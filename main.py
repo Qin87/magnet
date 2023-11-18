@@ -6,8 +6,9 @@ import torch
 import torch.nn.functional as F
 
 from args import parse_args
-from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split
-from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, sampling_idx_individual_dst
+from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split, load_directedData
+from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
+    sampling_idx_individual_dst, test_directed
 from nets import create_gcn, create_gat, create_sage
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
@@ -20,25 +21,28 @@ def train():
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
-    optimizer.zero_grad()        
-    if epoch > args.warmup:
-        
-        # identifying source samples
-        prev_out_local = prev_out[train_idx]
-        sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask) 
-        
-        # semimxup
-        new_edge_index = neighbor_sampling(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx, neighbor_dist_list)
-        beta = torch.distributions.beta.Beta(1, 100)
-        lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
-        new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+    optimizer.zero_grad()
+    if args.withAug:
+        if epoch > args.warmup:
 
+            # identifying source samples
+            prev_out_local = prev_out[train_idx]
+            sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask)
+
+            # semimxup
+            new_edge_index = neighbor_sampling(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx, neighbor_dist_list)
+            beta = torch.distributions.beta.Beta(1, 100)
+            lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
+            new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+
+        else:
+            sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
+            beta = torch.distributions.beta.Beta(2, 2)
+            lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
+            new_edge_index = duplicate_neighbor(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx)
+            new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
     else:
-        sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
-        beta = torch.distributions.beta.Beta(2, 2)
-        lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
-        new_edge_index = duplicate_neighbor(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx)
-        new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+        pass
 
     output = model(new_x, new_edge_index)
     prev_out = (output[:data.x.size(0)]).detach().clone()
@@ -75,6 +79,7 @@ def test():
     return accs, baccs, f1s
 
 args = parse_args()
+print(args)
 seed = args.seed
 # device = torch.device(args.device)
 cuda_device = 0
@@ -91,59 +96,95 @@ np.random.seed(seed)
 
 path = args.data_path
 path = osp.join(path, args.dataset)
-dataset = get_dataset(args.dataset, path, split_type='full')
+if args.DirectedDataset:
+    dataset= load_directedData(args)
+    print(dataset)
+else:
+    dataset = get_dataset(args.dataset, path, split_type='full')   # original in GraphSHA
 data = dataset[0]
 n_cls = data.y.max().item() + 1
 data = data.to(device)
 
-if args.dataset in ['Cora', 'CiteSeer', 'PubMed']:
-    data_train_mask, data_val_mask, data_test_mask = data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone()
-    stats = data.y[data_train_mask]
-    n_data = []
-    for i in range(n_cls):
-        data_num = (stats == i).sum()
-        n_data.append(int(data_num.item()))
-    idx_info = get_idx_info(data.y, n_cls, data_train_mask)
-    class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-        make_longtailed_data_remove(data.edge_index, data.y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
-    train_idx = data_train_mask.nonzero().squeeze()
+# if args.dataset in ['Cora', 'CiteSeer', 'PubMed']:
+#     data_train_mask, data_val_mask, data_test_mask = data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone()
+#     stats = data.y[data_train_mask]
+#     n_data = []
+#     for i in range(n_cls):
+#         data_num = (stats == i).sum()
+#         n_data.append(int(data_num.item()))
+#     idx_info = get_idx_info(data.y, n_cls, data_train_mask)
+#     class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+#         make_longtailed_data_remove(data.edge_index, data.y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+#     train_idx = data_train_mask.nonzero().squeeze()
+#
+#     labels_local = data.y.view([-1])[train_idx]
+#     train_idx_list = train_idx.cpu().tolist()
+#     local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
+#     global2local = dict([val, key] for key, val in local2global.items())
+#     idx_info_list = [item.cpu().tolist() for item in idx_info]
+#     idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list]
+#
+# elif args.dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+#     train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio, \
+#                                                                 valid_each=int(data.x.shape[0] * 0.1 / n_cls), \
+#                                                                 labeling_ratio=0.1, \
+#                                                                 all_idx=[i for i in range(data.x.shape[0])], \
+#                                                                 all_label=data.y.cpu().detach().numpy(), \
+#                                                                 nclass=n_cls)
+#
+#     data_train_mask = torch.zeros(data.x.shape[0]).bool().to(device)
+#     data_val_mask = torch.zeros(data.x.shape[0]).bool().to(device)
+#     data_test_mask = torch.zeros(data.x.shape[0]).bool().to(device)
+#     data_train_mask[train_idx] = True
+#     data_val_mask[valid_idx] = True
+#     data_test_mask[test_idx] = True
+#     train_idx = data_train_mask.nonzero().squeeze()
+#     train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
+#
+#     class_num_list = [len(item) for item in train_node]
+#     idx_info = [torch.tensor(item) for item in train_node]
+#
+# else:
+#     raise NotImplementedError
 
-    labels_local = data.y.view([-1])[train_idx]
-    train_idx_list = train_idx.cpu().tolist()
-    local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
-    global2local = dict([val, key] for key, val in local2global.items())
-    idx_info_list = [item.cpu().tolist() for item in idx_info] 
-    idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list] 
-
-elif args.dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-    train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio, \
-                                                                valid_each=int(data.x.shape[0] * 0.1 / n_cls), \
-                                                                labeling_ratio=0.1, \
-                                                                all_idx=[i for i in range(data.x.shape[0])], \
-                                                                all_label=data.y.cpu().detach().numpy(), \
-                                                                nclass=n_cls)
-
-    data_train_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-    data_val_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-    data_test_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-    data_train_mask[train_idx] = True
-    data_val_mask[valid_idx] = True
-    data_test_mask[test_idx] = True
-    train_idx = data_train_mask.nonzero().squeeze()
-    train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
-
-    class_num_list = [len(item) for item in train_node]
-    idx_info = [torch.tensor(item) for item in train_node]
-
+if args.dataset.split('/')[0].startswith('dgl'):
+    edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
+    data_y = data.ndata['label']
+    data_train_mask, data_val_mask, data_test_mask = (
+    data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+    data_x = data.ndata['feat']
+    # print(data_x.shape, data.num_nodes)  # torch.Size([3327, 3703])
+    dataset_num_features = data_x.shape[1]
 else:
-    raise NotImplementedError
+    edges = data.edge_index  # for torch_geometric librar
+    data_y = data.y
+    # data_train_mask, data_val_mask, data_test_mask = (data.train_mask[:,0].clone(), data.val_mask[:,0].clone(),
+#                                                   data.test_mask[:,0].clone())
+    data_train_mask, data_val_mask, data_test_mask = (data.train_mask.clone(), data.val_mask.clone(),
+                                                      data.test_mask.clone())
+    # print("how many val,,", data_val_mask.sum())   # how many val,, tensor(59)
+    data_x = data.x
+    dataset_num_features = dataset.num_features
 
-labels_local = data.y.view([-1])[train_idx]
+
+    IsDirectedGraph = test_directed(edges)
+    print("This is directed graph: ", IsDirectedGraph)
+
+# labels_local = data.y.view([-1])[train_idx]
+# train_idx_list = train_idx.cpu().tolist()
+# local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
+# global2local = dict([val, key] for key, val in local2global.items())
+# idx_info_list = [item.cpu().tolist() for item in idx_info]
+# idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list]
+
+train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
+labels_local = data_y.view([-1])[train_idx]  # view([-1]) is "flattening" the tensor.
 train_idx_list = train_idx.cpu().tolist()
-local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
+local2global = {i: train_idx_list[i] for i in range(len(train_idx_list))}
 global2local = dict([val, key] for key, val in local2global.items())
-idx_info_list = [item.cpu().tolist() for item in idx_info]
-idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list]
+idx_info_list = [item.cpu().tolist() for item in idx_info]  # list of all train nodes for each class
+idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
+                  idx_info_list]  # train nodes position inside train
 
 if args.gdc=='ppr':
     neighbor_dist_list = get_PPR_adj(data.x, data.edge_index[:,train_edge_mask], alpha=0.05, k=128, eps=None)
