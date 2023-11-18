@@ -76,7 +76,10 @@ def test():
 
 args = parse_args()
 seed = args.seed
-device = torch.device(args.device)
+# device = torch.device(args.device)
+cuda_device = 0
+device = torch.device("cuda:%d" % cuda_device if torch.cuda.is_available() else "cpu")
+
 
 torch.cuda.empty_cache()
 torch.manual_seed(seed)
