@@ -11,7 +11,7 @@ from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, g
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
-    neighbor_sampling_bidegree_variant2
+    neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse
 from nets import create_gcn, create_gat, create_sage
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
@@ -35,6 +35,9 @@ def train():
 
             if args.AugDirect == 1:
                 new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
+                                                   neighbor_dist_list)
+            elif args.AugDirect == -1:
+                new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
                                                    neighbor_dist_list)
             elif args.AugDirect == 2:
                 new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges[:, train_edge_mask],
