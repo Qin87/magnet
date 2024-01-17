@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 import tqdm
 import random
@@ -7,7 +8,10 @@ import torch.nn.functional as F
 
 from args import parse_args
 from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split
-from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, sampling_idx_individual_dst
+from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
+    sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
+    neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
+    neighbor_sampling_bidegree_variant2
 from nets import create_gcn, create_gat, create_sage
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
@@ -17,37 +21,69 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def train():
+    data_x, data_y, edges, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
-    optimizer.zero_grad()        
-    if epoch > args.warmup:
-        
-        # identifying source samples
-        prev_out_local = prev_out[train_idx]
-        sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask) 
-        
-        # semimxup
-        new_edge_index = neighbor_sampling(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx, neighbor_dist_list)
-        beta = torch.distributions.beta.Beta(1, 100)
-        lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
-        new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+    optimizer.zero_grad()
+    if args.WithAug:
+        if epoch > args.warmup:
+
+            # identifying source samples
+            prev_out_local = prev_out[train_idx]
+            sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask)
+
+            if args.AugDirect == 1:
+                new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
+                                                   neighbor_dist_list)
+            elif args.AugDirect == 2:
+                new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges[:, train_edge_mask],
+                                                          sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 4:
+                new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges[:, train_edge_mask],
+                                                                   sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 20:
+                new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],
+                                                            sampling_src_idx,
+                                                            neighbor_dist_list)  # has two types
+            elif args.AugDirect == 21:
+                new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],
+                                                                  sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 22:
+                new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],
+                                                                     sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 23:
+                new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],
+                                                                     sampling_src_idx, neighbor_dist_list)
+
+            else:
+                pass
+
+            # semimxup
+            # new_edge_index = neighbor_sampling(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx, neighbor_dist_list)
+            beta = torch.distributions.beta.Beta(1, 100)
+            lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
+            new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+
+        else:
+            sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
+            beta = torch.distributions.beta.Beta(2, 2)
+            lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
+            new_edge_index = duplicate_neighbor(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx)
+            new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+
+        output = model(new_x, new_edge_index)
+        prev_out = (output[:data.x.size(0)]).detach().clone()
+        add_num = output.shape[0] - data_train_mask.shape[0]
+        new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data.x.device)
+        new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
+        _new_y = data.y[sampling_src_idx].clone()
+        new_y = torch.cat((data.y[data_train_mask], _new_y),dim =0)
+        criterion(output[new_train_mask], new_y).backward()
 
     else:
-        sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
-        beta = torch.distributions.beta.Beta(2, 2)
-        lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
-        new_edge_index = duplicate_neighbor(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx)
-        new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
-
-    output = model(new_x, new_edge_index)
-    prev_out = (output[:data.x.size(0)]).detach().clone()
-    add_num = output.shape[0] - data_train_mask.shape[0]
-    new_train_mask = torch.ones(add_num, dtype=torch.bool, device= data.x.device)
-    new_train_mask = torch.cat((data_train_mask, new_train_mask), dim =0)
-    _new_y = data.y[sampling_src_idx].clone()
-    new_y = torch.cat((data.y[data_train_mask], _new_y),dim =0)
-    criterion(output[new_train_mask], new_y).backward()
+        output = model(data.x, data.edge_index[:,train_edge_mask])
+        criterion(output[data_train_mask], data.y[data_train_mask]).backward()
 
     with torch.no_grad():
         model.eval()
@@ -74,9 +110,104 @@ def test():
         f1s.append(f1)
     return accs, baccs, f1s
 
+def load_dataset():
+    # if args.IsDirectedData:
+    #     dataset = load_directedData(args)
+    # else:
+    #     path = args.data_path
+    #     path = osp.join(path, args.undirect_dataset)
+    #     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # print("Dataset is ", dataset, "\nChosen from DirectedData: ", args.IsDirectedData)
+
+    # if os.path.isdir(log_path) is False:
+    #     os.makedirs(log_path)
+
+    data = dataset[0]
+    data = data.to(device)
+
+    global class_num_list, idx_info, prev_out, sample_times
+    global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
+    try:
+        data.edge_weight = torch.FloatTensor(data.edge_weight)
+    except:
+        data.edge_weight = None
+
+    # if args.to_undirected:
+    #     data.edge_index = to_undirected(data.edge_index)
+
+    # copy GraphSHA
+    if args.dataset.split('/')[0].startswith('dgl'):
+        edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
+        data_y = data.ndata['label']
+        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
+            data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        data_x = data.ndata['feat']
+        dataset_num_features = data_x.shape[1]
+    # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+    elif not args.IsDirectedData and args.dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+        edges = data.edge_index  # for torch_geometric librar
+        data_y = data.y
+        data_x = data.x
+        dataset_num_features = dataset.num_features
+
+        data_y = data_y.long()
+        n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
+        n_cls = torch.tensor(n_cls).to(device)
+
+        train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio,
+                                                                    valid_each=int(data.x.shape[0] * 0.1 / n_cls),
+                                                                    labeling_ratio=0.1,
+                                                                    all_idx=[i for i in range(data.x.shape[0])],
+                                                                    all_label=data.y.cpu().detach().numpy(),
+                                                                    nclass=n_cls)
+
+        data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
+        data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
+        data_test_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
+        data_train_maskOrigin[train_idx] = True
+        data_val_maskOrigin[valid_idx] = True
+        data_test_maskOrigin[test_idx] = True
+        train_idx = data_train_maskOrigin.nonzero().squeeze()
+        train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
+
+        class_num_list = [len(item) for item in train_node]
+        idx_info = [torch.tensor(item) for item in train_node]
+    elif dataset == 'Amazon-Photo':
+        pass
+    else:
+        edges = data.edge_index  # for torch_geometric librar
+        data_y = data.y
+        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(),data.test_mask.clone())
+        data_x = data.x
+        try:
+            dataset_num_features = dataset.num_features
+        except:
+            dataset_num_features = data_x.shape[1]
+
+    # IsDirectedGraph = test_directed(edges)
+    # print("This is directed graph: ", IsDirectedGraph)
+    # print("data_x", data_x.shape)  # [11701, 300])
+
+    data = data.to(device)
+
+    data_y = data_y.long()
+    # n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
+    # n_cls = torch.tensor(n_cls).to(device)
+    # print("Number of classes: ", n_cls)
+
+    return data_x, data_y, edges, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
+
 args = parse_args()
 seed = args.seed
-device = torch.device(args.device)
+cuda_device = args.device
+
+if torch.cuda.is_available():
+    print("CUDA Device Index:", cuda_device)
+    device = torch.device("cuda:%d" % cuda_device)
+else:
+    print("CUDA is not available, using CPU.")
+    device = torch.device("cpu")
 
 torch.cuda.empty_cache()
 torch.manual_seed(seed)
@@ -164,8 +295,15 @@ criterion = CrossEntropy().to(device)
 optimizer = torch.optim.Adam([dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0),], lr=args.lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100, verbose=False)
 
+
+
+# list_com = [(True, 20), (True, 22),(True, 2), (True, 1), (True, 4), (True, 21),  (True, 23), (False, 0)]
+
+# for i in range(len(list_com)):
+#     (args.WithAug, args.AugDirect) = list_com[i]
 best_val_acc_f1 = 0
 saliency, prev_out = None, None
+test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
 for epoch in tqdm.tqdm(range(args.epoch)):
     train()
     accs, baccs, f1s = test()
@@ -177,6 +315,6 @@ for epoch in tqdm.tqdm(range(args.epoch)):
         test_acc = accs[2]
         test_bacc = baccs[2]
         test_f1 = f1s[2]
-
+print(args.net, args.dataset, args.imb_ratio, "WithAug:", args.WithAug, str(args.AugDirect))
 print('acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(test_acc*100, test_bacc*100, test_f1*100))
 

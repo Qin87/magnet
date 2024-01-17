@@ -118,7 +118,7 @@ def get_step_split(imb_ratio, valid_each, labeling_ratio, all_idx, all_label, nc
     h_num = len(head_list)
     t_num = len(tail_list)
 
-    base_train_each = int( len(all_idx) * labeling_ratio / (t_num + h_num * imb_ratio) )
+    base_train_each = int(len(all_idx) * labeling_ratio / (t_num + h_num * imb_ratio))
 
     idx2train,idx2valid = {},{}
 
