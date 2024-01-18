@@ -244,7 +244,7 @@ if not args.IsDirectedData and args.undirect_dataset in ['Cora', 'CiteSeer', 'Pu
     idx_info_list = [item.cpu().tolist() for item in idx_info] 
     idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list] 
 
-elif args.dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+elif args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
     train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio, \
                                                                 valid_each=int(data.x.shape[0] * 0.1 / n_cls), \
                                                                 labeling_ratio=0.1, \
