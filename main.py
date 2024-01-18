@@ -136,7 +136,7 @@ def load_dataset():
     #     data.edge_index = to_undirected(data.edge_index)
 
     # copy GraphSHA
-    if args.dataset.split('/')[0].startswith('dgl'):
+    if args.undirect_dataset.split('/')[0].startswith('dgl'):
         edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
         data_y = data.ndata['label']
         data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
@@ -144,7 +144,7 @@ def load_dataset():
         data_x = data.ndata['feat']
         dataset_num_features = data_x.shape[1]
     # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-    elif not args.IsDirectedData and args.dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
         edges = data.edge_index  # for torch_geometric librar
         data_y = data.y
         data_x = data.x
@@ -225,7 +225,7 @@ data = dataset[0]
 n_cls = data.y.max().item() + 1
 data = data.to(device)
 
-if not args.IsDirectedData and args.dataset in ['Cora', 'CiteSeer', 'PubMed']:
+if not args.IsDirectedData and args.undirect_dataset in ['Cora', 'CiteSeer', 'PubMed']:
     data_train_mask, data_val_mask, data_test_mask = data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone()
     stats = data.y[data_train_mask]
     n_data = []
@@ -301,10 +301,7 @@ except IndexError:
 optimizer = torch.optim.Adam([dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0),], lr=args.lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100, verbose=False)
 
-
-
 # list_com = [(True, 20), (True, 22),(True, 2), (True, 1), (True, 4), (True, 21),  (True, 23), (False, 0)]
-
 # for i in range(len(list_com)):
 #     (args.WithAug, args.AugDirect) = list_com[i]
 for split in range(splits):
@@ -323,9 +320,9 @@ for split in range(splits):
             data_train_maskOrigin[:, split].clone(), data_val_maskOrigin[:, split].clone())
             data_test_mask = data_test_maskOrigin[:, 1].clone()
 
-    data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
-                                                      data_val_maskOrigin[:, split].clone(),
-                                                      data_test_maskOrigin[:, split].clone())
+    # data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
+    #                                                   data_val_maskOrigin[:, split].clone(),
+    #                                                   data_test_maskOrigin[:, split].clone())
 
 
     stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
