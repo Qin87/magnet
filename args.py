@@ -5,10 +5,10 @@ def parse_args():
 
 
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=1, help='1 for one direction, 2 for bidirection aug edges, '
+    parser.add_argument('--AugDirect', type=int, default=21, help='1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree')
     parser.add_argument('--WithAug', type=bool, default=True, help='True is GraphSHA, False is original dataset')
-    parser.add_argument('--device', type=str, default='cuda:0', help='device')
+    parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='CiteSeer', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='cora_ml/', help='data set selection')
