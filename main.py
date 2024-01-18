@@ -26,9 +26,11 @@ def train(train_idx):
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
     optimizer.zero_grad()
-    if args.WithAug:
+    if args.AugDirect == 0:
+        output = model(data.x, data.edge_index[:,train_edge_mask])
+        criterion(output[data_train_mask], data.y[data_train_mask]).backward()
+    else:
         if epoch > args.warmup:
-
             # identifying source samples
             prev_out_local = prev_out[train_idx]
             sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask)
@@ -81,10 +83,6 @@ def train(train_idx):
         _new_y = data.y[sampling_src_idx].clone()
         new_y = torch.cat((data.y[data_train_mask], _new_y),dim =0)
         criterion(output[new_train_mask], new_y).backward()
-
-    else:
-        output = model(data.x, data.edge_index[:,train_edge_mask])
-        criterion(output[data_train_mask], data.y[data_train_mask]).backward()
 
     with torch.no_grad():
         model.eval()
@@ -277,12 +275,6 @@ else:
     except:
         dataset_num_features = data_x.shape[1]
 
-#
-
-
-
-
-    # raise NotImplementedError
 data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
 
 if args.net == 'GCN':
@@ -380,8 +372,6 @@ for split in range(splits):
     else:
         dataset_to_print = args.dataset
 
-    print(args.net, dataset_to_print, args.imb_ratio, "WithAug:", args.WithAug, str(args.AugDirect))
-
-    # print(args.net, args.dataset, args.imb_ratio, "WithAug:", args.WithAug, str(args.AugDirect))
+    print(args.net, dataset_to_print, args.imb_ratio, "Aug:", str(args.AugDirect))
     print('acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(test_acc*100, test_bacc*100, test_f1*100))
 
