@@ -1,3 +1,5 @@
+import os
+
 import torch
 import numpy as np
 from torch_scatter import scatter_add
@@ -52,68 +54,177 @@ def get_idx_info(label, n_cls, train_mask):
         idx_info.append(cls_indices)
     return idx_info
 
+# def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask):
+#     # Sort from major to minor
+#     n_data = torch.tensor(n_data)
+#     sorted_n_data, indices = torch.sort(n_data, descending=True)
+#     inv_indices = np.zeros(n_cls, dtype=np.int64)
+#     for i in range(n_cls):
+#         inv_indices[indices[i].item()] = i
+#     assert (torch.arange(len(n_data))[indices][torch.tensor(inv_indices)] - torch.arange(len(n_data))).sum().abs() < 1e-12
+#
+#     # Compute the number of nodes for each class following LT rules
+#     mu = np.power(1/ratio, 1/(n_cls - 1))
+#     n_round = []
+#     class_num_list = []
+#     for i in range(n_cls):
+#         assert int(sorted_n_data[0].item() * np.power(mu, i)) >= 1
+#         class_num_list.append(int(min(sorted_n_data[0].item() * np.power(mu, i), sorted_n_data[i])))
+#         """
+#         Note that we remove low degree nodes sequentially (10 steps)
+#         since degrees of remaining nodes are changed when some nodes are removed
+#         """
+#         if i < 1: # We does not remove any nodes of the most frequent class
+#             n_round.append(1)
+#         else:
+#             n_round.append(10)
+#     class_num_list = np.array(class_num_list)
+#     class_num_list = class_num_list[inv_indices]
+#     n_round = np.array(n_round)[inv_indices]
+#
+#     # Compute the number of nodes which would be removed for each class
+#     remove_class_num_list = [n_data[i].item()-class_num_list[i] for i in range(n_cls)]
+#     remove_idx_list = [[] for _ in range(n_cls)]
+#     cls_idx_list = []
+#     index_list = torch.arange(len(train_mask))
+#     original_mask = train_mask.clone()
+#     for i in range(n_cls):
+#         cls_idx_list.append(index_list[(label == i) & original_mask])
+#
+#     for i in indices.numpy():
+#         for r in range(1,n_round[i]+1):
+#             # Find removed nodes
+#             node_mask = label.new_ones(label.size(), dtype=torch.bool)
+#             node_mask[sum(remove_idx_list,[])] = False
+#
+#             # Remove connection with removed nodes
+#             row, col = edge_index[0], edge_index[1]
+#             row_mask = node_mask[row]
+#             col_mask = node_mask[col]
+#             edge_mask = row_mask & col_mask
+#
+#             # Compute degree
+#             degree = scatter_add(torch.ones_like(col[edge_mask]), col[edge_mask], dim_size=label.size(0)).to(row.device)
+#             degree = degree[cls_idx_list[i]]
+#
+#             # Remove nodes with low degree first (number increases as round increases)
+#             # Accumulation does not be problem since
+#             _, remove_idx = torch.topk(degree, (r*remove_class_num_list[i])//n_round[i], largest=False)
+#             remove_idx = cls_idx_list[i][remove_idx]
+#             remove_idx_list[i] = list(remove_idx.numpy())
+#
+#     # Find removed nodes
+#     node_mask = label.new_ones(label.size(), dtype=torch.bool)
+#     node_mask[sum(remove_idx_list,[])] = False
+#
+#     # Remove connection with removed nodes
+#     row, col = edge_index[0], edge_index[1]
+#     row_mask = node_mask[row]
+#     col_mask = node_mask[col]
+#     edge_mask = row_mask & col_mask
+#
+#     train_mask = node_mask & train_mask
+#     idx_info = []
+#     for i in range(n_cls):
+#         cls_indices = index_list[(label == i) & train_mask]
+#         idx_info.append(cls_indices)
+#
+#     return list(class_num_list), train_mask, idx_info, node_mask, edge_mask
+
 def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask):
+    """
+
+    :param edge_index: all edges in the graph
+    :param label: classes of all nodes
+    :param n_data:num of train in each class
+    :param n_cls:
+    :param ratio:
+    :param train_mask:
+    :return: list(class_num_list), train_mask, idx_info, node_mask, edge_mask
+    """
     # Sort from major to minor
-    n_data = torch.tensor(n_data)
+    n_data = torch.tensor(n_data)   # from list to tensor
+    # print(n_data)
     sorted_n_data, indices = torch.sort(n_data, descending=True)
+    # print(sorted_n_data, indices)   # tensor([341, 196, 196, 160, 138,  90,  87]) tensor([3, 2, 4, 0, 5, 1, 6])
     inv_indices = np.zeros(n_cls, dtype=np.int64)
+    # print(inv_indices)      # [0 0 0 0 0 0 0]
     for i in range(n_cls):
         inv_indices[indices[i].item()] = i
+    # print(inv_indices)      # [3 5 1 0 2 4 6]
     assert (torch.arange(len(n_data))[indices][torch.tensor(inv_indices)] - torch.arange(len(n_data))).sum().abs() < 1e-12
 
     # Compute the number of nodes for each class following LT rules
-    mu = np.power(1/ratio, 1/(n_cls - 1))
+    ratio = torch.tensor(ratio, dtype=torch.float32)   # for mu to convert to numpy
+    # Move the tensor to CPU before using it in numpy operations
+    if not isinstance(n_cls, int):
+        ratio = ratio.cpu()
+        n_cls = n_cls.cpu()
+    mu = np.power(1/ratio.detach().cpu().numpy(), 1/(n_cls - 1))
+
+    mu = torch.tensor(mu, dtype=torch.float32, device=ratio.device)
+
+    # print(mu, 1/ratio, 1/(n_cls-1))     # 0.4641588833612779 0.01 0.16666666666666666
     n_round = []
     class_num_list = []
     for i in range(n_cls):
-        assert int(sorted_n_data[0].item() * np.power(mu, i)) >= 1
-        class_num_list.append(int(min(sorted_n_data[0].item() * np.power(mu, i), sorted_n_data[i])))
+        # assert int(sorted_n_data[0].item() * np.power(mu, i)) >= 1
+        temp = int(sorted_n_data[0].item() * np.power(mu, i))
+        if temp< 1:
+            temp = 1
+        class_num_list.append(int(min(temp, sorted_n_data[i])))
         """
         Note that we remove low degree nodes sequentially (10 steps)
         since degrees of remaining nodes are changed when some nodes are removed
         """
-        if i < 1: # We does not remove any nodes of the most frequent class
+        if i < 1:  # We do not remove any nodes of the most frequent class
             n_round.append(1)
         else:
             n_round.append(10)
-    class_num_list = np.array(class_num_list)
-    class_num_list = class_num_list[inv_indices]
-    n_round = np.array(n_round)[inv_indices]
+    class_num_list = np.array(class_num_list)   # from list to np.array
+    class_num_list = class_num_list[inv_indices]    # sorted
+    n_round = np.array(n_round)[inv_indices]        # sorted  #
 
     # Compute the number of nodes which would be removed for each class
     remove_class_num_list = [n_data[i].item()-class_num_list[i] for i in range(n_cls)]
     remove_idx_list = [[] for _ in range(n_cls)]
-    cls_idx_list = []
+    # print(remove_idx_list)  # [[], [], [], [], [], [], []]
+    cls_idx_list = []   # nodes belong to class i
     index_list = torch.arange(len(train_mask))
     original_mask = train_mask.clone()
     for i in range(n_cls):
         cls_idx_list.append(index_list[(label == i) & original_mask])
 
     for i in indices.numpy():
-        for r in range(1,n_round[i]+1):
+        for r in range(1, n_round[i]+1):
             # Find removed nodes
             node_mask = label.new_ones(label.size(), dtype=torch.bool)
-            node_mask[sum(remove_idx_list,[])] = False
+            # new_ones is a PyTorch function used to create a new tensor of ones with the specified shape and data type.
+            # print("Initialize all true: ", node_mask[:10])
+            node_mask[sum(remove_idx_list, [])] = False
+            # print("Setting some as false", node_mask[:10])
 
             # Remove connection with removed nodes
             row, col = edge_index[0], edge_index[1]
+            # print("row is ", row.shape, row[:10])
+            # # torch.Size([10556]) tensor([0, 0, 0, 1, 1, 1, 2, 2, 2, 2])
+            # print("col is ", row.shape, col[:10])
+            # # torch.Size([10556]) tensor([ 633, 1862, 2582,    2,  652,  654,    1,  332, 1454, 1666])
             row_mask = node_mask[row]
             col_mask = node_mask[col]
-            edge_mask = row_mask & col_mask
+            edge_mask = row_mask & col_mask  # elementwise "and"
 
             # Compute degree
             degree = scatter_add(torch.ones_like(col[edge_mask]), col[edge_mask], dim_size=label.size(0)).to(row.device)
             degree = degree[cls_idx_list[i]]
-
-            # Remove nodes with low degree first (number increases as round increases)
-            # Accumulation does not be problem since
             _, remove_idx = torch.topk(degree, (r*remove_class_num_list[i])//n_round[i], largest=False)
             remove_idx = cls_idx_list[i][remove_idx]
+
             remove_idx_list[i] = list(remove_idx.numpy())
 
     # Find removed nodes
     node_mask = label.new_ones(label.size(), dtype=torch.bool)
-    node_mask[sum(remove_idx_list,[])] = False
+    node_mask[sum(remove_idx_list, [])] = False
 
     # Remove connection with removed nodes
     row, col = edge_index[0], edge_index[1]
@@ -128,6 +239,36 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
         idx_info.append(cls_indices)
 
     return list(class_num_list), train_mask, idx_info, node_mask, edge_mask
+
+
+def load_directedData(args):
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    load_func, subset = args.Direct_dataset.split('/')[0], args.Direct_dataset.split('/')[1]
+    print("dataset is ", load_func, subset)  # Ben WebKB
+    if load_func == 'WebKB':
+        load_func = WebKB
+        dataset = load_func(root=args.data_path, name=subset)
+    elif load_func == 'WikipediaNetwork':
+        load_func = WikipediaNetwork
+        dataset = load_func(root=args.data_path, name=subset)
+    elif load_func == 'WikiCS':
+        load_func = WikiCS
+        dataset = load_func(root=args.data_path)
+    elif load_func == 'cora_ml':
+        dataset = citation_datasets(root='cora_ml/cora_ml.npz')
+    elif load_func == 'citeseer_npz':
+        dataset = citation_datasets(root='../../dataset/data/tmp/citeseer_npz/citeseer_npz.npz')
+    # elif load_func == 'dgl':    # Ben
+    #     subset = subset.lower()
+    #     try:
+    #         dataset = load_dgl_directed(subset)
+    #     except NotImplementedError:
+    #         print("Load data unexpected: undirected data!")
+    #         dataset = load_dgl_bidirected(args)
+    else:
+        dataset = load_syn(args.data_path + args.dataset, None)
+
+    return dataset
 
 def get_step_split(imb_ratio, valid_each, labeling_ratio, all_idx, all_label, nclass):
     base_valid_each = valid_each

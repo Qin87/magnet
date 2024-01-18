@@ -1,32 +1,92 @@
+import math
+
 import torch
 import torch.nn.functional as F
 from torch_scatter import scatter_add
 from torch_geometric.utils import to_dense_batch
 
-@torch.no_grad()
 def sampling_idx_individual_dst(class_num_list, idx_info, device):
+    """
+    to get the source nodes
+    :param class_num_list:
+    :param idx_info: # all train nodes for each class
+    :param device:
+    :return:
+    """
+    # print("Warmup: ", class_num_list, np.shape(class_num_list))  #  [14, 0, 1, 45, 4] (5,)
     # Selecting src & dst nodes
     max_num, n_cls = max(class_num_list), len(class_num_list)
     sampling_list = max_num * torch.ones(n_cls) - torch.tensor(class_num_list)
+    # print(sampling_list)    # tensor([307., 334., 183.,   0., 268., 326., 338.])
     new_class_num_list = torch.Tensor(class_num_list).to(device)
+    # print("new : ", new_class_num_list)   # tensor([ 34.,   7., 158., 341.,  73.,  15.,   3.])
 
     # Compute # of source nodes
-    sampling_src_idx =[cls_idx[torch.randint(len(cls_idx),(int(samp_num.item()),))]
-                        for cls_idx, samp_num in zip(idx_info, sampling_list)]
-    sampling_src_idx = torch.cat(sampling_src_idx)
+    # print("samp: ", sampling_list)   # tensor([34., 48., 48.,  0., 45.])
 
-    # Generate corresponding destination nodes
-    prob = torch.log(new_class_num_list.float())/ new_class_num_list.float()
+    sampling_dst_idx = []
+    prob = torch.log(new_class_num_list.float()) / new_class_num_list.float()
+    prob = prob.repeat_interleave(new_class_num_list.long())
+    temp_idx_info = torch.cat(idx_info)
+    for cls_idx, samp_num in zip(idx_info, sampling_list):
+        samp_num = int(samp_num.item())
+        if samp_num <= 0:
+            continue
+        if len(cls_idx) <=0:
+            continue
+        # Sampling indices for dst
+        # print("What::", samp_num, len(cls_idx))   # What:: 45 0
+        dst_idx_local = cls_idx[torch.randint(len(cls_idx), (samp_num,))]
+        sampling_dst_idx.append(dst_idx_local)
+    # Concatenate the sampled indices
+    sampling_dst_idx = torch.cat(sampling_dst_idx)
+    # Sample indices for src
+    src_idx = torch.multinomial(prob, sampling_dst_idx.shape[0], True)
+    sampling_src_idx = temp_idx_info[src_idx]
+    # print("\nChatGPT samp_src_idx", sampling_src_idx.shape)
+
+    # sampling_src_idx = [cls_idx[torch.randint(len(cls_idx), (int(samp_num.item()),))]
+    #                     for cls_idx, samp_num in zip(idx_info, sampling_list)]   # this code err when sam_num, or cls_idx is 0
+    # sampling_src_idx = torch.cat(sampling_src_idx)  # this means 7 combines into one tensor
+    # print("\noriginal samp_src_idx", sampling_src_idx.shape)
+    prob = torch.log(new_class_num_list.float()) / new_class_num_list.float()   # why use this as prob?
     prob = prob.repeat_interleave(new_class_num_list.long())
     temp_idx_info = torch.cat(idx_info)
     dst_idx = torch.multinomial(prob, sampling_src_idx.shape[0], True)
     sampling_dst_idx = temp_idx_info[dst_idx]
 
     # Sorting src idx with corresponding dst idx
+    # the first is ascending ordered new tensor, the second is the original index
     sampling_src_idx, sorted_idx = torch.sort(sampling_src_idx)
     sampling_dst_idx = sampling_dst_idx[sorted_idx]
+    # print(sampling_src_idx, sampling_dst_idx)
 
     return sampling_src_idx, sampling_dst_idx
+
+@torch.no_grad()
+# def sampling_idx_individual_dst(class_num_list, idx_info, device):
+#     # Selecting src & dst nodes
+#     max_num, n_cls = max(class_num_list), len(class_num_list)
+#     sampling_list = max_num * torch.ones(n_cls) - torch.tensor(class_num_list)
+#     new_class_num_list = torch.Tensor(class_num_list).to(device)
+#
+#     # Compute # of source nodes
+#     sampling_src_idx =[cls_idx[torch.randint(len(cls_idx),(int(samp_num.item()),))]
+#                         for cls_idx, samp_num in zip(idx_info, sampling_list)]
+#     sampling_src_idx = torch.cat(sampling_src_idx)
+#
+#     # Generate corresponding destination nodes
+#     prob = torch.log(new_class_num_list.float())/ new_class_num_list.float()
+#     prob = prob.repeat_interleave(new_class_num_list.long())
+#     temp_idx_info = torch.cat(idx_info)
+#     dst_idx = torch.multinomial(prob, sampling_src_idx.shape[0], True)
+#     sampling_dst_idx = temp_idx_info[dst_idx]
+#
+#     # Sorting src idx with corresponding dst idx
+#     sampling_src_idx, sorted_idx = torch.sort(sampling_src_idx)
+#     sampling_dst_idx = sampling_dst_idx[sorted_idx]
+#
+#     return sampling_src_idx, sampling_dst_idx
 
 def saliency_mixup(x, sampling_src_idx, sampling_dst_idx, lam):
     new_src = x[sampling_src_idx.to(x.device), :].clone()
@@ -615,46 +675,131 @@ def neighbor_sampling_BiEdge_bidegree(total_node, edge_index, sampling_src_idx,
     return new_edge_index
 
 @torch.no_grad()
-def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, tau=2, max_flag=False, no_mask=False):
-    max_num, n_cls = max(class_num_list), len(class_num_list) 
-    if not max_flag: # mean
-        max_num = sum(class_num_list) / n_cls
-    sampling_list = max_num * torch.ones(n_cls) - torch.tensor(class_num_list)
+# def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, tau=2, max_flag=False, no_mask=False):
+#     max_num, n_cls = max(class_num_list), len(class_num_list)
+#     if not max_flag: # mean
+#         max_num = sum(class_num_list) / n_cls
+#     sampling_list = max_num * torch.ones(n_cls) - torch.tensor(class_num_list)
+#
+#     prev_out_local = F.softmax(prev_out_local/tau, dim=1)
+#     prev_out_local = prev_out_local.cpu()
+#
+#     src_idx_all = []
+#     dst_idx_all = []
+#     for cls_idx, num in enumerate(sampling_list):
+#         num = int(num.item())
+#         if num <= 0:
+#             continue
+#
+#         # first sampling
+#         prob = 1 - prev_out_local[idx_info_local[cls_idx]][:,cls_idx].squeeze()
+#         src_idx_local = torch.multinomial(prob + 1e-12, num, replacement=True)
+#         src_idx = train_idx[idx_info_local[cls_idx][src_idx_local]]
+#
+#         # second sampling
+#         conf_src = prev_out_local[idx_info_local[cls_idx][src_idx_local]]
+#         if not no_mask:
+#             conf_src[:,cls_idx] = 0
+#         neighbor_cls = torch.multinomial(conf_src + 1e-12, 1).squeeze().tolist()
+#
+#         # third sampling
+#         neighbor = [prev_out_local[idx_info_local[cls]][:,cls_idx] for cls in neighbor_cls]
+#         dst_idx = []
+#         for i, item in enumerate(neighbor):
+#             dst_idx_local = torch.multinomial(item + 1e-12, 1)[0]
+#             dst_idx.append(train_idx[idx_info_local[neighbor_cls[i]][dst_idx_local]])
+#         dst_idx = torch.tensor(dst_idx).to(src_idx.device)
+#
+#         src_idx_all.append(src_idx)
+#         dst_idx_all.append(dst_idx)
+#
+#     src_idx_all = torch.cat(src_idx_all)
+#     dst_idx_all = torch.cat(dst_idx_all)
+#
+#     return src_idx_all, dst_idx_all
 
-    prev_out_local = F.softmax(prev_out_local/tau, dim=1)
-    prev_out_local = prev_out_local.cpu() 
+
+def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, tau=2, max_flag=False,
+                         no_mask=False):
+    """
+    sampling for subsequent epochs
+    :param class_num_list:
+    :param prev_out_local: predicted label of train nodes
+    :param idx_info_local:  # train nodes position inside train
+    :param train_idx:
+    :param tau:
+    :param max_flag:
+    :param no_mask:whether to mask the self class in sampling neighbor classes. default is mask
+    :return:src_idx_all, dst_idx_all
+    """
+    max_num, n_cls = max(class_num_list), len(class_num_list)
+    if not max_flag:  # mean
+        max_num = math.ceil(sum(class_num_list) / n_cls)  # determined by args
+    sampling_list = max_num * torch.ones(n_cls) - torch.tensor(class_num_list)
+    # print("After warm", sampling_list)    # tensor([ 21.6667,  -2.3333,  -8.3333, -11.3333,  -3.3333,   3.6667])
+    prev_out_local = F.softmax(prev_out_local / tau, dim=1)
+    # softmax is to transform a vector of real numbers into a probability distribution.
+    prev_out_local = prev_out_local.cpu()
 
     src_idx_all = []
     dst_idx_all = []
+    # print("sampling_list: ", sampling_list)
     for cls_idx, num in enumerate(sampling_list):
         num = int(num.item())
-        if num <= 0: 
+        if num <= 0:
             continue
-
         # first sampling
-        prob = 1 - prev_out_local[idx_info_local[cls_idx]][:,cls_idx].squeeze() 
-        src_idx_local = torch.multinomial(prob + 1e-12, num, replacement=True) 
-        src_idx = train_idx[idx_info_local[cls_idx][src_idx_local]] 
+        if idx_info_local[cls_idx].numel() == 0:
+            continue
+        # print(cls_idx)  # 1
+        # print(idx_info_local[cls_idx])   # tensor([])
+        prob = 1 - prev_out_local[idx_info_local[cls_idx].long()][:, cls_idx].squeeze()
+        # print(prob)   # tensor(0.7912)
+        if prob.shape == torch.Size([]):
+            prob = torch.tensor([prob])
+        src_idx_local = torch.multinomial(prob + 1e-12, num,
+                                          replacement=True)  # the harder the sample, the more likely to be sampled
+        src_idx = train_idx[idx_info_local[cls_idx][src_idx_local]]  # each minor class has src_idx
 
         # second sampling
-        conf_src = prev_out_local[idx_info_local[cls_idx][src_idx_local]] 
+        conf_src = prev_out_local[idx_info_local[cls_idx][src_idx_local]]
         if not no_mask:
-            conf_src[:,cls_idx] = 0
-        neighbor_cls = torch.multinomial(conf_src + 1e-12, 1).squeeze().tolist() 
+            conf_src[:, cls_idx] = 0
+        neighbor_cls = torch.multinomial(conf_src + 1e-12, 1).squeeze().tolist()
 
         # third sampling
-        neighbor = [prev_out_local[idx_info_local[cls]][:,cls_idx] for cls in neighbor_cls] 
+        neighbor = [prev_out_local[idx_info_local[cls].long()][:, cls_idx] for cls in neighbor_cls if
+                    idx_info_local[cls].numel() != 0]
         dst_idx = []
+        new_src_idx = []
         for i, item in enumerate(neighbor):
-            dst_idx_local = torch.multinomial(item + 1e-12, 1)[0] 
-            dst_idx.append(train_idx[idx_info_local[neighbor_cls[i]][dst_idx_local]])
-        dst_idx = torch.tensor(dst_idx).to(src_idx.device)
+            dst_idx_local = torch.multinomial(item + 1e-12, 1)[0]
+            # dst_idx.append(train_idx[idx_info_local[neighbor_cls[i]][dst_idx_local]])    # index 32 is out of bounds for dimension 0 with size 0
+            # Check if idx_info_local[neighbor_cls[i]] has non-zero size along dimension 0
+            if idx_info_local[neighbor_cls[i]].numel() != 0:
+                # Check if dst_idx_local is within valid bounds
+                if 0 <= dst_idx_local < idx_info_local[neighbor_cls[i]].numel():
+                    dst_idx.append(train_idx[idx_info_local[neighbor_cls[i]][dst_idx_local]])
+                    new_src_idx.append(src_idx[i])
+                else:
+                    # Handle the case where dst_idx_local is out of bounds
+                    # You can print a warning or take appropriate action
+                    pass
+                    # print(f"Warning: dst_idx_local {dst_idx_local} is out of bounds.")
 
-        src_idx_all.append(src_idx)
+            else:
+                # Handle the case where idx_info_local[neighbor_cls[i]] has size 0
+                # You can print a warning or take appropriate action
+                # print(f"Warning: idx_info_local[neighbor_cls[i]] has size 0.")   # happened
+                pass
+        dst_idx = torch.tensor(dst_idx).to(src_idx.device)
+        # new_src_idx = torch.tensor(dst_idx).to(src_idx.device)
+        new_src_idx = torch.tensor(dst_idx, device=src_idx.device).clone().detach()
+
+        src_idx_all.append(new_src_idx)
         dst_idx_all.append(dst_idx)
-    
+
     src_idx_all = torch.cat(src_idx_all)
     dst_idx_all = torch.cat(dst_idx_all)
-    
-    return src_idx_all, dst_idx_all
 
+    return src_idx_all, dst_idx_all
