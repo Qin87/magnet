@@ -367,7 +367,7 @@ for split in range(splits):
     if args.IsDirectedData:
         dataset_to_print = args.Direct_dataset
     else:
-        dataset_to_print = args.dataset
+        dataset_to_print = args.undirect_dataset
 
     print(args.net, dataset_to_print, args.imb_ratio, "Aug:", str(args.AugDirect))
     print('acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(test_acc*100, test_bacc*100, test_f1*100))
