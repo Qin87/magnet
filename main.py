@@ -201,8 +201,6 @@ def load_dataset():
 
 args = parse_args()
 seed = args.seed
-cuda_device = args.device
-
 cuda_device = args.GPUdevice
 if torch.cuda.is_available():
     print("CUDA Device Index:", cuda_device)
