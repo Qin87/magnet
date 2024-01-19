@@ -80,6 +80,7 @@ def train(train_idx):
         add_num = output.shape[0] - data_train_mask.shape[0]
         new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data.x.device)
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
+        sampling_src_idx = sampling_src_idx.to(torch.long).to(data.y.device)   # Ben for GPU
         _new_y = data.y[sampling_src_idx].clone()
         new_y = torch.cat((data.y[data_train_mask], _new_y),dim =0)
         criterion(output[new_train_mask], new_y).backward()
