@@ -318,7 +318,10 @@ for split in range(splits):
             print("testIndex ,", data_test_mask.shape, data_train_mask.shape, data_val_mask.shape)
             data_train_mask, data_val_mask = (
             data_train_maskOrigin[:, split].clone(), data_val_maskOrigin[:, split].clone())
-            data_test_mask = data_test_maskOrigin[:, 1].clone()
+            try:
+                data_test_mask = data_test_maskOrigin[:, 1].clone()
+            except:
+                data_test_mask = data_test_maskOrigin.clone()
 
     # data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
     #                                                   data_val_maskOrigin[:, split].clone(),
