@@ -5,7 +5,7 @@ def parse_args():
 
 
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=4, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
+    parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree')
     # parser.add_argument('--WithAug', type=bool, default=True, help='True is GraphSHA, False is original dataset')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
