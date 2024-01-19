@@ -184,7 +184,7 @@ def duplicate_neighbor(total_node, edge_index, sampling_src_idx):
     # print(b_idx[:10], np.shape(b_idx))  # tensor([0, 0, 1, 1, 1, 1, 2, 2, 2, 2]) torch.Size([1380])
 
     edge_dense, _ = to_dense_batch(edge_mask, b_idx, fill_value=-1)
-    Coledge_dense, _ = to_dense_batch(edge_mask, Col_b_idx, fill_value=-1)
+    # Coledge_dense, _ = to_dense_batch(edge_mask, Col_b_idx, fill_value=-1)
     # print("edge_mask is ", edge_mask[:10], "\nb_idx is ", b_idx[:10])
     # print(edge_dense[:10], np.shape(edge_dense))    # torch.Size([241, 155])  torch.Size([240, 29])
     # tensor([[723, 2614, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -202,11 +202,11 @@ def duplicate_neighbor(total_node, edge_index, sampling_src_idx):
     else:
         cut_temp = temp[temp != 0]
 
-    if len(temp[temp != 0]) != Coledge_dense.shape[0]:  # edge_dense.shape[0] is the num of anchor nodes
-        colcut_num = len(temp[temp != 0]) - Coledge_dense.shape[0]
-        colcut_temp = temp[temp != 0][:-cut_num]
-    else:
-        colcut_temp = temp[temp != 0]
+    # if len(temp[temp != 0]) != Coledge_dense.shape[0]:  # edge_dense.shape[0] is the num of anchor nodes
+    #     colcut_num = len(temp[temp != 0]) - Coledge_dense.shape[0]
+    #     colcut_temp = temp[temp != 0][:-cut_num]
+    # else:
+    #     colcut_temp = temp[temp != 0]
 
     # print("Hi1, ", edge_dense[:10], np.shape(edge_dense))  # torch.Size([240, 29])
     edge_dense = edge_dense.repeat_interleave(cut_temp, dim=0)
