@@ -90,6 +90,7 @@ def sampling_idx_individual_dst(class_num_list, idx_info, device):
 
 def saliency_mixup(x, sampling_src_idx, sampling_dst_idx, lam):
     sampling_src_idx = sampling_src_idx.to(torch.long).to(x.device)   # Ben
+    sampling_dst_idx = sampling_dst_idx.to(torch.long).to(x.device)  # Ben
     new_src = x[sampling_src_idx.to(x.device), :].clone()
     new_dst = x[sampling_dst_idx.to(x.device), :].clone()
     lam = lam.to(x.device)
