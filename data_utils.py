@@ -257,7 +257,7 @@ def load_directedData(args):
     elif load_func == 'cora_ml':
         dataset = citation_datasets(root='cora_ml/cora_ml.npz')
     elif load_func == 'citeseer_npz':
-        dataset = citation_datasets(root='../../dataset/data/tmp/citeseer_npz/citeseer_npz.npz')
+        dataset = citation_datasets(root='citeseer_npz/citeseer_npz.npz')
     # elif load_func == 'dgl':    # Ben
     #     subset = subset.lower()
     #     try:

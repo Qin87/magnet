@@ -80,7 +80,7 @@ def train(train_idx):
         add_num = output.shape[0] - data_train_mask.shape[0]
         new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data.x.device)
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
-        sampling_src_idx = sampling_src_idx.to(torch.long).to(data.y.device)   # Ben for GPU
+        sampling_src_idx = sampling_src_idx.to(torch.long).to(data.y.device)   # Ben for GPU error
         _new_y = data.y[sampling_src_idx].clone()
         new_y = torch.cat((data.y[data_train_mask], _new_y),dim =0)
         criterion(output[new_train_mask], new_y).backward()
@@ -284,7 +284,6 @@ elif args.net == 'GAT':
     model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
 elif args.net == "SAGE":
     model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
-    # model = create_sage(nfeat=dataset.num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
 else:
     raise NotImplementedError("Not Implemented Architecture!")
 
