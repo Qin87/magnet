@@ -21,14 +21,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def train(train_idx):
-    data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
+    # data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
     optimizer.zero_grad()
     if args.AugDirect == 0:
-        output = model(data.x, data.edge_index[:,train_edge_mask])
-        criterion(output[data_train_mask], data.y[data_train_mask]).backward()
+        output = model(data_x, edges[:,train_edge_mask])
+        criterion(output[data_train_mask], data_y[data_train_mask]).backward()
     else:
         if epoch > args.warmup:
             # identifying source samples
@@ -62,33 +62,33 @@ def train(train_idx):
                                                                      sampling_src_idx, neighbor_dist_list)
 
             else:
-                pass
+                raise NotImplementedError
 
             beta = torch.distributions.beta.Beta(1, 100)
             lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
-            new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+            new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
         else:
             sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
             beta = torch.distributions.beta.Beta(2, 2)
             lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
-            new_edge_index = duplicate_neighbor(data.x.size(0), data.edge_index[:,train_edge_mask], sampling_src_idx)
-            new_x = saliency_mixup(data.x, sampling_src_idx, sampling_dst_idx, lam)
+            new_edge_index = duplicate_neighbor(data_x.size(0), edges[:,train_edge_mask], sampling_src_idx)
+            new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
         output = model(new_x, new_edge_index)
-        prev_out = (output[:data.x.size(0)]).detach().clone()
+        prev_out = (output[:data_x.size(0)]).detach().clone()
         add_num = output.shape[0] - data_train_mask.shape[0]
-        new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data.x.device)
+        new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data_x.device)
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
-        sampling_src_idx = sampling_src_idx.to(torch.long).to(data.y.device)   # Ben for GPU error
-        _new_y = data.y[sampling_src_idx].clone()
-        new_y = torch.cat((data.y[data_train_mask], _new_y),dim =0)
+        sampling_src_idx = sampling_src_idx.to(torch.long).to(data_y.device)   # Ben for GPU error
+        _new_y = data_y[sampling_src_idx].clone()
+        new_y = torch.cat((data_y[data_train_mask], _new_y),dim =0)
         criterion(output[new_train_mask], new_y).backward()
 
     with torch.no_grad():
         model.eval()
-        output = model(data.x, data.edge_index[:,train_edge_mask])
-        val_loss= F.cross_entropy(output[data_val_mask], data.y[data_val_mask])
+        output = model(data_x, edges[:,train_edge_mask])
+        val_loss= F.cross_entropy(output[data_val_mask], data_y[data_val_mask])
     optimizer.step()
     scheduler.step(val_loss)
     return num_features
@@ -96,13 +96,13 @@ def train(train_idx):
 @torch.no_grad()
 def test():
     model.eval()
-    logits = model(data.x, data.edge_index[:,train_edge_mask])
+    logits = model(data_x, edges[:,train_edge_mask])
     accs, baccs, f1s = [], [], []
     for mask in [data_train_mask, data_val_mask, data_test_mask]:
         pred = logits[mask].max(1)[1]
         y_pred = pred.cpu().numpy()
-        y_true = data.y[mask].cpu().numpy()
-        acc = pred.eq(data.y[mask]).sum().item() / mask.sum().item()
+        y_true = data_y[mask].cpu().numpy()
+        acc = pred.eq(data_y[mask]).sum().item() / mask.sum().item()
         bacc = balanced_accuracy_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average='macro')
         accs.append(acc)
@@ -137,7 +137,7 @@ def load_dataset():
     #     data.edge_index = to_undirected(data.edge_index)
 
     # copy GraphSHA
-    if args.undirect_dataset.split('/')[0].startswith('dgl'):
+    if args.Direct_dataset.split('/')[0].startswith('dgl'):
         edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
         data_y = data.ndata['label']
         data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
@@ -196,7 +196,7 @@ def load_dataset():
     # n_cls = torch.tensor(n_cls).to(device)
     # print("Number of classes: ", n_cls)
 
-    return data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
+    return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
 args = parse_args()
 seed = args.seed
@@ -222,61 +222,61 @@ else:
     path = args.data_path
     path = osp.join(path, args.undirect_dataset)
     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-data = dataset[0]
-n_cls = data.y.max().item() + 1
+data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
+n_cls = data_y.max().item() + 1
 data = data.to(device)
 
-if not args.IsDirectedData and args.undirect_dataset in ['Cora', 'CiteSeer', 'PubMed']:
-    data_train_mask, data_val_mask, data_test_mask = data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone()
-    stats = data.y[data_train_mask]
-    n_data = []
-    for i in range(n_cls):
-        data_num = (stats == i).sum()
-        n_data.append(int(data_num.item()))
-    idx_info = get_idx_info(data.y, n_cls, data_train_mask)
-    class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-        make_longtailed_data_remove(data.edge_index, data.y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
-    train_idx = data_train_mask.nonzero().squeeze()
+# if not args.IsDirectedData and args.undirect_dataset in ['Cora', 'CiteSeer', 'PubMed']:
+#     data_train_mask, data_val_mask, data_test_mask = data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone()
+#     stats = data.y[data_train_mask]
+#     n_data = []
+#     for i in range(n_cls):
+#         data_num = (stats == i).sum()
+#         n_data.append(int(data_num.item()))
+#     idx_info = get_idx_info(data.y, n_cls, data_train_mask)
+#     class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+#         make_longtailed_data_remove(data.edge_index, data.y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+#     train_idx = data_train_mask.nonzero().squeeze()
+#
+#     labels_local = data.y.view([-1])[train_idx]
+#     train_idx_list = train_idx.cpu().tolist()
+#     local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
+#     global2local = dict([val, key] for key, val in local2global.items())
+#     idx_info_list = [item.cpu().tolist() for item in idx_info]
+#     idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list]
+#
+# elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+#     train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio, \
+#                                                                 valid_each=int(data_x.shape[0] * 0.1 / n_cls), \
+#                                                                 labeling_ratio=0.1, \
+#                                                                 all_idx=[i for i in range(data_x.shape[0])], \
+#                                                                 all_label=data_y.cpu().detach().numpy(), \
+#                                                                 nclass=n_cls)
+#
+#     data_train_mask = torch.zeros(data.x.shape[0]).bool().to(device)
+#     data_val_mask = torch.zeros(data.x.shape[0]).bool().to(device)
+#     data_test_mask = torch.zeros(data.x.shape[0]).bool().to(device)
+#     data_train_mask[train_idx] = True
+#     data_val_mask[valid_idx] = True
+#     data_test_mask[test_idx] = True
+#     train_idx = data_train_mask.nonzero().squeeze()
+#     train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
+#
+#     class_num_list = [len(item) for item in train_node]
+#     idx_info = [torch.tensor(item) for item in train_node]
+#
+# else:
+#     edges = data.edge_index  # for torch_geometric librar
+#     data_y = data.y
+#     data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
+#     data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+#     data_x = data.x
+#     try:
+#         dataset_num_features = dataset.num_features
+#     except:
+#         dataset_num_features = data_x.shape[1]
 
-    labels_local = data.y.view([-1])[train_idx]
-    train_idx_list = train_idx.cpu().tolist()
-    local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
-    global2local = dict([val, key] for key, val in local2global.items())
-    idx_info_list = [item.cpu().tolist() for item in idx_info] 
-    idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list] 
 
-elif args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-    train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio, \
-                                                                valid_each=int(data.x.shape[0] * 0.1 / n_cls), \
-                                                                labeling_ratio=0.1, \
-                                                                all_idx=[i for i in range(data.x.shape[0])], \
-                                                                all_label=data.y.cpu().detach().numpy(), \
-                                                                nclass=n_cls)
-
-    data_train_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-    data_val_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-    data_test_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-    data_train_mask[train_idx] = True
-    data_val_mask[valid_idx] = True
-    data_test_mask[test_idx] = True
-    train_idx = data_train_mask.nonzero().squeeze()
-    train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
-
-    class_num_list = [len(item) for item in train_node]
-    idx_info = [torch.tensor(item) for item in train_node]
-
-else:
-    edges = data.edge_index  # for torch_geometric librar
-    data_y = data.y
-    data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
-    data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
-    data_x = data.x
-    try:
-        dataset_num_features = dataset.num_features
-    except:
-        dataset_num_features = data_x.shape[1]
-
-data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
 
 if args.net == 'GCN':
     model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
@@ -301,9 +301,6 @@ except IndexError:
 optimizer = torch.optim.Adam([dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0),], lr=args.lr)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100, verbose=False)
 
-# list_com = [(True, 20), (True, 22),(True, 2), (True, 1), (True, 4), (True, 21),  (True, 23), (False, 0)]
-# for i in range(len(list_com)):
-#     (args.WithAug, args.AugDirect) = list_com[i]
 for split in range(splits):
     if splits == 1:
         data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),
@@ -322,11 +319,6 @@ for split in range(splits):
                 data_test_mask = data_test_maskOrigin[:, 1].clone()
             except:
                 data_test_mask = data_test_maskOrigin.clone()
-
-    # data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
-    #                                                   data_val_maskOrigin[:, split].clone(),
-    #                                                   data_test_maskOrigin[:, split].clone())
-
 
     stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
     n_data = []  # num of train in each class
@@ -347,11 +339,11 @@ for split in range(splits):
                       idx_info_list]  # train nodes position inside train
 
     if args.gdc=='ppr':
-        neighbor_dist_list = get_PPR_adj(data.x, data.edge_index[:,train_edge_mask], alpha=0.05, k=128, eps=None)
+        neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
     elif args.gdc=='hk':
-        neighbor_dist_list = get_heat_adj(data.x, data.edge_index[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
+        neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
     elif args.gdc=='none':
-        neighbor_dist_list = get_ins_neighbor_dist(data.y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
+        neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
 
     best_val_acc_f1 = 0
     saliency, prev_out = None, None

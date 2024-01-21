@@ -1,7 +1,9 @@
 import os
 
+import dgl
 import torch
 import numpy as np
+from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset
 from torch_scatter import scatter_add
 from torch_geometric.datasets import WebKB, WikipediaNetwork, WikiCS
 
@@ -258,17 +260,34 @@ def load_directedData(args):
         dataset = citation_datasets(root='cora_ml/cora_ml.npz')
     elif load_func == 'citeseer_npz':
         dataset = citation_datasets(root='citeseer_npz/citeseer_npz.npz')
-    # elif load_func == 'dgl':    # Ben
-    #     subset = subset.lower()
-    #     try:
-    #         dataset = load_dgl_directed(subset)
-    #     except NotImplementedError:
-    #         print("Load data unexpected: undirected data!")
-    #         dataset = load_dgl_bidirected(args)
+    elif load_func == 'dgl':    # Ben
+        subset = subset.lower()
+        try:
+            dataset = load_dgl_directed(subset)
+        except NotImplementedError:
+            print("Load data unexpected: undirected data!")
+            dataset = load_dgl_bidirected(args)
     else:
         dataset = load_syn(args.data_path + args.dataset, None)
 
     return dataset
+
+def load_dgl_directed(subset):
+    if subset == 'citeseer':    # Nodes: 3327, Edges: 9228, Number of Classes: 6
+        return CiteseerGraphDataset(reverse_edge=False)
+
+    elif subset == 'cora':  # Nodes: 2708, Edges: 10556, Number of Classes: 7
+        return CoraGraphDataset(reverse_edge=False)
+    elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
+        dataset = PubmedGraphDataset(reverse_edge=False)
+    elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
+        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)
+    elif subset =='mutag':  # Nodes: 27163, Edges: 148100 (including reverse edges), 2 class
+        dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)
+    elif subset == 'bgs':   # Nodes: 94806,  Edges: 672884 (including reverse edges), 2 class
+        dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)
+    elif subset == 'am':   # Nodes: 881680  Edges: 5668682 (including reverse edges)
+        dataset = dgl.data.rdf.AMDataset(insert_reverse=False)
 
 def get_step_split(imb_ratio, valid_each, labeling_ratio, all_idx, all_label, nclass):
     base_valid_each = valid_each
