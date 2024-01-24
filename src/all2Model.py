@@ -562,6 +562,7 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available, using CPU.")
     device = torch.device("cpu")
+torch.cuda.set_device(device)
 
 date_time = datetime.now().strftime('%y-%m-%d-%H:%M')
 # date_time = datetime.now().strftime('%m-%d-%H:%M:%S')
