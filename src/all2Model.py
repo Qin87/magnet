@@ -702,7 +702,6 @@ for split in range(splits):
         # neighbor_dist_list = get_PPR_adj(data.x, data.edge_index[:,train_edge_mask], alpha=0.05, k=128, eps=None)
         neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
     elif args.gdc=='hk':
-        # neighbor_dist_list = get_heat_adj(data.x, data.edge_index[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
         neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
     elif args.gdc=='none':
         neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), edges[:,train_edge_mask], data_train_mask, device)
