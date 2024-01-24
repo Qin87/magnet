@@ -697,7 +697,7 @@ for split in range(splits):
     idx_info_list = [item.cpu().tolist() for item in idx_info]  # list of all train nodes for each class
     idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
                       idx_info_list]  # train nodes position inside train
-
+    print(edges.device, train_edge_mask.device)
     if args.gdc=='ppr':
         # neighbor_dist_list = get_PPR_adj(data.x, data.edge_index[:,train_edge_mask], alpha=0.05, k=128, eps=None)
         neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
