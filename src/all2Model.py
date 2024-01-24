@@ -559,10 +559,11 @@ cuda_device = args.GPUdevice
 if torch.cuda.is_available():
     print("CUDA Device Index:", cuda_device)
     device = torch.device("cuda:%d" % cuda_device)
+    torch.cuda.set_device(device)
 else:
     print("CUDA is not available, using CPU.")
     device = torch.device("cpu")
-torch.cuda.set_device(device)
+
 
 date_time = datetime.now().strftime('%y-%m-%d-%H:%M')
 # date_time = datetime.now().strftime('%m-%d-%H:%M:%S')
