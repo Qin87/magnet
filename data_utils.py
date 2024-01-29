@@ -148,7 +148,9 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
             _, remove_idx = torch.topk(degree, (r*remove_class_num_list[i])//n_round[i], largest=False)
             remove_idx = cls_idx_list[i][remove_idx]
 
-            remove_idx_list[i] = list(remove_idx.numpy())
+            # remove_idx_list[i] = list(remove_idx.numpy())
+            # Assuming remove_idx is a GPU tensor
+            remove_idx_list[i] = list(remove_idx.cpu().numpy())     # Ben for GPU
 
     # Find removed nodes
     node_mask = label.new_ones(label.size(), dtype=torch.bool)
