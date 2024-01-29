@@ -166,8 +166,8 @@ def duplicate_neighbor(total_node, edge_index, sampling_src_idx):
     col_new_col = (torch.arange(len(sampling_src_idx)).to(device) + total_node).repeat_interleave(
         Col_degree[sampling_src_idx])
     temp = scatter_add(torch.ones_like(sampling_src_idx), sampling_src_idx).to(device)  # Row_degree of anchor nodes
-    node_mask = torch.zeros(total_node, dtype=torch.bool)
-    unique_src = torch.unique(sampling_src_idx)
+    node_mask = torch.zeros(total_node, dtype=torch.bool).to(device)
+    unique_src = torch.unique(sampling_src_idx).to(device)
     node_mask[unique_src] = True  # get the torch where anchor nodes position are True
 
     row_mask = node_mask[row]  # select node in row, row_mask is bool. is Anchor node or not
@@ -179,11 +179,9 @@ def duplicate_neighbor(total_node, edge_index, sampling_src_idx):
     # print("edge_mask is ", edge_mask, edge_mask.shape)  # torch.Size([14])
     # print("new edge_mask is ", Newedge_mask, Newedge_mask.shape)  # torch.Size([9])
 
-    b_idx = torch.arange(len(unique_src)).to(device).repeat_interleave(
-        Row_degree[unique_src])  # anchor nodes' Row_degree
+    b_idx = torch.arange(len(unique_src)).to(device).repeat_interleave(Row_degree[unique_src])  # anchor nodes' Row_degree
     Col_b_idx = torch.arange(len(unique_src)).to(device).repeat_interleave(
         Col_degree[unique_src])  # anchor nodes' Row_degree
-    # print(b_idx[:10], np.shape(b_idx))  # tensor([0, 0, 1, 1, 1, 1, 2, 2, 2, 2]) torch.Size([1380])
 
     edge_dense, _ = to_dense_batch(edge_mask, b_idx, fill_value=-1)
     # Coledge_dense, _ = to_dense_batch(edge_mask, Col_b_idx, fill_value=-1)
@@ -211,10 +209,9 @@ def duplicate_neighbor(total_node, edge_index, sampling_src_idx):
     #     colcut_temp = temp[temp != 0]
 
     # print("Hi1, ", edge_dense[:10], np.shape(edge_dense))  # torch.Size([240, 29])
-    edge_dense = edge_dense.repeat_interleave(cut_temp, dim=0)
+    edge_dense = edge_dense.repeat_interleave(cut_temp, dim=0).to(device)
     row_new_col = edge_dense[edge_dense != -1]
-    # print(row_new_col, np.shape(row_new_col))   # tensor([ 723, 2614,  723,  ...,  463,   22, 1906]) torch.Size([15790])
-    inv_edge_index_row = torch.stack([row_new_col, row_new_row], dim=0)
+    inv_edge_index_row = torch.stack([row_new_col, row_new_row], dim=0).to(device)
 
     new_edge_index = torch.cat([edge_index, inv_edge_index_row], dim=1)  # original 7798 edges,
 
