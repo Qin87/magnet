@@ -48,12 +48,12 @@ def get_dataset(name, path, split_type='public'):
 
     return dataset
 
-def get_idx_info(label, n_cls, train_mask):
+def get_idx_info(label, n_cls, train_mask, device):
     index_list = torch.arange(len(label))
     idx_info = []
     for i in range(n_cls):
         print(train_mask.device, label.device)
-        cls_indices = index_list[((label == i) & train_mask)]
+        cls_indices = index_list[((label == i) & train_mask).to(device)]
         idx_info.append(cls_indices)
     return idx_info
 
