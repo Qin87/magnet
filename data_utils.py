@@ -52,13 +52,14 @@ def get_idx_info(label, n_cls, train_mask, device):
     index_list = torch.arange(len(label))
     idx_info = []
     for i in range(n_cls):
-        label = label.cpu()  # Ben for GPU run
-        train_mask = train_mask.cpu()
-        cls_indices = index_list[((label == i) & train_mask)]
+        # label = label.cpu()  # Ben for GPU run
+        # train_mask = train_mask.cpu()
+        print(train_mask.device, label.device, index_list.device)
+        cls_indices = index_list[((label == i) & train_mask).to(device)]
         idx_info.append(cls_indices)
     return idx_info
 
-def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask):
+def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask, device):
     """
 
     :param edge_index: all edges in the graph
@@ -117,7 +118,7 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
     remove_idx_list = [[] for _ in range(n_cls)]
     # print(remove_idx_list)  # [[], [], [], [], [], [], []]
     cls_idx_list = []   # nodes belong to class i
-    index_list = torch.arange(len(train_mask))
+    index_list = torch.arange(len(train_mask)).to(device)
     original_mask = train_mask.clone()
     for i in range(n_cls):
         cls_idx_list.append(index_list[(label == i) & original_mask])
