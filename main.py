@@ -11,7 +11,9 @@ from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, g
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
-    neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse
+    neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_2, \
+    neighbor_sampling_bidegree_variant2_2_, neighbor_sampling_bidegree_variant2_1, \
+    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
 from nets import create_gcn, create_gat, create_sage
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
@@ -80,6 +82,21 @@ def train(train_idx):
                 #                                                      sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,
                                                                      sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 232:
+                new_edge_index = neighbor_sampling_bidegree_variant2_2(data_x.size(0), edges,
+                                                                     sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 233:
+                new_edge_index = neighbor_sampling_bidegree_variant2_2_(data_x.size(0), edges,
+                                                                     sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 231:
+                new_edge_index = neighbor_sampling_bidegree_variant2_1(data_x.size(0), edges,
+                                                                     sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 2311:
+                new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges,
+                                                                     sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 230:
+                new_edge_index = neighbor_sampling_bidegree_variant2_0(data_x.size(0), edges,
+                                                                     sampling_src_idx, neighbor_dist_list)
 
             else:
                 raise NotImplementedError
@@ -134,12 +151,12 @@ def test():
     return accs, baccs, f1s
 
 def load_dataset():
-    # if args.IsDirectedData:
-    #     dataset = load_directedData(args)
-    # else:
-    #     path = args.data_path
-    #     path = osp.join(path, args.undirect_dataset)
-    #     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
+    if args.IsDirectedData:
+        dataset = load_directedData(args)
+    else:
+        path = args.data_path
+        path = osp.join(path, args.undirect_dataset)
+        dataset = get_dataset(args.undirect_dataset, path, split_type='full')
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # print("Dataset is ", dataset, "\nChosen from DirectedData: ", args.IsDirectedData)
 
@@ -160,7 +177,7 @@ def load_dataset():
     #     data.edge_index = to_undirected(data.edge_index)
 
     # copy GraphSHA
-    if args.Direct_dataset.split('/')[0].startswith('dgl'):
+    if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
         edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
         data_y = data.ndata['label']
         data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
