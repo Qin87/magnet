@@ -230,12 +230,7 @@ def load_dataset():
     # print("data_x", data_x.shape)  # [11701, 300])
 
     data = data.to(device)
-
     data_y = data_y.long()
-    # n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
-    # n_cls = torch.tensor(n_cls).to(device)
-    # print("Number of classes: ", n_cls)
-
     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
 args = parse_args()

@@ -52,9 +52,6 @@ def get_idx_info(label, n_cls, train_mask, device):
     index_list = torch.arange(len(label)).to(device)
     idx_info = []
     for i in range(n_cls):
-        # label = label.cpu()  # Ben for GPU run
-        # train_mask = train_mask.cpu()
-        print(train_mask.device, label.device, index_list.device)
         cls_indices = index_list[((label == i) & train_mask).to(device)]
         idx_info.append(cls_indices)
     return idx_info
@@ -149,7 +146,6 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
             remove_idx = cls_idx_list[i][remove_idx]
 
             # remove_idx_list[i] = list(remove_idx.numpy())
-            # Assuming remove_idx is a GPU tensor
             remove_idx_list[i] = list(remove_idx.cpu().numpy())     # Ben for GPU
 
     # Find removed nodes
