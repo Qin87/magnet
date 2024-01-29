@@ -266,56 +266,6 @@ data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskO
 n_cls = data_y.max().item() + 1
 data = data.to(device)
 
-# if not args.IsDirectedData and args.undirect_dataset in ['Cora', 'CiteSeer', 'PubMed']:
-#     data_train_mask, data_val_mask, data_test_mask = data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone()
-#     stats = data.y[data_train_mask]
-#     n_data = []
-#     for i in range(n_cls):
-#         data_num = (stats == i).sum()
-#         n_data.append(int(data_num.item()))
-#     idx_info = get_idx_info(data.y, n_cls, data_train_mask)
-#     class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-#         make_longtailed_data_remove(data.edge_index, data.y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
-#     train_idx = data_train_mask.nonzero().squeeze()
-#
-#     labels_local = data.y.view([-1])[train_idx]
-#     train_idx_list = train_idx.cpu().tolist()
-#     local2global = {i:train_idx_list[i] for i in range(len(train_idx_list))}
-#     global2local = dict([val, key] for key, val in local2global.items())
-#     idx_info_list = [item.cpu().tolist() for item in idx_info]
-#     idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in idx_info_list]
-#
-# elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-#     train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio, \
-#                                                                 valid_each=int(data_x.shape[0] * 0.1 / n_cls), \
-#                                                                 labeling_ratio=0.1, \
-#                                                                 all_idx=[i for i in range(data_x.shape[0])], \
-#                                                                 all_label=data_y.cpu().detach().numpy(), \
-#                                                                 nclass=n_cls)
-#
-#     data_train_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-#     data_val_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-#     data_test_mask = torch.zeros(data.x.shape[0]).bool().to(device)
-#     data_train_mask[train_idx] = True
-#     data_val_mask[valid_idx] = True
-#     data_test_mask[test_idx] = True
-#     train_idx = data_train_mask.nonzero().squeeze()
-#     train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
-#
-#     class_num_list = [len(item) for item in train_node]
-#     idx_info = [torch.tensor(item) for item in train_node]
-#
-# else:
-#     edges = data.edge_index  # for torch_geometric librar
-#     data_y = data.y
-#     data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
-#     data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
-#     data_x = data.x
-#     try:
-#         dataset_num_features = dataset.num_features
-#     except:
-#         dataset_num_features = data_x.shape[1]
-
 if args.net == 'GCN':
     model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
 elif args.net == 'GAT':
