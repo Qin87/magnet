@@ -27,7 +27,9 @@ def train(train_idx):
     model.train()
     optimizer.zero_grad()
     if args.AugDirect == 0:
-        output = model(data_x, edges[:,train_edge_mask])
+        # type 1
+        # output = model(data_x, edges[:,train_edge_mask])
+        output = model(data_x, edges)
         criterion(output[data_train_mask], data_y[data_train_mask]).backward()
     else:
         if epoch > args.warmup:
@@ -36,29 +38,47 @@ def train(train_idx):
             sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask)
 
             if args.AugDirect == 1:
-                new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
+                # new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
+                #                                    neighbor_dist_list)
+                new_edge_index = neighbor_sampling(data_x.size(0), edges, sampling_src_idx,
                                                    neighbor_dist_list)
             elif args.AugDirect == -1:
-                new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
-                                                   neighbor_dist_list)
+                # new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
+                #                                    neighbor_dist_list)
+                new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges, sampling_src_idx,
+                                                           neighbor_dist_list)
             elif args.AugDirect == 2:
-                new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges[:, train_edge_mask],
+                # new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges[:, train_edge_mask],
+                #                                           sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges,
                                                           sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 4:
-                new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges[:, train_edge_mask],
+                # new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges[:, train_edge_mask],
+                #                                                    sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges,
                                                                    sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 20:
-                new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],
+                # type 1
+                # new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],
+                #                                             sampling_src_idx,
+                #                                             neighbor_dist_list)  # has two types
+                new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges,
                                                             sampling_src_idx,
                                                             neighbor_dist_list)  # has two types
             elif args.AugDirect == 21:
-                new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],
+                # new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],
+                #                                                   sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges,
                                                                   sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 22:
-                new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],
+                # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],
+                #                                                      sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges,
                                                                      sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 23:
-                new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],
+                # new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],
+                #                                                      sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,
                                                                      sampling_src_idx, neighbor_dist_list)
 
             else:
@@ -75,6 +95,7 @@ def train(train_idx):
             new_edge_index = duplicate_neighbor(data_x.size(0), edges[:,train_edge_mask], sampling_src_idx)
             new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
+        # type 1
         output = model(new_x, new_edge_index)
         prev_out = (output[:data_x.size(0)]).detach().clone()
         add_num = output.shape[0] - data_train_mask.shape[0]
@@ -82,12 +103,14 @@ def train(train_idx):
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
         sampling_src_idx = sampling_src_idx.to(torch.long).to(data_y.device)   # Ben for GPU error
         _new_y = data_y[sampling_src_idx].clone()
-        new_y = torch.cat((data_y[data_train_mask], _new_y),dim =0)
+        new_y = torch.cat((data_y[data_train_mask], _new_y),dim=0)
         criterion(output[new_train_mask], new_y).backward()
 
     with torch.no_grad():
         model.eval()
-        output = model(data_x, edges[:,train_edge_mask])
+        # type 1
+        # output = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
+        output = model(data_x, edges)
         val_loss= F.cross_entropy(output[data_val_mask], data_y[data_val_mask])
     optimizer.step()
     scheduler.step(val_loss)
@@ -275,8 +298,6 @@ data = data.to(device)
 #         dataset_num_features = dataset.num_features
 #     except:
 #         dataset_num_features = data_x.shape[1]
-
-
 
 if args.net == 'GCN':
     model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
