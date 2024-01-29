@@ -49,7 +49,7 @@ def get_dataset(name, path, split_type='public'):
     return dataset
 
 def get_idx_info(label, n_cls, train_mask, device):
-    index_list = torch.arange(len(label))
+    index_list = torch.arange(len(label)).to(device)
     idx_info = []
     for i in range(n_cls):
         # label = label.cpu()  # Ben for GPU run
