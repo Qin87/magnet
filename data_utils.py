@@ -52,6 +52,7 @@ def get_idx_info(label, n_cls, train_mask):
     index_list = torch.arange(len(label))
     idx_info = []
     for i in range(n_cls):
+        print(train_mask.device, label.device)
         cls_indices = index_list[((label == i) & train_mask)]
         idx_info.append(cls_indices)
     return idx_info
