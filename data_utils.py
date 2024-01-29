@@ -52,8 +52,9 @@ def get_idx_info(label, n_cls, train_mask, device):
     index_list = torch.arange(len(label))
     idx_info = []
     for i in range(n_cls):
-        print(train_mask.device, label.device, idx_info.device)
-        cls_indices = index_list[((label == i) & train_mask).to(device)]
+        label = label.cpu()  # Ben for GPU run
+        train_mask = train_mask.cpu()
+        cls_indices = index_list[((label == i) & train_mask)]
         idx_info.append(cls_indices)
     return idx_info
 
