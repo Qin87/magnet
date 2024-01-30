@@ -283,10 +283,11 @@ optimizer = torch.optim.Adam(
         [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
         lr=args.lr)
 
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
-                                                           verbose=False)
+
 
 for split in range(splits):
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
+                                                           verbose=False)
     if splits == 1:
         data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),
                                                           data_val_maskOrigin.clone(),
