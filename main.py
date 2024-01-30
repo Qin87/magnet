@@ -279,13 +279,13 @@ try:
 except IndexError:
     splits = 1
 
-optimizer = torch.optim.Adam(
-        [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
-        lr=args.lr)
 
 
 
 for split in range(splits):
+    optimizer = torch.optim.Adam(
+        [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
+        lr=args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
                                                            verbose=True)
     if splits == 1:
@@ -300,7 +300,7 @@ for split in range(splits):
         except IndexError:
             print("testIndex ,", data_test_mask.shape, data_train_mask.shape, data_val_mask.shape)
             data_train_mask, data_val_mask = (
-            data_train_maskOrigin[:, split].clone(), data_val_maskOrigin[:, split].clone())
+                data_train_maskOrigin[:, split].clone(), data_val_maskOrigin[:, split].clone())
             try:
                 data_test_mask = data_test_maskOrigin[:, 1].clone()
             except:
