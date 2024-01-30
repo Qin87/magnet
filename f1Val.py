@@ -1,3 +1,4 @@
+# failed
 import os
 import os.path as osp
 import tqdm
@@ -21,6 +22,12 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 
 import warnings
 warnings.filterwarnings("ignore")
+
+def compute_f1(predictions, targets):
+    predictions = torch.argmax(predictions, dim=1).cpu().numpy()
+    targets = targets.cpu().numpy()
+    # f1 = f1_score(y_true, y_pred, average='macro')
+    return f1_score(targets, predictions, average='macro')
 
 def train(train_idx):
     # data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
@@ -125,9 +132,13 @@ def train(train_idx):
         # type 1
         # output = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         output = model(data_x, edges)
-        val_loss= F.cross_entropy(output[data_val_mask], data_y[data_val_mask])
+        # val_loss= F.cross_entropy(output[data_val_mask], data_y[data_val_mask])
+        val_f1 = compute_f1(output[data_val_mask], data_y[data_val_mask])    # Ben use F1 is metric
     optimizer.step()
-    scheduler.step(val_loss)
+    # scheduler.step(val_loss)
+
+    # Learning rate adjustment based on F1 score
+    f1_scheduler.step(val_f1)
 
     return num_features
 
@@ -279,12 +290,14 @@ try:
 except IndexError:
     splits = 1
 
-optimizer = torch.optim.Adam(
-        [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
-        lr=args.lr)
+# optimizer = torch.optim.Adam(
+#         [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
+#         lr=args.lr)
 
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
-                                                           verbose=False)
+# scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100,
+#                                                            verbose=False)
+optimizer = optim.SGD(model.parameters(), lr=0.1)        # Ben
+f1_scheduler = F1Scheduler(optimizer, factor=0.5, patience=100)     # Ben
 
 for split in range(splits):
     if splits == 1:
