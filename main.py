@@ -287,7 +287,7 @@ optimizer = torch.optim.Adam(
 
 for split in range(splits):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
-                                                           verbose=False)
+                                                           verbose=True)
     if splits == 1:
         data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),
                                                           data_val_maskOrigin.clone(),
