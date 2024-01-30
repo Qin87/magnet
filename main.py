@@ -11,8 +11,7 @@ from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, g
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
-    neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_2, \
-    neighbor_sampling_bidegree_variant2_2_, neighbor_sampling_bidegree_variant2_1, \
+    neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
 from nets import create_gcn, create_gat, create_sage
 from utils import CrossEntropy
@@ -27,6 +26,7 @@ def train(train_idx):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
+
     optimizer.zero_grad()
     if args.AugDirect == 0:
         # type 1
@@ -117,6 +117,7 @@ def train(train_idx):
         _new_y = data_y[sampling_src_idx].clone()
         new_y = torch.cat((data_y[data_train_mask], _new_y),dim=0)
         criterion(output[new_train_mask], new_y).backward()
+
 
     with torch.no_grad():
         model.eval()
@@ -276,8 +277,11 @@ try:
 except IndexError:
     splits = 1
 
-optimizer = torch.optim.Adam([dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0),], lr=args.lr)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100, verbose=False)
+optimizer = torch.optim.Adam(
+        [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
+        lr=args.lr)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100,
+                                                           verbose=False)
 
 for split in range(splits):
     if splits == 1:
@@ -324,24 +328,38 @@ for split in range(splits):
         neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
 
     best_val_acc_f1 = 0
+    best_val_f1 = 0
     saliency, prev_out = None, None
     test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
-    for epoch in tqdm.tqdm(range(args.epoch)):
+    CountNotImproved = 0
+    end_epoch =0
+    # for epoch in tqdm.tqdm(range(args.epoch)):
+    for epoch in range(args.epoch):
         train(train_idx)
         accs, baccs, f1s = test()
         train_acc, val_acc, tmp_test_acc = accs
         train_f1, val_f1, tmp_test_f1 = f1s
         val_acc_f1 = (val_acc + val_f1) / 2.
-        if val_acc_f1 > best_val_acc_f1:
-            best_val_acc_f1 = val_acc_f1
+        # if val_acc_f1 > best_val_acc_f1:
+        if val_f1 > best_val_f1:
+            # best_val_acc_f1 = val_acc_f1
+            best_val_f1 = val_f1
             test_acc = accs[2]
             test_bacc = baccs[2]
             test_f1 = f1s[2]
+        else:
+            CountNotImproved += 1
+        print('epoch: {:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(epoch, test_acc * 100, test_bacc * 100, test_f1 * 100))
+        end_epoch = epoch
+        # if CountNotImproved>100:
+        #     args.lr = 10*args.lr
+        if CountNotImproved> 500:
+            break
     if args.IsDirectedData:
         dataset_to_print = args.Direct_dataset
     else:
         dataset_to_print = args.undirect_dataset
 
-    print(args.net, dataset_to_print, args.imb_ratio, "Aug:", str(args.AugDirect))
+    print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
     print('acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(test_acc*100, test_bacc*100, test_f1*100))
 
