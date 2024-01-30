@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--warmup', type=int, default=5, help='warmup epoch')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch')
-    parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
+    parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
     # parser.add_argument('--lr', type=float, default=5e-3, help='learning rate')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer')
     parser.add_argument('--tau', type=int, default=2, help='temperature in the softmax function when calculating confidence-based node hardness')
