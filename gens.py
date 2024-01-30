@@ -252,7 +252,7 @@ def neighbor_sampling(total_node, edge_index, sampling_src_idx,
 
     # Sample degree for augmented nodes
     prob = degree_dist.unsqueeze(dim=0).repeat(len(sampling_src_idx),1)
-    aug_degree = torch.multinomial(prob, 1).to(device).squeeze(dim=1) # (m)
+    aug_degree = torch.multinomial(prob, 1).to(device).squeeze(dim=1)   # (m)
     max_degree = degree.max().item() + 1
     aug_degree = torch.min(aug_degree, degree[sampling_src_idx])
 
