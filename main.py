@@ -370,5 +370,4 @@ for split in range(splits):
         dataset_to_print = args.undirect_dataset
 
     print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
-    print('acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(test_acc*100, test_bacc*100, test_f1*100))
-
+    print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
