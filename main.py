@@ -82,12 +82,7 @@ def train(train_idx):
                 #                                                      sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,
                                                                      sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 232:
-                new_edge_index = neighbor_sampling_bidegree_variant2_2(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 233:
-                new_edge_index = neighbor_sampling_bidegree_variant2_2_(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
+
             elif args.AugDirect == 231:
                 new_edge_index = neighbor_sampling_bidegree_variant2_1(data_x.size(0), edges,
                                                                      sampling_src_idx, neighbor_dist_list)
