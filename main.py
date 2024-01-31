@@ -356,6 +356,7 @@ for split in range(splits):
             test_f1 = f1s[2]
             # print('hello')
             CountNotImproved =0
+            print('CountNotImproved reset to 0')
         else:
             CountNotImproved += 1
 
