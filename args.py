@@ -10,7 +10,9 @@ def parse_args():
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='Cora', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='cora_ml/', help='dgl/cora, citeseer_npz/ , cora_ml/,  ')
+    parser.add_argument('--Direct_dataset', type=str, default='WikiCS/', help='dgl/cora, dgl/citeseer, ..., citeseer_npz/ , cora_ml/,  WikiCS/, '
+                                                                              ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
+                                                                              'WebKB/Cornell, WebKB/texas, WebKB/wisconsin')
     # parser.add_argument('--data_path', type=str, default='datasets/', help='data path')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
     parser.add_argument('--net', type=str, choices=['GCN', 'GAT', 'SAGE'], default='SAGE', help='GNN bachbone')

@@ -170,7 +170,7 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Direct_dataset.split('/')[0], args.Direct_dataset.split('/')[1]
-    print("dataset is ", load_func, subset)  # Ben WebKB
+    # print("dataset is ", load_func, subset)  # Ben WebKB
     if load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)

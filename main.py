@@ -14,7 +14,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
-from nets import create_gcn, create_gat, create_sage
+from model_data import CreatModel
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -129,7 +129,7 @@ def train(train_idx):
     optimizer.step()
     scheduler.step(val_loss, epoch)
 
-    return num_features
+    return val_loss
 
 @torch.no_grad()
 def test():
@@ -148,88 +148,6 @@ def test():
         f1s.append(f1)
     return accs, baccs, f1s
 
-def load_dataset():
-    if args.IsDirectedData:
-        dataset = load_directedData(args)
-    else:
-        path = args.data_path
-        path = osp.join(path, args.undirect_dataset)
-        dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # print("Dataset is ", dataset, "\nChosen from DirectedData: ", args.IsDirectedData)
-
-    # if os.path.isdir(log_path) is False:
-    #     os.makedirs(log_path)
-
-    data = dataset[0]
-    data = data.to(device)
-
-    global class_num_list, idx_info, prev_out, sample_times
-    global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
-    try:
-        data.edge_weight = torch.FloatTensor(data.edge_weight)
-    except:
-        data.edge_weight = None
-
-    # if args.to_undirected:
-    #     data.edge_index = to_undirected(data.edge_index)
-
-    # copy GraphSHA
-    if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-        edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
-        data_y = data.ndata['label']
-        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
-            data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
-        data_x = data.ndata['feat']
-        dataset_num_features = data_x.shape[1]
-    # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-        edges = data.edge_index  # for torch_geometric librar
-        data_y = data.y
-        data_x = data.x
-        dataset_num_features = dataset.num_features
-
-        data_y = data_y.long()
-        n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
-        n_cls = torch.tensor(n_cls).to(device)
-
-        train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio,
-                                                                    valid_each=int(data.x.shape[0] * 0.1 / n_cls),
-                                                                    labeling_ratio=0.1,
-                                                                    all_idx=[i for i in range(data.x.shape[0])],
-                                                                    all_label=data.y.cpu().detach().numpy(),
-                                                                    nclass=n_cls)
-
-        data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
-        data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
-        data_test_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
-        data_train_maskOrigin[train_idx] = True
-        data_val_maskOrigin[valid_idx] = True
-        data_test_maskOrigin[test_idx] = True
-        train_idx = data_train_maskOrigin.nonzero().squeeze()
-        train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
-
-        class_num_list = [len(item) for item in train_node]
-        idx_info = [torch.tensor(item) for item in train_node]
-    elif dataset == 'Amazon-Photo':
-        pass
-    else:
-        edges = data.edge_index  # for torch_geometric librar
-        data_y = data.y
-        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(),data.test_mask.clone())
-        data_x = data.x
-        try:
-            dataset_num_features = dataset.num_features
-        except:
-            dataset_num_features = data_x.shape[1]
-
-    # IsDirectedGraph = test_directed(edges)
-    # print("This is directed graph: ", IsDirectedGraph)
-    # print("data_x", data_x.shape)  # [11701, 300])
-
-    data = data.to(device)
-    data_y = data_y.long()
-    return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
 args = parse_args()
 seed = args.seed
@@ -256,18 +174,11 @@ else:
     path = osp.join(path, args.undirect_dataset)
     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
+data = data.to(device)
 n_cls = data_y.max().item() + 1
 data = data.to(device)
 
-if args.net == 'GCN':
-    model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
-elif args.net == 'GAT':
-    model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
-elif args.net == "SAGE":
-    model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
-else:
-    raise NotImplementedError("Not Implemented Architecture!")
-
+model = CreatModel(args, num_features, n_cls, data_x, device)
 model = model.to(device)
 criterion = CrossEntropy().to(device)
 
@@ -344,7 +255,7 @@ for split in range(splits):
     end_epoch =0
     # for epoch in tqdm.tqdm(range(args.epoch)):
     for epoch in range(args.epoch):
-        train(train_idx)
+        val_loss = train(train_idx)
         accs, baccs, f1s = test()
         train_acc, val_acc, tmp_test_acc = accs
         train_f1, val_f1, tmp_test_f1 = f1s
@@ -360,11 +271,11 @@ for split in range(splits):
             test_f1 = f1s[2]
             # print('hello')
             CountNotImproved =0
-            print('CountNotImproved reset to 0')
+            print('test_f1 CountNotImproved reset to 0 in epoch', epoch)
         else:
             CountNotImproved += 1
 
-        print('epoch: {:3d}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+        print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
         end_epoch = epoch
         if CountNotImproved> 800:
             break
