@@ -130,7 +130,7 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
             # print("Setting some as false", node_mask[:10])
 
             # Remove connection with removed nodes
-            row, col = edge_index[0], edge_index[1]
+            row, col = edge_index[0].to(device), edge_index[1].to(device)
             # print("row is ", row.shape, row[:10])
             # # torch.Size([10556]) tensor([0, 0, 0, 1, 1, 1, 2, 2, 2, 2])
             # print("col is ", row.shape, col[:10])
