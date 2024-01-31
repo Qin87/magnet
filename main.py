@@ -23,7 +23,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def train(train_idx):
-    # data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
@@ -173,10 +172,9 @@ else:
     path = args.data_path
     path = osp.join(path, args.undirect_dataset)
     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args)
-data = data.to(device)
+data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+
 n_cls = data_y.max().item() + 1
-data = data.to(device)
 
 model = CreatModel(args, num_features, n_cls, data_x, device)
 model = model.to(device)

@@ -1,8 +1,14 @@
 import os
+
+import torch
+
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset
+from nets.DGCN import SymModel
+from nets.DiGCN import DiModel, DiGCN_IB
+from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
@@ -44,7 +50,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     return model
 
 
-def load_dataset(args):
+def load_dataset(args,device):
     if args.IsDirectedData:
         dataset = load_directedData(args)
     else:
@@ -122,5 +128,12 @@ def load_dataset(args):
     # print("data_x", data_x.shape)  # [11701, 300])
 
 
-    data_y = data_y.long()
+    data = data.to(device)
+    data_x = data_x.to(device)
+    data_y = data_y.long().to(device)
+    edges = edges.to(device)
+    dataset_num_features = dataset_num_features.to(device)
+    data_train_maskOrigin = data_train_maskOrigin.to(device)
+    data_val_maskOrigin = data_val_maskOrigin.to(device)
+    data_test_maskOrigin = data_test_maskOrigin.to(device)
     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
