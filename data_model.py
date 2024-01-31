@@ -5,7 +5,7 @@ import torch
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
-from data_utils import load_directedData, get_dataset
+from data_utils import load_directedData, get_dataset, get_step_split
 from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
 from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen
