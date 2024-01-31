@@ -14,7 +14,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
-from model_data import CreatModel
+from model_data import CreatModel, load_dataset
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -173,7 +173,7 @@ else:
     path = args.data_path
     path = osp.join(path, args.undirect_dataset)
     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset()
+data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args)
 data = data.to(device)
 n_cls = data_y.max().item() + 1
 data = data.to(device)
