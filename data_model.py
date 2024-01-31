@@ -13,24 +13,24 @@ from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen
 
 def CreatModel(args, num_features, n_cls, data_x,device):
     if args.net == 'GCN':
-        model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
+        model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
     elif args.net == 'GAT':
-        model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
+        model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
     elif args.net == "SAGE":
-        model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.n_layer)
-    elif args.method_name == 'GIN':
+        model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    elif args.net == 'GIN':
         model = GIN_ModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,
                              dropout=args.dropout, layer=args.layer)
-    elif args.method_name == 'Cheb':
+    elif args.net == 'Cheb':
         model = ChebModelBen(data_x.size(-1), n_cls, K=args.K,
                              filter_num=args.num_filter, dropout=args.dropout,
                              layer=args.layer).to(device)
-    elif args.method_name == 'APPNP':
+    elif args.net == 'APPNP':
         model = APPNP_ModelBen(data_x.size(-1), n_cls,
                                filter_num=args.num_filter, alpha=args.alpha,
                                dropout=args.dropout, layer=args.layer).to(device)
-    elif args.method_name == 'DiG':
-        if not args.method_name[-2:] == 'ib':
+    elif args.net == 'DiG':
+        if not args.net[-2:] == 'ib':
             model = DiModel(data_x.size(-1), n_cls, filter_num=args.num_filter,
                             dropout=args.dropout, layer=args.layer).to(device)
         else:
@@ -38,7 +38,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                              n_cls=n_cls, dropout=args.dropout,
                              layer=args.layer).to(device)
 
-    elif args.method_name == 'SymDiGCN':
+    elif args.net == 'SymDiGCN':
         model = SymModel(data_x.size(-1), n_cls, filter_num=args.num_filter,
                          dropout=args.dropout, layer=args.layer).to(device)
     else:

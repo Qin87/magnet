@@ -10,13 +10,17 @@ def parse_args():
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='Cora', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='WikiCS/', help='dgl/cora, dgl/citeseer, ..., citeseer_npz/ , cora_ml/,  WikiCS/, '
+    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='dgl/cora, dgl/citeseer, ..., citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/Cornell, WebKB/texas, WebKB/wisconsin')
     # parser.add_argument('--data_path', type=str, default='datasets/', help='data path')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
-    parser.add_argument('--net', type=str, choices=['GCN', 'GAT', 'SAGE'], default='SAGE', help='GNN bachbone')
-    parser.add_argument('--n_layer', type=int, default=2, help='the number of layers')
+    parser.add_argument('--net', type=str, choices=['GCN', 'GAT', 'SAGE'], default='GIN', help='GNN bachbone')
+
+    parser.add_argument('--dropout', type=float, default=0.1, help='dropout prob')
+    parser.add_argument('--num_filter', type=int, default=2, help='num of filters')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
+
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--warmup', type=int, default=5, help='warmup epoch')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch')
