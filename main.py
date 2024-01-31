@@ -127,7 +127,7 @@ def train(train_idx):
         output = model(data_x, edges)
         val_loss= F.cross_entropy(output[data_val_mask], data_y[data_val_mask])
     optimizer.step()
-    scheduler.step(val_loss)
+    scheduler.step(val_loss, epoch)
 
     return num_features
 
@@ -280,14 +280,17 @@ except IndexError:
     splits = 1
 
 
+optimizer = torch.optim.Adam(
+        [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
+        lr=args.lr)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
+                                                           verbose=True)
 
 
 for split in range(splits):
-    optimizer = torch.optim.Adam(
-        [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
-        lr=args.lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
-                                                           verbose=True)
+    # optimizer.
+    optimizer.param_groups[0]['lr'] = args.lr
+    optimizer.param_groups[1]['lr'] = args.lr
     if splits == 1:
         data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),
                                                           data_val_maskOrigin.clone(),
@@ -362,8 +365,6 @@ for split in range(splits):
 
         print('epoch: {:3d}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
         end_epoch = epoch
-        # if CountNotImproved>100:
-        #     args.lr = 10*args.lr
         if CountNotImproved> 800:
             break
     if args.IsDirectedData:
