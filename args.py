@@ -3,8 +3,8 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
 
-
-    parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
+    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
     parser.add_argument('--AugDirect', type=int, default=1, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--warmup', type=int, default=5, help='warmup epoch')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch')
-    parser.add_argument('--lr', type=float, default=10, help='learning rate')
+    parser.add_argument('--lr', type=float, default=100, help='learning rate')
     # parser.add_argument('--lr', type=float, default=5e-3, help='learning rate')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer')
     parser.add_argument('--tau', type=int, default=2, help='temperature in the softmax function when calculating confidence-based node hardness')
