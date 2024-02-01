@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import torch
 
@@ -137,3 +138,19 @@ def load_dataset(args,device):
     data_val_maskOrigin = data_val_maskOrigin.to(device)
     data_test_maskOrigin = data_test_maskOrigin.to(device)
     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
+
+def log_file(args):
+    if args.IsDirectedData:
+        dataset_to_print = args.Direct_dataset.split('/')[0]+'_'+args.Direct_dataset.split('/')[1] if len(args.Direct_dataset.split('/')) > 1 else \
+        args.Direct_dataset.split('/')[0]
+    else:
+        dataset_to_print = args.undirect_dataset
+    log_file_name = dataset_to_print+args.net+'_Aug'+str(args.AugDirect)+'_lr'+str(args.lr)+'_l2'+str(args.l2)+'_epoch'+str(args.epoch)
+    # Add a timestamp to the log file name to make it unique
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
+
+    log_directory = "~/Documents/Benlogs/"  # Change this to your desired directory
+    log_directory = os.path.expanduser(log_directory)
+
+    return log_directory, log_file_name_with_timestamp

@@ -14,7 +14,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
-from data_model import CreatModel, load_dataset
+from data_model import CreatModel, load_dataset, log_file
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -157,6 +157,9 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available, using CPU.")
     device = torch.device("cpu")
+log_directory, log_file_name_with_timestamp = log_file(args)
+with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
+    print(args, file=log_file)
 
 torch.cuda.empty_cache()
 torch.manual_seed(seed)
@@ -285,5 +288,10 @@ for split in range(splits):
     else:
         dataset_to_print = args.undirect_dataset
 
-    print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
-    print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+    with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
+        print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
+        print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+
+        print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
+        print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
+

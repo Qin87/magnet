@@ -5,12 +5,12 @@ def parse_args():
 
 
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
+    parser.add_argument('--AugDirect', type=int, default=1, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='Cora', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='dgl/cora, dgl/citeseer, ..., citeseer_npz/ , cora_ml/,  WikiCS/, '
+    parser.add_argument('--Direct_dataset', type=str, default='dgl/citeseer', help='dgl/cora, dgl/citeseer, ..., citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/Cornell, WebKB/texas, WebKB/wisconsin')
     # parser.add_argument('--data_path', type=str, default='datasets/', help='data path')
@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--warmup', type=int, default=5, help='warmup epoch')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch')
-    parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
+    parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
     # parser.add_argument('--lr', type=float, default=5e-3, help='learning rate')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer')
     parser.add_argument('--tau', type=int, default=2, help='temperature in the softmax function when calculating confidence-based node hardness')
