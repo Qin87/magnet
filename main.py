@@ -158,6 +158,7 @@ else:
     print("CUDA is not available, using CPU.")
     device = torch.device("cpu")
 log_directory, log_file_name_with_timestamp = log_file(args)
+print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
 
