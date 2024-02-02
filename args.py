@@ -6,7 +6,7 @@ def parse_args():
     # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
     parser.add_argument('--IsDirectedData', action='store_false', help='The dataset is a directed graph')
     # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=23,  help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
+    parser.add_argument('--AugDirect', type=int, default=231,  help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg')
     parser.add_argument('--net', type=str, default='GAT', help='GNN bachbone, chosen from GCN, GAT, SAGE, APPNP, Cheb, DIG, SymDiGCN, GIN')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
