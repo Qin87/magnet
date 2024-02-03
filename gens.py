@@ -566,7 +566,8 @@ def neighbor_sampling_bidegree_biTrainmask(total_node, edge_index, sampling_src_
     if train_node_mask is None:
         col_train_node_mask = torch.ones_like(col_degree,dtype=torch.bool)  # the same shape as the col_degree tensor, and all elements in the mask are set to True.
         row_train_node_mask = torch.ones_like(row_degree,dtype=torch.bool)  # the same shape as the col_degree tensor, and all elements in the mask are set to True.
-
+    if torch.all(col_train_node_mask == row_train_node_mask):
+        print("train node mask is the same")        # train node mask is the same
     col_degree_dist = scatter_add(torch.ones_like(col_degree[col_train_node_mask]), col_degree[col_train_node_mask]).to(device).type(torch.float32)
     row_degree_dist = scatter_add(torch.ones_like(row_degree[row_train_node_mask]), row_degree[row_train_node_mask]).to(device).type(torch.float32)
 

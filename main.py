@@ -58,10 +58,6 @@ def train(train_idx):
                 # new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx,neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)  # has two types
 
-
-            elif args.AugDirect == 202:
-                new_edge_index = neighbor_sampling_bidegree_biTrainmask(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)
-
             elif args.AugDirect == 21:
                 # new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
