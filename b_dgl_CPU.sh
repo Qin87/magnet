@@ -7,7 +7,7 @@ Direct_dataset='dgl/cora'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=False
 unDirect_data='CiteSeer'
-net='SAGE'
+net='Cheb'
 
 generate_timestamp() {
   date +"%d%H%M%S"

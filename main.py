@@ -13,7 +13,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
-    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
+    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_biTrainmask
 from data_model import CreatModel, load_dataset, log_file
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
@@ -40,58 +40,46 @@ def train(train_idx):
             sampling_src_idx, sampling_dst_idx = sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, args.tau, args.max, args.no_mask)
 
             if args.AugDirect == 1:
-                # new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
-                #                                    neighbor_dist_list)
-                new_edge_index = neighbor_sampling(data_x.size(0), edges, sampling_src_idx,
-                                                   neighbor_dist_list)
+                # new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
+                new_edge_index = neighbor_sampling(data_x.size(0), edges, sampling_src_idx,neighbor_dist_list)
             elif args.AugDirect == -1:
-                # new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,
-                #                                    neighbor_dist_list)
-                new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges, sampling_src_idx,
-                                                           neighbor_dist_list)
+                # new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
+                new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges, sampling_src_idx,neighbor_dist_list)
+
             elif args.AugDirect == 2:
                 # new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges[:, train_edge_mask],
                 #                                           sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges,
-                                                          sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)
             elif args.AugDirect == 4:
-                # new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges[:, train_edge_mask],
-                #                                                    sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges,
-                                                                   sampling_src_idx, neighbor_dist_list)
+                # new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges[:, train_edge_mask],,sampling_src_idx,neighbor_dist_list)
+                new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)
             elif args.AugDirect == 20:
                 # type 1
-                # new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],
-                #                                             sampling_src_idx,
-                #                                             neighbor_dist_list)  # has two types
-                new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges,
-                                                            sampling_src_idx,
-                                                            neighbor_dist_list)  # has two types
+                # new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx,neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)  # has two types
+
+
+            elif args.AugDirect == 202:
+                new_edge_index = neighbor_sampling_bidegree_biTrainmask(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)
+
             elif args.AugDirect == 21:
-                # new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],
-                #                                                   sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges,
-                                                                  sampling_src_idx, neighbor_dist_list)
+                # new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 22:
-                # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],
-                #                                                      sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
+                # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 23:
-                # new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],
-                #                                                      sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
+                # new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
 
             elif args.AugDirect == 231:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2_1(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 2311:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
+
             elif args.AugDirect == 230:
-                new_edge_index = neighbor_sampling_bidegree_variant2_0(data_x.size(0), edges,
-                                                                     sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2_0(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
+
 
             else:
                 raise NotImplementedError
