@@ -24,7 +24,7 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 import warnings
 warnings.filterwarnings("ignore")
 
-def train(train_idx):
+def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
@@ -141,7 +141,31 @@ def train(train_idx):
         model.eval()
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
-        out = model(data_x, edges)
+        # out = model(data_x, edges)
+        if args.net == 'SymDiGCN':
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+
+        elif args.net == 'DiG':
+            # must keep this, don't know why, but will be error without it----to analysis it later
+            edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+            edge_index1 = edge_index1.to(device)
+            edge_weights1 = edge_weights1.to(device)
+            if args.net[-2:] == 'ib':
+                edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                edge_index2 = edge_index2.to(device)
+                edge_weights2 = edge_weights2.to(device)
+                SparseEdges = (edge_index1, edge_index2)
+                edge_weight = (edge_weights1, edge_weights2)
+                del edge_index2, edge_weights2
+            else:
+                SparseEdges = edge_index1
+                edge_weight = edge_weights1
+            del edge_index1, edge_weights1
+
+            out = model(data_x, SparseEdges, edge_weight)
+        else:
+            out = model(data_x, edges)
         val_loss= F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
     optimizer.step()
     scheduler.step(val_loss, epoch)
@@ -151,7 +175,13 @@ def train(train_idx):
 @torch.no_grad()
 def test():
     model.eval()
-    logits = model(data_x, edges[:,train_edge_mask])
+    # logits = model(data_x, edges[:,train_edge_mask])
+    if args.net == 'SymDiGCN':
+        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
+    elif args.net == 'DiG':
+        logits = model(data_x, SparseEdges, edge_weight)
+    else:
+        logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
     for mask in [data_train_mask, data_val_mask, data_test_mask]:
         pred = logits[mask].max(1)[1]
@@ -202,7 +232,15 @@ model = CreatModel(args, num_features, n_cls, data_x, device)
 model = model.to(device)
 criterion = CrossEntropy().to(device)
 
-if args.net == 'APPNP' or args.net == 'DiG':
+edge_in = None
+in_weight = None
+edge_out = None
+out_weight = None
+SparseEdges = None
+edge_weight = None
+
+# if args.net == 'APPNP' or args.net == 'DiG':
+if args.net == 'DiG':
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
@@ -218,9 +256,7 @@ if args.net == 'APPNP' or args.net == 'DiG':
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges,
-                                                                         data_y.size(-1),
-                                                                         data.edge_weight)
+    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges,data_y.size(-1),data.edge_weight)
 else:
     pass
 
@@ -233,9 +269,6 @@ except IndexError:
     splits = 1
 
 
-
-
-
 for split in range(splits):
     if args.net in ['GAT', 'GCN', 'SAGE']:
         optimizer = torch.optim.Adam(
@@ -245,13 +278,8 @@ for split in range(splits):
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
                                                            verbose=True)
-    # optimizer.
-    # optimizer.param_groups[0]['lr'] = args.lr
-    # optimizer.param_groups[1]['lr'] = args.lr
     if splits == 1:
-        data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),
-                                                          data_val_maskOrigin.clone(),
-                                                          data_test_maskOrigin.clone())
+        data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
     else:
         try:
             data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
@@ -300,7 +328,7 @@ for split in range(splits):
     end_epoch =0
     # for epoch in tqdm.tqdm(range(args.epoch)):
     for epoch in range(args.epoch):
-        val_loss = train(train_idx)
+        val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         accs, baccs, f1s = test()
         train_acc, val_acc, tmp_test_acc = accs
         train_f1, val_f1, tmp_test_f1 = f1s
