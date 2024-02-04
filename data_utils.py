@@ -3,7 +3,7 @@ import os
 import dgl
 import torch
 import numpy as np
-from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset
+from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
 from torch_scatter import scatter_add
 from torch_geometric.datasets import WebKB, WikipediaNetwork, WikiCS
 
@@ -204,14 +204,19 @@ def load_dgl_directed(subset):
         return CoraGraphDataset(reverse_edge=False)
     elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
         dataset = PubmedGraphDataset(reverse_edge=False)
+    elif subset== 'coauthor':   # bidirected dataset
+        dataset = CoauthorCSDataset()
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
-        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)
+        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't work
     elif subset =='mutag':  # Nodes: 27163, Edges: 148100 (including reverse edges), 2 class
         dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)
     elif subset == 'bgs':   # Nodes: 94806,  Edges: 672884 (including reverse edges), 2 class
         dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)
     elif subset == 'am':   # Nodes: 881680  Edges: 5668682 (including reverse edges)
         dataset = dgl.data.rdf.AMDataset(insert_reverse=False)
+    else:
+        raise NotImplementedError
+    return dataset
 
 def get_step_split(imb_ratio, valid_each, labeling_ratio, all_idx, all_label, nclass):
     base_valid_each = valid_each

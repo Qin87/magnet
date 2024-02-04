@@ -9,12 +9,14 @@ from torch_geometric.graphgym import optim
 
 from args import parse_args
 from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split, load_directedData
+from edge_data import get_appr_directed_adj, get_second_directed_adj
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_biTrainmask
 from data_model import CreatModel, load_dataset, log_file
+from preprocess import F_in_out
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -29,9 +31,14 @@ def train(train_idx):
 
     optimizer.zero_grad()
     if args.AugDirect == 0:
+        if args.net == 'SymDiGCN':
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+        elif args.net == 'DiG':
+            out = model(data_x, SparseEdges, edge_weight)
+        else:
+            out = model(data_x, edges)
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])
-        out = model(data_x, edges)
         criterion(out[data_train_mask], data_y[data_train_mask]).backward()
     else:
         if epoch > args.warmup:
@@ -92,13 +99,40 @@ def train(train_idx):
             new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
         # type 1
-        out = model(new_x, new_edge_index)
+        sampling_src_idx = sampling_src_idx.to(torch.long).to(data_y.device)  # Ben for GPU error
+        _new_y = data_y[sampling_src_idx].clone()
+        # out = model(new_x, new_edge_index)
+        # Sym_edges = torch.cat([edges, new_edge_index], dim=1)
+        # Sym_edges = torch.unique(Sym_edges, dim=1)
+        Sym_new_y = torch.cat((data_y, _new_y), dim=0)
+        if args.net == 'SymDiGCN':
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
+        elif args.net == 'APPNP' or args.net == 'DiG':
+            edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
+            edge_index1 = edge_index1.to(device)
+            edge_weights1 = edge_weights1.to(device)
+            if args.net[-2:] == 'ib':
+                edge_index2, edge_weights2 = get_second_directed_adj(new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
+                edge_index2 = edge_index2.to(device)
+                edge_weights2 = edge_weights2.to(device)
+                new_SparseEdges = (edge_index1, edge_index2)
+                edge_weight = (edge_weights1, edge_weights2)
+                del edge_index2, edge_weights2
+            else:
+                new_SparseEdges = edge_index1
+                edge_weight = edge_weights1
+            del edge_index1, edge_weights1
+
+            out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
+        else:
+            out = model(new_x, new_edge_index)  # all data + aug
+
         prev_out = (out[:data_x.size(0)]).detach().clone()
         add_num = out.shape[0] - data_train_mask.shape[0]
         new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data_x.device)
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
-        sampling_src_idx = sampling_src_idx.to(torch.long).to(data_y.device)   # Ben for GPU error
-        _new_y = data_y[sampling_src_idx].clone()
+
         new_y = torch.cat((data_y[data_train_mask], _new_y),dim=0)
         criterion(out[new_train_mask], new_y).backward()
 
@@ -168,6 +202,28 @@ model = CreatModel(args, num_features, n_cls, data_x, device)
 model = model.to(device)
 criterion = CrossEntropy().to(device)
 
+if args.net == 'APPNP' or args.net == 'DiG':
+    edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+    edge_index1 = edge_index1.to(device)
+    edge_weights1 = edge_weights1.to(device)
+    if args.net[-2:] == 'ib':
+        edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        edge_index2 = edge_index2.to(device)
+        edge_weights2 = edge_weights2.to(device)
+        SparseEdges = (edge_index1, edge_index2)
+        edge_weight = (edge_weights1, edge_weights2)
+        del edge_index2, edge_weights2
+    else:
+        SparseEdges = edge_index1
+        edge_weight = edge_weights1
+    del edge_index1, edge_weights1
+elif args.net == 'SymDiGCN':
+    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges,
+                                                                         data_y.size(-1),
+                                                                         data.edge_weight)
+else:
+    pass
+
 try:
     splits = data_train_maskOrigin.shape[1]
     print("splits", splits)
@@ -175,6 +231,8 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except IndexError:
     splits = 1
+
+
 
 
 

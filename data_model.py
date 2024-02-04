@@ -77,10 +77,22 @@ def load_dataset(args,device):
 
     # copy GraphSHA
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-        edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
+        try:
+            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
+        except:
+            print(data.canonical_etypes)
+            print(data.etypes)
+            edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0)
+
         data_y = data.ndata['label']
-        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (
-            data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        print(data.ndata.keys())
+
+        try:
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        except:
+            data_train_maskOrigin = data.ndata['train_mask']
+            data_val_maskOrigin = data.ndata['val_mask']
+            data_test_maskOrigin = data.ndata['test_mask']
         data_x = data.ndata['feat']
         dataset_num_features = data_x.shape[1]
     # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
