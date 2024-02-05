@@ -1110,7 +1110,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     train_idx = train_idx.to(device)
     if torch.is_tensor(idx_info_local) and len(idx_info_local) == 1:
         idx_info_local = idx_info_local.item()  # Extract the Python scalar from the one-element tensor
-    idx_info_local = idx_info_local.to(device)
+    idx_info_local = torch.tensor(idx_info_local).to(device)
 
     src_idx_all = []
     dst_idx_all = []
