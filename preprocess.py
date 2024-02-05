@@ -244,6 +244,8 @@ def to_edge_dataset_sparse(q, edge_index, K, data_split, size, root='../dataset/
 
 
 def F_in_out(edge_index, size, edge_weight=None):
+    device = edge_index.device
+    edge_index = edge_index.long().cpu()
     if edge_weight is not None:
         a = sp.coo_matrix((edge_weight, edge_index), shape=(size, size)).tocsc()
     else:
@@ -276,9 +278,10 @@ def F_in_out(edge_index, size, edge_weight=None):
     A_in = A_in.tocoo()
     A_out = A_out.tocoo()
 
-    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long()
-    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long()
+    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)
+    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
 
-    in_weight = torch.from_numpy(A_in.data).float()
-    out_weight = torch.from_numpy(A_out.data).float()
+    in_weight = torch.from_numpy(A_in.data).float().to(device)
+    out_weight = torch.from_numpy(A_out.data).float().to(device)
+    edge_index = edge_index.to(device)  # Ben GPU
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight
