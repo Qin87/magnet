@@ -1108,7 +1108,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     # softmax is to transform a vector of real numbers into a probability distribution.
     # prev_out_local = prev_out_local.cpu()     # Ben try
     train_idx = train_idx.to(device)
-    idx_info_local = idx_info_local.to(device)
+    idx_info_local = torch.tensor(idx_info_local).to(device)
 
     src_idx_all = []
     dst_idx_all = []
