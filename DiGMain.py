@@ -231,7 +231,7 @@ in_weight = None
 edge_out = None
 out_weight = None
 SparseEdges = None
-edge_weight = None.to(device)
+edge_weight = None
 
 # if args.net == 'APPNP' or args.net == 'DiG':
 if args.net == 'DiG':
