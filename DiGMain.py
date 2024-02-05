@@ -313,6 +313,7 @@ for split in range(splits):
         neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
     elif args.gdc=='none':
         neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
+    neighbor_dist_list = neighbor_dist_list.to(device)
 
     best_val_acc_f1 = 0
     best_val_f1 = 0

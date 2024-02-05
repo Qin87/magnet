@@ -22,8 +22,8 @@ def get_ins_neighbor_dist(num_nodes, edge_index, train_mask, device):
         neighbor_dist[idx] = neighbor_dist[idx] + 1
         neighbor_dist_list.append(neighbor_dist)
 
-    neighbor_dist_list = torch.stack(neighbor_dist_list,dim=0)
-    neighbor_dist_list = F.normalize(neighbor_dist_list,dim=1,p=1)
+    neighbor_dist_list = torch.stack(neighbor_dist_list,dim=0).to(device)
+    neighbor_dist_list = F.normalize(neighbor_dist_list,dim=1,p=1).to(device)
 
     return neighbor_dist_list
 
