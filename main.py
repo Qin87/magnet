@@ -237,7 +237,7 @@ for split in range(splits):
     end_epoch =0
     # for epoch in tqdm.tqdm(range(args.epoch)):
     for epoch in range(args.epoch):
-        val_loss = train(train_idx)
+        val_loss = train(train_idx, )
         accs, baccs, f1s = test()
         train_acc, val_acc, tmp_test_acc = accs
         train_f1, val_f1, tmp_test_f1 = f1s

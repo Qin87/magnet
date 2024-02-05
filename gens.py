@@ -1098,6 +1098,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     :param no_mask:whether to mask the self class in sampling neighbor classes. default is mask
     :return:src_idx_all, dst_idx_all
     """
+    device = prev_out_local.device
     max_num, n_cls = max(class_num_list), len(class_num_list)
     if not max_flag:  # mean
         max_num = math.ceil(sum(class_num_list) / n_cls)  # determined by args
@@ -1106,6 +1107,8 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     prev_out_local = F.softmax(prev_out_local / tau, dim=1)
     # softmax is to transform a vector of real numbers into a probability distribution.
     # prev_out_local = prev_out_local.cpu()     # Ben try
+    train_idx = train_idx.to(device)
+    idx_info_local = idx_info_local.to(device)
 
     src_idx_all = []
     dst_idx_all = []
