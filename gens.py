@@ -1108,7 +1108,9 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     # softmax is to transform a vector of real numbers into a probability distribution.
     # prev_out_local = prev_out_local.cpu()     # Ben try
     train_idx = train_idx.to(device)
-    idx_info_local = torch.tensor(idx_info_local).to(device)
+    if torch.is_tensor(idx_info_local) and len(idx_info_local) == 1:
+        idx_info_local = idx_info_local.item()  # Extract the Python scalar from the one-element tensor
+    idx_info_local = idx_info_local.to(device)
 
     src_idx_all = []
     dst_idx_all = []
@@ -1126,8 +1128,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
         # print(prob)   # tensor(0.7912)
         if prob.shape == torch.Size([]):
             prob = torch.tensor([prob])
-        src_idx_local = torch.multinomial(prob + 1e-12, num,
-                                          replacement=True)  # the harder the sample, the more likely to be sampled
+        src_idx_local = torch.multinomial(prob + 1e-12, num,replacement=True)  # the harder the sample, the more likely to be sampled
         src_idx = train_idx[idx_info_local[cls_idx][src_idx_local]]  # each minor class has src_idx
 
         # second sampling
