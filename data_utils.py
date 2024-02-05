@@ -204,7 +204,7 @@ def load_dgl_directed(subset):
         return CoraGraphDataset(reverse_edge=False)
     elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
         dataset = PubmedGraphDataset(reverse_edge=False)
-    elif subset== 'coauthor':   # bidirected dataset
+    elif subset== 'coauthor':   # bidirected
         dataset = CoauthorCSDataset()
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
         dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't work

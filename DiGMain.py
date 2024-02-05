@@ -218,12 +218,6 @@ torch.backends.cudnn.benchmark = False
 random.seed(seed)
 np.random.seed(seed)
 
-if args.IsDirectedData:
-    dataset = load_directedData(args)
-else:
-    path = args.data_path
-    path = osp.join(path, args.undirect_dataset)
-    dataset = get_dataset(args.undirect_dataset, path, split_type='full')
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 
 n_cls = data_y.max().item() + 1
@@ -237,7 +231,7 @@ in_weight = None
 edge_out = None
 out_weight = None
 SparseEdges = None
-edge_weight = None
+edge_weight = None.to(device)
 
 # if args.net == 'APPNP' or args.net == 'DiG':
 if args.net == 'DiG':
@@ -256,7 +250,8 @@ if args.net == 'DiG':
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges,data_y.size(-1),data.edge_weight)
+
+    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
 else:
     pass
 
@@ -272,12 +267,12 @@ except IndexError:
 for split in range(splits):
     if args.net in ['GAT', 'GCN', 'SAGE']:
         optimizer = torch.optim.Adam(
-            [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],
-            lr=args.lr)
+            [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
+
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,
-                                                           verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
+
     if splits == 1:
         data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
     else:
@@ -356,7 +351,6 @@ for split in range(splits):
         dataset_to_print = args.Direct_dataset
     else:
         dataset_to_print = args.undirect_dataset
-
     with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
         print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
         print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))

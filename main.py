@@ -154,12 +154,6 @@ torch.backends.cudnn.benchmark = False
 random.seed(seed)
 np.random.seed(seed)
 
-if args.IsDirectedData:
-    dataset = load_directedData(args)
-else:
-    path = args.data_path
-    path = osp.join(path, args.undirect_dataset)
-    dataset = get_dataset(args.undirect_dataset, path, split_type='full')
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 
 n_cls = data_y.max().item() + 1

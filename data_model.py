@@ -64,7 +64,7 @@ def load_dataset(args,device):
     # if os.path.isdir(log_path) is False:
     #     os.makedirs(log_path)
 
-    data = dataset[0]
+    data = dataset[0].to(device)
     global class_num_list, idx_info, prev_out, sample_times
     global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
     try:
@@ -78,13 +78,13 @@ def load_dataset(args,device):
     # copy GraphSHA
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
         try:
-            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
+            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
         except:
             print(data.canonical_etypes)
             print(data.etypes)
-            edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0)
+            edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
 
-        data_y = data.ndata['label']
+        data_y = data.ndata['label'].to(device)
         print(data.ndata.keys())
 
         try:
@@ -97,9 +97,9 @@ def load_dataset(args,device):
         dataset_num_features = data_x.shape[1]
     # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
     elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-        edges = data.edge_index  # for torch_geometric librar
-        data_y = data.y
-        data_x = data.x
+        edges = data.edge_index.to(device)  # for torch_geometric librar
+        data_y = data.y.to(device)
+        data_x = data.x.to(device)
         dataset_num_features = dataset.num_features
 
         data_y = data_y.long()

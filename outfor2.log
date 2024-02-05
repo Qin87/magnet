@@ -1,0 +1,1 @@
+./b_dgl_CPU.sh: line 29: 880281 Killed                  nohup python3 DiGMain.py --AugDirect=$augdirect --net=$net --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data > ${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log
