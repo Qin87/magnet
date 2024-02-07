@@ -3,7 +3,7 @@ import os
 import dgl
 import torch
 import numpy as np
-from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset
+from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
 from torch_scatter import scatter_add
 from torch_geometric.datasets import WebKB, WikipediaNetwork, WikiCS
 
@@ -123,14 +123,14 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
     for i in indices.numpy():
         for r in range(1, n_round[i]+1):
             # Find removed nodes
-            node_mask = label.new_ones(label.size(), dtype=torch.bool)
+            node_mask = label.new_ones(label.size(), dtype=torch.bool).to(device)
             # new_ones is a PyTorch function used to create a new tensor of ones with the specified shape and data type.
             # print("Initialize all true: ", node_mask[:10])
             node_mask[sum(remove_idx_list, [])] = False
             # print("Setting some as false", node_mask[:10])
 
             # Remove connection with removed nodes
-            row, col = edge_index[0], edge_index[1]
+            row, col = edge_index[0].to(device), edge_index[1].to(device)
             # print("row is ", row.shape, row[:10])
             # # torch.Size([10556]) tensor([0, 0, 0, 1, 1, 1, 2, 2, 2, 2])
             # print("col is ", row.shape, col[:10])
@@ -170,7 +170,7 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Direct_dataset.split('/')[0], args.Direct_dataset.split('/')[1]
-    print("dataset is ", load_func, subset)  # Ben WebKB
+    # print("dataset is ", load_func, subset)  # Ben WebKB
     if load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)
@@ -204,14 +204,19 @@ def load_dgl_directed(subset):
         return CoraGraphDataset(reverse_edge=False)
     elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
         dataset = PubmedGraphDataset(reverse_edge=False)
+    elif subset== 'coauthor':   # bidirected
+        dataset = CoauthorCSDataset()
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
-        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)
+        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't work
     elif subset =='mutag':  # Nodes: 27163, Edges: 148100 (including reverse edges), 2 class
         dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)
     elif subset == 'bgs':   # Nodes: 94806,  Edges: 672884 (including reverse edges), 2 class
         dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)
     elif subset == 'am':   # Nodes: 881680  Edges: 5668682 (including reverse edges)
         dataset = dgl.data.rdf.AMDataset(insert_reverse=False)
+    else:
+        raise NotImplementedError
+    return dataset
 
 def get_step_split(imb_ratio, valid_each, labeling_ratio, all_idx, all_label, nclass):
     base_valid_each = valid_each

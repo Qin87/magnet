@@ -1,2 +1,0 @@
-./1GPU2PID.sh: line 22: 25897 Terminated              nohup python DiGMain.py --GPUdevice=$GPUdevice --AugDirect=$augdirect --net=$net --Direct_dataset=$Direct_dataset --undirect_dataset=$unDirect_data > ${filename}_Aug${augdirect}_T${timestamp}_GPU${./NoGPUlock.sh: line 23: 20185 Terminated              nohup python DiGMain.py --GPUdevice=$GPUdevice --AugDirect=$augdirect --net=$net --Direct_dataset=$Direct_dataset --undirect_dataset=$unDirect_data > ${filename}_Aug${augdirect}_T${timestamp}.log
-_T${timestamp}_GPU${GPUdevice}_${i}.log

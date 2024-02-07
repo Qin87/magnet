@@ -1,0 +1,10 @@
+CUDA Device Index: 0
+Namespace(IsDirectedData=True, AugDirect=21, net='APPNP', GPUdevice=0, seed=100, undirect_dataset='CiteSeer', Direct_dataset='WebKB/Cornell', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+APPNP_ModelBen(
+  (line1): Linear(in_features=1703, out_features=2, bias=True)
+  (line2): Linear(in_features=2, out_features=2, bias=True)
+  (conv1): APPNP(K=10, alpha=0.1)
+  (conv2): APPNP(K=10, alpha=0.1)
+  (Conv): Conv1d(2, 5, kernel_size=(1,), stride=(1,))
+)
+splits 10

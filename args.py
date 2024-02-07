@@ -8,14 +8,21 @@ def parse_args():
     parser.add_argument('--AugDirect', type=int, default=21
 ,help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg')
+    parser.add_argument('--net', type=str, default='SymDiGCN', help='GNN bachbone, chosen from GCN, GAT, SAGE, APPNP, Cheb, DIG, SymDiGCN, GIN')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='Cora', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='WikiCS/', help='dgl/cora, citeseer_npz/ , cora_ml/, WikiCS/ ')
+    parser.add_argument('--Direct_dataset', type=str, default='ls -', help='dgl/cora, dgl/citeseer, dgl/pubmed..., citeseer_npz/ , cora_ml/,  WikiCS/, '
+                                                                              ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
+                                                                              'WebKB/Cornell, WebKB/texas, WebKB/wisconsin')
     # parser.add_argument('--data_path', type=str, default='datasets/', help='data path')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
-    parser.add_argument('--net', type=str, choices=['GCN', 'GAT', 'SAGE', 'GIN', 'APPNP', 'DiG', 'Cheb', 'SymDiGCN'], default='GCN', help='GNN bachbone')
-    parser.add_argument('--n_layer', type=int, default=2, help='the number of layers')
+    parser.add_argument('--dropout', type=float, default=0.1, help='dropout prob')
+    parser.add_argument('--num_filter', type=int, default=2, help='num of filters')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
+    parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
+
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--warmup', type=int, default=5, help='warmup epoch')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch')

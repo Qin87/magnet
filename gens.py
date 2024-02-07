@@ -478,6 +478,79 @@ def neighbor_sampling_bidegree(total_node, edge_index, sampling_src_idx,
     mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx]
     # print(neighbor_dist_list)
 
+    # Compute tgt_degree
+    tgt = edge_index[1]
+    src = edge_index[0]
+    tgt_degree = scatter_add(torch.ones_like(tgt), tgt)  # Ben only col tgt_degree
+    src_degree = scatter_add(torch.ones_like(src), src)  # Ben only col tgt_degree
+
+    if len(tgt_degree) < total_node:
+        tgt_degree = torch.cat([tgt_degree, tgt_degree.new_zeros(total_node - len(tgt_degree))], dim=0)
+    if len(src_degree) < total_node:
+        src_degree = torch.cat([src_degree, src_degree.new_zeros(total_node - len(src_degree))], dim=0)
+    if train_node_mask is None:
+        train_node_mask = torch.ones_like(tgt_degree,dtype=torch.bool)  # the same shape as the tgt_degree tensor, and all elements in the mask are set to True.
+
+    tgt_degree_dist = scatter_add(torch.ones_like(tgt_degree[train_node_mask]), tgt_degree[train_node_mask]).to(device).type(torch.float32)
+    src_degree_dist = scatter_add(torch.ones_like(src_degree[train_node_mask]), src_degree[train_node_mask]).to(device).type(torch.float32)
+
+    # Sample tgt_degree for augmented nodes
+    tgt_prob = tgt_degree_dist.unsqueeze(dim=0).repeat(len(sampling_src_idx), 1)
+    src_prob = src_degree_dist.unsqueeze(dim=0).repeat(len(sampling_src_idx), 1)
+    tgt_aug_degree = torch.multinomial(tgt_prob, 1).to(device).squeeze(dim=1)  # (m)
+    src_aug_degree = torch.multinomial(src_prob, 1).to(device).squeeze(dim=1)  # (m)
+    tgt_max_degree = tgt_degree.max().item() + 1
+    src_max_degree = src_degree.max().item() + 1
+    tgt_aug_degree = torch.min(tgt_aug_degree, tgt_degree[sampling_src_idx])
+    src_aug_degree = torch.min(src_aug_degree, src_degree[sampling_src_idx])
+
+    # Sample neighbors
+    tgt_new_tgt = torch.multinomial(mixed_neighbor_dist + 1e-12, tgt_max_degree)
+    src_new_tgt = torch.multinomial(mixed_neighbor_dist + 1e-12, src_max_degree)
+    # print("hhh", mixed_neighbor_dist, 'eewe', tgt_new_tgt)
+    tgt_tgt_index = torch.arange(tgt_max_degree).unsqueeze(dim=0).to(device)
+    src_tgt_index = torch.arange(src_max_degree).unsqueeze(dim=0).to(device)
+    tgt_new_tgt = tgt_new_tgt[(tgt_tgt_index - tgt_aug_degree.unsqueeze(dim=1) < 0)]
+    src_new_src = src_new_tgt[(src_tgt_index - src_aug_degree.unsqueeze(dim=1) < 0)]
+
+    tgt_new_src = (torch.arange(len(sampling_src_idx)).to(device) + total_node)
+    src_new_tgt = (torch.arange(len(sampling_src_idx)).to(device) + total_node)
+    tgt_new_src = tgt_new_src.repeat_interleave(tgt_aug_degree)
+    src_new_tgt = src_new_tgt.repeat_interleave(src_aug_degree)
+    # tgt_inv_edge_index = torch.stack([tgt_new_tgt, tgt_new_src], dim=0)
+    # src_inv_edge_index = torch.stack([src_new_tgt, src_new_src], dim=0)
+    tgt_inv_edge_index = torch.stack([tgt_new_src, tgt_new_tgt], dim=0)  # Ben change direction
+    src_inv_edge_index = torch.stack([src_new_src, src_new_tgt], dim=0)
+    new_edge_index = torch.cat([edge_index, tgt_inv_edge_index, src_inv_edge_index], dim=1)
+
+    return new_edge_index
+
+def neighbor_sampling_bidegree_biTrainmask(total_node, edge_index, sampling_src_idx,neighbor_dist_list, train_node_mask=None):
+    """
+    two degrees in row and col.
+    Neighbor Sampling - Mix adjacent node distribution and samples neighbors from it
+    Input:
+        total_node:         # of nodes; scalar
+        edge_index:         Edge index; [2, # of edges]
+        sampling_src_idx:   Source node index for augmented nodes; [# of augmented nodes]
+        sampling_dst_idx:   Target node index for augmented nodes; [# of augmented nodes]
+        the sources nodes has no direction
+        neighbor_dist_list: Adjacent node distribution of whole nodes; [# of nodes, # of nodes]
+        may well no direction
+        prev_out:           Model prediction of the previous step; [# of nodes, n_cls]
+        train_node_mask:    Mask for not removed nodes; [# of nodes]
+    Output:
+        new_edge_index:     original edge index + sampled edge index
+        dist_kl:            kl divergence of target nodes from source nodes; [# of sampling nodes, 1]
+    """
+    ## Exception Handling ##
+    device = edge_index.device
+    sampling_src_idx = sampling_src_idx.clone().to(device).to(torch.long)
+
+    # Find the nearest nodes and mix target pool
+    mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx]
+    # print(neighbor_dist_list)
+
     # Compute col_degree
     col = edge_index[1]
     row = edge_index[0]
@@ -489,13 +562,12 @@ def neighbor_sampling_bidegree(total_node, edge_index, sampling_src_idx,
     if len(row_degree) < total_node:
         row_degree = torch.cat([row_degree, row_degree.new_zeros(total_node - len(row_degree))], dim=0)
     if train_node_mask is None:
-        train_node_mask = torch.ones_like(col_degree,
-                                          dtype=torch.bool)  # the same shape as the col_degree tensor, and all elements in the mask are set to True.
-    col_degree_dist = scatter_add(torch.ones_like(col_degree[train_node_mask]), col_degree[train_node_mask]).to(
-        device).type(
-        torch.float32)
-    row_degree_dist = scatter_add(torch.ones_like(row_degree[train_node_mask]), row_degree[train_node_mask]).to(
-        device).type(torch.float32)
+        col_train_node_mask = torch.ones_like(col_degree,dtype=torch.bool)  # the same shape as the col_degree tensor, and all elements in the mask are set to True.
+        row_train_node_mask = torch.ones_like(row_degree,dtype=torch.bool)  # the same shape as the col_degree tensor, and all elements in the mask are set to True.
+    if torch.all(col_train_node_mask == row_train_node_mask):
+        print("train node mask is the same")        # train node mask is the same
+    col_degree_dist = scatter_add(torch.ones_like(col_degree[col_train_node_mask]), col_degree[col_train_node_mask]).to(device).type(torch.float32)
+    row_degree_dist = scatter_add(torch.ones_like(row_degree[row_train_node_mask]), row_degree[row_train_node_mask]).to(device).type(torch.float32)
 
     # Sample col_degree for augmented nodes
     col_prob = col_degree_dist.unsqueeze(dim=0).repeat(len(sampling_src_idx), 1)
@@ -1012,49 +1084,6 @@ def neighbor_sampling_BiEdge_bidegree(total_node, edge_index, sampling_src_idx,
     return new_edge_index
 
 @torch.no_grad()
-# def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, tau=2, max_flag=False, no_mask=False):
-#     max_num, n_cls = max(class_num_list), len(class_num_list)
-#     if not max_flag: # mean
-#         max_num = sum(class_num_list) / n_cls
-#     sampling_list = max_num * torch.ones(n_cls) - torch.tensor(class_num_list)
-#
-#     prev_out_local = F.softmax(prev_out_local/tau, dim=1)
-#     prev_out_local = prev_out_local.cpu()
-#
-#     src_idx_all = []
-#     dst_idx_all = []
-#     for cls_idx, num in enumerate(sampling_list):
-#         num = int(num.item())
-#         if num <= 0:
-#             continue
-#
-#         # first sampling
-#         prob = 1 - prev_out_local[idx_info_local[cls_idx]][:,cls_idx].squeeze()
-#         src_idx_local = torch.multinomial(prob + 1e-12, num, replacement=True)
-#         src_idx = train_idx[idx_info_local[cls_idx][src_idx_local]]
-#
-#         # second sampling
-#         conf_src = prev_out_local[idx_info_local[cls_idx][src_idx_local]]
-#         if not no_mask:
-#             conf_src[:,cls_idx] = 0
-#         neighbor_cls = torch.multinomial(conf_src + 1e-12, 1).squeeze().tolist()
-#
-#         # third sampling
-#         neighbor = [prev_out_local[idx_info_local[cls]][:,cls_idx] for cls in neighbor_cls]
-#         dst_idx = []
-#         for i, item in enumerate(neighbor):
-#             dst_idx_local = torch.multinomial(item + 1e-12, 1)[0]
-#             dst_idx.append(train_idx[idx_info_local[neighbor_cls[i]][dst_idx_local]])
-#         dst_idx = torch.tensor(dst_idx).to(src_idx.device)
-#
-#         src_idx_all.append(src_idx)
-#         dst_idx_all.append(dst_idx)
-#
-#     src_idx_all = torch.cat(src_idx_all)
-#     dst_idx_all = torch.cat(dst_idx_all)
-#
-#     return src_idx_all, dst_idx_all
-
 
 def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_idx, tau=2, max_flag=False,
                          no_mask=False):
@@ -1069,6 +1098,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     :param no_mask:whether to mask the self class in sampling neighbor classes. default is mask
     :return:src_idx_all, dst_idx_all
     """
+    device = prev_out_local.device
     max_num, n_cls = max(class_num_list), len(class_num_list)
     if not max_flag:  # mean
         max_num = math.ceil(sum(class_num_list) / n_cls)  # determined by args
@@ -1076,7 +1106,11 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
     # print("After warm", sampling_list)    # tensor([ 21.6667,  -2.3333,  -8.3333, -11.3333,  -3.3333,   3.6667])
     prev_out_local = F.softmax(prev_out_local / tau, dim=1)
     # softmax is to transform a vector of real numbers into a probability distribution.
-    prev_out_local = prev_out_local.cpu()
+    prev_out_local = prev_out_local.cpu()     # Ben try
+    # train_idx = train_idx.to(device)
+    # if torch.is_tensor(idx_info_local) and len(idx_info_local) == 1:
+    #     idx_info_local = idx_info_local.item()  # Extract the Python scalar from the one-element tensor
+    # idx_info_local = torch.tensor(idx_info_local).to(device)
 
     src_idx_all = []
     dst_idx_all = []
@@ -1094,8 +1128,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
         # print(prob)   # tensor(0.7912)
         if prob.shape == torch.Size([]):
             prob = torch.tensor([prob])
-        src_idx_local = torch.multinomial(prob + 1e-12, num,
-                                          replacement=True)  # the harder the sample, the more likely to be sampled
+        src_idx_local = torch.multinomial(prob + 1e-12, num,replacement=True)  # the harder the sample, the more likely to be sampled
         src_idx = train_idx[idx_info_local[cls_idx][src_idx_local]]  # each minor class has src_idx
 
         # second sampling
