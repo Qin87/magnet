@@ -3,7 +3,6 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
     parser.add_argument('--IsDirectedData', action='store_false', help='The dataset is a directed graph')
     # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
     parser.add_argument('--AugDirect', type=int, default=1,  help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
