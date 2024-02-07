@@ -108,7 +108,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         if args.net == 'SymDiGCN':
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
             out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
-        elif args.net == 'APPNP' or args.net == 'DiG':
+        # elif args.net == 'APPNP' or args.net == 'DiG':
+        elif args.net == 'DiG':
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
