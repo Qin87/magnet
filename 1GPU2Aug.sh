@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # List of AugDirect values
-augdirect_values="-1 2 4 20 21 22 23 231 2311"
-Direct_dataset='WebKB/texas'  # Set your Direct_dataset value
+augdirect_values="0 1 -1 2 4 20 21 22 23 231 2311"
+Direct_dataset='WikipediaNetwork/squirrel'  # Set your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
-IsDirData=True
-unDirect_data='CiteSeer'
-net='GAT'
+IsDirData=False
+unDirect_data='PubMed'
+net='SymDiGCN'
 
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -30,7 +30,7 @@ for augdirect in $augdirect_values; do
   fi
 
   # Run the process
-  nohup python DiGMain.py --GPUdevice=2 --AugDirect=$augdirect --net=$net \
+  nohup python DiGMain.py --GPUdevice=1 --AugDirect=$augdirect --net=$net \
     --Direct_dataset=$Direct_dataset --undirect_dataset=$unDirect_data \
     > "${filename}_Aug${augdirect}_T$(generate_timestamp)_${i}.log" &
 

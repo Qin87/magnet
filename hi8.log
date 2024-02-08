@@ -1,0 +1,30 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 67, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.local/lib/python3.11/site-packages/torch_geometric/data/data.py", line 297, in to
+    return self.apply(
+           ^^^^^^^^^^^
+  File "/home/qj2004/.local/lib/python3.11/site-packages/torch_geometric/data/data.py", line 280, in apply
+    store.apply(func, *args)
+  File "/home/qj2004/.local/lib/python3.11/site-packages/torch_geometric/data/storage.py", line 191, in apply
+    self[key] = recursive_apply(value, func)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.local/lib/python3.11/site-packages/torch_geometric/data/storage.py", line 743, in recursive_apply
+    return func(data)
+           ^^^^^^^^^^
+  File "/home/qj2004/.local/lib/python3.11/site-packages/torch_geometric/data/data.py", line 298, in <lambda>
+    lambda x: x.to(device=device, non_blocking=non_blocking), *args)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: out of memory
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+./1GPU2Aug.sh: line 43: _pid: command not found
+./1GPU2Aug.sh: line 44: syntax error near unexpected token `done'
+./1GPU2Aug.sh: line 44: `done'

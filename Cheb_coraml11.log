@@ -1,0 +1,3 @@
+nohup: ignoring input
+./1GPU2Aug.sh: line 43: syntax error near unexpected token `done'
+./1GPU2Aug.sh: line 43: `done'
