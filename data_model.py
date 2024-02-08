@@ -63,10 +63,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                          dropout=args.dropout, layer=args.layer).to(device)
     else:
         raise NotImplementedError("Not Implemented Architecture!")
-    try:
-        print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
-    except:
-        pass
+    # try:
+    #     print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
+    # except:
+    #     pass
     return model
 
 
