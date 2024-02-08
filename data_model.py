@@ -10,16 +10,34 @@ import os.path as osp
 from data_utils import load_directedData, get_dataset, get_step_split
 from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
-from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen
+from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen
+
+
+class SAGEModelBen:
+    pass
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
-    if args.net == 'GCN':
-        model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-    elif args.net == 'GAT':
-        model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-    elif args.net == "SAGE":
-        model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    if args.net == 'GAT':
+        model = GATModelBen(data_x.size(-1), n_cls, heads=args.heads,filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+
+        # model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
+        #                    nlayer=args.n_layer)  # SHA
+    elif args.net == 'GCN':
+        model = GCNModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+
+        # model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
+        #                    nlayer=args.n_layer)  # SHA
+    elif args.net == 'SAGE':
+        model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout, layer=args.layer).to(device)
+        # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
+        #                     nlayer=args.n_layer)
+    # if args.net == 'GCN':
+    #     model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    # elif args.net == 'GAT':
+    #     model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    # elif args.net == "SAGE":
+    #     model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
     elif args.net == 'GIN':
         model = GIN_ModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,
                              dropout=args.dropout, layer=args.layer)
@@ -73,9 +91,7 @@ def load_dataset(args,device):
     except:
         data.edge_weight = None
 
-    if args.to_undirected:
-        data.edge_index = to_undirectedBen(data.edge_index)
-        print("Converted to undirected data")
+
 
     # copy GraphSHA
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
@@ -137,6 +153,10 @@ def load_dataset(args,device):
             dataset_num_features = dataset.num_features
         except:
             dataset_num_features = data_x.shape[1]
+
+    if args.to_undirected:
+        edges = to_undirectedBen(edges)
+        print("Converted to undirected data")
 
     # IsDirectedGraph = test_directed(edges)
     # print("This is directed graph: ", IsDirectedGraph)

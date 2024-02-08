@@ -704,3 +704,95 @@ class GIN_Model(torch.nn.Module):
         x = x.permute((0, 2, 1)).squeeze()
 
         return F.log_softmax(x, dim=1)
+
+
+class GATModelBen(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, heads, filter_num, dropout=False, layer=2):
+        super(GATModelBen, self).__init__()
+        self.dropout = dropout
+        self.conv1 = GATConv(input_dim, filter_num, heads=heads)
+        self.conv2 = GATConv(filter_num * heads, filter_num, heads=heads)
+        self.Conv = nn.Conv1d(filter_num * heads, out_dim, kernel_size=1)
+        self.layer = layer
+        if layer == 3:
+            self.conv3 = GATConv(filter_num * heads, filter_num, heads=heads)
+
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        if self.layer == 3:
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+
+        return F.log_softmax(x, dim=1)
+
+class GCNModelBen(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
+        super(GCNModelBen, self).__init__()
+        self.dropout = dropout
+        self.conv1 = GCNConv(input_dim, filter_num)
+        self.conv2 = GCNConv(filter_num, filter_num)
+        self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+
+        self.layer = layer
+        if layer == 3:
+            self.conv3 = GCNConv(filter_num, filter_num)
+
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)      # adds a singleton dimension at the beginning of the tensor x.
+        x = x.permute((0, 2, 1))    # If the original shape of x was [batch_size, original_dim1, original_dim2], the result of this permutation will be [batch_size, original_dim2, original_dim1].
+        x = self.Conv(x)    # applies a convolutional operation (assuming self.Conv is a convolutional layer) to the tensor x
+        x = x.permute((0, 2, 1)).squeeze()
+
+        return F.log_softmax(x, dim=1)
+
+    class SAGEModelBen(torch.nn.Module):
+        def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
+            super(SAGEModelBen, self).__init__()
+            self.dropout = dropout
+            self.conv1 = SAGEConv(input_dim, filter_num)
+            self.conv2 = SAGEConv(filter_num, filter_num)
+            self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+
+            self.layer = layer
+            if layer == 3:
+                self.conv3 = SAGEConv(filter_num, filter_num)
+
+        def forward(self, x, edge_index):
+            x = self.conv1(x, edge_index)
+            x = F.relu(x)
+            x = self.conv2(x, edge_index)
+            x = F.relu(x)
+
+            if self.layer == 3:
+                x = self.conv3(x, edge_index)
+                x = F.relu(x)
+
+            if self.dropout > 0:
+                x = F.dropout(x, self.dropout, training=self.training)
+            x = x.unsqueeze(0)
+            x = x.permute((0, 2, 1))
+            x = self.Conv(x)
+            x = x.permute((0, 2, 1)).squeeze()
+
+            return F.log_softmax(x, dim=1)

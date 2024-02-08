@@ -239,6 +239,7 @@ def neighbor_sampling(total_node, edge_index, sampling_src_idx,
     sampling_src_idx = sampling_src_idx.clone().to(device)
     
     # Find the nearest nodes and mix target pool
+    sampling_src_idx = sampling_src_idx.long()
     mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx]
 
     # Compute degree
@@ -289,6 +290,7 @@ def neighbor_sampling_reverse(total_node, edge_index, sampling_src_idx,
     sampling_src_idx = sampling_src_idx.clone().to(device)
 
     # Find the nearest nodes and mix target pool
+    sampling_src_idx = sampling_src_idx.long()
     mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx]
 
     # Compute degree
