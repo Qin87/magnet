@@ -266,11 +266,12 @@ except IndexError:
 
 
 for split in range(splits):
-    if args.net in ['GAT', 'GCN', 'SAGE']:
+    # if args.net in ['GAT', 'GCN', 'SAGE']:
+    try:
         optimizer = torch.optim.Adam(
             [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
 
-    else:
+    except:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
