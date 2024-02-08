@@ -351,7 +351,7 @@ for split in range(splits):
         if CountNotImproved> 800:
             break
     if args.IsDirectedData:
-        dataset_to_print = args.Direct_dataset
+        dataset_to_print = args.Direct_dataset + str(args.to_undirected)
     else:
         dataset_to_print = args.undirect_dataset
     with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
