@@ -192,9 +192,7 @@ class GATConv(MessagePassing):
         return x_j * alpha.unsqueeze(-1)
 
     def __repr__(self):
-        return '{}({}, {}, heads={})'.format(self.__class__.__name__,
-                                             self.in_channels,
-                                             self.out_channels, self.heads)
+        return '{}({}, {}, heads={})'.format(self.__class__.__name__,self.in_channels,self.out_channels, self.heads)
 
 class StandGAT1(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, is_add_self_loops=True):

@@ -1,2 +1,0 @@
-nohup: ignoring input
-./1GPU2Aug.sh: line 18: 33161 Killed                  nohup python DiGMain.py --GPUdevice=0 --AugDirect=$augdirect --net=$net --Direct_dataset=$Direct_dataset --undirect_dataset=$unDirect_data > "${filename}_Aug${augdirect}_T$(generate_timestamp)_${i}.log"

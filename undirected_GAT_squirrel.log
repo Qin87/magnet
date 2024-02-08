@@ -1,0 +1,441 @@
+nohup: ignoring input
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=0, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:00:29] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f88d39d48f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f88d3d43a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f88d3d40071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f88d3d5b54b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f88d3d95d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f88d3ea324f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f88d3da25d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f88d3db1396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f88d3d3f2a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=1, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:00:54] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f470c5768f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f470c8e5a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f470c8e2071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f470c8fd54b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f470c937d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f470ca4524f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f470c9445d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f470c953396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f470c8e12a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=-1, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:01:18] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f7948f348f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f79492a3a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f79492a0071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f79492bb54b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f79492f5d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f794940324f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f79493025d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f7949311396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f794929f2a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=2, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:01:44] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7fb6c4b588f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7fb6c4ec7a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7fb6c4ec4071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7fb6c4edf54b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7fb6c4f19d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7fb6c502724f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7fb6c4f265d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7fb6c4f35396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7fb6c4ec32a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=4, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:02:05] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f731727e8f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f73175eda92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f73175ea071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f731760554b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f731763fd53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f731774d24f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f731764c5d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f731765b396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f73175e92a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=20, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:02:27] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7fd3e054d8f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7fd3e08bca92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7fd3e08b9071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7fd3e08d454b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7fd3e090ed53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7fd3e0a1c24f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7fd3e091b5d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7fd3e092a396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7fd3e08b82a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=21, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:02:54] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f6e581a18f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f6e58510a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f6e5850d071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f6e5852854b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f6e58562d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f6e5867024f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f6e5856f5d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f6e5857e396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f6e5850c2a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=22, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:03:17] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f759b6a18f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f759ba10a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f759ba0d071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f759ba2854b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f759ba62d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f759bb7024f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f759ba6f5d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f759ba7e396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f759ba0c2a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=23, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:03:42] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f158f54b8f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f158f8baa92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f158f8b7071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f158f8d254b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f158f90cd53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f158fa1a24f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f158f9195d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f158f928396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f158f8b62a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=231, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:04:06] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f5ead1f68f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f5ead565a92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f5ead562071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f5ead57d54b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f5ead5b7d53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f5ead6c524f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f5ead5c45d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f5ead5d3396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f5ead5612a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
+CUDA Device Index: 0
+Namespace(to_undirected=True, IsDirectedData=True, AugDirect=2311, net='GAT', GPUdevice=0, seed=100, undirect_dataset='Cora', Direct_dataset='dgl/cora', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.1, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+  NumNodes: 2708
+  NumEdges: 5278
+  NumFeats: 1433
+  NumClasses: 7
+  NumTrainingSamples: 140
+  NumValidationSamples: 500
+  NumTestSamples: 1000
+Done loading data from cached files.
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 222, in <module>
+    data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 68, in load_dataset
+    data = dataset[0].to(device)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph.py", line 5709, in to
+    ret._graph = self._graph.copy_to(utils.to_dgl_context(device))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/heterograph_index.py", line 255, in copy_to
+    return _CAPI_DGLHeteroCopyTo(self, ctx.device_type, ctx.device_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "dgl/_ffi/_cython/./function.pxi", line 295, in dgl._ffi._cy3.core.FunctionBase.__call__
+  File "dgl/_ffi/_cython/./function.pxi", line 227, in dgl._ffi._cy3.core.FuncCall
+  File "dgl/_ffi/_cython/./function.pxi", line 217, in dgl._ffi._cy3.core.FuncCall3
+dgl._ffi.base.DGLError: [11:04:29] /opt/dgl/src/runtime/c_runtime_api.cc:82: Check failed: allow_missing: Device API cuda is not enabled. Please install the cuda version of dgl.
+Stack trace:
+  [bt] (0) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dmlc::LogMessageFatal::~LogMessageFatal()+0x75) [0x7f78284ab8f5]
+  [bt] (1) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPIManager::GetAPI(std::string, bool)+0x202) [0x7f782881aa92]
+  [bt] (2) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::DeviceAPI::Get(DGLContext, bool)+0x1e1) [0x7f7828817071]
+  [bt] (3) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::Empty(std::vector<long, std::allocator<long> >, DGLDataType, DGLContext)+0x13b) [0x7f782883254b]
+  [bt] (4) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::runtime::NDArray::CopyTo(DGLContext const&) const+0xc3) [0x7f782886cd53]
+  [bt] (5) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::UnitGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0x3ff) [0x7f782897a24f]
+  [bt] (6) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(dgl::HeteroGraph::CopyTo(std::shared_ptr<dgl::BaseHeteroGraph>, DGLContext const&)+0xf6) [0x7f78288795d6]
+  [bt] (7) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(+0x51b396) [0x7f7828888396]
+  [bt] (8) /home/qj2004/.conda/envs/env3.11/lib/python3.11/site-packages/dgl/libdgl.so(DGLFuncCall+0x48) [0x7f78288162a8]
+
+
+./1GPU2Aug.sh: line 35: --Direct_dataset=WikipediaNetwork/squirrel: No such file or directory
