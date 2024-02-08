@@ -514,7 +514,6 @@ def to_undirectedBen(edge_index, edge_weight=None, num_nodes=None):
     # print(edge_index, edge_index.shape)
 
     edges = [(edge_index[0][i].item(), edge_index[1][i].item()) for i in range(edge_index.shape[1])]
-    # print("Edges: ", edges)   # [(1, 90), (3, 163), (4, 8), (4, 25),
 
     set_edges = set(edges)
 

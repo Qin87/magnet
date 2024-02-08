@@ -3,6 +3,7 @@ from datetime import datetime
 
 import torch
 
+from edge_data import to_undirected, to_undirectedBen
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
@@ -72,8 +73,9 @@ def load_dataset(args,device):
     except:
         data.edge_weight = None
 
-    # if args.to_undirected:
-    #     data.edge_index = to_undirected(data.edge_index)
+    if args.to_undirected:
+        data.edge_index = to_undirectedBen(data.edge_index)
+        print("Converted to undirected data")
 
     # copy GraphSHA
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
