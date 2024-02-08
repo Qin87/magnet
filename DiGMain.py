@@ -201,10 +201,10 @@ args = parse_args()
 seed = args.seed
 cuda_device = args.GPUdevice
 if torch.cuda.is_available():
-    print("CUDA Device Index:", cuda_device)
+    print("cuda Device Index:", cuda_device)
     device = torch.device("cuda:%d" % cuda_device)
 else:
-    print("CUDA is not available, using CPU.")
+    print("cuda is not available, using CPU.")
     device = torch.device("cpu")
 log_directory, log_file_name_with_timestamp = log_file(args)
 print(args)
