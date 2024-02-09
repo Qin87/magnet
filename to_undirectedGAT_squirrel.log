@@ -1,1 +1,4 @@
 nohup: ignoring input
+./1GPU2Aug.sh: line 43: or_pids: command not found
+./1GPU2Aug.sh: line 44: syntax error near unexpected token `done'
+./1GPU2Aug.sh: line 44: `done'

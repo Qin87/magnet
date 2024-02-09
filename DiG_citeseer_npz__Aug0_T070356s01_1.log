@@ -7628,3 +7628,799 @@ epoch: 1231, val_loss:8.152218, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.34, f1:
 epoch: 1232, val_loss:8.156574, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.33, f1: 20.85
 epoch: 1233, val_loss:8.158826, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.32, f1: 20.85
 epoch: 1234, val_loss:8.161903, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.31, f1: 20.85
+epoch: 1235, val_loss:8.168415, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.31, f1: 20.85
+epoch: 1236, val_loss:8.176877, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.31, f1: 20.85
+epoch: 1237, val_loss:8.186323, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.31, f1: 20.85
+epoch: 1238, val_loss:8.197045, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.31, f1: 20.85
+epoch: 1239, val_loss:8.211672, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.31, f1: 20.85
+epoch: 1240, val_loss:8.226022, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.32, f1: 20.85
+epoch: 1241, val_loss:8.239545, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.24, f1: 20.85
+epoch: 1242, val_loss:8.252457, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.24, f1: 20.85
+epoch: 1243, val_loss:8.266749, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.25, f1: 20.85
+epoch: 1244, val_loss:8.281343, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.19, f1: 20.85
+epoch: 1245, val_loss:8.294949, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.19, f1: 20.85
+epoch: 1246, val_loss:8.274316, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.23, f1: 20.85
+epoch: 1247, val_loss:8.259789, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.20, f1: 20.85
+epoch: 1248, val_loss:8.249280, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.14, f1: 20.85
+epoch: 1249, val_loss:8.240335, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1250, val_loss:8.233690, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.17, f1: 20.85
+epoch: 1251, val_loss:8.228469, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.17, f1: 20.85
+epoch: 1252, val_loss:8.215661, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1253, val_loss:8.205871, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1254, val_loss:8.201404, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1255, val_loss:8.198092, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1256, val_loss:8.195127, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1257, val_loss:8.191714, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1258, val_loss:8.189044, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1259, val_loss:8.180219, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.17, f1: 20.85
+epoch: 1260, val_loss:8.173387, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.16, f1: 20.85
+epoch: 1261, val_loss:8.169653, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.18, f1: 20.85
+epoch: 1262, val_loss:8.169374, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.19, f1: 20.85
+epoch: 1263, val_loss:8.171947, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.19, f1: 20.85
+epoch: 1264, val_loss:8.176246, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.20, f1: 20.85
+epoch: 1265, val_loss:8.177478, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1266, val_loss:8.179547, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1267, val_loss:8.181557, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1268, val_loss:8.171954, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1269, val_loss:8.163418, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1270, val_loss:8.146681, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1271, val_loss:8.133968, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+epoch: 1272, val_loss:8.126288, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.20, f1: 20.85
+epoch: 1273, val_loss:8.122513, acc: 26.93, bacc: 32.14, tmp_test_f1: 12.21, f1: 20.85
+DiG citeseer_npz/ 100 Aug 0 EndEpoch 1273 lr 0.1
+SHAsplit  5, acc: 26.93, bacc: 32.14, f1: 20.85
+test_f1 CountNotImproved reset to 0 in epoch 0
+epoch:   0, val_loss:7.848185, acc: 10.51, bacc: 19.50, tmp_test_f1: 7.81, f1: 7.81
+test_f1 CountNotImproved reset to 0 in epoch 1
+epoch:   1, val_loss:7.861578, acc: 17.09, bacc: 23.16, tmp_test_f1: 10.27, f1: 10.27
+test_f1 CountNotImproved reset to 0 in epoch 2
+epoch:   2, val_loss:4.471898, acc: 21.21, bacc: 24.18, tmp_test_f1: 10.86, f1: 10.86
+test_f1 CountNotImproved reset to 0 in epoch 3
+epoch:   3, val_loss:3.181332, acc: 22.62, bacc: 23.78, tmp_test_f1: 11.38, f1: 11.38
+test_f1 CountNotImproved reset to 0 in epoch 4
+epoch:   4, val_loss:2.724622, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.54, f1: 11.54
+epoch:   5, val_loss:2.502256, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.40, f1: 11.54
+epoch:   6, val_loss:2.383356, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.44, f1: 11.54
+epoch:   7, val_loss:2.308283, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.34, f1: 11.54
+epoch:   8, val_loss:2.257584, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.39, f1: 11.54
+epoch:   9, val_loss:2.202688, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.71, f1: 11.54
+epoch:  10, val_loss:2.153927, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.50, f1: 11.54
+epoch:  11, val_loss:2.119923, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.41, f1: 11.54
+epoch:  12, val_loss:2.093879, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.39, f1: 11.54
+epoch:  13, val_loss:2.070546, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.44, f1: 11.54
+epoch:  14, val_loss:2.054815, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.51, f1: 11.54
+epoch:  15, val_loss:2.042115, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.37, f1: 11.54
+epoch:  16, val_loss:2.035409, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.85, f1: 11.54
+epoch:  17, val_loss:2.031344, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.92, f1: 11.54
+epoch:  18, val_loss:2.029081, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.85, f1: 11.54
+epoch:  19, val_loss:2.024905, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.85, f1: 11.54
+epoch:  20, val_loss:2.019703, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.85, f1: 11.54
+epoch:  21, val_loss:2.019992, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.92, f1: 11.54
+epoch:  22, val_loss:2.017586, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.85, f1: 11.54
+epoch:  23, val_loss:2.019908, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.79, f1: 11.54
+epoch:  24, val_loss:2.026181, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.73, f1: 11.54
+epoch:  25, val_loss:2.032475, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.67, f1: 11.54
+epoch:  26, val_loss:2.034514, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.67, f1: 11.54
+epoch:  27, val_loss:2.033950, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.60, f1: 11.54
+epoch:  28, val_loss:2.030750, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.69, f1: 11.54
+epoch:  29, val_loss:2.026057, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.59, f1: 11.54
+epoch:  30, val_loss:2.023325, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.59, f1: 11.54
+epoch:  31, val_loss:2.017216, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.59, f1: 11.54
+epoch:  32, val_loss:2.010354, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.60, f1: 11.54
+epoch:  33, val_loss:2.007130, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.61, f1: 11.54
+epoch:  34, val_loss:2.003114, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.60, f1: 11.54
+epoch:  35, val_loss:1.997491, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.59, f1: 11.54
+epoch:  36, val_loss:1.992812, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.59, f1: 11.54
+epoch:  37, val_loss:1.987382, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.59, f1: 11.54
+epoch:  38, val_loss:1.979622, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.60, f1: 11.54
+epoch:  39, val_loss:1.972287, acc: 22.96, bacc: 22.74, tmp_test_f1: 7.60, f1: 11.54
+epoch:  40, val_loss:1.964800, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.95, f1: 11.54
+epoch:  41, val_loss:1.959271, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.82, f1: 11.54
+epoch:  42, val_loss:1.956988, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.70, f1: 11.54
+epoch:  43, val_loss:1.953235, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.77, f1: 11.54
+epoch:  44, val_loss:1.951366, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.71, f1: 11.54
+epoch:  45, val_loss:1.949998, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.62, f1: 11.54
+epoch:  46, val_loss:1.949293, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.47, f1: 11.54
+epoch:  47, val_loss:1.949622, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.44, f1: 11.54
+epoch:  48, val_loss:1.949829, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.56, f1: 11.54
+epoch:  49, val_loss:1.948135, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.76, f1: 11.54
+epoch:  50, val_loss:1.948577, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.88, f1: 11.54
+epoch:  51, val_loss:1.948879, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.87, f1: 11.54
+epoch:  52, val_loss:1.949523, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.87, f1: 11.54
+epoch:  53, val_loss:1.951874, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.87, f1: 11.54
+epoch:  54, val_loss:1.956262, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.92, f1: 11.54
+epoch:  55, val_loss:1.962360, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.90, f1: 11.54
+epoch:  56, val_loss:1.969646, acc: 22.96, bacc: 22.74, tmp_test_f1: 9.99, f1: 11.54
+epoch:  57, val_loss:1.978057, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.10, f1: 11.54
+epoch:  58, val_loss:1.985429, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.02, f1: 11.54
+epoch:  59, val_loss:1.996180, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.03, f1: 11.54
+epoch:  60, val_loss:2.005555, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.03, f1: 11.54
+epoch:  61, val_loss:2.013136, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.01, f1: 11.54
+epoch:  62, val_loss:2.025167, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  63, val_loss:2.039246, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  64, val_loss:2.048543, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  65, val_loss:2.054621, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  66, val_loss:2.058884, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  67, val_loss:2.058943, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  68, val_loss:2.055535, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  69, val_loss:2.048714, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  70, val_loss:2.036983, acc: 22.96, bacc: 22.74, tmp_test_f1: 3.29, f1: 11.54
+epoch:  71, val_loss:2.022645, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.30, f1: 11.54
+epoch:  72, val_loss:2.007301, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.38, f1: 11.54
+epoch:  73, val_loss:1.993113, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.38, f1: 11.54
+epoch:  74, val_loss:1.982228, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.39, f1: 11.54
+epoch:  75, val_loss:1.969780, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.39, f1: 11.54
+epoch:  76, val_loss:1.963351, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.39, f1: 11.54
+epoch:  77, val_loss:1.957889, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.50, f1: 11.54
+epoch:  78, val_loss:1.952221, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.50, f1: 11.54
+epoch:  79, val_loss:1.948008, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.32, f1: 11.54
+epoch:  80, val_loss:1.945079, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.31, f1: 11.54
+epoch:  81, val_loss:1.941898, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.31, f1: 11.54
+epoch:  82, val_loss:1.938536, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.30, f1: 11.54
+epoch:  83, val_loss:1.935526, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.30, f1: 11.54
+epoch:  84, val_loss:1.932631, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.27, f1: 11.54
+epoch:  85, val_loss:1.930971, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.31, f1: 11.54
+epoch:  86, val_loss:1.929026, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.28, f1: 11.54
+epoch:  87, val_loss:1.930793, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.38, f1: 11.54
+epoch:  88, val_loss:1.931725, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.49, f1: 11.54
+epoch:  89, val_loss:1.932576, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.70, f1: 11.54
+epoch:  90, val_loss:1.934673, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.67, f1: 11.54
+epoch:  91, val_loss:1.937633, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.58, f1: 11.54
+epoch:  92, val_loss:1.939552, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.50, f1: 11.54
+epoch:  93, val_loss:1.940524, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.59, f1: 11.54
+epoch:  94, val_loss:1.940666, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.72, f1: 11.54
+epoch:  95, val_loss:1.940027, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.58, f1: 11.54
+epoch:  96, val_loss:1.941882, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.54, f1: 11.54
+epoch:  97, val_loss:1.945175, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.45, f1: 11.54
+epoch:  98, val_loss:1.948123, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.53, f1: 11.54
+epoch:  99, val_loss:1.949429, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.58, f1: 11.54
+epoch: 100, val_loss:1.950790, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.66, f1: 11.54
+epoch: 101, val_loss:1.950678, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.82, f1: 11.54
+epoch: 102, val_loss:1.952112, acc: 22.96, bacc: 22.74, tmp_test_f1: 10.99, f1: 11.54
+epoch: 103, val_loss:1.957435, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.11, f1: 11.54
+epoch: 104, val_loss:1.963781, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.36, f1: 11.54
+epoch: 105, val_loss:1.969573, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.35, f1: 11.54
+epoch: 106, val_loss:1.974529, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.34, f1: 11.54
+epoch: 107, val_loss:1.977155, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.32, f1: 11.54
+epoch: 108, val_loss:1.977576, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.46, f1: 11.54
+epoch: 109, val_loss:1.979847, acc: 22.96, bacc: 22.74, tmp_test_f1: 11.51, f1: 11.54
+test_f1 CountNotImproved reset to 0 in epoch 110
+epoch: 110, val_loss:1.979691, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.65, f1: 11.65
+epoch: 111, val_loss:1.979658, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.55, f1: 11.65
+epoch: 112, val_loss:1.980119, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.47, f1: 11.65
+epoch: 113, val_loss:1.978294, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.57, f1: 11.65
+epoch: 114, val_loss:1.975995, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.55, f1: 11.65
+epoch: 115, val_loss:1.974844, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.54, f1: 11.65
+epoch: 116, val_loss:1.975693, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.55, f1: 11.65
+epoch: 117, val_loss:1.975606, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.39, f1: 11.65
+epoch: 118, val_loss:1.975814, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.39, f1: 11.65
+epoch: 119, val_loss:1.980702, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.15, f1: 11.65
+epoch: 120, val_loss:1.986060, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.25, f1: 11.65
+epoch: 121, val_loss:1.993485, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.28, f1: 11.65
+epoch: 122, val_loss:2.002504, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.32, f1: 11.65
+epoch: 123, val_loss:2.008090, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.25, f1: 11.65
+epoch: 124, val_loss:2.010079, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.19, f1: 11.65
+epoch: 125, val_loss:2.011019, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.44, f1: 11.65
+epoch: 126, val_loss:2.007745, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.44, f1: 11.65
+epoch: 127, val_loss:2.003901, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.50, f1: 11.65
+epoch: 128, val_loss:1.997422, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.55, f1: 11.65
+epoch: 129, val_loss:1.990153, acc: 23.29, bacc: 20.48, tmp_test_f1: 11.62, f1: 11.65
+test_f1 CountNotImproved reset to 0 in epoch 130
+epoch: 130, val_loss:1.980983, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.74, f1: 11.74
+epoch: 131, val_loss:1.975995, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.65, f1: 11.74
+epoch: 132, val_loss:1.977892, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.61, f1: 11.74
+epoch: 133, val_loss:1.980948, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.58, f1: 11.74
+epoch: 134, val_loss:1.983210, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.43, f1: 11.74
+epoch: 135, val_loss:1.991025, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.42, f1: 11.74
+epoch: 136, val_loss:1.994118, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.38, f1: 11.74
+epoch: 137, val_loss:1.999225, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.43, f1: 11.74
+epoch: 138, val_loss:1.999500, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.53, f1: 11.74
+epoch: 139, val_loss:2.000622, acc: 23.40, bacc: 21.09, tmp_test_f1: 11.62, f1: 11.74
+test_f1 CountNotImproved reset to 0 in epoch 140
+epoch: 140, val_loss:1.999555, acc: 23.44, bacc: 21.20, tmp_test_f1: 11.76, f1: 11.76
+epoch: 141, val_loss:1.998577, acc: 23.44, bacc: 21.20, tmp_test_f1: 11.62, f1: 11.76
+epoch: 142, val_loss:2.001752, acc: 23.44, bacc: 21.20, tmp_test_f1: 11.54, f1: 11.76
+epoch: 143, val_loss:2.006676, acc: 23.44, bacc: 21.20, tmp_test_f1: 11.65, f1: 11.76
+test_f1 CountNotImproved reset to 0 in epoch 144
+epoch: 144, val_loss:2.007880, acc: 23.48, bacc: 21.52, tmp_test_f1: 11.81, f1: 11.81
+epoch: 145, val_loss:2.011195, acc: 23.48, bacc: 21.52, tmp_test_f1: 11.80, f1: 11.81
+epoch: 146, val_loss:2.014942, acc: 23.48, bacc: 21.52, tmp_test_f1: 11.74, f1: 11.81
+epoch: 147, val_loss:2.019245, acc: 23.48, bacc: 21.52, tmp_test_f1: 11.78, f1: 11.81
+test_f1 CountNotImproved reset to 0 in epoch 148
+epoch: 148, val_loss:2.021340, acc: 23.51, bacc: 21.67, tmp_test_f1: 11.88, f1: 11.88
+epoch: 149, val_loss:2.021552, acc: 23.51, bacc: 21.67, tmp_test_f1: 11.84, f1: 11.88
+epoch: 150, val_loss:2.025934, acc: 23.51, bacc: 21.67, tmp_test_f1: 11.84, f1: 11.88
+test_f1 CountNotImproved reset to 0 in epoch 151
+epoch: 151, val_loss:2.027345, acc: 23.59, bacc: 21.80, tmp_test_f1: 11.95, f1: 11.95
+test_f1 CountNotImproved reset to 0 in epoch 152
+epoch: 152, val_loss:2.023678, acc: 23.66, bacc: 21.92, tmp_test_f1: 12.04, f1: 12.04
+epoch: 153, val_loss:2.018824, acc: 23.66, bacc: 21.92, tmp_test_f1: 12.02, f1: 12.04
+epoch: 154, val_loss:2.012242, acc: 23.66, bacc: 21.92, tmp_test_f1: 12.01, f1: 12.04
+test_f1 CountNotImproved reset to 0 in epoch 155
+epoch: 155, val_loss:2.005435, acc: 23.70, bacc: 21.95, tmp_test_f1: 12.06, f1: 12.06
+epoch: 156, val_loss:2.000612, acc: 23.70, bacc: 21.95, tmp_test_f1: 12.06, f1: 12.06
+test_f1 CountNotImproved reset to 0 in epoch 157
+epoch: 157, val_loss:1.996681, acc: 23.74, bacc: 22.04, tmp_test_f1: 12.09, f1: 12.09
+epoch: 158, val_loss:1.996734, acc: 23.74, bacc: 22.04, tmp_test_f1: 12.05, f1: 12.09
+test_f1 CountNotImproved reset to 0 in epoch 159
+epoch: 159, val_loss:2.002935, acc: 23.74, bacc: 22.05, tmp_test_f1: 12.10, f1: 12.10
+test_f1 CountNotImproved reset to 0 in epoch 160
+epoch: 160, val_loss:2.007077, acc: 23.81, bacc: 22.23, tmp_test_f1: 12.19, f1: 12.19
+test_f1 CountNotImproved reset to 0 in epoch 161
+epoch: 161, val_loss:2.008494, acc: 23.92, bacc: 22.44, tmp_test_f1: 12.34, f1: 12.34
+test_f1 CountNotImproved reset to 0 in epoch 162
+epoch: 162, val_loss:2.010694, acc: 23.96, bacc: 22.47, tmp_test_f1: 12.37, f1: 12.37
+test_f1 CountNotImproved reset to 0 in epoch 163
+epoch: 163, val_loss:2.014729, acc: 24.00, bacc: 22.56, tmp_test_f1: 12.40, f1: 12.40
+epoch: 164, val_loss:2.020140, acc: 24.00, bacc: 22.56, tmp_test_f1: 12.37, f1: 12.40
+test_f1 CountNotImproved reset to 0 in epoch 165
+epoch: 165, val_loss:2.021208, acc: 24.03, bacc: 22.71, tmp_test_f1: 12.43, f1: 12.43
+epoch: 166, val_loss:2.027599, acc: 24.03, bacc: 22.71, tmp_test_f1: 12.37, f1: 12.43
+epoch: 167, val_loss:2.032664, acc: 24.03, bacc: 22.71, tmp_test_f1: 12.39, f1: 12.43
+test_f1 CountNotImproved reset to 0 in epoch 168
+epoch: 168, val_loss:2.038871, acc: 24.03, bacc: 22.90, tmp_test_f1: 12.52, f1: 12.52
+epoch: 169, val_loss:2.048602, acc: 24.03, bacc: 22.90, tmp_test_f1: 12.50, f1: 12.52
+epoch: 170, val_loss:2.053890, acc: 24.03, bacc: 22.90, tmp_test_f1: 12.47, f1: 12.52
+epoch: 171, val_loss:2.062900, acc: 24.03, bacc: 22.90, tmp_test_f1: 12.44, f1: 12.52
+test_f1 CountNotImproved reset to 0 in epoch 172
+epoch: 172, val_loss:2.071235, acc: 24.07, bacc: 22.99, tmp_test_f1: 12.52, f1: 12.52
+test_f1 CountNotImproved reset to 0 in epoch 173
+epoch: 173, val_loss:2.079859, acc: 24.15, bacc: 23.11, tmp_test_f1: 12.62, f1: 12.62
+test_f1 CountNotImproved reset to 0 in epoch 174
+epoch: 174, val_loss:2.089826, acc: 24.26, bacc: 23.22, tmp_test_f1: 12.78, f1: 12.78
+test_f1 CountNotImproved reset to 0 in epoch 175
+epoch: 175, val_loss:2.098329, acc: 24.37, bacc: 23.37, tmp_test_f1: 12.93, f1: 12.93
+test_f1 CountNotImproved reset to 0 in epoch 176
+epoch: 176, val_loss:2.108961, acc: 24.44, bacc: 23.55, tmp_test_f1: 13.01, f1: 13.01
+epoch: 177, val_loss:2.114300, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.94, f1: 13.01
+epoch: 178, val_loss:2.112312, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.92, f1: 13.01
+epoch: 179, val_loss:2.105930, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.91, f1: 13.01
+epoch: 180, val_loss:2.098444, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.91, f1: 13.01
+epoch: 181, val_loss:2.090595, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.91, f1: 13.01
+epoch: 182, val_loss:2.086394, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.84, f1: 13.01
+epoch: 183, val_loss:2.079976, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.84, f1: 13.01
+epoch: 184, val_loss:2.074513, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.87, f1: 13.01
+epoch: 185, val_loss:2.070728, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.90, f1: 13.01
+epoch: 186, val_loss:2.072260, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.95, f1: 13.01
+epoch: 187, val_loss:2.071572, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.91, f1: 13.01
+epoch: 188, val_loss:2.078179, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.87, f1: 13.01
+epoch: 189, val_loss:2.081813, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.92, f1: 13.01
+epoch: 190, val_loss:2.084692, acc: 24.44, bacc: 23.55, tmp_test_f1: 12.97, f1: 13.01
+test_f1 CountNotImproved reset to 0 in epoch 191
+epoch: 191, val_loss:2.085422, acc: 24.41, bacc: 23.71, tmp_test_f1: 13.02, f1: 13.02
+test_f1 CountNotImproved reset to 0 in epoch 192
+epoch: 192, val_loss:2.086267, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.12, f1: 13.12
+epoch: 193, val_loss:2.087713, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.06, f1: 13.12
+epoch: 194, val_loss:2.092287, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.02, f1: 13.12
+epoch: 195, val_loss:2.108440, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.08, f1: 13.12
+epoch: 196, val_loss:2.123103, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.10, f1: 13.12
+epoch: 197, val_loss:2.137764, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.11, f1: 13.12
+epoch: 198, val_loss:2.147541, acc: 24.48, bacc: 23.83, tmp_test_f1: 13.09, f1: 13.12
+test_f1 CountNotImproved reset to 0 in epoch 199
+epoch: 199, val_loss:2.152128, acc: 24.29, bacc: 24.00, tmp_test_f1: 13.13, f1: 13.13
+epoch: 200, val_loss:2.149279, acc: 24.29, bacc: 24.00, tmp_test_f1: 13.12, f1: 13.13
+test_f1 CountNotImproved reset to 0 in epoch 201
+epoch: 201, val_loss:2.143446, acc: 24.29, bacc: 24.01, tmp_test_f1: 13.17, f1: 13.17
+test_f1 CountNotImproved reset to 0 in epoch 202
+epoch: 202, val_loss:2.137659, acc: 24.29, bacc: 24.01, tmp_test_f1: 13.21, f1: 13.21
+test_f1 CountNotImproved reset to 0 in epoch 203
+epoch: 203, val_loss:2.129043, acc: 24.29, bacc: 24.02, tmp_test_f1: 13.29, f1: 13.29
+test_f1 CountNotImproved reset to 0 in epoch 204
+epoch: 204, val_loss:2.122080, acc: 24.37, bacc: 24.14, tmp_test_f1: 13.38, f1: 13.38
+test_f1 CountNotImproved reset to 0 in epoch 205
+epoch: 205, val_loss:2.122054, acc: 24.41, bacc: 24.18, tmp_test_f1: 13.44, f1: 13.44
+test_f1 CountNotImproved reset to 0 in epoch 206
+epoch: 206, val_loss:2.121236, acc: 24.44, bacc: 24.21, tmp_test_f1: 13.50, f1: 13.50
+test_f1 CountNotImproved reset to 0 in epoch 207
+epoch: 207, val_loss:2.116237, acc: 24.48, bacc: 24.25, tmp_test_f1: 13.59, f1: 13.59
+test_f1 CountNotImproved reset to 0 in epoch 208
+epoch: 208, val_loss:2.113002, acc: 24.52, bacc: 24.29, tmp_test_f1: 13.64, f1: 13.64
+test_f1 CountNotImproved reset to 0 in epoch 209
+epoch: 209, val_loss:2.114396, acc: 24.52, bacc: 24.29, tmp_test_f1: 13.68, f1: 13.68
+test_f1 CountNotImproved reset to 0 in epoch 210
+epoch: 210, val_loss:2.116615, acc: 24.55, bacc: 24.44, tmp_test_f1: 13.74, f1: 13.74
+epoch: 211, val_loss:2.119224, acc: 24.55, bacc: 24.44, tmp_test_f1: 13.69, f1: 13.74
+epoch: 212, val_loss:2.127562, acc: 24.55, bacc: 24.44, tmp_test_f1: 13.70, f1: 13.74
+epoch: 213, val_loss:2.136850, acc: 24.55, bacc: 24.44, tmp_test_f1: 13.68, f1: 13.74
+epoch: 214, val_loss:2.143681, acc: 24.55, bacc: 24.44, tmp_test_f1: 13.73, f1: 13.74
+test_f1 CountNotImproved reset to 0 in epoch 215
+epoch: 215, val_loss:2.148211, acc: 24.48, bacc: 24.68, tmp_test_f1: 13.78, f1: 13.78
+epoch: 216, val_loss:2.152675, acc: 24.48, bacc: 24.68, tmp_test_f1: 13.76, f1: 13.78
+test_f1 CountNotImproved reset to 0 in epoch 217
+epoch: 217, val_loss:2.151599, acc: 24.59, bacc: 25.01, tmp_test_f1: 13.90, f1: 13.90
+test_f1 CountNotImproved reset to 0 in epoch 218
+epoch: 218, val_loss:2.160342, acc: 24.59, bacc: 25.07, tmp_test_f1: 13.90, f1: 13.90
+test_f1 CountNotImproved reset to 0 in epoch 219
+epoch: 219, val_loss:2.179592, acc: 24.70, bacc: 25.23, tmp_test_f1: 14.04, f1: 14.04
+epoch: 220, val_loss:2.196735, acc: 24.70, bacc: 25.23, tmp_test_f1: 14.00, f1: 14.04
+test_f1 CountNotImproved reset to 0 in epoch 221
+epoch: 221, val_loss:2.214288, acc: 24.63, bacc: 25.24, tmp_test_f1: 14.06, f1: 14.06
+test_f1 CountNotImproved reset to 0 in epoch 222
+epoch: 222, val_loss:2.226767, acc: 24.70, bacc: 25.42, tmp_test_f1: 14.16, f1: 14.16
+test_f1 CountNotImproved reset to 0 in epoch 223
+epoch: 223, val_loss:2.243950, acc: 24.63, bacc: 25.43, tmp_test_f1: 14.18, f1: 14.18
+test_f1 CountNotImproved reset to 0 in epoch 224
+epoch: 224, val_loss:2.259975, acc: 24.67, bacc: 25.64, tmp_test_f1: 14.25, f1: 14.25
+epoch: 225, val_loss:2.271712, acc: 24.67, bacc: 25.64, tmp_test_f1: 14.23, f1: 14.25
+test_f1 CountNotImproved reset to 0 in epoch 226
+epoch: 226, val_loss:2.275500, acc: 24.67, bacc: 25.64, tmp_test_f1: 14.29, f1: 14.29
+epoch: 227, val_loss:2.277350, acc: 24.67, bacc: 25.64, tmp_test_f1: 14.28, f1: 14.29
+test_f1 CountNotImproved reset to 0 in epoch 228
+epoch: 228, val_loss:2.279892, acc: 24.63, bacc: 25.74, tmp_test_f1: 14.35, f1: 14.35
+test_f1 CountNotImproved reset to 0 in epoch 229
+epoch: 229, val_loss:2.282176, acc: 24.59, bacc: 25.84, tmp_test_f1: 14.41, f1: 14.41
+epoch: 230, val_loss:2.287245, acc: 24.59, bacc: 25.84, tmp_test_f1: 14.38, f1: 14.41
+epoch: 231, val_loss:2.293047, acc: 24.59, bacc: 25.84, tmp_test_f1: 14.36, f1: 14.41
+test_f1 CountNotImproved reset to 0 in epoch 232
+epoch: 232, val_loss:2.296643, acc: 24.55, bacc: 25.82, tmp_test_f1: 14.47, f1: 14.47
+test_f1 CountNotImproved reset to 0 in epoch 233
+epoch: 233, val_loss:2.292283, acc: 24.55, bacc: 25.82, tmp_test_f1: 14.51, f1: 14.51
+test_f1 CountNotImproved reset to 0 in epoch 234
+epoch: 234, val_loss:2.292768, acc: 25.45, bacc: 26.19, tmp_test_f1: 14.98, f1: 14.98
+test_f1 CountNotImproved reset to 0 in epoch 235
+epoch: 235, val_loss:2.199389, acc: 25.63, bacc: 25.99, tmp_test_f1: 15.11, f1: 15.11
+test_f1 CountNotImproved reset to 0 in epoch 236
+epoch: 236, val_loss:2.140821, acc: 25.78, bacc: 25.94, tmp_test_f1: 15.24, f1: 15.24
+epoch: 237, val_loss:2.102509, acc: 25.78, bacc: 25.94, tmp_test_f1: 15.20, f1: 15.24
+test_f1 CountNotImproved reset to 0 in epoch 238
+epoch: 238, val_loss:2.084767, acc: 25.89, bacc: 25.90, tmp_test_f1: 15.33, f1: 15.33
+test_f1 CountNotImproved reset to 0 in epoch 239
+epoch: 239, val_loss:2.072731, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.35, f1: 15.35
+epoch: 240, val_loss:2.063633, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.33, f1: 15.35
+epoch: 241, val_loss:2.059827, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.28, f1: 15.35
+epoch: 242, val_loss:2.054703, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.25, f1: 15.35
+epoch: 243, val_loss:2.048141, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.12, f1: 15.35
+epoch: 244, val_loss:2.044508, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.22, f1: 15.35
+epoch: 245, val_loss:2.040248, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.23, f1: 15.35
+epoch: 246, val_loss:2.036318, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.13, f1: 15.35
+epoch: 247, val_loss:2.036978, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.19, f1: 15.35
+epoch: 248, val_loss:2.040224, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.22, f1: 15.35
+epoch: 249, val_loss:2.045204, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.28, f1: 15.35
+epoch: 250, val_loss:2.051166, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.28, f1: 15.35
+epoch: 251, val_loss:2.062475, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.21, f1: 15.35
+epoch: 252, val_loss:2.071663, acc: 25.93, bacc: 25.93, tmp_test_f1: 15.32, f1: 15.35
+test_f1 CountNotImproved reset to 0 in epoch 253
+epoch: 253, val_loss:2.080951, acc: 25.89, bacc: 26.40, tmp_test_f1: 15.52, f1: 15.52
+test_f1 CountNotImproved reset to 0 in epoch 254
+epoch: 254, val_loss:2.091523, acc: 25.97, bacc: 26.53, tmp_test_f1: 15.67, f1: 15.67
+test_f1 CountNotImproved reset to 0 in epoch 255
+epoch: 255, val_loss:2.102096, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.69, f1: 15.69
+epoch: 256, val_loss:2.109714, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.64, f1: 15.69
+epoch: 257, val_loss:2.118747, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.57, f1: 15.69
+epoch: 258, val_loss:2.122927, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.65, f1: 15.69
+epoch: 259, val_loss:2.125662, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.63, f1: 15.69
+epoch: 260, val_loss:2.125279, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.57, f1: 15.69
+epoch: 261, val_loss:2.129448, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.54, f1: 15.69
+epoch: 262, val_loss:2.132854, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.57, f1: 15.69
+epoch: 263, val_loss:2.131823, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.56, f1: 15.69
+epoch: 264, val_loss:2.134602, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.68, f1: 15.69
+epoch: 265, val_loss:2.147288, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.66, f1: 15.69
+epoch: 266, val_loss:2.158432, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.60, f1: 15.69
+epoch: 267, val_loss:2.168775, acc: 25.97, bacc: 26.65, tmp_test_f1: 15.66, f1: 15.69
+test_f1 CountNotImproved reset to 0 in epoch 268
+epoch: 268, val_loss:2.176423, acc: 25.33, bacc: 26.74, tmp_test_f1: 15.75, f1: 15.75
+epoch: 269, val_loss:2.181951, acc: 25.33, bacc: 26.74, tmp_test_f1: 15.72, f1: 15.75
+test_f1 CountNotImproved reset to 0 in epoch 270
+epoch: 270, val_loss:2.183705, acc: 25.30, bacc: 26.77, tmp_test_f1: 15.79, f1: 15.79
+test_f1 CountNotImproved reset to 0 in epoch 271
+epoch: 271, val_loss:2.182093, acc: 25.37, bacc: 26.89, tmp_test_f1: 15.84, f1: 15.84
+epoch: 272, val_loss:2.177330, acc: 25.37, bacc: 26.89, tmp_test_f1: 15.79, f1: 15.84
+test_f1 CountNotImproved reset to 0 in epoch 273
+epoch: 273, val_loss:2.173849, acc: 25.37, bacc: 26.89, tmp_test_f1: 15.84, f1: 15.84
+test_f1 CountNotImproved reset to 0 in epoch 274
+epoch: 274, val_loss:2.175299, acc: 25.41, bacc: 26.98, tmp_test_f1: 15.88, f1: 15.88
+test_f1 CountNotImproved reset to 0 in epoch 275
+epoch: 275, val_loss:2.179393, acc: 25.52, bacc: 27.08, tmp_test_f1: 16.04, f1: 16.04
+test_f1 CountNotImproved reset to 0 in epoch 276
+epoch: 276, val_loss:2.188102, acc: 25.56, bacc: 27.25, tmp_test_f1: 16.22, f1: 16.22
+test_f1 CountNotImproved reset to 0 in epoch 277
+epoch: 277, val_loss:2.200145, acc: 25.71, bacc: 27.40, tmp_test_f1: 16.47, f1: 16.47
+test_f1 CountNotImproved reset to 0 in epoch 278
+epoch: 278, val_loss:2.216842, acc: 25.82, bacc: 27.53, tmp_test_f1: 16.57, f1: 16.57
+test_f1 CountNotImproved reset to 0 in epoch 279
+epoch: 279, val_loss:2.228837, acc: 25.82, bacc: 27.60, tmp_test_f1: 16.65, f1: 16.65
+epoch: 280, val_loss:2.247858, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.65, f1: 16.65
+epoch: 281, val_loss:2.266074, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.64, f1: 16.65
+epoch: 282, val_loss:2.284416, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.65, f1: 16.65
+epoch: 283, val_loss:2.301839, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.67, f1: 16.65
+epoch: 284, val_loss:2.321985, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.67, f1: 16.65
+epoch: 285, val_loss:2.341127, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.72, f1: 16.65
+epoch: 286, val_loss:2.352429, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.67, f1: 16.65
+Epoch 00287: reducing learning rate of group 0 to 5.0000e-02.
+epoch: 287, val_loss:2.376757, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.97, f1: 16.65
+epoch: 288, val_loss:2.242815, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.06, f1: 16.65
+epoch: 289, val_loss:2.198182, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.13, f1: 16.65
+epoch: 290, val_loss:2.169386, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.15, f1: 16.65
+epoch: 291, val_loss:2.154615, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.06, f1: 16.65
+epoch: 292, val_loss:2.148594, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.06, f1: 16.65
+epoch: 293, val_loss:2.149311, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.03, f1: 16.65
+epoch: 294, val_loss:2.154699, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.96, f1: 16.65
+epoch: 295, val_loss:2.160337, acc: 25.82, bacc: 27.60, tmp_test_f1: 8.00, f1: 16.65
+epoch: 296, val_loss:2.165280, acc: 25.82, bacc: 27.60, tmp_test_f1: 7.97, f1: 16.65
+test_f1 CountNotImproved reset to 0 in epoch 297
+epoch: 297, val_loss:2.166508, acc: 28.94, bacc: 28.96, tmp_test_f1: 19.03, f1: 19.03
+test_f1 CountNotImproved reset to 0 in epoch 298
+epoch: 298, val_loss:2.155994, acc: 30.20, bacc: 30.18, tmp_test_f1: 20.40, f1: 20.40
+test_f1 CountNotImproved reset to 0 in epoch 299
+epoch: 299, val_loss:2.150352, acc: 30.79, bacc: 30.68, tmp_test_f1: 20.92, f1: 20.92
+test_f1 CountNotImproved reset to 0 in epoch 300
+epoch: 300, val_loss:2.145119, acc: 31.28, bacc: 31.02, tmp_test_f1: 21.13, f1: 21.13
+test_f1 CountNotImproved reset to 0 in epoch 301
+epoch: 301, val_loss:2.140270, acc: 31.72, bacc: 31.39, tmp_test_f1: 21.31, f1: 21.31
+epoch: 302, val_loss:2.136815, acc: 31.72, bacc: 31.39, tmp_test_f1: 21.27, f1: 21.31
+epoch: 303, val_loss:2.138293, acc: 31.72, bacc: 31.39, tmp_test_f1: 21.18, f1: 21.31
+test_f1 CountNotImproved reset to 0 in epoch 304
+epoch: 304, val_loss:2.138048, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.36, f1: 21.36
+epoch: 305, val_loss:2.138566, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.32, f1: 21.36
+epoch: 306, val_loss:2.139147, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.30, f1: 21.36
+epoch: 307, val_loss:2.141035, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.22, f1: 21.36
+epoch: 308, val_loss:2.141208, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.19, f1: 21.36
+epoch: 309, val_loss:2.143022, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.27, f1: 21.36
+epoch: 310, val_loss:2.143362, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.17, f1: 21.36
+epoch: 311, val_loss:2.143329, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.04, f1: 21.36
+epoch: 312, val_loss:2.144340, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.07, f1: 21.36
+epoch: 313, val_loss:2.146336, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.04, f1: 21.36
+epoch: 314, val_loss:2.148180, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.71, f1: 21.36
+epoch: 315, val_loss:2.187964, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.61, f1: 21.36
+epoch: 316, val_loss:2.214991, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.07, f1: 21.36
+epoch: 317, val_loss:2.149910, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.66, f1: 21.36
+epoch: 318, val_loss:2.173053, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.89, f1: 21.36
+epoch: 319, val_loss:2.228111, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.01, f1: 21.36
+epoch: 320, val_loss:2.229828, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.01, f1: 21.36
+epoch: 321, val_loss:2.236440, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.15, f1: 21.36
+epoch: 322, val_loss:2.248433, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.95, f1: 21.36
+epoch: 323, val_loss:2.268402, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.95, f1: 21.36
+epoch: 324, val_loss:2.288599, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.91, f1: 21.36
+epoch: 325, val_loss:2.304265, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.76, f1: 21.36
+epoch: 326, val_loss:2.316477, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.79, f1: 21.36
+epoch: 327, val_loss:2.324924, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.71, f1: 21.36
+epoch: 328, val_loss:2.330591, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.72, f1: 21.36
+epoch: 329, val_loss:2.329121, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.73, f1: 21.36
+epoch: 330, val_loss:2.321547, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.78, f1: 21.36
+epoch: 331, val_loss:2.315499, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.93, f1: 21.36
+epoch: 332, val_loss:2.306404, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.02, f1: 21.36
+epoch: 333, val_loss:2.300916, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.03, f1: 21.36
+epoch: 334, val_loss:2.293100, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.05, f1: 21.36
+epoch: 335, val_loss:2.287224, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.06, f1: 21.36
+epoch: 336, val_loss:2.280557, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.00, f1: 21.36
+epoch: 337, val_loss:2.270586, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.06, f1: 21.36
+epoch: 338, val_loss:2.258136, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.07, f1: 21.36
+epoch: 339, val_loss:2.246299, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.97, f1: 21.36
+epoch: 340, val_loss:2.232515, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.09, f1: 21.36
+epoch: 341, val_loss:2.222546, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.05, f1: 21.36
+epoch: 342, val_loss:2.214781, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.07, f1: 21.36
+epoch: 343, val_loss:2.207249, acc: 32.32, bacc: 32.01, tmp_test_f1: 19.97, f1: 21.36
+epoch: 344, val_loss:2.201920, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.07, f1: 21.36
+epoch: 345, val_loss:2.198159, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.11, f1: 21.36
+epoch: 346, val_loss:2.196027, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.24, f1: 21.36
+epoch: 347, val_loss:2.195086, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.21, f1: 21.36
+epoch: 348, val_loss:2.191763, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.33, f1: 21.36
+epoch: 349, val_loss:2.191211, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.29, f1: 21.36
+epoch: 350, val_loss:2.191838, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.25, f1: 21.36
+epoch: 351, val_loss:2.190709, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.32, f1: 21.36
+epoch: 352, val_loss:2.191050, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.46, f1: 21.36
+epoch: 353, val_loss:2.189732, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.45, f1: 21.36
+epoch: 354, val_loss:2.189274, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.61, f1: 21.36
+epoch: 355, val_loss:2.186677, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.59, f1: 21.36
+epoch: 356, val_loss:2.183368, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.56, f1: 21.36
+epoch: 357, val_loss:2.181044, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.59, f1: 21.36
+epoch: 358, val_loss:2.178694, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.54, f1: 21.36
+epoch: 359, val_loss:2.180746, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.67, f1: 21.36
+epoch: 360, val_loss:2.182473, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.65, f1: 21.36
+epoch: 361, val_loss:2.187045, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.69, f1: 21.36
+epoch: 362, val_loss:2.191349, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.66, f1: 21.36
+epoch: 363, val_loss:2.196458, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.66, f1: 21.36
+epoch: 364, val_loss:2.203003, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.66, f1: 21.36
+epoch: 365, val_loss:2.208906, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.63, f1: 21.36
+epoch: 366, val_loss:2.218777, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.67, f1: 21.36
+epoch: 367, val_loss:2.228720, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.67, f1: 21.36
+epoch: 368, val_loss:2.238881, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.77, f1: 21.36
+epoch: 369, val_loss:2.248694, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.82, f1: 21.36
+epoch: 370, val_loss:2.257632, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.83, f1: 21.36
+epoch: 371, val_loss:2.261461, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.80, f1: 21.36
+epoch: 372, val_loss:2.262226, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.72, f1: 21.36
+epoch: 373, val_loss:2.261822, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.76, f1: 21.36
+epoch: 374, val_loss:2.262257, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.58, f1: 21.36
+epoch: 375, val_loss:2.260818, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.62, f1: 21.36
+epoch: 376, val_loss:2.258408, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.58, f1: 21.36
+epoch: 377, val_loss:2.257665, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.67, f1: 21.36
+epoch: 378, val_loss:2.257185, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.67, f1: 21.36
+epoch: 379, val_loss:2.257924, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.71, f1: 21.36
+epoch: 380, val_loss:2.258272, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.75, f1: 21.36
+epoch: 381, val_loss:2.256042, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.73, f1: 21.36
+epoch: 382, val_loss:2.251904, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.75, f1: 21.36
+epoch: 383, val_loss:2.248626, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.70, f1: 21.36
+epoch: 384, val_loss:2.245484, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.84, f1: 21.36
+epoch: 385, val_loss:2.242436, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.86, f1: 21.36
+epoch: 386, val_loss:2.241731, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.89, f1: 21.36
+epoch: 387, val_loss:2.239415, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.89, f1: 21.36
+epoch: 388, val_loss:2.239393, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.97, f1: 21.36
+epoch: 389, val_loss:2.241081, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.00, f1: 21.36
+epoch: 390, val_loss:2.242686, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.98, f1: 21.36
+epoch: 391, val_loss:2.246906, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.20, f1: 21.36
+epoch: 392, val_loss:2.254710, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.19, f1: 21.36
+epoch: 393, val_loss:2.260391, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.17, f1: 21.36
+epoch: 394, val_loss:2.266306, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.18, f1: 21.36
+epoch: 395, val_loss:2.271056, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.23, f1: 21.36
+epoch: 396, val_loss:2.275849, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.17, f1: 21.36
+epoch: 397, val_loss:2.282165, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.08, f1: 21.36
+epoch: 398, val_loss:2.288528, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.09, f1: 21.36
+epoch: 399, val_loss:2.290609, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.09, f1: 21.36
+epoch: 400, val_loss:2.296215, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.10, f1: 21.36
+epoch: 401, val_loss:2.299973, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.19, f1: 21.36
+epoch: 402, val_loss:2.302922, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.24, f1: 21.36
+epoch: 403, val_loss:2.305920, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.18, f1: 21.36
+epoch: 404, val_loss:2.310276, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.14, f1: 21.36
+epoch: 405, val_loss:2.313404, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.15, f1: 21.36
+epoch: 406, val_loss:2.320085, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.16, f1: 21.36
+epoch: 407, val_loss:2.328095, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.10, f1: 21.36
+epoch: 408, val_loss:2.334385, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.12, f1: 21.36
+epoch: 409, val_loss:2.335960, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.09, f1: 21.36
+epoch: 410, val_loss:2.337675, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.15, f1: 21.36
+epoch: 411, val_loss:2.335246, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.19, f1: 21.36
+epoch: 412, val_loss:2.332362, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.27, f1: 21.36
+epoch: 413, val_loss:2.327648, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.28, f1: 21.36
+epoch: 414, val_loss:2.328632, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.21, f1: 21.36
+epoch: 415, val_loss:2.212195, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.96, f1: 21.36
+epoch: 416, val_loss:2.130023, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.18, f1: 21.36
+epoch: 417, val_loss:2.075376, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.12, f1: 21.36
+epoch: 418, val_loss:2.041009, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.16, f1: 21.36
+epoch: 419, val_loss:2.020726, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.13, f1: 21.36
+epoch: 420, val_loss:2.007582, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.14, f1: 21.36
+epoch: 421, val_loss:2.002887, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.15, f1: 21.36
+epoch: 422, val_loss:2.006735, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.05, f1: 21.36
+epoch: 423, val_loss:2.020044, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.07, f1: 21.36
+epoch: 424, val_loss:2.033731, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.14, f1: 21.36
+epoch: 425, val_loss:2.049629, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.22, f1: 21.36
+epoch: 426, val_loss:2.064644, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.10, f1: 21.36
+epoch: 427, val_loss:2.078743, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.11, f1: 21.36
+epoch: 428, val_loss:2.089228, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.08, f1: 21.36
+epoch: 429, val_loss:2.096508, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.98, f1: 21.36
+epoch: 430, val_loss:2.108966, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.00, f1: 21.36
+epoch: 431, val_loss:2.120254, acc: 32.32, bacc: 32.01, tmp_test_f1: 20.99, f1: 21.36
+epoch: 432, val_loss:2.129916, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.02, f1: 21.36
+epoch: 433, val_loss:2.136434, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.04, f1: 21.36
+epoch: 434, val_loss:2.141317, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.07, f1: 21.36
+epoch: 435, val_loss:2.143804, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.13, f1: 21.36
+epoch: 436, val_loss:2.144130, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.15, f1: 21.36
+epoch: 437, val_loss:2.143975, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.17, f1: 21.36
+epoch: 438, val_loss:2.145197, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.19, f1: 21.36
+epoch: 439, val_loss:2.146249, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.27, f1: 21.36
+epoch: 440, val_loss:2.146955, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.28, f1: 21.36
+epoch: 441, val_loss:2.152901, acc: 32.32, bacc: 32.01, tmp_test_f1: 21.34, f1: 21.36
+test_f1 CountNotImproved reset to 0 in epoch 442
+epoch: 442, val_loss:2.160766, acc: 29.87, bacc: 33.03, tmp_test_f1: 21.44, f1: 21.44
+test_f1 CountNotImproved reset to 0 in epoch 443
+epoch: 443, val_loss:2.171525, acc: 29.83, bacc: 33.11, tmp_test_f1: 21.49, f1: 21.49
+epoch: 444, val_loss:2.182361, acc: 29.83, bacc: 33.11, tmp_test_f1: 21.46, f1: 21.49
+epoch: 445, val_loss:2.193258, acc: 29.83, bacc: 33.11, tmp_test_f1: 21.36, f1: 21.49
+epoch: 446, val_loss:2.199709, acc: 29.83, bacc: 33.11, tmp_test_f1: 21.36, f1: 21.49
+epoch: 447, val_loss:2.205975, acc: 29.83, bacc: 33.11, tmp_test_f1: 21.38, f1: 21.49
+epoch: 448, val_loss:2.208608, acc: 29.83, bacc: 33.11, tmp_test_f1: 21.44, f1: 21.49
+test_f1 CountNotImproved reset to 0 in epoch 449
+epoch: 449, val_loss:2.215924, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.53, f1: 21.53
+epoch: 450, val_loss:2.223236, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.48, f1: 21.53
+epoch: 451, val_loss:2.232497, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.41, f1: 21.53
+epoch: 452, val_loss:2.242761, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.34, f1: 21.53
+epoch: 453, val_loss:2.252055, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.25, f1: 21.53
+epoch: 454, val_loss:2.262435, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.29, f1: 21.53
+epoch: 455, val_loss:2.268789, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.32, f1: 21.53
+epoch: 456, val_loss:2.271931, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.36, f1: 21.53
+epoch: 457, val_loss:2.272513, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.34, f1: 21.53
+epoch: 458, val_loss:2.273078, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.34, f1: 21.53
+epoch: 459, val_loss:2.271592, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.28, f1: 21.53
+epoch: 460, val_loss:2.266880, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.30, f1: 21.53
+epoch: 461, val_loss:2.265546, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.31, f1: 21.53
+epoch: 462, val_loss:2.267736, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.34, f1: 21.53
+epoch: 463, val_loss:2.243224, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.35, f1: 21.53
+epoch: 464, val_loss:2.229486, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.30, f1: 21.53
+epoch: 465, val_loss:2.229492, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.36, f1: 21.53
+epoch: 466, val_loss:2.235547, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.43, f1: 21.53
+epoch: 467, val_loss:2.245395, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.46, f1: 21.53
+epoch: 468, val_loss:2.257907, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.46, f1: 21.53
+epoch: 469, val_loss:2.268309, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.49, f1: 21.53
+epoch: 470, val_loss:2.276648, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.51, f1: 21.53
+epoch: 471, val_loss:2.285910, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.51, f1: 21.53
+epoch: 472, val_loss:2.302966, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.51, f1: 21.53
+epoch: 473, val_loss:2.318327, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.49, f1: 21.53
+epoch: 474, val_loss:2.333046, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.46, f1: 21.53
+epoch: 475, val_loss:2.348208, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.37, f1: 21.53
+epoch: 476, val_loss:2.362224, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.20, f1: 21.53
+epoch: 477, val_loss:2.378255, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.20, f1: 21.53
+epoch: 478, val_loss:2.391147, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.06, f1: 21.53
+epoch: 479, val_loss:2.402846, acc: 29.38, bacc: 32.84, tmp_test_f1: 21.09, f1: 21.53
+epoch: 480, val_loss:2.414873, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.85, f1: 21.53
+epoch: 481, val_loss:2.428880, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.72, f1: 21.53
+epoch: 482, val_loss:2.440340, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.64, f1: 21.53
+epoch: 483, val_loss:2.449897, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.66, f1: 21.53
+epoch: 484, val_loss:2.455730, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.64, f1: 21.53
+epoch: 485, val_loss:2.455940, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.61, f1: 21.53
+epoch: 486, val_loss:2.453150, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.59, f1: 21.53
+epoch: 487, val_loss:2.451234, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.52, f1: 21.53
+Epoch 00488: reducing learning rate of group 0 to 2.5000e-02.
+epoch: 488, val_loss:2.447852, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.52, f1: 21.53
+epoch: 489, val_loss:2.442348, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.52, f1: 21.53
+epoch: 490, val_loss:2.443783, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.50, f1: 21.53
+epoch: 491, val_loss:2.447278, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.53, f1: 21.53
+epoch: 492, val_loss:2.450490, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.52, f1: 21.53
+epoch: 493, val_loss:2.451262, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.50, f1: 21.53
+epoch: 494, val_loss:2.451133, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.52, f1: 21.53
+epoch: 495, val_loss:2.452938, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.46, f1: 21.53
+epoch: 496, val_loss:2.456151, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.47, f1: 21.53
+epoch: 497, val_loss:2.457732, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.50, f1: 21.53
+epoch: 498, val_loss:2.460890, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.43, f1: 21.53
+epoch: 499, val_loss:2.465221, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.33, f1: 21.53
+epoch: 500, val_loss:2.469144, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.35, f1: 21.53
+epoch: 501, val_loss:2.469970, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.26, f1: 21.53
+epoch: 502, val_loss:2.471630, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.27, f1: 21.53
+epoch: 503, val_loss:2.474938, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.33, f1: 21.53
+epoch: 504, val_loss:2.477390, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.26, f1: 21.53
+epoch: 505, val_loss:2.479212, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.30, f1: 21.53
+epoch: 506, val_loss:2.479485, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.28, f1: 21.53
+epoch: 507, val_loss:2.479695, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.29, f1: 21.53
+epoch: 508, val_loss:2.482033, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.29, f1: 21.53
+epoch: 509, val_loss:2.485830, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.29, f1: 21.53
+epoch: 510, val_loss:2.487604, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.26, f1: 21.53
+epoch: 511, val_loss:2.488230, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.27, f1: 21.53
+epoch: 512, val_loss:2.488413, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.35, f1: 21.53
+epoch: 513, val_loss:2.488461, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.34, f1: 21.53
+epoch: 514, val_loss:2.488563, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.34, f1: 21.53
+epoch: 515, val_loss:2.489636, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.28, f1: 21.53
+epoch: 516, val_loss:2.491412, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.31, f1: 21.53
+epoch: 517, val_loss:2.490940, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.31, f1: 21.53
+epoch: 518, val_loss:2.488605, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.31, f1: 21.53
+epoch: 519, val_loss:2.487750, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.42, f1: 21.53
+epoch: 520, val_loss:2.465718, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.52, f1: 21.53
+epoch: 521, val_loss:2.445377, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.53, f1: 21.53
+epoch: 522, val_loss:2.426581, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.69, f1: 21.53
+epoch: 523, val_loss:2.411399, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.76, f1: 21.53
+epoch: 524, val_loss:2.399301, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.81, f1: 21.53
+epoch: 525, val_loss:2.393767, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.84, f1: 21.53
+epoch: 526, val_loss:2.394053, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.84, f1: 21.53
+epoch: 527, val_loss:2.396140, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.73, f1: 21.53
+epoch: 528, val_loss:2.402457, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.74, f1: 21.53
+epoch: 529, val_loss:2.408893, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.72, f1: 21.53
+epoch: 530, val_loss:2.417698, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.64, f1: 21.53
+epoch: 531, val_loss:2.426365, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.68, f1: 21.53
+epoch: 532, val_loss:2.434901, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.54, f1: 21.53
+epoch: 533, val_loss:2.444922, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.39, f1: 21.53
+epoch: 534, val_loss:2.456162, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.28, f1: 21.53
+epoch: 535, val_loss:2.468700, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.20, f1: 21.53
+epoch: 536, val_loss:2.481767, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.10, f1: 21.53
+epoch: 537, val_loss:2.493062, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.09, f1: 21.53
+epoch: 538, val_loss:2.501967, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.07, f1: 21.53
+epoch: 539, val_loss:2.508110, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.03, f1: 21.53
+epoch: 540, val_loss:2.513719, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.06, f1: 21.53
+epoch: 541, val_loss:2.522595, acc: 29.38, bacc: 32.84, tmp_test_f1: 19.99, f1: 21.53
+epoch: 542, val_loss:2.532104, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.06, f1: 21.53
+epoch: 543, val_loss:2.539704, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.16, f1: 21.53
+epoch: 544, val_loss:2.506664, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.31, f1: 21.53
+epoch: 545, val_loss:2.477272, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.36, f1: 21.53
+epoch: 546, val_loss:2.454318, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.51, f1: 21.53
+epoch: 547, val_loss:2.434801, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.59, f1: 21.53
+epoch: 548, val_loss:2.418667, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.70, f1: 21.53
+epoch: 549, val_loss:2.406340, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.79, f1: 21.53
+epoch: 550, val_loss:2.395747, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.89, f1: 21.53
+epoch: 551, val_loss:2.386661, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.96, f1: 21.53
+epoch: 552, val_loss:2.379571, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.92, f1: 21.53
+epoch: 553, val_loss:2.378361, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.93, f1: 21.53
+epoch: 554, val_loss:2.377304, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.93, f1: 21.53
+epoch: 555, val_loss:2.378765, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.87, f1: 21.53
+epoch: 556, val_loss:2.381704, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.81, f1: 21.53
+epoch: 557, val_loss:2.387137, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.69, f1: 21.53
+epoch: 558, val_loss:2.394035, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.70, f1: 21.53
+epoch: 559, val_loss:2.400248, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.72, f1: 21.53
+epoch: 560, val_loss:2.406921, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.71, f1: 21.53
+epoch: 561, val_loss:2.415998, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.70, f1: 21.53
+epoch: 562, val_loss:2.424411, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.60, f1: 21.53
+epoch: 563, val_loss:2.430455, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.49, f1: 21.53
+epoch: 564, val_loss:2.439238, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.53, f1: 21.53
+epoch: 565, val_loss:2.446097, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.50, f1: 21.53
+epoch: 566, val_loss:2.450026, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.45, f1: 21.53
+epoch: 567, val_loss:2.453725, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.22, f1: 21.53
+epoch: 568, val_loss:2.479374, acc: 29.38, bacc: 32.84, tmp_test_f1: 20.12, f1: 21.53
+epoch: 569, val_loss:2.476025, acc: 29.38, bacc: 32.84, tmp_test_f1: 19.98, f1: 21.53
+test_f1 CountNotImproved reset to 0 in epoch 570
+epoch: 570, val_loss:2.473093, acc: 27.90, bacc: 32.25, tmp_test_f1: 21.70, f1: 21.70
+test_f1 CountNotImproved reset to 0 in epoch 571
+epoch: 571, val_loss:2.237333, acc: 30.09, bacc: 33.31, tmp_test_f1: 22.43, f1: 22.43
+test_f1 CountNotImproved reset to 0 in epoch 572
+epoch: 572, val_loss:2.087856, acc: 31.50, bacc: 33.79, tmp_test_f1: 22.61, f1: 22.61
+epoch: 573, val_loss:1.995129, acc: 31.50, bacc: 33.79, tmp_test_f1: 22.41, f1: 22.61
+epoch: 574, val_loss:1.939797, acc: 31.50, bacc: 33.79, tmp_test_f1: 22.45, f1: 22.61
+test_f1 CountNotImproved reset to 0 in epoch 575
+epoch: 575, val_loss:1.910230, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.61, f1: 22.61
+epoch: 576, val_loss:1.897386, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.57, f1: 22.61
+epoch: 577, val_loss:1.896305, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.56, f1: 22.61
+epoch: 578, val_loss:1.904187, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.59, f1: 22.61
+epoch: 579, val_loss:1.915104, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.55, f1: 22.61
+epoch: 580, val_loss:1.928091, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.48, f1: 22.61
+epoch: 581, val_loss:1.942980, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.37, f1: 22.61
+epoch: 582, val_loss:1.959558, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.32, f1: 22.61
+epoch: 583, val_loss:1.974351, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.37, f1: 22.61
+epoch: 584, val_loss:1.986751, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.47, f1: 22.61
+epoch: 585, val_loss:1.996796, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.39, f1: 22.61
+epoch: 586, val_loss:2.004786, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.45, f1: 22.61
+epoch: 587, val_loss:2.011326, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.38, f1: 22.61
+epoch: 588, val_loss:2.015235, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.33, f1: 22.61
+epoch: 589, val_loss:2.017180, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.35, f1: 22.61
+epoch: 590, val_loss:2.017799, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.40, f1: 22.61
+epoch: 591, val_loss:2.022027, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.36, f1: 22.61
+epoch: 592, val_loss:2.025539, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.30, f1: 22.61
+epoch: 593, val_loss:2.028536, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.27, f1: 22.61
+epoch: 594, val_loss:2.031343, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.25, f1: 22.61
+epoch: 595, val_loss:2.034283, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.25, f1: 22.61
+epoch: 596, val_loss:2.036212, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.23, f1: 22.61
+epoch: 597, val_loss:2.038270, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.18, f1: 22.61
+epoch: 598, val_loss:2.043062, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.23, f1: 22.61
+epoch: 599, val_loss:2.048259, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.24, f1: 22.61
+epoch: 600, val_loss:2.054154, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.26, f1: 22.61
+epoch: 601, val_loss:2.061384, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.36, f1: 22.61
+epoch: 602, val_loss:2.068965, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.40, f1: 22.61
+epoch: 603, val_loss:2.076031, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.48, f1: 22.61
+epoch: 604, val_loss:2.084125, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.52, f1: 22.61
+epoch: 605, val_loss:2.091774, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.56, f1: 22.61
+epoch: 606, val_loss:2.099010, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.53, f1: 22.61
+epoch: 607, val_loss:2.105129, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.53, f1: 22.61
+epoch: 608, val_loss:2.112929, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.44, f1: 22.61
+epoch: 609, val_loss:2.118839, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.47, f1: 22.61
+epoch: 610, val_loss:2.124841, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.48, f1: 22.61
+epoch: 611, val_loss:2.133536, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.37, f1: 22.61
+epoch: 612, val_loss:2.141926, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.35, f1: 22.61
+epoch: 613, val_loss:2.149494, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.41, f1: 22.61
+epoch: 614, val_loss:2.156838, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.33, f1: 22.61
+epoch: 615, val_loss:2.164395, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.20, f1: 22.61
+epoch: 616, val_loss:2.173193, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.13, f1: 22.61
+epoch: 617, val_loss:2.183791, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.15, f1: 22.61
+epoch: 618, val_loss:2.194964, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.27, f1: 22.61
+epoch: 619, val_loss:2.204212, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.25, f1: 22.61
+epoch: 620, val_loss:2.212703, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.22, f1: 22.61
+epoch: 621, val_loss:2.131676, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.39, f1: 22.61
+epoch: 622, val_loss:2.072070, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.39, f1: 22.61
+epoch: 623, val_loss:2.031799, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.36, f1: 22.61
+epoch: 624, val_loss:2.006004, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.30, f1: 22.61
+epoch: 625, val_loss:1.990214, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.26, f1: 22.61
+epoch: 626, val_loss:1.982836, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.38, f1: 22.61
+epoch: 627, val_loss:1.980521, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.54, f1: 22.61
+epoch: 628, val_loss:1.981195, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.54, f1: 22.61
+epoch: 629, val_loss:1.983351, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.49, f1: 22.61
+epoch: 630, val_loss:1.988701, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.51, f1: 22.61
+epoch: 631, val_loss:1.992876, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.53, f1: 22.61
+epoch: 632, val_loss:1.997152, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.50, f1: 22.61
+epoch: 633, val_loss:2.001032, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.38, f1: 22.61
+epoch: 634, val_loss:2.007417, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.36, f1: 22.61
+epoch: 635, val_loss:2.011499, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.40, f1: 22.61
+epoch: 636, val_loss:2.014222, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.39, f1: 22.61
+epoch: 637, val_loss:2.015923, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.43, f1: 22.61
+epoch: 638, val_loss:2.017772, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.44, f1: 22.61
+epoch: 639, val_loss:2.020721, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.53, f1: 22.61
+epoch: 640, val_loss:2.022597, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.43, f1: 22.61
+epoch: 641, val_loss:2.024697, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.37, f1: 22.61
+epoch: 642, val_loss:2.026877, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.41, f1: 22.61
+epoch: 643, val_loss:2.029300, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.42, f1: 22.61
+epoch: 644, val_loss:2.032524, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.42, f1: 22.61
+epoch: 645, val_loss:2.036836, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.49, f1: 22.61
+epoch: 646, val_loss:2.041397, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.42, f1: 22.61
+epoch: 647, val_loss:2.046134, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.45, f1: 22.61
+epoch: 648, val_loss:2.051675, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.45, f1: 22.61
+epoch: 649, val_loss:2.059144, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.32, f1: 22.61
+epoch: 650, val_loss:2.065310, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.46, f1: 22.61
+epoch: 651, val_loss:2.071795, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.37, f1: 22.61
+epoch: 652, val_loss:2.079110, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.40, f1: 22.61
+epoch: 653, val_loss:2.085848, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.42, f1: 22.61
+epoch: 654, val_loss:2.093931, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.30, f1: 22.61
+epoch: 655, val_loss:2.101162, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.40, f1: 22.61
+epoch: 656, val_loss:2.089427, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.37, f1: 22.61
+epoch: 657, val_loss:2.079933, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.34, f1: 22.61
+epoch: 658, val_loss:2.071577, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.30, f1: 22.61
+epoch: 659, val_loss:2.065056, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.28, f1: 22.61
+epoch: 660, val_loss:2.061522, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.31, f1: 22.61
+epoch: 661, val_loss:2.062243, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.34, f1: 22.61
+epoch: 662, val_loss:2.066113, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.42, f1: 22.61
+epoch: 663, val_loss:2.070998, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.41, f1: 22.61
+epoch: 664, val_loss:2.077499, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.51, f1: 22.61
+epoch: 665, val_loss:2.087366, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.46, f1: 22.61
+epoch: 666, val_loss:2.099842, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.27, f1: 22.61
+epoch: 667, val_loss:2.113158, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.19, f1: 22.61
+epoch: 668, val_loss:2.126195, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.19, f1: 22.61
+epoch: 669, val_loss:2.139127, acc: 32.91, bacc: 33.77, tmp_test_f1: 22.22, f1: 22.61
