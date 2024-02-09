@@ -3,7 +3,7 @@
 # List of AugDirect values
 augdirect_values="0 1 -1 2 4 20 21 22 23 231 2311"
 #augdirect_values="-1 2 21"
-Direct_dataset='cora_ml/'  # Set your Direct_dataset value
+Direct_dataset='WebKB/texas'  # Set your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=True
 unDirect_data='PubMed'
@@ -32,7 +32,7 @@ for augdirect in $augdirect_values; do
 
   # Run the process
   nohup python DiGMain.py --GPUdevice=0 --AugDirect=$augdirect --net=$net \
-     -to_undirected
+     -to_undirected \
      --Direct_dataset=$Direct_dataset --undirect_dataset=$unDirect_data \
     > "${filename}_Aug${augdirect}_T$(generate_timestamp)_ToUndirectData.log" &
 
