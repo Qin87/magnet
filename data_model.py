@@ -18,26 +18,26 @@ class SAGEModelBen:
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
-    if args.net == 'GAT':
-        model = GATModelBen(data_x.size(-1), n_cls, heads=args.heads,filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
-
-        # model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-        #                    nlayer=args.n_layer)  # SHA
-    elif args.net == 'GCN':
-        model = GCNModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
-
-        # model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-        #                    nlayer=args.n_layer)  # SHA
-    elif args.net == 'SAGE':
-        model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout, layer=args.layer).to(device)
-        # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-        #                     nlayer=args.n_layer)
-    # if args.net == 'GCN':
-    #     model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-    # elif args.net == 'GAT':
-    #     model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-    # elif args.net == "SAGE":
-    #     model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    # if args.net == 'GAT':
+    #     model = GATModelBen(data_x.size(-1), n_cls, heads=args.heads,filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+    #
+    #     # model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
+    #     #                    nlayer=args.n_layer)  # SHA
+    # elif args.net == 'GCN':
+    #     model = GCNModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+    #
+    #     # model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
+    #     #                    nlayer=args.n_layer)  # SHA
+    # elif args.net == 'SAGE':
+    #     model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout, layer=args.layer).to(device)
+    #     # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
+    #     #                     nlayer=args.n_layer)
+    if args.net == 'GCN':
+        model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    elif args.net == 'GAT':
+        model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
+    elif args.net == "SAGE":
+        model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
     elif args.net == 'GIN':
         model = GIN_ModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,
                              dropout=args.dropout, layer=args.layer)
