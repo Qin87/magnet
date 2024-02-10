@@ -22,8 +22,9 @@ exec > $logfile 2>&1
 # Iterate over each AugDirect value
 for augdirect in $augdirect_values; do
   nohup python3 DiGMain.py --AugDirect=$augdirect --net=$net \
+    -to_undirected  \
     --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
-    >MModel${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log &
+    >SHA${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log &
   pid=$!
 
   wait $pid

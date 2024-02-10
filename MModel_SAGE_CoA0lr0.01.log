@@ -1,0 +1,10 @@
+cuda Device Index: 1
+Namespace(to_undirected=False, from_SHA=False, IsDirectedData=False, AugDirect=0, net='SAGE', GPUdevice=1, seed=100, undirect_dataset='Coauthor-CS', Direct_dataset='WikiCS/', imb_ratio=100, dropout=0.1, num_filter=2, layer=2, alpha=0.1, K=2, feat_dim=64, warmup=5, epoch=1500, lr=0.01, l2=0.0005, tau=2, max=False, no_mask=False, gdc='ppr', heads=8, log_root='../logs/', log_path='test', data_path='../dataset/data/tmp/')
+Traceback (most recent call last):
+  File "/home/qj2004/GraphSHA/DiGMain.py", line 226, in <module>
+    model = CreatModel(args, num_features, n_cls, data_x, device)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/qj2004/GraphSHA/data_model.py", line 60, in CreatModel
+    model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SAGEModelBen() takes no arguments
