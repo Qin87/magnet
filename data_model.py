@@ -4,17 +4,14 @@ from datetime import datetime
 import torch
 
 from edge_data import to_undirected, to_undirectedBen
+from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset, get_step_split
 from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
-from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen
-
-
-class SAGEModelBen:
-    pass
+from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
@@ -58,7 +55,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                 #                    nlayer=args.n_layer)  # SHA
             elif args.net == 'SAGE':
                 model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout,
-                                     layer=args.layer).to(device)
+                                     layer=args.layer)
+                # model = model.to(device)
                 # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
                 #                     nlayer=args.n_layer)
             else:
@@ -89,7 +87,7 @@ def load_dataset(args,device):
         path = osp.join(path, args.undirect_dataset)
         dataset = get_dataset(args.undirect_dataset, path, split_type='full')
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # print("Dataset is ", dataset, "\nChosen from DirectedData: ", args.IsDirectedData)
+    print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
 
     # if os.path.isdir(log_path) is False:
     #     os.makedirs(log_path)
@@ -153,8 +151,6 @@ def load_dataset(args,device):
 
         class_num_list = [len(item) for item in train_node]
         idx_info = [torch.tensor(item) for item in train_node]
-    elif dataset == 'Amazon-Photo':
-        pass
     else:
         edges = data.edge_index  # for torch_geometric librar
         data_y = data.y
@@ -165,13 +161,13 @@ def load_dataset(args,device):
         except:
             dataset_num_features = data_x.shape[1]
 
-    if args.to_undirected:
+    if args.IsDirectedData and args.to_undirected:
         edges = to_undirectedBen(edges)
         print("Converted to undirected data")
 
-    # IsDirectedGraph = test_directed(edges)
-    # print("This is directed graph: ", IsDirectedGraph)
-    # print("data_x", data_x.shape)  # [11701, 300])
+    IsDirectedGraph = test_directed(edges)
+    print("This is directed graph: ", IsDirectedGraph)
+    print("data_x", data_x.shape)  # [11701, 300])
 
 
     data = data.to(device)
