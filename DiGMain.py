@@ -40,6 +40,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])
         criterion(out[data_train_mask], data_y[data_train_mask]).backward()
+        print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
     else:
         if epoch > args.warmup:
             # identifying source samples
@@ -76,7 +77,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
 
             elif args.AugDirect == 231:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 2311:
                 new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
 
@@ -91,6 +92,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
             new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
+            print('Aug', args.AugDirect, ',edges', new_edge_index.shape[1], ',x',new_x.shape[0])
         else:
             sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
             beta = torch.distributions.beta.Beta(2, 2)
@@ -346,7 +348,7 @@ for split in range(splits):
         else:
             CountNotImproved += 1
 
-        print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+        # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
         end_epoch = epoch
         if CountNotImproved> 800:
             break

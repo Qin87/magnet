@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # List of AugDirect values
-augdirect_values="-1 1 2 4 20 21 22 23 231 2311"
+augdirect_values="0 -1 1 2 4 20 21 22 23 231 2311"
 #augdirect_values="-1 2 21"
 Direct_dataset='dgl/'  # Set your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=False    # this only effect on name
-unDirect_data='Amazon-Computers'
-net='SymDiGCN'
+unDirect_data='Coauthor-CS'
+net='SAGE'
 
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -31,7 +31,7 @@ for augdirect in $augdirect_values; do
   fi
   
   # Run the process
-command="python DiGMain.py --GPUdevice=1 --AugDirect=$augdirect --net=$net \
+command="python DiGMain.py --lr 0.01 --GPUdevice=2 --AugDirect=$augdirect --net=$net \
     --Direct_dataset=$Direct_dataset --undirect_dataset=$unDirect_data"
 nohup $command > "${filename}_Aug${augdirect}_T$(generate_timestamp)_directData.log" &
 
