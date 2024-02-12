@@ -267,7 +267,8 @@ except IndexError:
     splits = 1
 
 
-for split in range(splits):
+# for split in range(splits):
+for split in range(splits - 1, -1, -1):
     # if args.net in ['GAT', 'GCN', 'SAGE']:
     try:
         optimizer = torch.optim.Adam(
@@ -348,7 +349,7 @@ for split in range(splits):
         else:
             CountNotImproved += 1
 
-        # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+        print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
         end_epoch = epoch
         if CountNotImproved> 800:
             break
