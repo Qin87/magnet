@@ -27,7 +27,7 @@ def train(train_idx):
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
 
-    optimizer.zero_grad()
+
     if args.AugDirect == 0:
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])
@@ -109,6 +109,7 @@ def train(train_idx):
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         out = model(data_x, edges)
         val_loss= F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
+    optimizer.zero_grad()
     optimizer.step()
     scheduler.step(val_loss, epoch)
 
