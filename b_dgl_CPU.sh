@@ -1,4 +1,4 @@
-##!/bin/bash
+###!/bin/bash
 
 # List of AugDirect values
 #augdirect_values="4 20 21 22 23 231 2311"
@@ -8,8 +8,8 @@ augdirect_values="0 1 -1 2 4 20 21 22 23 231 2311"
 Direct_dataset='dgl/citeseer'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=False
-unDirect_data='Amazon-Computers'
-net='DiG'
+unDirect_data='Cora'
+net='GIN'
 
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -23,7 +23,7 @@ exec > $logfile 2>&1
 for augdirect in $augdirect_values; do
   nohup python3 DiGMain.py --AugDirect=$augdirect --net=$net \
     --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
-    >${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log &
+    >Norelu${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log &
   pid=$!
 
   wait $pid

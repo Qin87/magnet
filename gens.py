@@ -1159,8 +1159,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
         neighbor_cls = torch.multinomial(conf_src + 1e-12, 1).squeeze().tolist()
 
         # third sampling
-        neighbor = [prev_out_local[idx_info_local[cls].long()][:, cls_idx] for cls in neighbor_cls if
-                    idx_info_local[cls].numel() != 0]
+        neighbor = [prev_out_local[idx_info_local[cls].long()][:, cls_idx] for cls in neighbor_cls if idx_info_local[cls].numel() != 0]
         dst_idx = []
         new_src_idx = []
         for i, item in enumerate(neighbor):

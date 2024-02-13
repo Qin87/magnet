@@ -11,70 +11,50 @@ import os.path as osp
 from data_utils import load_directedData, get_dataset, get_step_split
 from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
-from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen
+from nets.GIN_Ben import create_GIN
+from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
-
     if args.net == 'GIN':
-        model = GIN_ModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,
-                             dropout=args.dropout, layer=args.layer)
+        model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+        # model = GIN_ModelBen(num_features, n_cls, nhid=args.feat_dim,
+        #                      dropout=args.dropout, layer=args.layer)
     elif args.net == 'Cheb':
-        model = ChebModelBen(data_x.size(-1), n_cls, K=args.K,
+        model = ChebModelBen(num_features, n_cls, K=args.K,
                              filter_num=args.num_filter, dropout=args.dropout,
                              layer=args.layer).to(device)
     elif args.net == 'APPNP':
-        model = APPNP_ModelBen(data_x.size(-1), n_cls,
+        model = APPNP_ModelBen(num_features, n_cls,
                                filter_num=args.num_filter, alpha=args.alpha,
                                dropout=args.dropout, layer=args.layer).to(device)
     elif args.net == 'DiG':
         if not args.net[-2:] == 'ib':
-            model = DiModel(data_x.size(-1), n_cls, filter_num=args.num_filter,
+            model = DiModel(num_features, n_cls, filter_num=args.num_filter,
                             dropout=args.dropout, layer=args.layer).to(device)
         else:
-            model = DiGCN_IB(data_x.size(-1), hidden=args.num_filter,
+            model = DiGCN_IB(num_features, hidden=args.num_filter,
                              n_cls=n_cls, dropout=args.dropout,
                              layer=args.layer).to(device)
 
     elif args.net == 'SymDiGCN':
-        model = SymModel(data_x.size(-1), n_cls, filter_num=args.num_filter,
+        model = SymModel(num_features, n_cls, filter_num=args.num_filter,
                          dropout=args.dropout, layer=args.layer).to(device)
     else:
-        if args.from_SHA is False:
-            if args.net == 'GAT':
-                model = GATModelBen(data_x.size(-1), n_cls, heads=args.heads, filter_num=args.num_filter,
-                                    dropout=args.dropout, layer=args.layer).to(device)
 
-                # model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                #                    nlayer=args.n_layer)  # SHA
-            elif args.net == 'GCN':
-                model = GCNModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout,
-                                    layer=args.layer).to(device)
-
-                # model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                #                    nlayer=args.n_layer)  # SHA
-            elif args.net == 'SAGE':
-                model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout,
-                                     layer=args.layer)
-                # model = model.to(device)
-                # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                #                     nlayer=args.n_layer)
-            else:
-                raise NotImplementedError("Not Implemented Architecture!")
+        if args.net == 'GCN':
+            model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+        elif args.net == 'GAT':
+            model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+        elif args.net == "SAGE":
+            model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
-            if args.net == 'GCN':
-                model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-            elif args.net == 'GAT':
-                model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-            elif args.net == "SAGE":
-                model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,nlayer=args.layer)
-            else:
-                raise NotImplementedError("Not Implemented Architecture!")
+            raise NotImplementedError("Not Implemented Architecture!")
 
-    # try:
-    #     print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
-    # except:
-    #     pass
+    try:
+        print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
+    except:
+        pass
     return model
 
 
@@ -98,7 +78,6 @@ def load_dataset(args,device):
         data.edge_weight = torch.FloatTensor(data.edge_weight)
     except:
         data.edge_weight = None
-
 
 
     # copy GraphSHA
