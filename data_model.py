@@ -67,8 +67,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             elif args.net == 'GAT':
                 model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
             elif args.net == "SAGE":
-                model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                                    nlayer=args.layer)
+                model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,nlayer=args.layer)
             else:
                 raise NotImplementedError("Not Implemented Architecture!")
 
