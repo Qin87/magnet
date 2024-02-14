@@ -11,18 +11,11 @@ class GIN_ModelBen1(torch.nn.Module):
         self.line1 = nn.Linear(input_dim, nhid)
         self.conv1 = GINConv(self.line1)
 
-        self.reg_params = list(self.conv1.parameters())
-        self.non_reg_params = self.conv2.parameters()
+        self.reg_params = []
+        self.non_reg_params = self.conv1.parameters()
 
     def forward(self, x, edge_index):
         x = F.relu(self.conv1(x, edge_index))
-
-        for iter_layer in self.convx:
-            x = F.dropout(x, self.dropout, training=self.training)
-            x = F.relu(iter_layer(x, edge_index))
-
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = F.relu(self.conv2(x, edge_index))
 
         return x
 
