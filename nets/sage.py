@@ -109,7 +109,8 @@ class GraphSAGE1(nn.Module):
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x = F.relu(self.conv1(x, edge_index, edge_weight))
+        # x = F.relu(self.conv1(x, edge_index, edge_weight))
+        x = self.conv1(x, edge_index, edge_weight)
 
         return x
 

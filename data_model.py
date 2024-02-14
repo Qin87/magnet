@@ -9,25 +9,30 @@ from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset, get_step_split
+from nets.APPNP_Ben import create_APPNP
+from nets.Cheb_Ben import create_Cheb
 from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
 from nets.GIN_Ben import create_GIN
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 
 
+
 def CreatModel(args, num_features, n_cls, data_x,device):
     if args.net == 'GIN':
-        model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+        model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = GIN_ModelBen(num_features, n_cls, nhid=args.feat_dim,
         #                      dropout=args.dropout, layer=args.layer)
     elif args.net == 'Cheb':
-        model = ChebModelBen(num_features, n_cls, K=args.K,
-                             filter_num=args.num_filter, dropout=args.dropout,
-                             layer=args.layer).to(device)
+        model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
+        # model = ChebModelBen(num_features, n_cls, K=args.K,
+        #                      filter_num=args.num_filter, dropout=args.dropout,
+        #                      layer=args.layer).to(device)
     elif args.net == 'APPNP':
-        model = APPNP_ModelBen(num_features, n_cls,
-                               filter_num=args.num_filter, alpha=args.alpha,
-                               dropout=args.dropout, layer=args.layer).to(device)
+        model = create_APPNP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha).to(device)
+        # model = create_appnp(num_features, n_cls,
+        #                        filter_num=args.num_filter, alpha=args.alpha,
+        #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net == 'DiG':
         if not args.net[-2:] == 'ib':
             model = DiModel(num_features, n_cls, filter_num=args.num_filter,

@@ -4,9 +4,9 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
 
-class GIN_ModelBen1(nn.Module):
+class DiG_ModelBen1(nn.Module):
     def __init__(self, input_dim, nhid, out_dim,  dropout, layer=2):
-        super(GIN_ModelBen1, self).__init__()
+        super(DiG_ModelBen1, self).__init__()
         self.dropout = dropout
         self.line1 = nn.Linear(input_dim, out_dim)
         self.conv1 = GINConv(self.line1)
@@ -21,9 +21,9 @@ class GIN_ModelBen1(nn.Module):
 
         return x
 
-class GIN_ModelBen2(nn.Module):
+class DiG_ModelBen2(nn.Module):
     def __init__(self, input_dim, hid_dim, out_dim, dropout, layer=2):
-        super(GIN_ModelBen2, self).__init__()
+        super(DiG_ModelBen2, self).__init__()
         self.dropout = dropout
         self.line1 = nn.Linear(input_dim, hid_dim)
         self.line2 = nn.Linear(hid_dim, out_dim)
@@ -41,10 +41,10 @@ class GIN_ModelBen2(nn.Module):
         # x = F.relu(x)
         return x
 
-class GIN_ModelBenX(torch.nn.Module):
+class DiG_ModelBenX(torch.nn.Module):
 
     def __init__(self, input_dim,  nhid, out_dim, dropout, layer=3):
-        super(GIN_ModelBenX, self).__init__()
+        super(DiG_ModelBenX, self).__init__()
         self.dropout = dropout
         self.line1 = nn.Linear(input_dim, nhid)
         self.line2 = nn.Linear(nhid, out_dim)
@@ -69,11 +69,11 @@ class GIN_ModelBenX(torch.nn.Module):
 
         return x
 
-def create_GIN(nfeat, nhid, nclass, dropout, nlayer):
+def create_DiG(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
-        model = GIN_ModelBen1(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_ModelBen1(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = GIN_ModelBen2(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_ModelBen2(nfeat, nhid, nclass, dropout, nlayer)
     else:
-        model = GIN_ModelBenX(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_ModelBenX(nfeat, nhid, nclass, dropout, nlayer)
     return model
