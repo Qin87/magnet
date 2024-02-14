@@ -1,5 +1,6 @@
-for log_file in $(ls -1  Norelulayer1Cheb_dgl_citeseer_Aug* | sort); do
+for log_file in $(ls -1   Norelulayer3Cheb_dgl_citeseer_Aug*_T141435s51.log | sort); do
   echo "        "
-  tail -n 2 "$log_file"
+  grep '^C' "$log_file"
+  tail -n 1 "$log_file"
 done
 

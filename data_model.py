@@ -9,7 +9,7 @@ from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset, get_step_split
-from nets.APPNP_Ben import create_APPNP
+from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT
 from nets.Cheb_Ben import create_Cheb
 from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
@@ -29,7 +29,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         #                      filter_num=args.num_filter, dropout=args.dropout,
         #                      layer=args.layer).to(device)
     elif args.net == 'APPNP':
-        model = create_APPNP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha).to(device)
+        model = create_APPNPGGPT(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
+        # model = create_APPNP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha).to(device)
         # model = create_appnp(num_features, n_cls,
         #                        filter_num=args.num_filter, alpha=args.alpha,
         #                        dropout=args.dropout, layer=args.layer).to(device)
