@@ -196,9 +196,8 @@ class SymLayer2(torch.nn.Module):
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
-        x = self.Conv(x)    # test with VS. without this
+        x = self.Conv(x)    # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
-        # x = F.relu(x)
         return x
 
 class SymLayerX(torch.nn.Module):
@@ -215,10 +214,14 @@ class SymLayerX(torch.nn.Module):
         self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
 
         self.layer = layer
-        if layer == 3:
-            self.lin3 = torch.nn.Linear(nhid * 3, nhid, bias=False)
-            self.bias3 = nn.Parameter(torch.Tensor(1, nhid))
-            nn.init.zeros_(self.bias3)
+        # self.lin3 = torch.nn.Linear(nhid * 3, nhid, bias=False)
+        # self.bias3 = nn.Parameter(torch.Tensor(1, nhid))
+        # nn.init.zeros_(self.bias3)
+
+        self.linx = nn.ModuleList([torch.nn.Linear(nhid * 3, nhid, bias=False) for _ in range(layer - 2)])
+        self.biasx = nn.ParameterList([nn.Parameter(torch.Tensor(1, nhid)) for _ in range(layer - 2)])
+        for bias_param in self.biasx:
+            nn.init.zeros_(bias_param)
 
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
@@ -234,6 +237,9 @@ class SymLayerX(torch.nn.Module):
         x3 += self.bias1
 
         x = torch.cat((x1, x2, x3), axis=-1)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(x)
 
         x = self.lin2(x)
@@ -248,22 +254,22 @@ class SymLayerX(torch.nn.Module):
         x = torch.cat((x1, x2, x3), axis=-1)
         x = F.relu(x)
 
-        if self.layer == 3:
-            x = self.lin3(x)
+
+        for iter_layer, biasHi in zip(self.linx, self.biasx):
+            x = F.dropout(x, self.dropout, training=self.training)
+            x = iter_layer(x)
             x1 = self.gconv(x, edge_index)
             x2 = self.gconv(x, edge_in, in_w)
             x3 = self.gconv(x, edge_out, out_w)
 
-            x1 += self.bias3
-            x2 += self.bias3
-            x3 += self.bias3
+            x1 += biasHi
+            x2 += biasHi
+            x3 += biasHi
 
             x = torch.cat((x1, x2, x3), axis=-1)
             x = F.relu(x)
 
-        if self.dropout > 0:
-            x = F.dropout(x, self.dropout, training=self.training)
-        # x = x.unsqueeze(0)
+        # x = x.unsqueeze(0)        # without this block seems better and faster
         # x = x.permute((0, 2, 1))
         # x = self.Conv(x)
         # x = x.permute((0, 2, 1)).squeeze()
