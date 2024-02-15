@@ -121,6 +121,7 @@ class SymLayer1(torch.nn.Module):
         super(SymLayer1, self).__init__()
         self.dropout = dropout
         self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(out_dim * 3, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
         self.bias1 = nn.Parameter(torch.Tensor(1, out_dim))
@@ -137,6 +138,13 @@ class SymLayer1(torch.nn.Module):
         x3 += self.bias1
 
         x = torch.cat((x1, x2, x3), axis=-1)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)  # test with VS. without this
+        x = x.permute((0, 2, 1)).squeeze()
+
+
         # x = F.relu(x)
 
         return x
