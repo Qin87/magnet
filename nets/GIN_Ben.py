@@ -39,7 +39,8 @@ class GIN_ModelBen2(nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv2(x, edge_index)
         # x = F.relu(x)
-        return x
+        # return x
+        return F.log_softmax(x, dim=1)
 
 class GIN_ModelBenX(torch.nn.Module):
 

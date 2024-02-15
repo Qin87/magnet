@@ -11,9 +11,10 @@ import os.path as osp
 from data_utils import load_directedData, get_dataset, get_step_split
 from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT
 from nets.Cheb_Ben import create_Cheb
-from nets.DGCN import SymModel
+# from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
 from nets.GIN_Ben import create_GIN
+from nets.Sym_Ben import create_Sym
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 
 
@@ -44,8 +45,9 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                              layer=args.layer).to(device)
 
     elif args.net == 'SymDiGCN':
-        model = SymModel(num_features, n_cls, filter_num=args.num_filter,
-                         dropout=args.dropout, layer=args.layer).to(device)
+        model = create_Sym(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+
     else:
 
         if args.net == 'GCN':
