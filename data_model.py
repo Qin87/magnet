@@ -13,6 +13,7 @@ from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
+from nets.DiG_Ben import create_DiG
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Ben import create_Sym
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
@@ -37,8 +38,9 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net == 'DiG':
         if not args.net[-2:] == 'ib':
-            model = DiModel(num_features, n_cls, filter_num=args.num_filter,
-                            dropout=args.dropout, layer=args.layer).to(device)
+            model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+            # model = DiModel(num_features, n_cls, filter_num=args.num_filter,
+            #                 dropout=args.dropout, layer=args.layer).to(device)
         else:
             model = DiGCN_IB(num_features, hidden=args.num_filter,
                              n_cls=n_cls, dropout=args.dropout,
@@ -49,7 +51,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
 
     else:
-
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
         elif args.net == 'GAT':
@@ -58,7 +59,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
             raise NotImplementedError("Not Implemented Architecture!")
-
     try:
         print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
     except:

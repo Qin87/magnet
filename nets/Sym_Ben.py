@@ -1,4 +1,4 @@
-from operator import mul
+from operator import mul, matmul
 from typing import Optional, Tuple
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 
@@ -58,7 +58,8 @@ class DGCNConv(MessagePassing):
                  improved: bool = False, cached: bool = False,
                  add_self_loops: bool = True, normalize: bool = True,
                  bias: bool = True, **kwargs):
-
+        self.in_channels = None
+        self.out_channels = None
         kwargs.setdefault('aggr', 'add')
         super(DGCNConv, self).__init__(**kwargs)
 
@@ -102,8 +103,10 @@ class DGCNConv(MessagePassing):
                     edge_index = cache
 
         # propagate_type: (x: Tensor, edge_weight: OptTensor)
-        out = self.propagate(edge_index, x=x, edge_weight=edge_weight,
-                             size=None)
+        out = self.propagate(edge_index, x=x, edge_weight=edge_weight,size=None)
+
+        self.in_channels = x.size(1)
+        self.out_channels = out.size(1)
         return out
 
     def message(self, x_j: Tensor, edge_weight: OptTensor) -> Tensor:

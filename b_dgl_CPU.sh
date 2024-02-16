@@ -9,7 +9,7 @@ Direct_dataset='dgl/citeseer'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=True
 unDirect_data='Cora'
-net='APPNP'
+net='SymDiGCN'
 
 generate_timestamp() {
   date +"%d%H%Ms%S"
