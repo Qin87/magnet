@@ -150,7 +150,6 @@ class DiG_Ben2(nn.Module):
         return x
 
 class DiG_BenX(torch.nn.Module):
-
     def __init__(self, input_dim,  hid_dim, out_dim, dropout, layer=3):
         super(DiG_BenX, self).__init__()
         self.dropout = dropout

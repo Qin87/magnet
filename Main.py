@@ -254,7 +254,6 @@ if args.net == 'DiG':
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-
     data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
 else:
     pass
