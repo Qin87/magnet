@@ -92,19 +92,30 @@ class DIGCNConv(MessagePassing):
 
 
 class DiG_Ben1(nn.Module):
-    def __init__(self, input_dim, nhid, out_dim,  dropout, layer=2):
+    def __init__(self, input_dim, hid_dim, out_dim,  dropout, layer=1):
         super(DiG_Ben1, self).__init__()
         self.dropout = dropout
-        self.line1 = nn.Linear(input_dim, out_dim)
-        self.conv1 = GINConv(self.line1)
 
+        self.conv1 = DIGCNConv(input_dim, hid_dim)
+        self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
+
+        # type1
         self.reg_params = []
         self.non_reg_params = self.conv1.parameters()
 
-    def forward(self, x, edge_index):
-        # x = F.relu(self.conv1(x, edge_index))
-        x = self.conv1(x, edge_index)
-        print(x)
+        # # # type2
+        # self.reg_params = list(self.conv1.parameters())
+        # self.non_reg_params = self.Conv.parameters()
+
+    def forward(self, x, edge_index, edge_weight):
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = F.relu(x)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
@@ -117,14 +128,17 @@ class DiG_Ben2(nn.Module):
         self.conv2 = DIGCNConv(hid_dim, hid_dim)
         self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
 
+        # type1
         self.reg_params = list(self.conv1.parameters())
         self.non_reg_params = self.conv2.parameters()
 
+        # # type2
+        # self.reg_params = list(self.conv1.parameters()) + list(self.conv2.parameters())
+        # self.non_reg_params = self.Conv.parameters()
+
     def forward(self, x, edge_index, edge_weight):
-        # x = F.relu(self.conv1(x, edge_index))
         x = F.relu(self.conv1(x, edge_index, edge_weight))
         x = F.dropout(x, self.dropout, training=self.training)
-        # x = self.conv2(x, edge_index)
         x = self.conv2(x, edge_index, edge_weight)
         x = F.relu(x)
 
@@ -137,29 +151,38 @@ class DiG_Ben2(nn.Module):
 
 class DiG_BenX(torch.nn.Module):
 
-    def __init__(self, input_dim,  nhid, out_dim, dropout, layer=3):
+    def __init__(self, input_dim,  hid_dim, out_dim, dropout, layer=3):
         super(DiG_BenX, self).__init__()
         self.dropout = dropout
-        self.line1 = nn.Linear(input_dim, nhid)
-        self.line2 = nn.Linear(nhid, out_dim)
-        self.conv1 = GINConv(self.line1)
-        self.conv2 = GINConv(self.line2)
-        self.convx = nn.ModuleList([GINConv(nn.Linear(nhid, nhid)) for _ in range(layer-2)])
+        self.conv1 = DIGCNConv(input_dim, hid_dim)
+        self.conv2 = DIGCNConv(hid_dim, hid_dim)
+        self.convx = nn.ModuleList([DIGCNConv(hid_dim, hid_dim) for _ in range(layer-2)])
+        self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
 
+        # type1
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
         self.non_reg_params = self.conv2.parameters()
 
-    def forward(self, x, edge_index):
-        x = F.relu(self.conv1(x, edge_index))
+        # # type2
+        # self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters()) + list(self.conv2.parameters())
+        # self.non_reg_params = self.Conv.parameters()
+
+    def forward(self, x, edge_index, edge_weight):
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
+        x = F.relu(x)
 
         for iter_layer in self.convx:
             x = F.dropout(x, self.dropout, training=self.training)
-            x = F.relu(iter_layer(x, edge_index))
+            x = F.relu(iter_layer(x, edge_index, edge_weight))
 
         x = F.dropout(x, self.dropout, training=self.training)
         # x = F.relu(self.conv2(x, edge_index))      # I should desert this line
-        x = self.conv2(x, edge_index)      # I should desert this line
-        # print(x.shape)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
