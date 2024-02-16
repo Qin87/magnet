@@ -208,6 +208,8 @@ if torch.cuda.is_available():
 else:
     print("cuda is not available, using CPU.")
     device = torch.device("cpu")
+if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
+    device = torch.device("cpu")
 log_directory, log_file_name_with_timestamp = log_file(args)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
@@ -236,7 +238,6 @@ out_weight = None
 SparseEdges = None
 edge_weight = None
 
-# if args.net == 'APPNP' or args.net == 'DiG':
 if args.net == 'DiG':
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
