@@ -161,13 +161,14 @@ class SymRegLayer2(torch.nn.Module):
         super(SymRegLayer2, self).__init__()
         self.dropout = dropout
         self.gconv = DGCNConv()
-        # self.Conv = nn.Conv1d(out_dim * 3, out_dim, kernel_size=1)
+        self.Conv = nn.Conv1d(out_dim * 3, out_dim, kernel_size=1)
+        # self.Conv = nn.Conv1d(nhid * 3, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
         self.lin2 = torch.nn.Linear(nhid * 3, out_dim, bias=False)
 
         self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
 
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
@@ -202,10 +203,10 @@ class SymRegLayer2(torch.nn.Module):
 
         x = torch.cat((x1, x2, x3), axis=-1)
 
-        # x = x.unsqueeze(0)
-        # x = x.permute((0, 2, 1))
-        # x = self.Conv(x)    # with this block or without, almost the same result
-        # x = x.permute((0, 2, 1)).squeeze()
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)    # with this block or without, almost the same result
+        x = x.permute((0, 2, 1)).squeeze()
         return x
 
 class SymRegLayerX(torch.nn.Module):
