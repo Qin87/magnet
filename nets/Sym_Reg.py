@@ -130,6 +130,9 @@ class SymRegLayer1(torch.nn.Module):
         self.bias1 = nn.Parameter(torch.Tensor(1, out_dim))
         nn.init.zeros_(self.bias1)
 
+        # self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
+        self.reg_params = []
+        self.non_reg_params = self.lin1.parameters()
         # self.reg_params = []  todo
         # self.non_reg_params = self.conv1.parameters()
 
@@ -232,7 +235,8 @@ class SymRegLayerX(torch.nn.Module):
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
 
-        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters()) + list(self.linx.parameters())
+        # self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
