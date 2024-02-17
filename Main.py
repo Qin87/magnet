@@ -1,5 +1,7 @@
 import os
 import os.path as osp
+import time
+
 import tqdm
 import random
 import numpy as np
@@ -267,100 +269,107 @@ except IndexError:
     splits = 1
 
 
+
+start_time = time.time()
 # for split in range(splits):
-for split in range(splits - 1, -1, -1):
-    # if args.net in ['GAT', 'GCN', 'SAGE']:
-    try:
+with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
+    for split in range(splits - 1, -1, -1):
+        # if args.net in ['GAT', 'GCN', 'SAGE']:
+        # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+        # try:
         optimizer = torch.optim.Adam(
             [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
 
-    except:
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
+        # except:
+        #     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
-    if splits == 1:
-        data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
-    else:
-        try:
-            data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
-                                                              data_val_maskOrigin[:, split].clone(),
-                                                              data_test_maskOrigin[:, split].clone())
-        except IndexError:
-            print("testIndex ,", data_test_mask.shape, data_train_mask.shape, data_val_mask.shape)
-            data_train_mask, data_val_mask = (
-                data_train_maskOrigin[:, split].clone(), data_val_maskOrigin[:, split].clone())
-            try:
-                data_test_mask = data_test_maskOrigin[:, 1].clone()
-            except:
-                data_test_mask = data_test_maskOrigin.clone()
-
-    stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
-    n_data = []  # num of train in each class
-    for i in range(n_cls):
-        data_num = (stats == i).sum()
-        n_data.append(int(data_num.item()))
-    idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
-    class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-        make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone(), device)
-
-    train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
-    labels_local = data_y.view([-1])[train_idx]  # view([-1]) is "flattening" the tensor.
-    train_idx_list = train_idx.cpu().tolist()
-    local2global = {i: train_idx_list[i] for i in range(len(train_idx_list))}
-    global2local = dict([val, key] for key, val in local2global.items())
-    idx_info_list = [item.cpu().tolist() for item in idx_info]  # list of all train nodes for each class
-    idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
-                      idx_info_list]  # train nodes position inside train
-
-    if args.gdc=='ppr':
-        neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
-    elif args.gdc=='hk':
-        neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
-    elif args.gdc=='none':
-        neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
-    neighbor_dist_list = neighbor_dist_list.to(device)
-
-    best_val_acc_f1 = 0
-    best_val_f1 = 0
-    best_test_f1 =0
-    saliency, prev_out = None, None
-    test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
-    CountNotImproved = 0
-    end_epoch =0
-    # for epoch in tqdm.tqdm(range(args.epoch)):
-    for epoch in range(args.epoch):
-        val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
-        accs, baccs, f1s = test()
-        train_acc, val_acc, tmp_test_acc = accs
-        train_f1, val_f1, tmp_test_f1 = f1s
-        val_acc_f1 = (val_acc + val_f1) / 2.
-        # if val_acc_f1 > best_val_acc_f1:
-        # if val_f1 > best_val_f1:
-        if tmp_test_f1 > best_test_f1:
-            # best_val_acc_f1 = val_acc_f1
-            # best_val_f1 = val_f1
-            best_test_f1 = tmp_test_f1
-            test_acc = accs[2]
-            test_bacc = baccs[2]
-            test_f1 = f1s[2]
-            # print('hello')
-            CountNotImproved =0
-            print('test_f1 CountNotImproved reset to 0 in epoch', epoch)
+        if splits == 1:
+            data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
         else:
-            CountNotImproved += 1
+            try:
+                data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin[:, split].clone(),
+                                                                  data_val_maskOrigin[:, split].clone(),
+                                                                  data_test_maskOrigin[:, split].clone())
+            except IndexError:
+                print("testIndex ,", data_test_mask.shape, data_train_mask.shape, data_val_mask.shape)
+                data_train_mask, data_val_mask = (
+                    data_train_maskOrigin[:, split].clone(), data_val_maskOrigin[:, split].clone())
+                try:
+                    data_test_mask = data_test_maskOrigin[:, 1].clone()
+                except:
+                    data_test_mask = data_test_maskOrigin.clone()
 
-        print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
-        end_epoch = epoch
-        if CountNotImproved> 800:
-            break
-    if args.IsDirectedData:
-        dataset_to_print = args.Direct_dataset + str(args.to_undirected)
-    else:
-        dataset_to_print = args.undirect_dataset
-    with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
-        print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
-        print('Feb14split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+        stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
+        n_data = []  # num of train in each class
+        for i in range(n_cls):
+            data_num = (stats == i).sum()
+            n_data.append(int(data_num.item()))
+        idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
+        class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+            make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone(), device)
 
-        print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
-        print('Feb14split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
+        train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
+        labels_local = data_y.view([-1])[train_idx]  # view([-1]) is "flattening" the tensor.
+        train_idx_list = train_idx.cpu().tolist()
+        local2global = {i: train_idx_list[i] for i in range(len(train_idx_list))}
+        global2local = dict([val, key] for key, val in local2global.items())
+        idx_info_list = [item.cpu().tolist() for item in idx_info]  # list of all train nodes for each class
+        idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
+                          idx_info_list]  # train nodes position inside train
+
+        if args.gdc=='ppr':
+            neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
+        elif args.gdc=='hk':
+            neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
+        elif args.gdc=='none':
+            neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
+        neighbor_dist_list = neighbor_dist_list.to(device)
+
+        best_val_acc_f1 = 0
+        best_val_f1 = 0
+        best_test_f1 =0
+        saliency, prev_out = None, None
+        test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
+        CountNotImproved = 0
+        end_epoch =0
+        # for epoch in tqdm.tqdm(range(args.epoch)):
+        for epoch in range(args.epoch):
+            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+            accs, baccs, f1s = test()
+            train_acc, val_acc, tmp_test_acc = accs
+            train_f1, val_f1, tmp_test_f1 = f1s
+            val_acc_f1 = (val_acc + val_f1) / 2.
+            # if val_acc_f1 > best_val_acc_f1:
+            # if val_f1 > best_val_f1:
+            if tmp_test_f1 > best_test_f1:
+                # best_val_acc_f1 = val_acc_f1
+                # best_val_f1 = val_f1
+                best_test_f1 = tmp_test_f1
+                test_acc = accs[2]
+                test_bacc = baccs[2]
+                test_f1 = f1s[2]
+                # print('hello')
+                CountNotImproved =0
+                print('test_f1 CountNotImproved reset to 0 in epoch', epoch)
+            else:
+                CountNotImproved += 1
+            end_time = time.time()
+            print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+            print(end_time - start_time)
+            # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
+            print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
+            end_epoch = epoch
+            if CountNotImproved> 800:
+                break
+        if args.IsDirectedData:
+            dataset_to_print = args.Direct_dataset + str(args.to_undirected)
+        else:
+            dataset_to_print = args.undirect_dataset
+        with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
+            print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
+            print('Feb14split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+
+            print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
+            print('Feb14split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
 
