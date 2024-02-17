@@ -281,7 +281,7 @@ class SymRegLayerX(torch.nn.Module):
 
         return x
 
-def create_Sym(nfeat, nhid, nclass, dropout, nlayer):
+def create_SymReg(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = SymRegLayer1(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
