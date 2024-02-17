@@ -222,9 +222,6 @@ class SymRegLayerX(torch.nn.Module):
         self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
 
         self.layer = layer
-        # self.lin3 = torch.nn.Linear(nhid * 3, nhid, bias=False)
-        # self.bias3 = nn.Parameter(torch.Tensor(1, nhid))
-        # nn.init.zeros_(self.bias3)
 
         self.linx = nn.ModuleList([torch.nn.Linear(nhid * 3, nhid, bias=False) for _ in range(layer - 2)])
         self.biasx = nn.ParameterList([nn.Parameter(torch.Tensor(1, nhid)) for _ in range(layer - 2)])
