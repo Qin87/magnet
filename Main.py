@@ -40,6 +40,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])
         criterion(out[data_train_mask], data_y[data_train_mask]).backward()
+        print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
     else:
         if epoch > args.warmup:
             # identifying source samples
@@ -76,7 +77,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
 
             elif args.AugDirect == 231:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 2311:
                 new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
 
@@ -91,6 +92,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
             new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
+            # print('Aug', args.AugDirect, ',edges', new_edge_index.shape[1], ',x',new_x.shape[0])
         else:
             sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
             beta = torch.distributions.beta.Beta(2, 2)
@@ -206,6 +208,8 @@ if torch.cuda.is_available():
 else:
     print("cuda is not available, using CPU.")
     device = torch.device("cpu")
+if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
+    device = torch.device("cpu")
 log_directory, log_file_name_with_timestamp = log_file(args)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
@@ -234,7 +238,6 @@ out_weight = None
 SparseEdges = None
 edge_weight = None
 
-# if args.net == 'APPNP' or args.net == 'DiG':
 if args.net == 'DiG':
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
@@ -251,7 +254,6 @@ if args.net == 'DiG':
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-
     data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
 else:
     pass
@@ -265,7 +267,8 @@ except IndexError:
     splits = 1
 
 
-for split in range(splits):
+# for split in range(splits):
+for split in range(splits - 1, -1, -1):
     # if args.net in ['GAT', 'GCN', 'SAGE']:
     try:
         optimizer = torch.optim.Adam(
@@ -356,8 +359,8 @@ for split in range(splits):
         dataset_to_print = args.undirect_dataset
     with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
         print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
-        print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+        print('Feb14split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
 
         print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
-        print('SHAsplit{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
+        print('Feb14split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
 

@@ -449,6 +449,71 @@ class SAGEModel(torch.nn.Module):
 
         return F.log_softmax(x, dim=1)
 
+class SAGEModelBen(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
+        super(SAGEModelBen, self).__init__()
+        self.dropout = dropout
+        self.conv1 = SAGEConv(input_dim, filter_num)
+        self.conv2 = SAGEConv(filter_num, filter_num)
+        self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+
+        self.layer = layer
+        if layer == 3:
+            self.conv3 = SAGEConv(filter_num, filter_num)
+
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+
+        return F.log_softmax(x, dim=1)
+
+class SAGEModelBen1(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, hid_dim, dropout=False, layer=2):
+        super(SAGEModelBen1, self).__init__()
+        self.dropout = dropout
+        self.conv1 = SAGEConv(input_dim, hid_dim)
+        self.conv2 = SAGEConv(hid_dim, out_dim)
+        # self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+        #
+        # self.reg_params = list(self.conv1.parameters())
+        # self.non_reg_params = self.conv2.parameters()
+
+        self.layer = layer
+        if layer == 3:
+            self.conv3 = SAGEConv(hid_dim, hid_dim)
+
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1)).squeeze()
+
+        return F.log_softmax(x, dim=1)
+
 
 class GCNModel(torch.nn.Module):
     def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
@@ -634,20 +699,20 @@ class APPNP_Model(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-class GIN_ModelBen(torch.nn.Module):
-    def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
-        super(GIN_ModelBen, self).__init__()
+class GIN_ModelBen2(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, hid_dim, dropout=False, layer=2):
+        super(GIN_ModelBen2, self).__init__()
         self.dropout = dropout
-        self.line1 = nn.Linear(input_dim, filter_num)
-        self.line2 = nn.Linear(filter_num, filter_num)
+        self.line1 = nn.Linear(input_dim, hid_dim)
+        self.line2 = nn.Linear(hid_dim, out_dim)
 
         self.conv1 = GINConv(self.line1)
         self.conv2 = GINConv(self.line2)
 
-        self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+        # self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
         self.layer = layer
         if layer == 3:
-            self.line3 = nn.Linear(filter_num, filter_num)
+            self.line3 = nn.Linear(hid_dim, hid_dim)
             self.conv3 = GINConv(self.line3)
 
     def forward(self, x, edge_index):

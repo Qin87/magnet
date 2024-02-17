@@ -1,7 +1,4 @@
-###############################################
-# Modified from pytorch Geometric GCN
-###############################################
-
+from operator import mul, matmul
 from typing import Optional, Tuple
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 
@@ -17,14 +14,6 @@ from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_sparse import SparseTensor, fill_diag
 
 
-@torch.jit._overload
-# def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
-#              add_self_loops=True, dtype=None):
-#     # type: (Tensor, OptTensor, Optional[int], bool, bool, Optional[int]) -> PairTensor  # noqa
-#     pass
-
-
-@torch.jit._overload
 def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
              add_self_loops=True, dtype=None):
     fill_value = 2. if improved else 1.
@@ -61,8 +50,6 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
         deg_inv_sqrt.masked_fill_(deg_inv_sqrt == float('inf'), 0)
         return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-
-# the same as GCN but remove trainable weights
 class DGCNConv(MessagePassing):
     _cached_edge_index: Optional[Tuple[Tensor, Tensor]]
     _cached_adj_t: Optional[SparseTensor]
@@ -71,7 +58,8 @@ class DGCNConv(MessagePassing):
                  improved: bool = False, cached: bool = False,
                  add_self_loops: bool = True, normalize: bool = True,
                  bias: bool = True, **kwargs):
-
+        self.in_channels = None
+        self.out_channels = None
         kwargs.setdefault('aggr', 'add')
         super(DGCNConv, self).__init__(**kwargs)
 
@@ -115,8 +103,10 @@ class DGCNConv(MessagePassing):
                     edge_index = cache
 
         # propagate_type: (x: Tensor, edge_weight: OptTensor)
-        out = self.propagate(edge_index, x=x, edge_weight=edge_weight,
-                             size=None)
+        out = self.propagate(edge_index, x=x, edge_weight=edge_weight,size=None)
+
+        self.in_channels = x.size(1)
+        self.out_channels = out.size(1)
         return out
 
     def message(self, x_j: Tensor, edge_weight: OptTensor) -> Tensor:
@@ -129,25 +119,53 @@ class DGCNConv(MessagePassing):
         return '{}({}, {})'.format(self.__class__.__name__, self.in_channels,
                                    self.out_channels)
 
-
-class SymModel(torch.nn.Module):
-    def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
-        super(SymModel, self).__init__()
+class SymLayer1(torch.nn.Module):
+    def __init__(self, input_dim,  nhid, out_dim,dropout=False, layer=2):
+        super(SymLayer1, self).__init__()
         self.dropout = dropout
         self.gconv = DGCNConv()
-        self.Conv = nn.Conv1d(filter_num * 3, out_dim, kernel_size=1)
+        self.Conv = nn.Conv1d(out_dim * 3, out_dim, kernel_size=1)
 
-        self.lin1 = torch.nn.Linear(input_dim, filter_num, bias=False)
-        self.lin2 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
+        self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
+        self.bias1 = nn.Parameter(torch.Tensor(1, out_dim))
+        nn.init.zeros_(self.bias1)
 
-        self.bias1 = nn.Parameter(torch.Tensor(1, filter_num))
-        self.bias2 = nn.Parameter(torch.Tensor(1, filter_num))
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+        x = self.lin1(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
 
-        self.layer = layer
-        if layer == 3:
-            self.lin3 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
-            self.bias3 = nn.Parameter(torch.Tensor(1, filter_num))
-            nn.init.zeros_(self.bias3)
+        x1 += self.bias1
+        x2 += self.bias1
+        x3 += self.bias1
+
+        x = torch.cat((x1, x2, x3), axis=-1)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)  # test with VS. without this
+        x = x.permute((0, 2, 1)).squeeze()
+
+
+        # x = F.relu(x)
+
+        return x
+
+
+class SymLayer2(torch.nn.Module):
+    def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=2):
+        super(SymLayer2, self).__init__()
+        self.dropout = dropout
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(nhid * 3, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid * 3, nhid, bias=False)
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
+
 
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
@@ -165,6 +183,9 @@ class SymModel(torch.nn.Module):
         x = torch.cat((x1, x2, x3), axis=-1)
         x = F.relu(x)
 
+        # if self.dropout > 0:
+        #     x = F.dropout(x, self.dropout, training=self.training)
+
         x = self.lin2(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -175,48 +196,40 @@ class SymModel(torch.nn.Module):
         x3 += self.bias2
 
         x = torch.cat((x1, x2, x3), axis=-1)
-        x = F.relu(x)
 
-        if self.layer == 3:
-            x = self.lin3(x)
-            x1 = self.gconv(x, edge_index)
-            x2 = self.gconv(x, edge_in, in_w)
-            x3 = self.gconv(x, edge_out, out_w)
-
-            x1 += self.bias3
-            x2 += self.bias3
-            x3 += self.bias3
-
-            x = torch.cat((x1, x2, x3), axis=-1)
-            x = F.relu(x)
-
-        if self.dropout > 0:
-            x = F.dropout(x, self.dropout, training=self.training)
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
-        x = self.Conv(x)
+        x = self.Conv(x)    # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
+        return x
 
-        return F.log_softmax(x, dim=1)
-
-
-class Sym_Link(torch.nn.Module):
-    def __init__(self, input_dim, out_dim, filter_num, dropout=False):
-        super(Sym_Link, self).__init__()
+class SymLayerX(torch.nn.Module):
+    def __init__(self, input_dim,  nhid,out_dim, dropout=False, layer=3):
+        super(SymLayerX, self).__init__()
         self.dropout = dropout
         self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(nhid * 3, out_dim, kernel_size=1)
 
-        self.lin1 = torch.nn.Linear(input_dim, filter_num, bias=False)
-        self.lin2 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid * 3, nhid, bias=False)
 
-        self.bias1 = nn.Parameter(torch.Tensor(1, filter_num))
-        self.bias2 = nn.Parameter(torch.Tensor(1, filter_num))
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
+
+        self.layer = layer
+        # self.lin3 = torch.nn.Linear(nhid * 3, nhid, bias=False)
+        # self.bias3 = nn.Parameter(torch.Tensor(1, nhid))
+        # nn.init.zeros_(self.bias3)
+
+        self.linx = nn.ModuleList([torch.nn.Linear(nhid * 3, nhid, bias=False) for _ in range(layer - 2)])
+        self.biasx = nn.ParameterList([nn.Parameter(torch.Tensor(1, nhid)) for _ in range(layer - 2)])
+        for bias_param in self.biasx:
+            nn.init.zeros_(bias_param)
+
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
 
-        self.linear = nn.Linear(filter_num * 6, out_dim)
-
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, index):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -227,6 +240,9 @@ class Sym_Link(torch.nn.Module):
         x3 += self.bias1
 
         x = torch.cat((x1, x2, x3), axis=-1)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(x)
 
         x = self.lin2(x)
@@ -241,10 +257,33 @@ class Sym_Link(torch.nn.Module):
         x = torch.cat((x1, x2, x3), axis=-1)
         x = F.relu(x)
 
-        # x = x[index[:,0]] - x[index[:,1]]
-        x = torch.cat((x[index[:, 0]], x[index[:, 1]]), axis=-1)
-        if self.dropout > 0:
-            x = F.dropout(x, self.dropout, training=self.training)
-        x = self.linear(x)
 
-        return F.log_softmax(x, dim=1)
+        for iter_layer, biasHi in zip(self.linx, self.biasx):
+            x = F.dropout(x, self.dropout, training=self.training)
+            x = iter_layer(x)
+            x1 = self.gconv(x, edge_index)
+            x2 = self.gconv(x, edge_in, in_w)
+            x3 = self.gconv(x, edge_out, out_w)
+
+            x1 += biasHi
+            x2 += biasHi
+            x3 += biasHi
+
+            x = torch.cat((x1, x2, x3), axis=-1)
+            x = F.relu(x)
+
+        # x = x.unsqueeze(0)        # without this block seems better and faster
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1)).squeeze()
+
+        return x
+
+def create_Sym(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = SymLayer1(nfeat, nhid, nclass, dropout, nlayer)
+    elif nlayer == 2:
+        model = SymLayer2(nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = SymLayerX(nfeat, nhid, nclass, dropout, nlayer)
+    return model

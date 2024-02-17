@@ -18,6 +18,8 @@ from torch_scatter import scatter_add
 import scipy
 import os
 from joblib import Parallel, delayed
+from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
+from torch_scatter import scatter_add
 
 
 def sub_adj(edge_index, prob, seed):
@@ -342,9 +344,6 @@ def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15,
 #     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
 def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype):
-    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-    from torch_scatter import scatter_add
-
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
     fill_value = 1
     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)

@@ -1,9 +1,25 @@
 import math
+import sys
 
 import torch
 import torch.nn.functional as F
 from torch_scatter import scatter_add
 from torch_geometric.utils import to_dense_batch
+
+def test_directed(edge_index):
+    set_edges = set()
+    bi_direct = 0
+    for i in range(edge_index.shape[1]):
+
+        edge_inv = frozenset([edge_index[1][i].item(), edge_index[0][i].item()])
+        edge = frozenset([edge_index[0][i].item(), edge_index[1][i].item()])
+        if edge_inv in set_edges:
+            bi_direct += 1
+        set_edges.add(edge)
+    print("Num_bidirect_edges: {}, total_num_edges: {}".format(bi_direct, edge_index.shape[1]))
+    if bi_direct * 2 == edge_index.shape[1]:
+        return False
+    return True
 
 def sampling_idx_individual_dst(class_num_list, idx_info, device):
     """
@@ -237,7 +253,7 @@ def neighbor_sampling(total_node, edge_index, sampling_src_idx,
     ## Exception Handling ##
     device = edge_index.device
     sampling_src_idx = sampling_src_idx.clone().to(device)
-    
+
     # Find the nearest nodes and mix target pool
     sampling_src_idx = sampling_src_idx.long()
     mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx]
@@ -880,7 +896,7 @@ def neighbor_sampling_bidegree_variant2_1(total_node, edge_index, sampling_src_i
     new_edge_index = torch.cat([edge_index, inv_edge_index], dim=1)
 
     return new_edge_index
-def neighbor_sampling_bidegree_variant2_1(total_node, edge_index, sampling_src_idx,
+def neighbor_sampling_bidegree_variant2_1(args, total_node, edge_index, sampling_src_idx,
                                neighbor_dist_list, train_node_mask=None):
     """
     two degrees in row and col.
@@ -912,6 +928,9 @@ def neighbor_sampling_bidegree_variant2_1(total_node, edge_index, sampling_src_i
     row = edge_index[0]
     col_degree = scatter_add(torch.ones_like(col), col)  # Ben only col col_degree
     row_degree = scatter_add(torch.ones_like(row), row)  # Ben only col col_degree
+    are_equal = torch.allclose(col_degree, row_degree)
+    if not args.IsDirectedData:
+        assert are_equal, "Strange: col_degree not equal to row_degree!"
 
     if len(col_degree) < total_node:
         col_degree = torch.cat([col_degree, col_degree.new_zeros(total_node - len(col_degree))], dim=0)
@@ -1140,8 +1159,7 @@ def sampling_node_source(class_num_list, prev_out_local, idx_info_local, train_i
         neighbor_cls = torch.multinomial(conf_src + 1e-12, 1).squeeze().tolist()
 
         # third sampling
-        neighbor = [prev_out_local[idx_info_local[cls].long()][:, cls_idx] for cls in neighbor_cls if
-                    idx_info_local[cls].numel() != 0]
+        neighbor = [prev_out_local[idx_info_local[cls].long()][:, cls_idx] for cls in neighbor_cls if idx_info_local[cls].numel() != 0]
         dst_idx = []
         new_src_idx = []
         for i, item in enumerate(neighbor):

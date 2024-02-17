@@ -4,80 +4,65 @@ from datetime import datetime
 import torch
 
 from edge_data import to_undirected, to_undirectedBen
+from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset, get_step_split
-from nets.DGCN import SymModel
+from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT
+from nets.Cheb_Ben import create_Cheb
+# from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
-from nets.geometric_baselines import GIN_ModelBen, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen
+from nets.DiG_Ben import create_DiG
+from nets.GIN_Ben import create_GIN
+from nets.Sym_Ben import create_Sym
+from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 
-
-class SAGEModelBen:
-    pass
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
-
     if args.net == 'GIN':
-        model = GIN_ModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter,
-                             dropout=args.dropout, layer=args.layer)
+        model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        # model = GIN_ModelBen(num_features, n_cls, nhid=args.feat_dim,
+        #                      dropout=args.dropout, layer=args.layer)
     elif args.net == 'Cheb':
-        model = ChebModelBen(data_x.size(-1), n_cls, K=args.K,
-                             filter_num=args.num_filter, dropout=args.dropout,
-                             layer=args.layer).to(device)
+        model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
+        # model = ChebModelBen(num_features, n_cls, K=args.K,
+        #                      filter_num=args.num_filter, dropout=args.dropout,
+        #                      layer=args.layer).to(device)
     elif args.net == 'APPNP':
-        model = APPNP_ModelBen(data_x.size(-1), n_cls,
-                               filter_num=args.num_filter, alpha=args.alpha,
-                               dropout=args.dropout, layer=args.layer).to(device)
+        model = create_APPNPGGPT(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
+        # model = create_APPNP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha).to(device)
+        # model = create_appnp(num_features, n_cls,
+        #                        filter_num=args.num_filter, alpha=args.alpha,
+        #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net == 'DiG':
         if not args.net[-2:] == 'ib':
-            model = DiModel(data_x.size(-1), n_cls, filter_num=args.num_filter,
-                            dropout=args.dropout, layer=args.layer).to(device)
+            model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+            # model = DiModel(num_features, n_cls, filter_num=args.num_filter,
+            #                 dropout=args.dropout, layer=args.layer).to(device)
         else:
-            model = DiGCN_IB(data_x.size(-1), hidden=args.num_filter,
+            model = DiGCN_IB(num_features, hidden=args.num_filter,
                              n_cls=n_cls, dropout=args.dropout,
                              layer=args.layer).to(device)
 
     elif args.net == 'SymDiGCN':
-        model = SymModel(data_x.size(-1), n_cls, filter_num=args.num_filter,
-                         dropout=args.dropout, layer=args.layer).to(device)
+        model = create_Sym(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+
     else:
-        if args.from_SHA is False:
-            if args.net == 'GAT':
-                model = GATModelBen(data_x.size(-1), n_cls, heads=args.heads, filter_num=args.num_filter,
-                                    dropout=args.dropout, layer=args.layer).to(device)
-
-                # model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                #                    nlayer=args.n_layer)  # SHA
-            elif args.net == 'GCN':
-                model = GCNModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout,
-                                    layer=args.layer).to(device)
-
-                # model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                #                    nlayer=args.n_layer)  # SHA
-            elif args.net == 'SAGE':
-                model = SAGEModelBen(data_x.size(-1), n_cls, filter_num=args.num_filter, dropout=args.dropout,
-                                     layer=args.layer).to(device)
-                # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                #                     nlayer=args.n_layer)
-            else:
-                raise NotImplementedError("Not Implemented Architecture!")
+        if args.net == 'GCN':
+            model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+        elif args.net == 'GAT':
+            model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+        elif args.net == "SAGE":
+            model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
-            if args.net == 'GCN':
-                model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-            elif args.net == 'GAT':
-                model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5, nlayer=args.layer)
-            elif args.net == "SAGE":
-                model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=0.5,
-                                    nlayer=args.layer)
-            else:
-                raise NotImplementedError("Not Implemented Architecture!")
-
-    # try:
-    #     print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
-    # except:
-    #     pass
+            raise NotImplementedError("Not Implemented Architecture!")
+    try:
+        print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
+    except:
+        pass
     return model
 
 
@@ -89,7 +74,7 @@ def load_dataset(args,device):
         path = osp.join(path, args.undirect_dataset)
         dataset = get_dataset(args.undirect_dataset, path, split_type='full')
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # print("Dataset is ", dataset, "\nChosen from DirectedData: ", args.IsDirectedData)
+    print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
 
     # if os.path.isdir(log_path) is False:
     #     os.makedirs(log_path)
@@ -101,7 +86,6 @@ def load_dataset(args,device):
         data.edge_weight = torch.FloatTensor(data.edge_weight)
     except:
         data.edge_weight = None
-
 
 
     # copy GraphSHA
@@ -153,8 +137,6 @@ def load_dataset(args,device):
 
         class_num_list = [len(item) for item in train_node]
         idx_info = [torch.tensor(item) for item in train_node]
-    elif dataset == 'Amazon-Photo':
-        pass
     else:
         edges = data.edge_index  # for torch_geometric librar
         data_y = data.y
@@ -165,13 +147,13 @@ def load_dataset(args,device):
         except:
             dataset_num_features = data_x.shape[1]
 
-    if args.to_undirected:
+    if args.IsDirectedData and args.to_undirected:
         edges = to_undirectedBen(edges)
         print("Converted to undirected data")
 
-    # IsDirectedGraph = test_directed(edges)
-    # print("This is directed graph: ", IsDirectedGraph)
-    # print("data_x", data_x.shape)  # [11701, 300])
+    IsDirectedGraph = test_directed(edges)
+    print("This is directed graph: ", IsDirectedGraph)
+    print("data_x", data_x.shape)  # [11701, 300])
 
 
     data = data.to(device)
