@@ -17,6 +17,7 @@ from nets.DiG_Ben import create_DiG
 from nets.DiG_NoConv import create_DiGSimple
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Ben import create_Sym
+from nets.Sym_Reg import create_SymReg
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 
 
@@ -49,7 +50,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                              layer=args.layer).to(device)
 
     elif args.net == 'SymDiGCN':
-        model = create_Sym(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        # model = create_Sym(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        model = create_SymReg(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
 
     else:
@@ -162,7 +164,6 @@ def load_dataset(args,device):
     data_x = data_x.to(device)
     data_y = data_y.long().to(device)
     edges = edges.to(device)
-    # dataset_num_features = dataset_num_features.to(device)
     data_train_maskOrigin = data_train_maskOrigin.to(device)
     data_val_maskOrigin = data_val_maskOrigin.to(device)
     data_test_maskOrigin = data_test_maskOrigin.to(device)
