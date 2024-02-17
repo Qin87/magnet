@@ -29,12 +29,16 @@ exec > $logfile 2>&1
 
 # Iterate over each AugDirect value
 for augdirect in $augdirect_values; do
+<<<<<<< HEAD
   nohup python3 DiGMain.py --AugDirect=$augdirect --net=$net \
 <<<<<<< HEAD
     -to_undirected  \
     --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
     >SHA${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}_ToUndi.log &
 =======
+=======
+  nohup python3 Main.py --AugDirect=$augdirect --net=$net \
+>>>>>>> 64109c357c22388df00a64b88166b0cbff5fd781
   --layer=1  --IsDirectedData    --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
     >layer1${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log &
 >>>>>>> a29cb825f1afa2c0afcc97e0ad0f85c851b51446

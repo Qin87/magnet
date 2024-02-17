@@ -91,13 +91,13 @@ class DIGCNConv(MessagePassing):
                                    self.out_channels)
 
 
-class DiG_Ben1(nn.Module):
+class DiG_Simple1(nn.Module):
     def __init__(self, input_dim, hid_dim, out_dim,  dropout, layer=1):
-        super(DiG_Ben1, self).__init__()
+        super(DiG_Simple1, self).__init__()
         self.dropout = dropout
 
-        self.conv1 = DIGCNConv(input_dim, hid_dim)
-        self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
+        self.conv1 = DIGCNConv(input_dim, out_dim)
+        # self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
 
         # type1
         self.reg_params = []
@@ -109,24 +109,24 @@ class DiG_Ben1(nn.Module):
 
     def forward(self, x, edge_index, edge_weight):
         x = F.relu(self.conv1(x, edge_index, edge_weight))
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = F.relu(x)
+        # x = F.dropout(x, self.dropout, training=self.training)
+        # x = F.relu(x)
 
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1)).squeeze()
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
-class DiG_Ben2(nn.Module):
+class DiG_Simple2(nn.Module):
     def __init__(self, input_dim, hid_dim, out_dim, dropout, layer=2):
-        super(DiG_Ben2, self).__init__()
+        super(DiG_Simple2, self).__init__()
         self.dropout = dropout
 
         self.conv1 = DIGCNConv(input_dim, hid_dim)
-        self.conv2 = DIGCNConv(hid_dim, hid_dim)
-        self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
+        self.conv2 = DIGCNConv(hid_dim, out_dim)
+        # self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
 
         # type1
         self.reg_params = list(self.conv1.parameters())
@@ -140,23 +140,23 @@ class DiG_Ben2(nn.Module):
         x = F.relu(self.conv1(x, edge_index, edge_weight))
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv2(x, edge_index, edge_weight)
-        x = F.relu(x)
+        # x = F.relu(x)
 
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1)).squeeze()
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
-class DiG_BenX(torch.nn.Module):
+class DiG_SimpleX(torch.nn.Module):
     def __init__(self, input_dim,  hid_dim, out_dim, dropout, layer=3):
-        super(DiG_BenX, self).__init__()
+        super(DiG_SimpleX, self).__init__()
         self.dropout = dropout
         self.conv1 = DIGCNConv(input_dim, hid_dim)
-        self.conv2 = DIGCNConv(hid_dim, hid_dim)
+        self.conv2 = DIGCNConv(hid_dim, out_dim)
         self.convx = nn.ModuleList([DIGCNConv(hid_dim, hid_dim) for _ in range(layer-2)])
-        self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
+        # self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
 
         # type1
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
@@ -168,28 +168,27 @@ class DiG_BenX(torch.nn.Module):
 
     def forward(self, x, edge_index, edge_weight):
         x = F.relu(self.conv1(x, edge_index, edge_weight))
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = self.conv2(x, edge_index, edge_weight)
-        x = F.relu(x)
 
         for iter_layer in self.convx:
             x = F.dropout(x, self.dropout, training=self.training)
             x = F.relu(iter_layer(x, edge_index, edge_weight))
 
         x = F.dropout(x, self.dropout, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
+        # x = F.relu(x)
         # x = F.relu(self.conv2(x, edge_index))      # I should desert this line
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1)).squeeze()
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
-def create_DiG(nfeat, nhid, nclass, dropout, nlayer):
+def create_DiGSimple(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
-        model = DiG_Ben1(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_Simple1(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = DiG_Ben2(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_Simple2(nfeat, nhid, nclass, dropout, nlayer)
     else:
-        model = DiG_BenX(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_SimpleX(nfeat, nhid, nclass, dropout, nlayer)
     return model
