@@ -1,4 +1,4 @@
-for log_file in $(ls -1 SHAGAT_dgl_cora_Aug*.log | sort); do
+for log_file in $(ls -1 layer1SymDiGCN_dgl_citeseer_Aug*.log | sort); do
   echo "     "
   grep -E '^(AP|G|Ch|F|S)' "$log_file" 
  #grep -v '^[eEtNA]' "$log_file"

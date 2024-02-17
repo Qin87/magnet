@@ -214,13 +214,13 @@ class SymRegLayerX(torch.nn.Module):
         super(SymRegLayerX, self).__init__()
         self.dropout = dropout
         self.gconv = DGCNConv()
-        self.Conv = nn.Conv1d(nhid * 3, out_dim, kernel_size=1)
+        self.Conv = nn.Conv1d(out_dim * 3, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
-        self.lin2 = torch.nn.Linear(nhid * 3, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid * 3, out_dim, bias=False)
 
         self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
 
         self.layer = layer
 
@@ -231,6 +231,9 @@ class SymRegLayerX(torch.nn.Module):
 
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
+
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
+        self.non_reg_params = self.lin2.parameters()
 
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
@@ -248,19 +251,6 @@ class SymRegLayerX(torch.nn.Module):
             x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(x)
 
-        x = self.lin2(x)
-        x1 = self.gconv(x, edge_index)
-        x2 = self.gconv(x, edge_in, in_w)
-        x3 = self.gconv(x, edge_out, out_w)
-
-        x1 += self.bias2
-        x2 += self.bias2
-        x3 += self.bias2
-
-        x = torch.cat((x1, x2, x3), axis=-1)
-        x = F.relu(x)
-
-
         for iter_layer, biasHi in zip(self.linx, self.biasx):
             x = F.dropout(x, self.dropout, training=self.training)
             x = iter_layer(x)
@@ -275,10 +265,21 @@ class SymRegLayerX(torch.nn.Module):
             x = torch.cat((x1, x2, x3), axis=-1)
             x = F.relu(x)
 
-        # x = x.unsqueeze(0)        # without this block seems better and faster
-        # x = x.permute((0, 2, 1))
-        # x = self.Conv(x)
-        # x = x.permute((0, 2, 1)).squeeze()
+        x = self.lin2(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x1 += self.bias2
+        x2 += self.bias2
+        x3 += self.bias2
+
+        x = torch.cat((x1, x2, x3), axis=-1)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)  # with this block or without, almost the same result
+        x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
