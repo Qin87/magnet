@@ -14,6 +14,7 @@ from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_Ben import create_DiG
+from nets.DiG_NoConv import create_DiGSimple
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Ben import create_Sym
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
@@ -38,7 +39,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net == 'DiG':
         if not args.net[-2:] == 'ib':
-            model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+            # model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+            model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
             # model = DiModel(num_features, n_cls, filter_num=args.num_filter,
             #                 dropout=args.dropout, layer=args.layer).to(device)
         else:

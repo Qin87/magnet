@@ -1,8 +1,8 @@
 ###!/bin/bash
 
 # List of AugDirect values
-#augdirect_values="2 4 20 21 22 23 231 2311"
-augdirect_values="0 1 -1 2 4 20 21 22 23 231 2311"
+augdirect_values="2 4 20 21 22 23 231 2311"
+#augdirect_values="0 1 -1 2 4 20 21 22 23 231 2311"
 #augdirect_values="0 1 -1 2"
 
 Direct_dataset='dgl/citeseer'  # Update your Direct_dataset value

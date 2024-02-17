@@ -276,12 +276,12 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     for split in range(splits - 1, -1, -1):
         # if args.net in ['GAT', 'GCN', 'SAGE']:
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        # try:
-        optimizer = torch.optim.Adam(
-            [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
+        try:
+            optimizer = torch.optim.Adam(
+                [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
 
-        # except:
-        #     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+        except:
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
         if splits == 1:
@@ -360,7 +360,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
             end_epoch = epoch
-            if CountNotImproved> 800:
+            if CountNotImproved> 450:
+                print("No improved for consecutive 450 epochs, break.")
                 break
         if args.IsDirectedData:
             dataset_to_print = args.Direct_dataset + str(args.to_undirected)
