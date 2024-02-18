@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/Main.py", line 338, in <module>
-    val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/Main.py", line 82, in train
-    new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/gens.py", line 931, in neighbor_sampling_bidegree_variant2_1
-    are_equal = torch.allclose(tgt_degree, src_degree)
-RuntimeError: The size of tensor a (3327) must match the size of tensor b (3323) at non-singleton dimension 0

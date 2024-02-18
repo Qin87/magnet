@@ -175,7 +175,7 @@ def log_file(args):
         args.Direct_dataset.split('/')[0]
     else:
         dataset_to_print = args.undirect_dataset
-    log_file_name = dataset_to_print+args.net+'_Aug'+str(args.AugDirect)+'_lr'+str(args.lr)+'_l2'+str(args.l2)+'_epoch'+str(args.epoch)
+    log_file_name = dataset_to_print+args.net+'_Aug'+str(args.AugDirect)+'_lr'+str(args.lr)+'_l2'+str(args.l2)+'_NotImprovEpoch'+str(args.NotImproved)
     # Add a timestamp to the log file name to make it unique
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"

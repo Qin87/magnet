@@ -128,7 +128,7 @@ class GraphSAGE2(nn.Module):
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
         x = F.relu(self.conv1(x, edge_index, edge_weight))
-        x = F.dropout(x, p= self.dropout_p, training=self.training)
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
         x = self.conv2(x, edge_index, edge_weight)
         return x
 
@@ -152,7 +152,7 @@ class GraphSAGEX(nn.Module):
             x = F.dropout(x, p= self.dropout_p, training=self.training)
             x = F.relu(iter_layer(x, edge_index,edge_weight))
 
-        x = F.dropout(x, p= self.dropout_p, training=self.training)
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
         x = self.conv2(x, edge_index,edge_weight)
 
         return x
