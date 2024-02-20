@@ -268,20 +268,19 @@ try:
 except IndexError:
     splits = 1
 
-
-
 start_time = time.time()
-# for split in range(splits):
+
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
+    print(model, file=log_file)
     for split in range(splits - 1, -1, -1):
+    # for split in range(splits):
         # if args.net in ['GAT', 'GCN', 'SAGE']:
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        try:
-            optimizer = torch.optim.Adam(
-                [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
-
-        except:
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+        # try:
+        optimizer = torch.optim.Adam(
+            [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
+        # except:
+        #     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
         if splits == 1:
@@ -374,4 +373,5 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print(end_time - start_time, file=log_file)
         print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
         print('Feb18split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
+
 

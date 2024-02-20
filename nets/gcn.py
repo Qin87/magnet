@@ -249,13 +249,91 @@ class StandGCNX(nn.Module):
         x, edge_index = self.conv2(x, edge_index, edge_weight,is_add_self_loops=self.is_add_self_loops)
         return x
 
+class StandGCN1BN(nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1):
+        super(StandGCN1BN, self).__init__()
+        self.conv1 = GCNConv(nfeat, nclass, cached=False, normalize=True)
+        self.reg_params = []
+        self.non_reg_params = self.conv1.parameters()
+        self.is_add_self_loops = True
+        self.batch_norm1 = nn.BatchNorm1d(nclass)
+
+    def forward(self, x, adj, edge_weight=None):
+
+        edge_index = adj
+        x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        x = self.batch_norm1(x)
+
+        return x
+
+
+class StandGCN2BN(nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2):
+        super(StandGCN2BN, self).__init__()
+        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=True)
+        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=True)
+        self.dropout_p = dropout
+
+        self.is_add_self_loops = True
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nclass)
+
+        self.reg_params = list(self.conv1.parameters())
+        self.non_reg_params = self.conv2.parameters()
+
+
+    def forward(self, x, adj, edge_weight=None):
+        edge_index = adj
+        x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        x = self.batch_norm1(x)
+        x = F.relu(x)
+
+        x = F.dropout(x, p= self.dropout_p, training=self.training)
+        x, edge_index = self.conv2(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        x = self.batch_norm2(x)
+
+        return x
+
+
+class StandGCNXBN(nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3):
+        super(StandGCNXBN, self).__init__()
+        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=True)
+        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=True)
+        self.convx = nn.ModuleList([GCNConv(nhid, nhid) for _ in range(nlayer-2)])
+        self.dropout_p = dropout
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nclass)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        self.is_add_self_loops = True
+        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+        self.non_reg_params = self.conv2.parameters()
+
+    def forward(self, x, adj, edge_weight=None):
+        edge_index = adj
+        x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        x = F.relu(self.batch_norm1(x))
+
+        for iter_layer in self.convx:
+            x = F.dropout(x,p= self.dropout_p, training=self.training)
+            x, edge_index = iter_layer(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+            x= self.batch_norm3(x)
+            x = F.relu(x)
+
+        x = F.dropout(x, p= self.dropout_p, training=self.training)
+        x, edge_index = self.conv2(x, edge_index, edge_weight,is_add_self_loops=self.is_add_self_loops)
+        x = self.batch_norm2(x)
+        return x
+
 
 def create_gcn(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
-        model = StandGCN1(nfeat, nhid, nclass, dropout,nlayer)
+        model = StandGCN1BN(nfeat, nhid, nclass, dropout,nlayer)
     elif nlayer == 2:
-        model = StandGCN2(nfeat, nhid, nclass, dropout,nlayer)
+        model = StandGCN2BN(nfeat, nhid, nclass, dropout,nlayer)
     else:
-        model = StandGCNX(nfeat, nhid, nclass, dropout,nlayer)
+        model = StandGCNXBN(nfeat, nhid, nclass, dropout,nlayer)
 
     return model
