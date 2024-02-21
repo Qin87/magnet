@@ -367,11 +367,11 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         else:
             dataset_to_print = args.undirect_dataset
         # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
-        print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
-        print('Feb18split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+        print(args.net,args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
+        print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
 
         print(end_time - start_time, file=log_file)
-        print(args.net, dataset_to_print, args.imb_ratio, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
-        print('Feb18split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
+        print(args.net,args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
+        print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
 
 
