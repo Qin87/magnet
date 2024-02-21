@@ -38,7 +38,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         # model = create_appnp(num_features, n_cls,
         #                        filter_num=args.num_filter, alpha=args.alpha,
         #                        dropout=args.dropout, layer=args.layer).to(device)
-    elif args.net == 'DiG':
+    elif args.net.startswith('DiG'):
         if not args.net[-2:] == 'ib':
             model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
             # model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)

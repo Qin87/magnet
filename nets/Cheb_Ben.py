@@ -113,10 +113,10 @@ class ChebBenXBN(torch.nn.Module):
 
         for iter_layer in self.convx:
             x = F.dropout(x, self.dropout, training=self.training)
-            x = F.relu(self.batch_norm2(iter_layer(x, edge_index)))
+            x = F.relu(self.batch_norm3(iter_layer(x, edge_index)))
 
         x = F.dropout(x, self.dropout, training=self.training)
-        x = self.batch_norm3(self.conv2(x, edge_index))
+        x = self.batch_norm2(self.conv2(x, edge_index))
         return x
 
 def create_Cheb(nfeat, nhid, nclass, dropout, nlayer, K):
