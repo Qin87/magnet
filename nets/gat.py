@@ -362,3 +362,12 @@ def create_gat(nfeat, nhid, nclass, dropout, nlayer):
     else:
         model = StandGATXBN(nfeat, nhid, nclass, dropout,nlayer)
     return model
+
+def create_gat_0(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = StandGAT1(nfeat, nhid, nclass, dropout,nlayer)
+    elif nlayer == 2:
+        model = StandGAT2(nfeat, nhid, nclass, dropout,nlayer)
+    else:
+        model = StandGATX(nfeat, nhid, nclass, dropout,nlayer)
+    return model

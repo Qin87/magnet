@@ -40,8 +40,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith('DiG'):
         if not args.net[-2:] == 'ib':
-            model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-            # model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+            # model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+            model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
             # model = DiModel(num_features, n_cls, filter_num=args.num_filter,
             #                 dropout=args.dropout, layer=args.layer).to(device)
         else:

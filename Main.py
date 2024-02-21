@@ -355,6 +355,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 CountNotImproved += 1
             end_time = time.time()
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+            print(end_time - start_time, file=log_file)
             print(end_time - start_time)
             # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
