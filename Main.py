@@ -365,7 +365,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         if args.IsDirectedData:
             dataset_to_print = args.Direct_dataset + str(args.to_undirected)
         else:
-            dataset_to_print = args.undirect_dataset
+            dataset_to_print = args.undirect_dataset+ str(args.to_undirected)
         # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print(args.net,args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
