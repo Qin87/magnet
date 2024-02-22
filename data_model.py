@@ -17,6 +17,7 @@ from nets.DiG_Ben import create_DiG
 from nets.DiG_NoConv import create_DiGSimple
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg
+from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 
 
@@ -151,14 +152,14 @@ def load_dataset(args,device):
         except:
             dataset_num_features = data_x.shape[1]
 
-    if args.IsDirectedData and args.to_undirected:
-        edges = to_undirectedBen(edges)
-        print("Converted to undirected data")
 
     IsDirectedGraph = test_directed(edges)
     print("This is directed graph: ", IsDirectedGraph)
     print("data_x", data_x.shape)  # [11701, 300])
 
+    if IsDirectedGraph and args.to_undirected:
+        edges = to_undirectedBen(edges)
+        print("Converted to undirected data")
 
     data = data.to(device)
     data_x = data_x.to(device)

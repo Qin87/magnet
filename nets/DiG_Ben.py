@@ -233,5 +233,5 @@ def create_DiG(nfeat, nhid, nclass, dropout, nlayer):
     elif nlayer == 2:
         model = DiG_Ben2(nfeat, nhid, nclass, dropout, nlayer)
     else:
-        model = DiG_BenX(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiG_BenXBN(nfeat, nhid, nclass, dropout, nlayer)
     return model
