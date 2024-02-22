@@ -35,7 +35,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     if args.AugDirect == 0:
         if args.net == 'SymDiGCN':
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-        elif args.net == 'DiG':
+        elif args.net.startswith('DiG'):
             out = model(data_x, SparseEdges, edge_weight)
         else:
             out = model(data_x, edges)
@@ -112,8 +112,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         if args.net == 'SymDiGCN':
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
             out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
-        # elif args.net == 'APPNP' or args.net == 'DiG':
-        elif args.net == 'DiG':
+        elif args.net.startswith('DiG'):
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
@@ -151,7 +150,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
 
-        elif args.net == 'DiG':
+        elif args.net.startswith('DiG'):
             # must keep this, don't know why, but will be error without it----to analysis it later
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
             edge_index1 = edge_index1.to(device)
@@ -183,7 +182,7 @@ def test():
     # logits = model(data_x, edges[:,train_edge_mask])
     if args.net == 'SymDiGCN':
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
-    elif args.net == 'DiG':
+    elif args.net.startswith('DiG'):
         logits = model(data_x, SparseEdges, edge_weight)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
@@ -240,7 +239,7 @@ out_weight = None
 SparseEdges = None
 edge_weight = None
 
-if args.net == 'DiG':
+if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)

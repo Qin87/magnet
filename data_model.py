@@ -13,8 +13,7 @@ from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT, create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
-from nets.DiG_Ben import create_DiG
-from nets.DiG_NoConv import create_DiGSimple
+from nets.DiG_NoConv import create_DiGSimple, DiGCN_IB_XBN, create_DiG_IB
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg
 from nets.gat import create_gat_0
@@ -41,18 +40,12 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith('DiG'):
         if not args.net[-2:] == 'ib':
-            # model = create_DiG(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-            model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
-            # model = DiModel(num_features, n_cls, filter_num=args.num_filter,
-            #                 dropout=args.dropout, layer=args.layer).to(device)
+            model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         else:
-            model = DiGCN_IB(num_features, hidden=args.num_filter,
-                             n_cls=n_cls, dropout=args.dropout,
-                             layer=args.layer).to(device)
+            model = create_DiG_IB(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
 
     elif args.net == 'SymDiGCN':
-        # model = create_Sym(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-        model = create_SymReg(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
 
     else:
@@ -68,6 +61,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
     except:
         pass
+    model = model.to(device)
     return model
 
 
@@ -152,7 +146,6 @@ def load_dataset(args,device):
         except:
             dataset_num_features = data_x.shape[1]
 
-
     IsDirectedGraph = test_directed(edges)
     print("This is directed graph: ", IsDirectedGraph)
     print("data_x", data_x.shape)  # [11701, 300])
@@ -177,7 +170,6 @@ def log_file(args):
     else:
         dataset_to_print = args.undirect_dataset
     log_file_name = dataset_to_print+args.net+'_Aug'+str(args.AugDirect)+'_lr'+str(args.lr)+'_l2'+str(args.l2)+'_NotImprovEpoch'+str(args.NotImproved)
-    # Add a timestamp to the log file name to make it unique
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 

@@ -315,6 +315,9 @@ class SymRegLayer1BN(torch.nn.Module):
 
         return x
 class SymRegLayer2BN(torch.nn.Module):
+    """
+    Don't try again to simplify it by deleting Conv, because the catenation
+    """
     def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=2):
         super(SymRegLayer2BN, self).__init__()
         self.dropout = dropout
@@ -451,6 +454,7 @@ class SymRegLayerXBN(torch.nn.Module):
         x = x.permute((0, 2, 1)).squeeze()
 
         return x
+
 def create_SymReg(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = SymRegLayer1BN(nfeat, nhid, nclass, dropout, nlayer)
