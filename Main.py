@@ -17,8 +17,10 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_biTrainmask
-from data_model import CreatModel, load_dataset, log_file
-from preprocess import F_in_out
+from data_model import CreatModel, load_dataset, log_file, geometric_dataset_sparse_Ben
+from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
+from nets.sparse_magnet import sparse_mx_to_torch_sparse_tensor, ChebNet
+from preprocess import F_in_out, geometric_dataset_sparse
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -26,7 +28,7 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 import warnings
 warnings.filterwarnings("ignore")
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight):
+def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     model.train()
@@ -37,12 +39,15 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
         elif args.net.startswith('DiG'):
             out = model(data_x, SparseEdges, edge_weight)
+        elif args.net.startswith('Mag'):
+            out = model(X_real, X_img)
+            out = out.permute(2, 1, 0).squeeze()
         else:
             out = model(data_x, edges)
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])
         criterion(out[data_train_mask], data_y[data_train_mask]).backward()
-        print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
+        # print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
     else:
         if epoch > args.warmup:
             # identifying source samples
@@ -129,6 +134,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             del edge_index1, edge_weights1
 
             out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
+        elif args.net.startswith('Mag'):
+            out = model(X_real, X_img).permute(2, 1, 0).squeeze()
         else:
             out = model(new_x, new_edge_index)  # all data + aug
 
@@ -168,6 +175,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             del edge_index1, edge_weights1
 
             out = model(data_x, SparseEdges, edge_weight)
+        elif args.net.startswith('Mag'):
+            out = model(X_real, X_img).permute(2, 1, 0).squeeze()
         else:
             out = model(data_x, edges)
         val_loss= F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -184,6 +193,8 @@ def test():
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith('DiG'):
         logits = model(data_x, SparseEdges, edge_weight)
+    elif args.net.startswith('Mag'):
+        logits = model(X_real, X_img).permute(2, 1, 0).squeeze()
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -224,20 +235,46 @@ torch.backends.cudnn.benchmark = False
 random.seed(seed)
 np.random.seed(seed)
 
-data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
-
-n_cls = data_y.max().item() + 1
-
-model = CreatModel(args, num_features, n_cls, data_x, device)
-model = model.to(device)
-criterion = CrossEntropy().to(device)
-
 edge_in = None
 in_weight = None
 edge_out = None
 out_weight = None
 SparseEdges = None
 edge_weight = None
+X_img = None
+X_real = None
+
+data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+
+n_cls = data_y.max().item() + 1
+
+if args.net.startswith('Mag'):
+    size = data_y.size(-1)
+    f_node, e_node = edges[0], edges[1]
+    laplacian = True
+    gcn_appr = False
+    try:
+        L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=data.edge_weight)
+    except AttributeError:
+        L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+    multi_order_laplacian = cheb_poly_sparse(L, args.K)
+    L = multi_order_laplacian
+    L_img = []
+    L_real = []
+    for i in range(len(L)):
+        L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
+        L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+    X_img = torch.FloatTensor(data_x).to(device)
+    X_real = torch.FloatTensor(data_x).to(device)
+
+    model = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+                activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+else:
+
+    model = CreatModel(args, num_features, n_cls, data_x, device)
+model = model.to(device)
+criterion = CrossEntropy().to(device)
+
 
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
@@ -275,11 +312,11 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     # for split in range(splits):
         # if args.net in ['GAT', 'GCN', 'SAGE']:
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        # try:
-        optimizer = torch.optim.Adam(
-            [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
-        # except:
-        #     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+        try:
+            optimizer = torch.optim.Adam(
+                [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
+        except:  # TODo
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
         if splits == 1:
@@ -333,7 +370,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         end_epoch =0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         for epoch in range(args.epoch):
-            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img)
             accs, baccs, f1s = test()
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s

@@ -8,7 +8,7 @@ import scipy.sparse as sp
 from torch_geometric.utils import to_undirected
 from torch_geometric.datasets import WebKB, WikipediaNetwork
 
-from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse, hermitian_decomp, cheb_poly
+from src.utils.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 
 # internel
 # import hermitian
@@ -21,8 +21,7 @@ if __name__ == '__main__':
 def load_cora(q, path='../../dataset/cora/', save_pk=False, K=1):
     # only graph structure without features
     # create the graph, networkx graph
-    G = nx.read_edgelist(path + '/cora.edges', nodetype=int, delimiter=',', data=(('weight', float),),
-                         create_using=nx.DiGraph())
+    G = nx.read_edgelist(path + '/cora.edges', nodetype=int, delimiter=',', data=(('weight', float),), create_using=nx.DiGraph())
 
     # create the label set
     label = {}
@@ -198,12 +197,8 @@ def geometric_dataset_sparse(q, K, root='../dataset/data/tmp/', subset='Cornell'
         pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
     return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
 
-# def geometric_dataset_sparse_Ben(q, K, root='../dataset/data/tmp/', subset='Cornell', dataset=WebKB,
-#                              load_only=False, save_pk=True, laplacian=True, gcn_appr=False):
 
-
-def to_edge_dataset(q, edge_index, K, data_split, size, root='../dataset/data/tmp/', laplacian=True, norm=True,
-                    max_eigen=2.0, gcn_appr=False):
+def to_edge_dataset(q, edge_index, K, data_split, size, root='../dataset/data/tmp/', laplacian=True, norm=True, max_eigen=2.0, gcn_appr=False):
     save_name = root + '/edge_' + str(q) + '_' + str(K) + '_' + str(data_split) + '.pk'
     if os.path.isfile(save_name):
         multi_order_laplacian = pk.load(open(save_name, 'rb'))
@@ -233,28 +228,27 @@ def to_edge_dataset(q, edge_index, K, data_split, size, root='../dataset/data/tm
     return multi_order_laplacian
 
 
-def to_edge_dataset_sparse(q, edge_index, K, data_split, size, root='../dataset/data/tmp/', laplacian=True, norm=True,
-                           max_eigen=2.0, gcn_appr=False):
+def to_edge_dataset_sparse(q, edge_index, K, data_split, size, root='../dataset/data/tmp/', laplacian=True, norm=True, max_eigen=2.0, gcn_appr=False):
     save_name = root + '/edge_' + str(q) + '_' + str(K) + '_' + str(data_split) + '.pk'
     if os.path.isfile(save_name):
         multi_order_laplacian = pk.load(open(save_name, 'rb'))
         return multi_order_laplacian
 
     f_node, e_node = edge_index[0], edge_index[1]
-    L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0,
-                                gcn_appr=gcn_appr)
+    L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr)
     multi_order_laplacian = cheb_poly_sparse(L, K)
 
     return multi_order_laplacian
 
 
 def F_in_out(edge_index, size, edge_weight=None):
-    device = edge_index.device
-    edge_index = edge_index.long().cpu()
     if edge_weight is not None:
         a = sp.coo_matrix((edge_weight, edge_index), shape=(size, size)).tocsc()
     else:
-        a = sp.coo_matrix((np.ones(len(edge_index[0])), edge_index), shape=(size, size)).tocsc()
+        try:
+            a = sp.coo_matrix((np.ones(len(edge_index[0])), edge_index), shape=(size, size)).tocsc()
+        except:
+            a = sp.coo_matrix((np.ones(len(edge_index[0])), edge_index.cpu().numpy()), shape=(size, size)).tocsc()  # for GPU run
 
     out_degree = np.array(a.sum(axis=0))[0]
     out_degree[out_degree == 0] = 1
@@ -283,10 +277,15 @@ def F_in_out(edge_index, size, edge_weight=None):
     A_in = A_in.tocoo()
     A_out = A_out.tocoo()
 
-    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)
-    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
+    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long()
+    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long()
 
-    in_weight = torch.from_numpy(A_in.data).float().to(device)
-    out_weight = torch.from_numpy(A_out.data).float().to(device)
-    edge_index = edge_index.to(device)  # Ben GPU
+    in_weight = torch.from_numpy(A_in.data).float()
+    out_weight = torch.from_numpy(A_out.data).float()
+
+    tensors = [edge_in, edge_out, in_weight, out_weight]
+    for i in range(len(tensors)):
+        tensors[i] = tensors[i].to(edge_index.device)
+    edge_in, edge_out, in_weight, out_weight = tensors
+
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight

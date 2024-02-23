@@ -185,6 +185,23 @@ class InceptionBlock(torch.nn.Module):
         x2 = self.conv2(x, edge_index2, edge_weight2)
         return x0, x1, x2
 
+class InceptionBlock_Ben(torch.nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(InceptionBlock_Ben, self).__init__()
+        self.ln = Linear(in_dim, out_dim)
+        self.conv1 = DIGCNConv(in_dim, out_dim)
+        self.conv2 = DIGCNConv(in_dim, out_dim)
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
+        self.conv1.reset_parameters()
+        self.conv2.reset_parameters()
+
+    def forward(self, x, edge_index, edge_weight, edge_index2, edge_weight2):
+        x0 = self.ln(x)
+        x1 = self.conv1(x, edge_index, edge_weight)
+        x2 = self.conv2(x, edge_index2, edge_weight2)
+        return x0, x1, x2
 
 class DiGCN_IB(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):

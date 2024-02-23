@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import numpy as np
 import torch
 
 from edge_data import to_undirected, to_undirectedBen
@@ -18,7 +19,9 @@ from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg
 from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
-
+from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
+from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor
+from preprocess import geometric_dataset_sparse
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
@@ -47,7 +50,41 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'SymDiGCN':
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
-
+    # elif args.net == 'Magnet':
+    #     # _file_ = args.data_path + args.dataset + '/data' + str(args.q) + '_' + str(args.K) + '_sparse.pk'
+    #     # if os.path.isfile(_file_):
+    #     #     data = pk.load(open(_file_, 'rb'))
+    #     #     L = data['L']
+    #     #     X, label, train_mask, val_mask, test_mask = geometric_dataset_sparse(args.q, args.K,
+    #     #                                                                          root=args.data_path + args.dataset, subset=subset,
+    #     #                                                                          dataset=load_func, load_only=True, save_pk=False)
+    #     # else:
+    #     X, label, train_mask, val_mask, test_mask, L = geometric_dataset_sparse(args.q, args.K,
+    #                                                                                 root=args.data_path + args.dataset, subset=subset,
+    #                                                                                 dataset=load_func, load_only=False, save_pk=True)
+    #
+    #     # normalize label, the minimum should be 0 as class index
+    #     _label_ = label - np.amin(label)
+    #     cluster_dim = np.amax(_label_) + 1
+    #
+    #     # convert dense laplacian to sparse matrix
+    #     L_img = []
+    #     L_real = []
+    #     for i in range(len(L)):
+    #         L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
+    #         L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+    #
+    #     # label = torch.from_numpy(_label_[np.newaxis]).to(device)
+    #     # X_img = torch.FloatTensor(X).to(device)
+    #     # X_real = torch.FloatTensor(X).to(device)
+    #     # criterion = nn.NLLLoss()
+    #
+    #     # model = ChebNet(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+    #     # model = ChebNet(num_features, L_norm_real, L_norm_imag, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False).to(device)
+    #     model = ChebNet(num_features, L_real, L_img, K=args.K, label_dim=cluster_dim, layer=args.layer,
+    #                     activation=args.activation, num_filter=args.num_filter, dropout=args.dropout).to(device)
+    #     # model = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=cluster_dim, layer=args.layer,
+    #     #                 activation=args.activation, num_filter=args.num_filter, dropout=args.dropout).to(device)
     else:
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
@@ -65,7 +102,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     return model
 
 
-def load_dataset(args,device):
+def load_dataset(args,device, laplacian=True, gcn_appr=False):
     if args.IsDirectedData:
         dataset = load_directedData(args)
     else:
@@ -154,6 +191,40 @@ def load_dataset(args,device):
         edges = to_undirectedBen(edges)
         print("Converted to undirected data")
 
+    # if args.net == 'Magnet':
+    #     size = data_y.size(-1)
+    #     # adj = torch.zeros(size, size).data.numpy().astype('uint8')
+    #     # adj[dataset[0].edge_index[0], dataset[0].edge_index[1]] = 1
+    #
+    #     f_node, e_node = edges[0], edges[1]
+    #
+    #     # label = dataset[0].y.data.nta.numpy().astype('bool_')
+    #     numpy().astype('int')
+    #     # X = dataset[0].x.data.numpy().astype('float32')
+    #     # train_mask = dataset[0].train_mask.data.numpy().astype('bool_')
+    #     # val_mask = dataset[0].val_mask.data.numpy().astype('bool_')
+    #     # test_mask = dataset[0].test_mask.da
+    #     # if load_only:
+    #     #     return X, label, train_mask, val_mask, test_mask
+    #
+    #     try:
+    #         L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
+    #                                     max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=dataset[0].edge_weight)
+    #     except AttributeError:
+    #         L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
+    #                                     max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+    #
+    #     multi_order_laplacian = cheb_poly_sparse(L, K)
+    #
+    #     # save_name = root + '/data' + str(q) + '_' + str(K)
+    #     # if laplacian == False:
+    #     #     save_name += '_P'
+    #     # if save_pk:
+    #     #     data = {}
+    #     #     data['L'] = multi_order_laplacian
+    #     #     pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
+    #     return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
+
     data = data.to(device)
     data_x = data_x.to(device)
     data_y = data_y.long().to(device)
@@ -177,3 +248,49 @@ def log_file(args):
     log_directory = os.path.expanduser(log_directory)
 
     return log_directory, log_file_name_with_timestamp
+
+def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gcn_appr=False):
+    # if subset == '':
+    #     dataset = dataset(root=root)
+    # else:
+    #     dataset = dataset(root=root, name=subset)
+    if args.IsDirectedData:
+        dataset = load_directedData(args)
+    else:
+        path = args.data_path
+        path = osp.join(path, args.undirect_dataset)
+        dataset = get_dataset(args.undirect_dataset, path, split_type='full')
+    # dataset = load_directedData(args)
+
+    size = dataset[0].y.size(-1)
+    # adj = torch.zeros(size, size).data.numpy().astype('uint8')
+    # adj[dataset[0].edge_index[0], dataset[0].edge_index[1]] = 1
+
+    f_node, e_node = dataset[0].edge_index[0], dataset[0].edge_index[1]
+
+    label = dataset[0].y.data.numpy().astype('int')
+    X = dataset[0].x.data.numpy().astype('float32')
+    train_mask = dataset[0].train_mask.data.numpy().astype('bool_')
+    val_mask = dataset[0].val_mask.data.numpy().astype('bool_')
+    test_mask = dataset[0].test_mask.data.numpy().astype('bool_')
+
+    if load_only:
+        return X, label, train_mask, val_mask, test_mask
+
+    try:
+        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
+                                    max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=dataset[0].edge_weight)
+    except AttributeError:
+        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
+                                    max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+
+    multi_order_laplacian = cheb_poly_sparse(L, K)
+
+    # save_name = root + '/data' + str(q) + '_' + str(K)
+    # if laplacian == False:
+    #     save_name += '_P'
+    # if save_pk:
+    #     data = {}
+    #     data['L'] = multi_order_laplacian
+    #     pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
+    return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
