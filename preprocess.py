@@ -283,8 +283,8 @@ def F_in_out(edge_index, size, edge_weight=None):
                 edge_Qin_in.append((k,j))
             if a[j,k]==1:
                 edge_Qin_out.append((j,k))
-    edge_Qin_in_tensor = torch.tensor(edge_Qin_in).t()
-    edge_Qin_out_tensor = torch.tensor(edge_Qin_out).t()
+    edge_Qin_in_tensor = torch.tensor(edge_Qin_in).t().to(device)
+    edge_Qin_out_tensor = torch.tensor(edge_Qin_out).t().to(device)
     # edge_Qin_in = torch.from_numpy(np.vstack(a.row, a.col)).long().to(device)
 
     A_in = sp.csr_matrix(np.zeros((size, size)))
