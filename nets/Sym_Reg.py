@@ -173,7 +173,7 @@ class SymRegLayer2(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -339,7 +339,7 @@ class SymRegLayer2BN(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -373,6 +373,75 @@ class SymRegLayer2BN(torch.nn.Module):
         x = self.Conv(x)    # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
         return x
+
+class SymRegLayer2BN_Qin(torch.nn.Module):
+    """
+    Don't try again to simplify it by deleting Conv, because the catenation
+    """
+    def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=2):
+        super(SymRegLayer2BN_Qin, self).__init__()
+        self.dropout = dropout
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(out_dim * 5, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid * 5, out_dim, bias=False)
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+
+        nn.init.zeros_(self.bias1)
+        nn.init.zeros_(self.bias2)
+
+        self.batch_norm1 = nn.BatchNorm1d(5*nhid)
+        self.batch_norm2 = nn.BatchNorm1d(5*out_dim)
+
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
+        self.non_reg_params = self.lin2.parameters()
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+        x = self.lin1(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+        x4 = self.gconv(x, edge_Qin_in_tensor)
+        x5 = self.gconv(x, edge_Qin_out_tensor)
+
+        x1 += self.bias1
+        x2 += self.bias1
+        x3 += self.bias1
+        x4 += self.bias1
+        x5 += self.bias1
+
+        x = torch.cat((x1, x2, x3, x4, x5), axis=-1)
+        x = self.batch_norm1(x)
+        x = F.relu(x)
+
+        # if self.dropout > 0:
+        #     x = F.dropout(x, self.dropout, training=self.training)
+
+        x = self.lin2(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+        x4 = self.gconv(x, edge_Qin_in_tensor)
+        x5 = self.gconv(x, edge_Qin_out_tensor)
+
+        x1 += self.bias2
+        x2 += self.bias2
+        x3 += self.bias2
+        x4 += self.bias2
+        x5 += self.bias2
+
+        x = torch.cat((x1, x2, x3, x4, x5), axis=-1)
+        x = self.batch_norm2(x)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)    # with this block or without, almost the same result
+        x = x.permute((0, 2, 1)).squeeze()
+        return x
+
 class SymRegLayerXBN(torch.nn.Module):
     def __init__(self, input_dim,  nhid,out_dim, dropout=False, layer=3):
         super(SymRegLayerXBN, self).__init__()
@@ -459,7 +528,7 @@ def create_SymReg(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = SymRegLayer1BN(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = SymRegLayer2BN(nfeat, nhid, nclass, dropout, nlayer)
+        model = SymRegLayer2BN_Qin(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = SymRegLayerXBN(nfeat, nhid, nclass, dropout, nlayer)
     return model

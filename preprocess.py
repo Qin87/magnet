@@ -274,6 +274,19 @@ def F_in_out(edge_index, size, edge_weight=None):
     '''
     # sparse implementation
     a = sp.csr_matrix(a)
+
+    edge_Qin_in = []
+    edge_Qin_out = []
+    for k in range(size):
+        for j in range(size):
+            if a[k,j]==1:
+                edge_Qin_in.append((k,j))
+            if a[j,k]==1:
+                edge_Qin_out.append((j,k))
+    edge_Qin_in_tensor = torch.tensor(edge_Qin_in).t()
+    edge_Qin_out_tensor = torch.tensor(edge_Qin_out).t()
+    # edge_Qin_in = torch.from_numpy(np.vstack(a.row, a.col)).long().to(device)
+
     A_in = sp.csr_matrix(np.zeros((size, size)))
     A_out = sp.csr_matrix(np.zeros((size, size)))
     for k in range(size):
@@ -289,4 +302,4 @@ def F_in_out(edge_index, size, edge_weight=None):
     in_weight = torch.from_numpy(A_in.data).float().to(device)
     out_weight = torch.from_numpy(A_out.data).float().to(device)
     edge_index = edge_index.to(device)  # Ben GPU
-    return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight
+    return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor

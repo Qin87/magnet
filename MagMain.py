@@ -341,7 +341,8 @@ if args.net.startswith('DiG'):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
 else:
     pass
 
@@ -513,7 +514,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 # Sym_edges = torch.unique(Sym_edges, dim=1)
                 Sym_new_y = torch.cat((data_y, _new_y), dim=0)
                 if args.net == 'SymDiGCN':
-                    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+                    # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+                    data.edge_index, edge_in, in_weight, edge_out, out_weight,edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
                     out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
                 elif args.net.startswith('DiG'):
                     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
@@ -616,7 +618,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
                 # out = model(data_x, edges)
                 if args.net == 'SymDiGCN':
-                    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+                    # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+                    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
                     out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
 
                 elif args.net.startswith('DiG'):

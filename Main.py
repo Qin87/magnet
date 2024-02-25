@@ -28,7 +28,7 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 import warnings
 warnings.filterwarnings("ignore")
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, Magmodel):
+def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, Magmodel,edge_Qin_in_tensor, edge_Qin_out_tensor):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     try:
@@ -39,7 +39,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.AugDirect == 0:
         if args.net == 'SymDiGCN':
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
             out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
@@ -120,8 +121,10 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # Sym_edges = torch.unique(Sym_edges, dim=1)
         Sym_new_y = torch.cat((data_y, _new_y), dim=0)
         if args.net == 'SymDiGCN':
-            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
-            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
+            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
         elif args.net.startswith('DiG'):
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
@@ -187,8 +190,10 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         # out = model(data_x, edges)
         if args.net == 'SymDiGCN':
-            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
 
         elif args.net.startswith('DiG'):
             # must keep this, don't know why, but will be error without it----to analysis it later
@@ -223,7 +228,7 @@ def test():
     model.eval()
     # logits = model(data_x, edges[:,train_edge_mask])
     if args.net == 'SymDiGCN':
-        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
+        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
     elif args.net.startswith('DiG'):
         logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -279,6 +284,8 @@ edge_weight = None
 X_img = None
 X_real = None
 Magmodel = None
+edge_Qin_in_tensor = None
+edge_Qin_out_tensor = None
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 
@@ -332,7 +339,7 @@ if args.net.startswith('DiG'):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
 else:
     pass
 
@@ -409,7 +416,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         end_epoch =0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         for epoch in range(args.epoch):
-            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Magmodel)
+            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Magmodel, edge_Qin_in_tensor, edge_Qin_out_tensor)
             accs, baccs, f1s = test()
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s
