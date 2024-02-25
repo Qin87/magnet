@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+NameError: name 'model' is not defined
