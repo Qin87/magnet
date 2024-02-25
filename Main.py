@@ -301,8 +301,8 @@ if args.net.startswith('Mag'):
         for i in range(len(L)):
             L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
             L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
-        print(data_x.device, device)
-        X_img = torch.FloatTensor(data_x).to(device)
+        X_img = torch.FloatTensor(data_x)
+        X_img = X_img.to(device)
         X_real = torch.FloatTensor(data_x).to(device)
 
         Magmodel = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
