@@ -112,7 +112,7 @@ def saliency_mixup(x, sampling_src_idx, sampling_dst_idx, lam):
     lam = lam.to(x.device)
 
     mixed_node = lam * new_src + (1-lam) * new_dst
-    new_x = torch.cat([x, mixed_node], dim =0)
+    new_x = torch.cat([x, mixed_node], dim=0)
     return new_x
 
 @torch.no_grad()

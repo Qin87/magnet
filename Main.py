@@ -28,10 +28,13 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 import warnings
 warnings.filterwarnings("ignore")
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img):
+def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, Magmodel):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
-    model.train()
+    try:
+        model.train()
+    except:
+        pass
 
     optimizer.zero_grad()
     if args.AugDirect == 0:
@@ -49,6 +52,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         criterion(out[data_train_mask], data_y[data_train_mask]).backward()
         # print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
     else:
+
         if epoch > args.warmup:
             # identifying source samples
             prev_out_local = prev_out[train_idx]
@@ -110,6 +114,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # type 1
         sampling_src_idx = sampling_src_idx.to(torch.long).to(data_y.device)  # Ben for GPU error
         _new_y = data_y[sampling_src_idx].clone()
+        new_y = torch.cat((data_y[data_train_mask], _new_y), dim=0)
         # out = model(new_x, new_edge_index)
         # Sym_edges = torch.cat([edges, new_edge_index], dim=1)
         # Sym_edges = torch.unique(Sym_edges, dim=1)
@@ -135,7 +140,35 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
             out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
         elif args.net.startswith('Mag'):
-            out = model(X_real, X_img).permute(2, 1, 0).squeeze()
+
+            newX_img = torch.FloatTensor(new_x).to(device)
+            newX_real = torch.FloatTensor(new_x).to(device)
+
+            if epoch == 0:
+                size = Sym_new_y.size(-1)
+                f_node, e_node = new_edge_index[0], new_edge_index[1]
+                laplacian = True
+                gcn_appr = False
+                try:
+                    L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=data.edge_weight)
+                except AttributeError:
+                    L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+                multi_order_laplacian = cheb_poly_sparse(L, args.K)
+                L = multi_order_laplacian
+                L_img = []
+                L_real = []
+                for i in range(len(L)):
+                    L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
+                    L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+                # X_img = torch.FloatTensor(data_x).to(device)
+                # X_real = torch.FloatTensor(data_x).to(device)
+
+                Magmodel = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+                                activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+                Magmodel.train()
+                # model = Magmodel
+
+            out = Magmodel(newX_real, newX_img).permute(2, 1, 0).squeeze()
         else:
             out = model(new_x, new_edge_index)  # all data + aug
 
@@ -144,7 +177,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data_x.device)
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
 
-        new_y = torch.cat((data_y[data_train_mask], _new_y),dim=0)
+
         criterion(out[new_train_mask], new_y).backward()
 
 
@@ -245,36 +278,40 @@ SparseEdges = None
 edge_weight = None
 X_img = None
 X_real = None
+Magmodel = None
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 
 n_cls = data_y.max().item() + 1
 
 if args.net.startswith('Mag'):
-    size = data_y.size(-1)
-    f_node, e_node = edges[0], edges[1]
-    laplacian = True
-    gcn_appr = False
-    try:
-        L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=data.edge_weight)
-    except AttributeError:
-        L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
-    multi_order_laplacian = cheb_poly_sparse(L, args.K)
-    L = multi_order_laplacian
-    L_img = []
-    L_real = []
-    for i in range(len(L)):
-        L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
-        L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
-    X_img = torch.FloatTensor(data_x).to(device)
-    X_real = torch.FloatTensor(data_x).to(device)
+    if args.AugDirect==0:
+        size = data_y.size(-1)
+        f_node, e_node = edges[0], edges[1]
+        laplacian = True
+        gcn_appr = False
+        try:
+            L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=data.edge_weight)
+        except AttributeError:
+            L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+        multi_order_laplacian = cheb_poly_sparse(L, args.K)
+        L = multi_order_laplacian
+        L_img = []
+        L_real = []
+        for i in range(len(L)):
+            L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
+            L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+        X_img = torch.FloatTensor(data_x).to(device)
+        X_real = torch.FloatTensor(data_x).to(device)
 
-    model = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
-                activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+        Magmodel = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+                    activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+        model = Magmodel.to(device)
+    else:
+        pass
 else:
-
     model = CreatModel(args, num_features, n_cls, data_x, device)
-model = model.to(device)
+    model = model.to(device)
 criterion = CrossEntropy().to(device)
 
 
@@ -309,16 +346,15 @@ except IndexError:
 start_time = time.time()
 
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
-    print(model, file=log_file)
+    # print(model, file=log_file)
     for split in range(splits - 1, -1, -1):
     # for split in range(splits):
-        # if args.net in ['GAT', 'GCN', 'SAGE']:
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         try:
             optimizer = torch.optim.Adam(
                 [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
         except:  # TODo
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+            optimizer = torch.optim.Adam(Magmodel.parameters(), lr=args.lr, weight_decay=args.l2)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
         if splits == 1:
@@ -372,7 +408,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         end_epoch =0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         for epoch in range(args.epoch):
-            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img)
+            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Magmodel)
             accs, baccs, f1s = test()
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s
