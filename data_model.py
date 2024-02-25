@@ -191,40 +191,6 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         edges = to_undirectedBen(edges)
         print("Converted to undirected data")
 
-    # if args.net == 'Magnet':
-    #     size = data_y.size(-1)
-    #     # adj = torch.zeros(size, size).data.numpy().astype('uint8')
-    #     # adj[dataset[0].edge_index[0], dataset[0].edge_index[1]] = 1
-    #
-    #     f_node, e_node = edges[0], edges[1]
-    #
-    #     # label = dataset[0].y.data.nta.numpy().astype('bool_')
-    #     numpy().astype('int')
-    #     # X = dataset[0].x.data.numpy().astype('float32')
-    #     # train_mask = dataset[0].train_mask.data.numpy().astype('bool_')
-    #     # val_mask = dataset[0].val_mask.data.numpy().astype('bool_')
-    #     # test_mask = dataset[0].test_mask.da
-    #     # if load_only:
-    #     #     return X, label, train_mask, val_mask, test_mask
-    #
-    #     try:
-    #         L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
-    #                                     max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=dataset[0].edge_weight)
-    #     except AttributeError:
-    #         L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
-    #                                     max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
-    #
-    #     multi_order_laplacian = cheb_poly_sparse(L, K)
-    #
-    #     # save_name = root + '/data' + str(q) + '_' + str(K)
-    #     # if laplacian == False:
-    #     #     save_name += '_P'
-    #     # if save_pk:
-    #     #     data = {}
-    #     #     data['L'] = multi_order_laplacian
-    #     #     pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
-    #     return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
-
     data = data.to(device)
     data_x = data_x.to(device)
     data_y = data_y.long().to(device)
