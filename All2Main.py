@@ -286,8 +286,9 @@ if args.net.startswith('DiG'):
 elif args.net == 'SymDiGCN':
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
 elif args.net.startswith('Mag'):
-    X_img = torch.FloatTensor(data_x).to(device)
-    X_real = torch.FloatTensor(data_x).to(device)
+    data_x_cpu = data_x.cpu()
+    X_img = torch.FloatTensor(data_x_cpu).to(device)
+    X_real = torch.FloatTensor(data_x_cpu).to(device)
 else:
     pass
 
