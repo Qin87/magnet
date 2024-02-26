@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_sparse import SparseTensor
 
+from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
+
 
 # from torch.nn import MultiheadAttention
 
@@ -86,13 +88,7 @@ class ChebConv_Qin(nn.Module):
     """
 
     def __init__(self, in_c, out_c, K, bias=True):
-        super(ChebConv, self).__init__()
-
-        L_norm_real, L_norm_imag = L_norm_real, L_norm_imag
-
-        # list of K sparsetensors, each is N by N
-        self.mul_L_real = L_norm_real  # [K, N, N]
-        self.mul_L_imag = L_norm_imag  # [K, N, N]
+        super(ChebConv_Qin, self).__init__()
 
         self.weight = nn.Parameter(torch.Tensor(K + 1, in_c, out_c))  # [K+1, 1, in_c, out_c]
 
@@ -105,23 +101,45 @@ class ChebConv_Qin(nn.Module):
         else:
             self.register_parameter("bias", None)
 
+    # def forward(self, X_real, X_imag,  edges, q=0, edge_weight=None):
     def forward(self, data):
         """
         :param inputs: the input data, real [B, N, C], img [B, N, C]
         :param L_norm_real, L_norm_imag: the laplace, [N, N], [N,N]
         """
         X_real, X_imag = data[0], data[1]
+        edges, q, edge_weight = data[2], data[3], data[4],
+        device = X_real.device
+        size = X_real.size(0)
+
+        f_node, e_node = edges[0], edges[1]
+        laplacian = True
+        gcn_appr = False
+        try:
+            L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+        except AttributeError:
+            L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+        multi_order_laplacian = cheb_poly_sparse(L, K=2)   # K=2 is temp by me
+        L = multi_order_laplacian
+        L_img = []
+        L_real = []
+        for i in range(len(L)):
+            L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
+            L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+        # list of K sparsetensors, each is N by N
+        L_norm_real = L_img     # [K, N, N]
+        L_norm_imag = L_real    # [K, N, N]
 
         real = 0.0
         imag = 0.0
 
         future = []
-        for i in range(len(self.mul_L_real)):  # [K, B, N, D]
+        for i in range(len(L_norm_real)):  # [K, B, N, D]
             future.append(torch.jit.fork(process,
-                                         self.mul_L_real[i], self.mul_L_imag[i],
+                                         L_norm_real[i], L_norm_imag[i],
                                          self.weight[i], X_real, X_imag))
         result = []
-        for i in range(len(self.mul_L_real)):
+        for i in range(len(L_norm_real)):
             result.append(torch.jit.wait(future[i]))
         result = torch.sum(torch.stack(result), dim=0)
 
@@ -160,7 +178,7 @@ class ChebNet(nn.Module):
         super(ChebNet, self).__init__()
 
         chebs = [ChebConv(in_c=in_c, out_c=num_filter, K=K, L_norm_real=L_norm_real, L_norm_imag=L_norm_imag)]
-        chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+        # chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
         # self.ib1 = InceptionBlock(num_features, hidden)
         if activation:
             chebs.append(complex_relu_layer())
@@ -178,7 +196,7 @@ class ChebNet(nn.Module):
 
     def forward(self, real, imag):
         real, imag = self.Chebs((real, imag))
-        x = self.Chebs_Qin(x)
+        # x = self.Chebs_Qin(x)
         # out = self.propagate(edge_index, x=x, size=size)
         # x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
         x = torch.cat((real, imag), dim=-1)
@@ -202,12 +220,13 @@ class ChebNet_Ben(nn.Module):
         """
         super(ChebNet_Ben, self).__init__()
 
-        chebs = [ChebConv(in_c=in_c, out_c=num_filter, K=K, L_norm_real=L_norm_real, L_norm_imag=L_norm_imag)]
+        self.cheb_Qin = ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)
+        chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
         if activation:
             chebs.append(complex_relu_layer())
 
         for i in range(1, layer):
-            chebs.append(ChebConv(in_c=num_filter, out_c=num_filter, K=K, L_norm_real=L_norm_real, L_norm_imag=L_norm_imag))
+            chebs.append(ChebConv_Qin(in_c=num_filter, out_c=num_filter, K=K))
             if activation:
                 chebs.append(complex_relu_layer())
 
@@ -217,8 +236,10 @@ class ChebNet_Ben(nn.Module):
         self.Conv = nn.Conv1d(num_filter * last_dim, label_dim, kernel_size=1)
         self.dropout = dropout
 
-    def forward(self, real, imag):
-        real, imag = self.Chebs((real, imag))
+    def forward(self, real, imag, edges, q, edge_weight):
+
+        # real, imag = self.Chebs((real, imag,  size, edges, q, edge_weight))
+        real, imag = self.cheb_Qin((real, imag, edges, q, edge_weight))
         x = torch.cat((real, imag), dim=-1)
 
         if self.dropout > 0:

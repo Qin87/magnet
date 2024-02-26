@@ -233,9 +233,9 @@ def test(X_real, X_img):
     elif args.net.startswith('Mag'):
         # logits = model(X_real, X_img).permute(2, 1, 0).squeeze()
         try:
-            logits = model(newX_real, newX_img).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
+            logits = model(newX_real, newX_img, data_y, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
         except:
-            logits = model(X_real, X_img).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
+            logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -437,7 +437,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 elif args.net.startswith('DiG'):
                     out = model(data_x, SparseEdges, edge_weight)
                 elif args.net.startswith('Mag'):
-                    out = model(X_real, X_img, data_y, edges, args, data)
+                    out = model(X_real, X_img, edges, args.q, edge_weight)
                     out = out.permute(2, 1, 0).squeeze()
                 else:
                     out = model(data_x, edges)
@@ -556,7 +556,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                             L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
 
 
-                        model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+                        model = ChebNet_Ben(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
                                            activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
                         model.train()
 
@@ -595,20 +595,16 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                     newX_img = torch.FloatTensor(new_x).to(device)
                     newX_real = torch.FloatTensor(new_x).to(device)
 
-                    out = model(newX_real, newX_img).permute(2, 1, 0).squeeze()
+                    out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
                 else:
-                    out = model(new_x, new_edge_index)  # all data + aug
+                    out = model(new_x, new_edge_index, edges, args.q, edge_weight)  # all data + aug
 
                 prev_out = (out[:data_x.size(0)]).detach().clone()
-
-
 
                 # try:
                 criterion(out[new_train_mask], new_y).backward()
                 # except:
                 #     criterion(new_x_train, new_y).backward()
-
-
 
             with torch.no_grad():
                 model.eval()
@@ -640,9 +636,9 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                     out = model(data_x, SparseEdges, edge_weight)
                 elif args.net.startswith('Mag'):
                     try:
-                        out = model(newX_real, newX_img).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
+                        out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
                     except:
-                        out = model(X_real, X_img).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
+                        out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()[:data_x.shape[0]]
                 else:
                     out = model(data_x, edges)
                 val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -681,7 +677,6 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             dataset_to_print = args.Direct_dataset + str(args.to_undirected)
         else:
             dataset_to_print = args.undirect_dataset+ str(args.to_undirected)
-        # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print(args.net,args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
 
