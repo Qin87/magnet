@@ -142,9 +142,9 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
             out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
         elif args.net.startswith('Mag'):
-
-            newX_img = torch.FloatTensor(new_x).to(device)
-            newX_real = torch.FloatTensor(new_x).to(device)
+            new_x_cpu = new_x.cpu()
+            newX_img = torch.FloatTensor(new_x_cpu).to(device)
+            newX_real = torch.FloatTensor(new_x_cpu).to(device)
             out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
         else:
             out = model(new_x, new_edge_index)  # all data + aug
