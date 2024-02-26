@@ -211,7 +211,8 @@ class ChebNet(nn.Module):
         return x
 
 class ChebNet_Ben(nn.Module):
-    def __init__(self, in_c, L_norm_real, L_norm_imag, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
+    # def __init__(self, in_c, L_norm_real, L_norm_imag, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
+    def __init__(self, in_c, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
         """
         :param in_c: int, number of input channels.
         :param hid_c: int, number of hidden channels.

@@ -20,7 +20,7 @@ from nets.Sym_Reg import create_SymReg
 from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
-from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor
+from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor, ChebNet_Ben
 from preprocess import geometric_dataset_sparse
 
 
@@ -50,41 +50,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'SymDiGCN':
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
-    # elif args.net == 'Magnet':
-    #     # _file_ = args.data_path + args.dataset + '/data' + str(args.q) + '_' + str(args.K) + '_sparse.pk'
-    #     # if os.path.isfile(_file_):
-    #     #     data = pk.load(open(_file_, 'rb'))
-    #     #     L = data['L']
-    #     #     X, label, train_mask, val_mask, test_mask = geometric_dataset_sparse(args.q, args.K,
-    #     #                                                                          root=args.data_path + args.dataset, subset=subset,
-    #     #                                                                          dataset=load_func, load_only=True, save_pk=False)
-    #     # else:
-    #     X, label, train_mask, val_mask, test_mask, L = geometric_dataset_sparse(args.q, args.K,
-    #                                                                                 root=args.data_path + args.dataset, subset=subset,
-    #                                                                                 dataset=load_func, load_only=False, save_pk=True)
-    #
-    #     # normalize label, the minimum should be 0 as class index
-    #     _label_ = label - np.amin(label)
-    #     cluster_dim = np.amax(_label_) + 1
-    #
-    #     # convert dense laplacian to sparse matrix
-    #     L_img = []
-    #     L_real = []
-    #     for i in range(len(L)):
-    #         L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
-    #         L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
-    #
-    #     # label = torch.from_numpy(_label_[np.newaxis]).to(device)
-    #     # X_img = torch.FloatTensor(X).to(device)
-    #     # X_real = torch.FloatTensor(X).to(device)
-    #     # criterion = nn.NLLLoss()
-    #
-    #     # model = ChebNet(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-    #     # model = ChebNet(num_features, L_norm_real, L_norm_imag, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False).to(device)
-    #     model = ChebNet(num_features, L_real, L_img, K=args.K, label_dim=cluster_dim, layer=args.layer,
-    #                     activation=args.activation, num_filter=args.num_filter, dropout=args.dropout).to(device)
-    #     # model = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=cluster_dim, layer=args.layer,
-    #     #                 activation=args.activation, num_filter=args.num_filter, dropout=args.dropout).to(device)
+    elif args.net.startswith('Mag'):
+        model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
+                            activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+
     else:
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)

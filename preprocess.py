@@ -248,7 +248,7 @@ def to_edge_dataset_sparse(q, edge_index, K, data_split, size, root='../dataset/
     return multi_order_laplacian
 
 
-def F_in_out(edge_index, size, edge_weight=None):
+def F_in_out_Qin(edge_index, size, edge_weight=None):
     device = edge_index.device
     edge_index = edge_index.long().cpu()
     if edge_weight is not None:
@@ -303,3 +303,59 @@ def F_in_out(edge_index, size, edge_weight=None):
     out_weight = torch.from_numpy(A_out.data).float().to(device)
     edge_index = edge_index.to(device)  # Ben GPU
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor
+
+def F_in_out(edge_index, size, edge_weight=None):
+    device = edge_index.device
+    edge_index = edge_index.long().cpu()
+    if edge_weight is not None:
+        a = sp.coo_matrix((edge_weight, edge_index), shape=(size, size)).tocsc()
+    else:
+        a = sp.coo_matrix((np.ones(len(edge_index[0])), edge_index), shape=(size, size)).tocsc()
+
+    out_degree = np.array(a.sum(axis=0))[0]
+    out_degree[out_degree == 0] = 1
+
+    in_degree = np.array(a.sum(axis=1))[:, 0]
+    in_degree[in_degree == 0] = 1
+    '''
+    # can be more efficient
+    a = np.zeros((size, size), dtype=np.uint8)
+    a[edge_index[0], edge_index[1]] = 1
+
+    out_degree = np.sum(a, axis = 1)
+    out_degree[out_degree == 0] = 1
+
+    in_degree = np.sum(a, axis = 0)
+    in_degree[in_degree == 0] = 1
+    '''
+    # sparse implementation
+    a = sp.csr_matrix(a)
+
+    # edge_Qin_in = []
+    # edge_Qin_out = []
+    # for k in range(size):
+    #     for j in range(size):
+    #         if a[k,j]==1:
+    #             edge_Qin_in.append((k,j))
+    #         if a[j,k]==1:
+    #             edge_Qin_out.append((j,k))
+    # edge_Qin_in_tensor = torch.tensor(edge_Qin_in).t().to(device)
+    # edge_Qin_out_tensor = torch.tensor(edge_Qin_out).t().to(device)
+    # edge_Qin_in = torch.from_numpy(np.vstack(a.row, a.col)).long().to(device)
+
+    A_in = sp.csr_matrix(np.zeros((size, size)))
+    A_out = sp.csr_matrix(np.zeros((size, size)))
+    for k in range(size):
+        A_in += np.dot(a[k, :].T, a[k, :]) / out_degree[k]
+        A_out += np.dot(a[:, k], a[:, k].T) / in_degree[k]
+
+    A_in = A_in.tocoo()
+    A_out = A_out.tocoo()
+
+    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)
+    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
+
+    in_weight = torch.from_numpy(A_in.data).float().to(device)
+    out_weight = torch.from_numpy(A_out.data).float().to(device)
+    edge_index = edge_index.to(device)  # Ben GPU
+    return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight

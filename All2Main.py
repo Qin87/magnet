@@ -28,7 +28,7 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 import warnings
 warnings.filterwarnings("ignore")
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, Magmodel,edge_Qin_in_tensor, edge_Qin_out_tensor):
+def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     try:
@@ -44,7 +44,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         elif args.net.startswith('DiG'):
             out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
-            out = model(X_real, X_img)
+            out = model(X_real, X_img, edges, args.q, edge_weight)
             out = out.permute(2, 1, 0).squeeze()
         else:
             out = model(data_x, edges)
@@ -53,7 +53,6 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         criterion(out[data_train_mask], data_y[data_train_mask]).backward()
         # print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
     else:
-
         if epoch > args.warmup:
             # identifying source samples
             prev_out_local = prev_out[train_idx]
@@ -146,32 +145,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
             newX_img = torch.FloatTensor(new_x).to(device)
             newX_real = torch.FloatTensor(new_x).to(device)
-
-            if epoch == 0:
-                size = Sym_new_y.size(-1)
-                f_node, e_node = new_edge_index[0], new_edge_index[1]
-                laplacian = True
-                gcn_appr = False
-                try:
-                    L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=data.edge_weight)
-                except AttributeError:
-                    L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
-                multi_order_laplacian = cheb_poly_sparse(L, args.K)
-                L = multi_order_laplacian
-                L_img = []
-                L_real = []
-                for i in range(len(L)):
-                    L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
-                    L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
-                # X_img = torch.FloatTensor(data_x).to(device)
-                # X_real = torch.FloatTensor(data_x).to(device)
-
-                Magmodel = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
-                                activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
-                Magmodel.train()
-                # model = Magmodel
-
-            out = Magmodel(newX_real, newX_img).permute(2, 1, 0).squeeze()
+            out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
         else:
             out = model(new_x, new_edge_index)  # all data + aug
 
@@ -214,7 +188,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
             out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
-            out = model(X_real, X_img).permute(2, 1, 0).squeeze()
+            out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
         else:
             out = model(data_x, edges)
         val_loss= F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -226,13 +200,12 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 @torch.no_grad()
 def test():
     model.eval()
-    # logits = model(data_x, edges[:,train_edge_mask])
     if args.net == 'SymDiGCN':
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
     elif args.net.startswith('DiG'):
         logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
-        logits = model(X_real, X_img).permute(2, 1, 0).squeeze()
+        logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -283,7 +256,6 @@ SparseEdges = None
 edge_weight = None
 X_img = None
 X_real = None
-Magmodel = None
 edge_Qin_in_tensor = None
 edge_Qin_out_tensor = None
 
@@ -291,35 +263,8 @@ data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskO
 
 n_cls = data_y.max().item() + 1
 
-if args.net.startswith('Mag'):
-    if args.AugDirect==0:
-        size = data_y.size(-1)
-        f_node, e_node = edges[0], edges[1]
-        laplacian = True
-        gcn_appr = False
-        try:
-            L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=data.edge_weight)
-        except AttributeError:
-            L = hermitian_decomp_sparse(f_node, e_node, size, args.q, norm=True, laplacian=laplacian,max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
-        multi_order_laplacian = cheb_poly_sparse(L, args.K)
-        L = multi_order_laplacian
-        L_img = []
-        L_real = []
-        for i in range(len(L)):
-            L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
-            L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
-        data_x_cpu = data_x.cpu()
-        X_img = torch.FloatTensor(data_x_cpu).to(device)
-        X_real = torch.FloatTensor(data_x_cpu).to(device)
-
-        Magmodel = ChebNet(X_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
-                    activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
-        model = Magmodel.to(device)
-    else:
-        pass
-else:
-    model = CreatModel(args, num_features, n_cls, data_x, device)
-    model = model.to(device)
+model = CreatModel(args, num_features, n_cls, data_x, device)
+model = model.to(device)
 criterion = CrossEntropy().to(device)
 
 
@@ -340,6 +285,9 @@ if args.net.startswith('DiG'):
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+elif args.net.startswith('Mag'):
+    X_img = torch.FloatTensor(data_x).to(device)
+    X_real = torch.FloatTensor(data_x).to(device)
 else:
     pass
 
@@ -362,7 +310,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             optimizer = torch.optim.Adam(
                 [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
         except:  # TODo
-            optimizer = torch.optim.Adam(Magmodel.parameters(), lr=args.lr, weight_decay=args.l2)
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
 
         if splits == 1:
@@ -416,7 +364,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         end_epoch =0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         for epoch in range(args.epoch):
-            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Magmodel, edge_Qin_in_tensor, edge_Qin_out_tensor)
+            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor)
             accs, baccs, f1s = test()
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s
