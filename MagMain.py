@@ -359,9 +359,9 @@ start_time = time.time()
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     # print(model, file=log_file)
     for split in range(splits - 1, -1, -1):
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200, verbose=True)
-        optimizer.zero_grad()
+        # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200, verbose=True)
+        # optimizer.zero_grad()
     # for split in range(splits):
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         # try:
@@ -590,8 +590,6 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                             new_y = new_y[:num_y]
                         else:
                             pass
-
-
 
 
                     newX_img = torch.FloatTensor(new_x).to(device)

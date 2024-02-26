@@ -75,6 +75,60 @@ class ChebConv(nn.Module):
         imag = result[1]
         return real + self.bias, imag + self.bias
 
+class ChebConv_Qin(nn.Module):
+    """
+    The MagNet convolution operation.
+
+    :param in_c: int, number of input channels.
+    :param out_c: int, number of output channels.
+    :param K: int, the order of Chebyshev Polynomial.
+    :param L_norm_real, L_norm_imag: normalized laplacian of real and imag
+    """
+
+    def __init__(self, in_c, out_c, K, bias=True):
+        super(ChebConv, self).__init__()
+
+        L_norm_real, L_norm_imag = L_norm_real, L_norm_imag
+
+        # list of K sparsetensors, each is N by N
+        self.mul_L_real = L_norm_real  # [K, N, N]
+        self.mul_L_imag = L_norm_imag  # [K, N, N]
+
+        self.weight = nn.Parameter(torch.Tensor(K + 1, in_c, out_c))  # [K+1, 1, in_c, out_c]
+
+        stdv = 1. / math.sqrt(self.weight.size(-1))
+        self.weight.data.uniform_(-stdv, stdv)
+
+        if bias:
+            self.bias = nn.Parameter(torch.Tensor(1, out_c))
+            nn.init.zeros_(self.bias)
+        else:
+            self.register_parameter("bias", None)
+
+    def forward(self, data):
+        """
+        :param inputs: the input data, real [B, N, C], img [B, N, C]
+        :param L_norm_real, L_norm_imag: the laplace, [N, N], [N,N]
+        """
+        X_real, X_imag = data[0], data[1]
+
+        real = 0.0
+        imag = 0.0
+
+        future = []
+        for i in range(len(self.mul_L_real)):  # [K, B, N, D]
+            future.append(torch.jit.fork(process,
+                                         self.mul_L_real[i], self.mul_L_imag[i],
+                                         self.weight[i], X_real, X_imag))
+        result = []
+        for i in range(len(self.mul_L_real)):
+            result.append(torch.jit.wait(future[i]))
+        result = torch.sum(torch.stack(result), dim=0)
+
+        real = result[0]
+        imag = result[1]
+        return real + self.bias, imag + self.bias
+
 
 class complex_relu_layer(nn.Module):
     def __init__(self, ):
@@ -106,6 +160,8 @@ class ChebNet(nn.Module):
         super(ChebNet, self).__init__()
 
         chebs = [ChebConv(in_c=in_c, out_c=num_filter, K=K, L_norm_real=L_norm_real, L_norm_imag=L_norm_imag)]
+        chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+        # self.ib1 = InceptionBlock(num_features, hidden)
         if activation:
             chebs.append(complex_relu_layer())
 
@@ -122,6 +178,9 @@ class ChebNet(nn.Module):
 
     def forward(self, real, imag):
         real, imag = self.Chebs((real, imag))
+        x = self.Chebs_Qin(x)
+        # out = self.propagate(edge_index, x=x, size=size)
+        # x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
         x = torch.cat((real, imag), dim=-1)
 
         if self.dropout > 0:

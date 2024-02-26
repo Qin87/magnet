@@ -1,36 +1,76 @@
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 651, in <module>
+    optimizer.step()
+NameError: name 'optimizer' is not defined
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
 Traceback (most recent call last):
-  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 361, in <module>
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-NameError: name 'model' is not defined
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
+Traceback (most recent call last):
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/MagMain.py", line 559, in <module>
+    model = ChebNet(newX_real.size(-1), L_real, L_img, K=args.K, label_dim=n_cls, layer=args.layer,
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 163, in __init__
+    chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
+  File "/home/qin/Documents/PythonProject/original/GraphSHA/nets/sparse_magnet.py", line 89, in __init__
+    super(ChebConv, self).__init__()
+TypeError: super(type, obj): obj must be an instance or subtype of type
