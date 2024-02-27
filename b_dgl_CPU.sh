@@ -9,7 +9,7 @@ Direct_dataset='dgl/cora'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=False
 unDirect_data='PubMed'
-net='Magnet'
+net='DiGib'
 
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -22,7 +22,7 @@ exec > $logfile 2>&1
 # Iterate over each AugDirect value
 for augdirect in $augdirect_values; do
   nohup python3 All2Main.py --AugDirect=$augdirect --net=$net \
-  --layer=2    --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
+  --layer=2  --q=0.5  --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
     >layer2${net}_${Direct_dataset_filename}_Aug${augdirect}_T${timestamp}.log &
   pid=$!
 

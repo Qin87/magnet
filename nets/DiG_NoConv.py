@@ -411,12 +411,12 @@ class DiGCN_IB_2BN_Ben2(torch.nn.Module):    #  obviously worse than DiGCN_IB_2B
         edge_index, edge_index2 = edge_index_tuple
         edge_weight, edge_weight2 = edge_weight_tuple
         x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x1 + x2
+        x = 2*(x1 + x2)
         # x = torch.cat(x0, x)
         x = torch.cat((x0, x), axis=-1)
         x = self.batch_norm1(x)
         x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = 0.5 * (x1 + x2)
+        x = 2 * (x1 + x2)
         # x = torch.cat(x0, x)
         x = torch.cat((x0, x), axis=-1)
         x = self.batch_norm2(x)
