@@ -307,8 +307,8 @@ start_time = time.time()
 
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     print(model, file=log_file)
-    for split in range(splits - 1, -1, -1):
-    # for split in range(splits):
+    # for split in range(splits - 1, -1, -1):
+    for split in range(splits):
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         try:
             optimizer = torch.optim.Adam(
@@ -373,6 +373,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s
             val_acc_f1 = (val_acc + val_f1) / 2.
+            print('train_acc:', train_acc,'val_acc:', val_acc, 'test_acc:', accs[2])
             # if val_acc_f1 > best_val_acc_f1:
             # if val_f1 > best_val_f1:
             if tmp_test_f1 > best_test_f1:
