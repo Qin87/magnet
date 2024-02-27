@@ -303,7 +303,7 @@ except IndexError:
 start_time = time.time()
 
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
-    # print(model, file=log_file)
+    print(model, file=log_file)
     for split in range(splits - 1, -1, -1):
     # for split in range(splits):
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)

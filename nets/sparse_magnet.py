@@ -145,7 +145,8 @@ class ChebConv_Qin(nn.Module):
 
         real = result[0]
         imag = result[1]
-        return real + self.bias, imag + self.bias
+        # return real + self.bias, imag + self.bias
+        return real + self.bias, imag + self.bias, edges, q, edge_weight
 
 
 class complex_relu_layer(nn.Module):
@@ -165,6 +166,25 @@ class complex_relu_layer(nn.Module):
 
         real, img = self.complex_relu(real, img)
         return real, img
+
+class complex_relu_layer_Ben(nn.Module):
+    def __init__(self, ):
+        super(complex_relu_layer_Ben, self).__init__()
+
+    def complex_relu(self, real, img):
+        mask = 1.0 * (real >= 0)
+        return mask * real, mask * img
+
+    # def forward(self, real, img, edges, q, edge_weight):
+    def forward(self, real, img=None):
+        # for torch nn sequential usage
+        # in this case, x_real is a tuple of (real, img)
+        if img == None:
+            img = real[1]
+            real = real[0]
+            edges, q, edge_weight = real[2],real[3],real[4],
+        real, img = self.complex_relu(real, img)
+        return real, img, edges, q, edge_weight
 
 
 class ChebNet(nn.Module):
@@ -212,7 +232,7 @@ class ChebNet(nn.Module):
 
 class ChebNet_Ben(nn.Module):
     # def __init__(self, in_c, L_norm_real, L_norm_imag, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
-    def __init__(self, in_c, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
+    def __init__(self, in_c, num_filter=2, K=2, label_dim=2, activation=True, layer=2, dropout=False):
         """
         :param in_c: int, number of input channels.
         :param hid_c: int, number of hidden channels.
@@ -224,12 +244,12 @@ class ChebNet_Ben(nn.Module):
         self.cheb_Qin = ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)
         chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
         if activation:
-            chebs.append(complex_relu_layer())
+            chebs.append(complex_relu_layer_Ben())
 
         for i in range(1, layer):
             chebs.append(ChebConv_Qin(in_c=num_filter, out_c=num_filter, K=K))
             if activation:
-                chebs.append(complex_relu_layer())
+                chebs.append(complex_relu_layer_Ben())
 
         self.Chebs = torch.nn.Sequential(*chebs)
 
@@ -239,8 +259,8 @@ class ChebNet_Ben(nn.Module):
 
     def forward(self, real, imag, edges, q, edge_weight):
 
-        # real, imag = self.Chebs((real, imag,  size, edges, q, edge_weight))
-        real, imag = self.cheb_Qin((real, imag, edges, q, edge_weight))
+        real, imag, edges, q, edge_weight = self.Chebs((real, imag,  edges, q, edge_weight))
+        # real, imag = self.cheb_Qin((real, imag, edges, q, edge_weight))
         x = torch.cat((real, imag), dim=-1)
 
         if self.dropout > 0:
