@@ -143,8 +143,11 @@ def cheb_poly_sparse(A, K):
 
 def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, max_eigen=2,
                             gcn_appr=False, edge_weight=None):
-    row = row.cpu().numpy()
-    col = col.cpu().numpy()
+    # row = row.cpu().numpy()
+    # col = col.cpu().numpy()
+    row = row.detach().cpu().numpy()
+    col = col.detach().cpu().numpy()
+
     if edge_weight is None:
         A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
     else:
