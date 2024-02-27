@@ -20,7 +20,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
 from data_model import CreatModel, load_dataset, log_file, geometric_dataset_sparse_Ben
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import sparse_mx_to_torch_sparse_tensor, ChebNet
-from preprocess import F_in_out, geometric_dataset_sparse
+from preprocess import F_in_out, geometric_dataset_sparse, F_in_out_Qin
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -121,7 +121,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         Sym_new_y = torch.cat((data_y, _new_y), dim=0)
         if args.net == 'SymDiGCN':
             # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all
+            # y, not only train
             out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
             # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
         elif args.net.startswith('DiG'):
@@ -166,7 +167,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         if args.net == 'SymDiGCN':
             # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
+            # no augmented data
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
 
         elif args.net.startswith('DiG'):
@@ -284,7 +286,8 @@ if args.net.startswith('DiG'):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
 elif args.net == 'SymDiGCN':
-    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
 elif args.net.startswith('Mag'):
     data_x_cpu = data_x.cpu()
     X_img = torch.FloatTensor(data_x_cpu).to(device)
