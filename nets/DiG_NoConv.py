@@ -393,6 +393,41 @@ class DiGCN_IB_2BN_Ben(torch.nn.Module):    #  obviously worse than DiGCN_IB_2BN
         x = x.permute((0, 2, 1)).squeeze()
         return x
 
+class DiGCN_IB_2BN_Ben_cat(torch.nn.Module):    #  obviously worse than DiGCN_IB_2BN
+    def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
+        super(DiGCN_IB_2BN_Ben_cat, self).__init__()
+        self.ib1 = InceptionBlock(num_features, hidden)
+        self.ib2 = InceptionBlock(3*hidden, num_classes)
+        self.Conv = nn.Conv1d(num_classes * 3, num_classes, kernel_size=1)
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(3*hidden)
+        self.batch_norm2 = nn.BatchNorm1d(3*num_classes)
+
+        self.reg_params = list(self.ib1.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        # x = 2*(x1 + x2)
+        # x = torch.cat((x0, x), axis=-1)
+        x = torch.cat((x0, x1, x2), axis=-1)
+        x = self.batch_norm1(x)
+        x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        # x = 2 * (x1 + x2)
+        # x = torch.cat((x0, x), axis=-1)
+        x = torch.cat((x0, x1, x2), axis=-1)
+        x = self.batch_norm2(x)
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)  # with this block or without, almost the same result
+        x = x.permute((0, 2, 1)).squeeze()
+        return x
 class DiGCN_IB_2BN_Ben2(torch.nn.Module):    #  obviously worse than DiGCN_IB_2BN
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_2BN_Ben2, self).__init__()
@@ -428,7 +463,6 @@ class DiGCN_IB_2BN_Ben2(torch.nn.Module):    #  obviously worse than DiGCN_IB_2B
         x = self.Conv(x)  # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
         return x
-
 class DiGCN_IB_XBN(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_XBN, self).__init__()
@@ -470,7 +504,7 @@ def create_DiG_IB(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = DiGCN_IB_1BN(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = DiGCN_IB_2BN_Ben2(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiGCN_IB_2BN_Ben_cat(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = DiGCN_IB_XBN(nfeat, nhid, nclass, dropout, nlayer)
     return model
