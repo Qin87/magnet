@@ -126,10 +126,11 @@ def __norm__(
         Return types:
             * edge_index, edge_weight_real, edge_weight_imag (PyTorch Float Tensor) - Magnetic laplacian tensor: edge index, real weights and imaginary weights.
         """
+        device = edge_index.device
         edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
         edge_index, edge_weight_real, edge_weight_imag = get_Sign_Magnetic_Laplacian(
             edge_index, gcn, net_flow, edge_weight, normalization, dtype, num_nodes  )
-        # lambda_max.to(edge_weight_real.device)
+        # lambda_max.to(device)
         lambda_max = lambda_max.to(edge_weight_real.device)
 
         edge_weight_real = (2.0 * edge_weight_real) / lambda_max
@@ -146,6 +147,10 @@ def __norm__(
         edge_index, edge_weight_imag = add_self_loops(
             edge_index, edge_weight_imag, fill_value=0, num_nodes=num_nodes )
         assert edge_weight_imag is not None
+
+        edge_index = edge_index.to(device)
+        edge_weight_real = edge_weight_real.to(device)
+        edge_weight_imag = edge_weight_imag.to(device)
         return edge_index, edge_weight_real, edge_weight_imag
 
 
