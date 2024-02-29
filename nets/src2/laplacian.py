@@ -129,7 +129,8 @@ def __norm__(
         edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
         edge_index, edge_weight_real, edge_weight_imag = get_Sign_Magnetic_Laplacian(
             edge_index, gcn, net_flow, edge_weight, normalization, dtype, num_nodes  )
-        lambda_max.to(edge_weight_real.device)
+        # lambda_max.to(edge_weight_real.device)
+        lambda_max = lambda_max.to(edge_weight_real.device)
 
         edge_weight_real = (2.0 * edge_weight_real) / lambda_max
         edge_weight_real.masked_fill_(edge_weight_real == float("inf"), 0)
