@@ -6,14 +6,14 @@ def parse_args():
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
     # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=20, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
+    parser.add_argument('--AugDirect', type=int, default=1, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg')
-    parser.add_argument('--net', type=str, default='Sig', help='device')
+    parser.add_argument('--net', type=str, default='Mag', help='device')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='CiteSeer', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('--Direct_dataset', type=str, default='dgl/pubmed', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin')
