@@ -504,7 +504,7 @@ def create_DiG_IB(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = DiGCN_IB_1BN(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = DiGCN_IB_2BN_Ben_cat(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiGCN_IB_2BN(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = DiGCN_IB_XBN(nfeat, nhid, nclass, dropout, nlayer)
     return model

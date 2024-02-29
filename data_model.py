@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 import torch
 
+from Signum import SigMaNet_node_prediction_one_laplacian, SigMaNet_node_prediction_one_laplacian_Qin
 from edge_data import to_undirected, to_undirectedBen
 from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
@@ -21,6 +22,7 @@ from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor, ChebNet_Ben
+from nets.src2 import laplacian
 from preprocess import geometric_dataset_sparse
 
 
@@ -53,6 +55,14 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith('Mag'):
         model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                             activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+    elif args.net.startswith('Sig'):
+        # model = SigMaNet_node_prediction_one_laplacian_Qin(K=args.K, num_features=X_real.size(-1), hidden=args.num_filter, label_dim=cluster_dim,
+        #                                                i_complex=False, layer=args.layer, follow_math=args.follow_math, gcn=gcn, net_flow=args.netflow, unwind=True, edge_index=edge_index, \
+        #                                                norm_real=norm_real, norm_imag=norm_imag).to(device)
+
+        model = SigMaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.feat_dim, label_dim=n_cls,i_complex=args.i_complex, layer=args.layer,
+                                                           activation=args.activation,follow_math=args.follow_math, gcn=args.gcn, net_flow=args.netflow, unwind=True).to(device)
+
 
     else:
         if args.net == 'GCN':

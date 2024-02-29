@@ -20,6 +20,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
 from data_model import CreatModel, load_dataset, log_file, geometric_dataset_sparse_Ben
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import sparse_mx_to_torch_sparse_tensor, ChebNet
+from nets.src2 import laplacian
 from preprocess import F_in_out, geometric_dataset_sparse, F_in_out_Qin
 from utils import CrossEntropy, F1Scheduler
 from sklearn.metrics import balanced_accuracy_score, f1_score
@@ -28,7 +29,7 @@ from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 import warnings
 warnings.filterwarnings("ignore")
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor):
+def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor, Sigedge_index, norm_real, norm_imag):
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
     try:
@@ -46,6 +47,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         elif args.net.startswith('Mag'):
             out = model(X_real, X_img, edges, args.q, edge_weight)
             out = out.permute(2, 1, 0).squeeze()
+        elif args.net.startswith('Sig'):    # TODO might change
+            out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
         else:
             out = model(data_x, edges)
         # type 1
@@ -146,7 +149,15 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             new_x_cpu = new_x.cpu()
             newX_img = torch.FloatTensor(new_x_cpu).to(device)
             newX_real = torch.FloatTensor(new_x_cpu).to(device)
-            out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+            # out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+            out = model(newX_real, newX_img, new_edge_index, args.q, edge_weight).permute(2, 1, 0).squeeze()
+        elif args.net.startswith('Sig'):
+            new_x_cpu = new_x.cpu()
+            newX_img = torch.FloatTensor(new_x_cpu).to(device)
+            newX_real = torch.FloatTensor(new_x_cpu).to(device)
+            NewSigedge_index, Newnorm_real,  Newnorm_imag = laplacian.process_magnetic_laplacian(edge_index=new_edge_index, gcn=gcn, net_flow=args.netflow, x_real=newX_real, edge_weight=edge_weight,
+                                                                                    normalization='sym', return_lambda_max=False)
+            out = model(newX_real, newX_img, Newnorm_real, Newnorm_imag, NewSigedge_index)     # TODO revise!
         else:
             out = model(new_x, new_edge_index)  # all data + aug
 
@@ -191,6 +202,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
             out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+        elif args.net.startswith('Sig'):    # TODO might change
+            out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
         else:
             out = model(data_x, edges)
         val_loss= F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -208,6 +221,8 @@ def test():
         logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
         logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+    elif args.net.startswith('Sig'):  # TODO might change
+        logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -235,8 +250,8 @@ else:
     device = torch.device("cpu")
 if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
     device = torch.device("cpu")
-if args.net.startswith('Mag'):
-    device = torch.device("cpu")
+# if args.net.startswith('Mag'):
+#     device = torch.device("cpu")
 log_directory, log_file_name_with_timestamp = log_file(args)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
@@ -260,6 +275,11 @@ X_img = None
 X_real = None
 edge_Qin_in_tensor = None
 edge_Qin_out_tensor = None
+Sigedge_index = None
+norm_real = None
+norm_imag = None
+
+gcn = True
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 
@@ -288,10 +308,13 @@ if args.net.startswith('DiG'):
 elif args.net == 'SymDiGCN':
     # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
-elif args.net.startswith('Mag'):
+elif args.net.startswith(('Mag', 'Sig')):
     data_x_cpu = data_x.cpu()
     X_img = torch.FloatTensor(data_x_cpu).to(device)
     X_real = torch.FloatTensor(data_x_cpu).to(device)
+    if args.net.startswith('Sig'):
+        Sigedge_index, norm_real, norm_imag = laplacian.process_magnetic_laplacian(edge_index=edges, gcn=gcn, net_flow=args.netflow, x_real=X_real, edge_weight=edge_weight,
+                                                                                   normalization='sym', return_lambda_max=False)
 else:
     pass
 
@@ -368,7 +391,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         end_epoch =0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         for epoch in range(args.epoch):
-            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor)
+            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor, Sigedge_index, norm_real, norm_imag)
             accs, baccs, f1s = test()
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s

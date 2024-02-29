@@ -145,13 +145,18 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
                             gcn_appr=False, edge_weight=None):
     # row = row.cpu().numpy()
     # col = col.cpu().numpy()
-    row = row.detach().cpu().numpy()
-    col = col.detach().cpu().numpy()
+    # row = row.detach().cpu().numpy()
+    # col = col.detach().cpu().numpy()
+    row = row.detach().numpy()
+    col = col.detach().numpy()
 
     if edge_weight is None:
         A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
     else:
-        A = coo_matrix((edge_weight, (row, col)), shape=(size, size), dtype=np.float32)
+        # A = coo_matrix((edge_weight, (row, col)), shape=(size, size), dtype=np.float32)
+        # A = coo_matrix((edge_weight.detach().cpu().numpy(), (row.detach().cpu().numpy(), col.detach().cpu().numpy())), shape=(size, size), dtype=np.float32)
+
+        A = coo_matrix((edge_weight.detach().numpy(), (row, col)), shape=(size, size), dtype=np.float32)
 
     diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
     if gcn_appr:

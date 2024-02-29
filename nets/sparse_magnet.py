@@ -175,16 +175,35 @@ class complex_relu_layer_Ben(nn.Module):
         mask = 1.0 * (real >= 0)
         return mask * real, mask * img
 
-    # def forward(self, real, img, edges, q, edge_weight):
     def forward(self, real, img=None):
+    # def forward(self, real, img,edges, q, edge_weight):
         # for torch nn sequential usage
         # in this case, x_real is a tuple of (real, img)
         if img == None:
             img = real[1]
+            edges, q, edge_weight = real[2],real[3],real[4]
             real = real[0]
-            edges, q, edge_weight = real[2],real[3],real[4],
         real, img = self.complex_relu(real, img)
         return real, img, edges, q, edge_weight
+
+class complex_relu_layer_SigBen(nn.Module):
+    def __init__(self, ):
+        super(complex_relu_layer_SigBen, self).__init__()
+
+    def complex_relu(self, real, img):
+        mask = 1.0 * (real >= 0)
+        return mask * real, mask * img
+
+    # def forward(self, real, img, edges, q, edge_weight):
+    def forward(self, real, img, norm_real, norm_imag, edges):
+        # for torch nn sequential usage
+        # in this case, x_real is a tuple of (real, img)
+        if img is None:
+            img = real[1]
+            real = real[0]
+            norm_real, norm_imag, edges = real[2],real[3],real[4],
+        real, img = self.complex_relu(real, img)
+        return real, img, norm_real, norm_imag, edges
 
 
 class ChebNet(nn.Module):
