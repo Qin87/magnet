@@ -39,16 +39,21 @@ def dictionary_connection(graph):
 
 # Creation of the subdivision graph
 def flipping(graph):
-    graph_1 = nx.from_scipy_sparse_matrix(graph, create_using=nx.DiGraph)
-    graph_bidirectional = nx.from_scipy_sparse_matrix(coo_matrix((graph_1.number_of_nodes(), graph_1.number_of_nodes()), 
-                                               dtype=np.int8), create_using=nx.DiGraph)
+    # graph_1 = nx.from_scipy_sparse_matrix(graph, create_using=nx.DiGraph)
+    graph_1 = nx.from_scipy_sparse_array(graph, create_using=nx.DiGraph)
+    # graph_bidirectional = nx.from_scipy_sparse_matrix(coo_matrix((graph_1.number_of_nodes(), graph_1.number_of_nodes()),
+    #                                            dtype=np.int8), create_using=nx.DiGraph)
+    graph_bidirectional = nx.from_scipy_sparse_array(coo_matrix((graph_1.number_of_nodes(), graph_1.number_of_nodes()),
+                                                                 dtype=np.int8), create_using=nx.DiGraph)
     dictionary = dictionary_connection(graph_1)
     biconnections = biconnection(graph_1)
-    A = nx.to_scipy_sparse_matrix(graph_1)
+    # A = nx.to_scipy_sparse_matrix(graph_1)
+    A = nx.to_scipy_sparse_array(graph_1)
     n_rows = A.shape[0]
     lista = [add_edges(graph_bidirectional, n_rows, biconnections,dictionary, i) for i in range(0, len(biconnections),2)]
-    return nx.to_scipy_sparse_matrix(graph_bidirectional)
-    
+    # return nx.to_scipy_sparse_matrix(graph_bidirectional)
+    return nx.to_scipy_sparse_array(graph_bidirectional)
+
 def new_adj(A):
     AB = flipping(A)
     AU = triu(AB - AB.T)
