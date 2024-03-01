@@ -15,7 +15,7 @@ from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT, create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 from nets.DiGCN import DiModel, DiGCN_IB
-from nets.DiG_NoConv import create_DiGSimple, DiGCN_IB_XBN, create_DiG_IB
+from nets.DiG_NoConv import create_DiGSimple, DiGCN_IB_XBN, create_DiG_IB, create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg
 from nets.gat import create_gat_0
@@ -47,9 +47,12 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         if not args.net[-2:] == 'ib':
             model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         else:
-            model = create_DiG_IB(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+            if args.net[3:].startswith('Sym'):
+                model = create_DiG_IB_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+            else:
+                model = create_DiG_IB(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
 
-    elif args.net == 'SymDiGCN':
+    elif args.net.startswith('Sym'):
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith('Mag'):

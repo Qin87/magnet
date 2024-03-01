@@ -1,7 +1,3 @@
-################################
-#  This is old Augmentation, who don't consider the original direction of edges
-# I'll Aug edge according to original direction in MainMar1.py, and the work begins on Mar 1.
-################################
 import os
 import os.path as osp
 import time
@@ -20,7 +16,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
-    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_biTrainmask
+    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_biTrainmask, neighbor_samplingDirection, neighbor_sampling_BiEdge_bidegree_Direction
 from data_model import CreatModel, load_dataset, log_file, geometric_dataset_sparse_Ben
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import sparse_mx_to_torch_sparse_tensor, ChebNet
@@ -68,40 +64,9 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             if args.AugDirect == 1:
                 # new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
                 new_edge_index = neighbor_sampling(data_x.size(0), edges, sampling_src_idx,neighbor_dist_list)
-            elif args.AugDirect == -1:
-                # new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
-                new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges, sampling_src_idx,neighbor_dist_list)
-
-            elif args.AugDirect == 2:
-                # new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges[:, train_edge_mask],
-                #                                           sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_BiEdge(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)
-            elif args.AugDirect == 4:
-                # new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges[:, train_edge_mask],,sampling_src_idx,neighbor_dist_list)
-                new_edge_index = neighbor_sampling_BiEdge_bidegree(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)
-            elif args.AugDirect == 20:
-                # type 1
-                # new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx,neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegree(data_x.size(0), edges,sampling_src_idx,neighbor_dist_list)  # has two types
-
-            elif args.AugDirect == 21:
-                # new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegreeOrigin(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 22:
-                # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 23:
-                # new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
-                new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-
-            elif args.AugDirect == 231:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 2311:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-
-            elif args.AugDirect == 230:
-                new_edge_index = neighbor_sampling_bidegree_variant2_0(data_x.size(0), edges,sampling_src_idx, neighbor_dist_list)
-
+            if args.AugDirect == 301:
+                # new_edge_index = neighbor_samplingDirection(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_BiEdge_bidegree_Direction(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
             else:
                 raise NotImplementedError
@@ -376,7 +341,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
                           idx_info_list]  # train nodes position inside train
 
-        if args.gdc=='ppr':
+        if args.gdc=='ppr':     # TODO don't know the difference
             neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
         elif args.gdc=='hk':
             neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
@@ -398,7 +363,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s
             val_acc_f1 = (val_acc + val_f1) / 2.
-            # print('train_acc:', train_acc,'val_acc:', val_acc, 'test_acc:', accs[2])
+            print('train_acc:', train_acc,'val_acc:', val_acc, 'test_acc:', accs[2])
             # if val_acc_f1 > best_val_acc_f1:
             # if val_f1 > best_val_f1:
             if tmp_test_f1 > best_test_f1:
@@ -414,9 +379,9 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             else:
                 CountNotImproved += 1
             end_time = time.time()
-            # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+            print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
             print(end_time - start_time, file=log_file)
-            # print(end_time - start_time)
+            print(end_time - start_time)
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
             end_epoch = epoch
             if CountNotImproved> args.NotImproved:

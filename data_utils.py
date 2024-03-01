@@ -56,7 +56,7 @@ def get_idx_info(label, n_cls, train_mask, device):
         idx_info.append(cls_indices)
     return idx_info
 
-def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask, device):
+def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask):
     """
 
     :param edge_index: all edges in the graph
@@ -68,15 +68,12 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
     :return: list(class_num_list), train_mask, idx_info, node_mask, edge_mask
     """
     # Sort from major to minor
+    device = edge_index.device
     n_data = torch.tensor(n_data)   # from list to tensor
-    # print(n_data)
     sorted_n_data, indices = torch.sort(n_data, descending=True)
-    # print(sorted_n_data, indices)   # tensor([341, 196, 196, 160, 138,  90,  87]) tensor([3, 2, 4, 0, 5, 1, 6])
     inv_indices = np.zeros(n_cls, dtype=np.int64)
-    # print(inv_indices)      # [0 0 0 0 0 0 0]
     for i in range(n_cls):
         inv_indices[indices[i].item()] = i
-    # print(inv_indices)      # [3 5 1 0 2 4 6]
     assert (torch.arange(len(n_data))[indices][torch.tensor(inv_indices)] - torch.arange(len(n_data))).sum().abs() < 1e-12
 
     # Compute the number of nodes for each class following LT rules
@@ -85,11 +82,9 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
     if not isinstance(n_cls, int):
         ratio = ratio.cpu()
         n_cls = n_cls.cpu()
-    mu = np.power(1/ratio.detach().cpu().numpy(), 1/(n_cls - 1))
-
+    mu = np.power(1/ratio.detach().cpu().numpy(), 1/(n_cls - 1))            # mu is ratio of two classes, while args.ratio is ratio of major to minor
     mu = torch.tensor(mu, dtype=torch.float32, device=ratio.device)
 
-    # print(mu, 1/ratio, 1/(n_cls-1))     # 0.4641588833612779 0.01 0.16666666666666666
     n_round = []
     class_num_list = []
     for i in range(n_cls):

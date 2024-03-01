@@ -330,9 +330,9 @@ class DiGCN_IB_1BN(torch.nn.Module):
         x = self.batch_norm1(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
-class DiGCN_IB_2BN(torch.nn.Module):
+class DiGCN_IB_2BN_Sym(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
-        super(DiGCN_IB_2BN, self).__init__()
+        super(DiGCN_IB_2BN_Sym, self).__init__()
         self.ib1 = InceptionBlock(num_features, hidden)
         self.ib2 = InceptionBlock(hidden, num_classes)
         self._dropout = dropout
@@ -501,6 +501,15 @@ class DiGCN_IB_XBN(torch.nn.Module):
         return x
 
 def create_DiG_IB(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = DiGCN_IB_1BN(nfeat, nhid, nclass, dropout, nlayer)
+    elif nlayer == 2:
+        model = DiGCN_IB_2BN(nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = DiGCN_IB_XBN(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+def create_DiG_IB_Sym(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = DiGCN_IB_1BN(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:

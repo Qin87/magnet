@@ -79,14 +79,8 @@ class ChebConv(nn.Module):
 
 class ChebConv_Qin(nn.Module):
     """
-    The MagNet convolution operation.
-
-    :param in_c: int, number of input channels.
-    :param out_c: int, number of output channels.
-    :param K: int, the order of Chebyshev Polynomial.
-    :param L_norm_real, L_norm_imag: normalized laplacian of real and imag
+    differ from ChebConv is parameter(X_real, X_imag) in __init__ move to forward.
     """
-
     def __init__(self, in_c, out_c, K, bias=True):
         super(ChebConv_Qin, self).__init__()
 
@@ -104,8 +98,7 @@ class ChebConv_Qin(nn.Module):
     # def forward(self, X_real, X_imag,  edges, q=0, edge_weight=None):
     def forward(self, data):
         """
-        :param inputs: the input data, real [B, N, C], img [B, N, C]
-        :param L_norm_real, L_norm_imag: the laplace, [N, N], [N,N]
+        :
         """
         X_real, X_imag = data[0], data[1]
         edges, q, edge_weight = data[2], data[3], data[4],
@@ -251,7 +244,7 @@ class ChebNet(nn.Module):
 
 class ChebNet_Ben(nn.Module):
     # def __init__(self, in_c, L_norm_real, L_norm_imag, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
-    def __init__(self, in_c, num_filter=2, K=2, label_dim=2, activation=True, layer=2, dropout=False):
+    def __init__(self, in_c, num_filter=2, K=2, label_dim=2, activation=False, layer=2, dropout=False):
         """
         :param in_c: int, number of input channels.
         :param hid_c: int, number of hidden channels.

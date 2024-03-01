@@ -7,13 +7,14 @@ def parse_args():
     # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
     parser.add_argument('--AugDirect', type=int, default=1, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
-                                                                 '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg')
-    parser.add_argument('--net', type=str, default='Sig', help='device')
+                                                                 '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
+                                                                 '301 based on original direction')
+    parser.add_argument('--net', type=str, default='Mag', help='device')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='CiteSeer', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='WebKB/Cornell', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('--Direct_dataset', type=str, default='WebKB/texas', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin')
@@ -48,8 +49,8 @@ def parse_args():
     parser.add_argument('--q', type=float, default=0, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
-    # parser.add_argument('-activation', '-a', action='store_true', help='if use activation function')
-    parser.add_argument('-activation', '-a', action='store_false', help='if use activation function')
+    parser.add_argument('-activation', '-a', action='store_true', help='if use activation function')
+    # parser.add_argument('-activation', '-a', action='store_false', help='if use activation function')
 
     # for SigManet
     parser.add_argument('--netflow', '-N', action='store_false', help='if use net flow')
