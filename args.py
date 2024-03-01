@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('--data_path', type=str, default='../dataset/data/tmp/',
                         help='data set folder, for default format see dataset/cora/cora.edges and cora.node_labels')
 
-    ##   from Magnet
+    #  from Magnet
     parser.add_argument('--q', type=float, default=0, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
