@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from torch_geometric.graphgym import optim
 
 from args import parse_args
-from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split, load_directedData
+from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split, load_directedData, keep_all_data
 from edge_data import get_appr_directed_adj, get_second_directed_adj
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
@@ -364,8 +364,14 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             data_num = (stats == i).sum()
             n_data.append(int(data_num.item()))
         idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
-        class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-            make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+        # class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+        #     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+        if args.MakeImbalance:
+            class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+                make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+        else:
+            class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+                keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
 
         train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
         labels_local = data_y.view([-1])[train_idx]  # view([-1]) is "flattening" the tensor.
@@ -420,7 +426,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
             end_epoch = epoch
             if CountNotImproved> args.NotImproved:
-                print("No improved for consecutive 450 epochs, break.")
+                print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                 break
         if args.IsDirectedData:
             dataset_to_print = args.Direct_dataset + str(args.to_undirected)

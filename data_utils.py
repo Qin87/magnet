@@ -161,7 +161,36 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
 
     return list(class_num_list), train_mask, idx_info, node_mask, edge_mask
 
+def keep_all_data(edge_index, label, n_data, n_cls, ratio, train_mask):
+    """
+    just keep all training data
+    :param edge_index:
+    :param label:
+    :param n_data:
+    :param n_cls:
+    :param ratio:
+    :param train_mask:
+    :return:
+    """
+    device = edge_index.device
+    class_num_list = n_data
+    data_train_mask = train_mask
 
+    index_list = torch.arange(len(train_mask)).to(device)
+    idx_info = []
+    for i in range(n_cls):
+        cls_indices = index_list[(label == i) & train_mask]
+        idx_info.append(cls_indices)
+
+    train_node_mask = train_mask.to(device)
+
+    row, col = edge_index[0].to(device), edge_index[1].to(device)
+    row_mask = train_mask[row]
+    col_mask = train_mask[col]
+    edge_mask = row_mask & col_mask
+    # print(torch.sum(train_mask), torch.sum(row_mask), torch.sum(col_mask), torch.sum(edge_mask))  # tensor(250) tensor(414) tensor(410) tensor(51)
+
+    return class_num_list, data_train_mask, idx_info, train_node_mask, edge_mask
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Direct_dataset.split('/')[0], args.Direct_dataset.split('/')[1]
