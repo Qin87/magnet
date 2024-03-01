@@ -20,6 +20,7 @@ def parse_args():
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
     parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
+    # parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
     parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
