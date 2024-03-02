@@ -17,7 +17,7 @@ from nets.Cheb_Ben import create_Cheb
 from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import create_DiGSimple, DiGCN_IB_XBN, create_DiG_IB, create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
-from nets.Sym_Reg import create_SymReg
+from nets.Sym_Reg import create_SymReg, create_SymReg_add
 from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
@@ -55,6 +55,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith('Sym'):
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+    elif args.net.startswith('addSym'):
+        model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
     elif args.net.startswith('Mag'):
         model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                             activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)

@@ -126,7 +126,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # Sym_edges = torch.cat([edges, new_edge_index], dim=1)
         # Sym_edges = torch.unique(Sym_edges, dim=1)
         Sym_new_y = torch.cat((data_y, _new_y), dim=0)
-        if args.net.startswith('Sym'):
+        if args.net.startswith('Sym') or args.net.startswith('addSym'):
             # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
             data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all
             # y, not only train
@@ -179,7 +179,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         # out = model(data_x, edges)
-        if args.net.startswith('Sym'):
+        if args.net.startswith('Sym') or args.net.startswith('addSym'):
             # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
@@ -219,7 +219,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 @torch.no_grad()
 def test():
     model.eval()
-    if args.net.startswith('Sym'):
+    if args.net.startswith('Sym') or args.net.startswith('addSym'):
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
     elif args.net.startswith('DiG'):
         logits = model(data_x, SparseEdges, edge_weight)
@@ -307,7 +307,7 @@ if args.net.startswith('DiG'):
         SparseEdges = edge_index1
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
-elif args.net.startswith('Sym'):
+elif args.net.startswith('Sym') or args.net.startswith('addSym'):
     # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
 elif args.net.startswith(('Mag', 'Sig')):
@@ -420,7 +420,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             else:
                 CountNotImproved += 1
             end_time = time.time()
-            # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+            print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
             print(end_time - start_time, file=log_file)
             # print(end_time - start_time)
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
