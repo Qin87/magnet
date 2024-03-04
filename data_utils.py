@@ -1,9 +1,12 @@
 import os
 
-import dgl
+try:
+    import dgl
+    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
+except:
+    print("dgl not support this python!")
 import torch
 import numpy as np
-from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
 from torch_scatter import scatter_add
 from torch_geometric.datasets import WebKB, WikipediaNetwork, WikiCS
 
