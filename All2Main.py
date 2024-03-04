@@ -11,7 +11,6 @@ import random
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch_geometric.graphgym import optim
 
 from args import parse_args
 from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split, load_directedData, keep_all_data
