@@ -42,7 +42,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
     optimizer.zero_grad()
     if args.AugDirect == 0:
-        if args.net.startswith('Sym'):
+        if args.net.startswith('Sym')  or args.net.startswith('addSym'):
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
