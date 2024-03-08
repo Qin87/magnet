@@ -87,7 +87,7 @@ class ChebConv_Qin(nn.Module):
         self.weight = nn.Parameter(torch.Tensor(K + 1, in_c, out_c))  # [K+1, 1, in_c, out_c]
 
         stdv = 1. / math.sqrt(self.weight.size(-1))
-        self.weight.data.uniform_(-stdv, stdv)
+        self.weight.data.uniform_(-stdv, stdv)      # Qin learn: initializes the weights from a uniform distribution bounded by -stdv and stdv.
 
         if bias:
             self.bias = nn.Parameter(torch.Tensor(1, out_c))
@@ -97,9 +97,14 @@ class ChebConv_Qin(nn.Module):
 
     # def forward(self, X_real, X_imag,  edges, q=0, edge_weight=None):
     def forward(self, data):
-        """
-        :
-        """
+        '''
+        main body is process: complex muplication between input x and L
+        Args:
+            data:real and img,
+
+        Returns: new real and img after this ChebConv layer.( get the last layer of X from first layer of X)
+
+        '''
         X_real, X_imag = data[0], data[1]
         edges, q, edge_weight = data[2], data[3], data[4],
         device = X_real.device
@@ -126,7 +131,7 @@ class ChebConv_Qin(nn.Module):
         real = 0.0
         imag = 0.0
 
-        future = []
+        future = []     # future stores handles to ongoing asynchronous computations
         for i in range(len(L_norm_real)):  # [K, B, N, D]
             future.append(torch.jit.fork(process,
                                          L_norm_real[i], L_norm_imag[i],
@@ -140,6 +145,79 @@ class ChebConv_Qin(nn.Module):
         imag = result[1]
         # return real + self.bias, imag + self.bias
         return real + self.bias, imag + self.bias, edges, q, edge_weight
+
+
+class ChebConv_Qin_2bias(nn.Module):
+    """
+    differ from ChebConv is parameter(X_real, X_imag) in __init__ move to forward.
+    """
+    def __init__(self, in_c, out_c, K, bias=True):
+        super(ChebConv_Qin_2bias, self).__init__()
+
+        self.weight = nn.Parameter(torch.Tensor(K + 1, in_c, out_c))  # [K+1, 1, in_c, out_c]
+
+        stdv = 1. / math.sqrt(self.weight.size(-1))
+        self.weight.data.uniform_(-stdv, stdv)      # Qin learn: initializes the weights from a uniform distribution bounded by -stdv and stdv.
+
+        if bias:
+            self.biasreal = nn.Parameter(torch.Tensor(1, out_c))
+            self.biasimag = nn.Parameter(torch.Tensor(1, out_c))
+            nn.init.zeros_(self.biasreal)
+            nn.init.zeros_(self.biasimag)
+        else:
+            self.register_parameter("bias", None)
+
+    # def forward(self, X_real, X_imag,  edges, q=0, edge_weight=None):
+    def forward(self, data):
+        '''
+        bias of real and imag are different
+        main body is process: complex muplication between input x and L
+        Args:
+            data:real and img,
+
+        Returns: new real and img after this ChebConv layer.( get the last layer of X from first layer of X)
+
+        '''
+        X_real, X_imag = data[0], data[1]
+        edges, q, edge_weight = data[2], data[3], data[4],
+        device = X_real.device
+        size = X_real.size(0)
+
+        f_node, e_node = edges[0], edges[1]
+        laplacian = True
+        gcn_appr = False
+        try:
+            L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+        except AttributeError:
+            L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+        multi_order_laplacian = cheb_poly_sparse(L, K=2)   # K=2 is temp by me
+        L = multi_order_laplacian
+        L_img = []
+        L_real = []
+        for i in range(len(L)):
+            L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
+            L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+        # list of K sparsetensors, each is N by N
+        L_norm_real = L_img     # [K, N, N]
+        L_norm_imag = L_real    # [K, N, N]
+
+        real = 0.0
+        imag = 0.0
+
+        future = []     # future stores handles to ongoing asynchronous computations
+        for i in range(len(L_norm_real)):  # [K, B, N, D]
+            future.append(torch.jit.fork(process,
+                                         L_norm_real[i], L_norm_imag[i],
+                                         self.weight[i], X_real, X_imag))
+        result = []
+        for i in range(len(L_norm_real)):
+            result.append(torch.jit.wait(future[i]))
+        result = torch.sum(torch.stack(result), dim=0)
+
+        real = result[0]
+        imag = result[1]
+        # return real + self.bias, imag + self.bias
+        return real + self.biasreal, imag + self.biasimag, edges, q, edge_weight
 
 
 class complex_relu_layer(nn.Module):
@@ -253,7 +331,6 @@ class ChebNet_Ben(nn.Module):
         """
         super(ChebNet_Ben, self).__init__()
 
-        self.cheb_Qin = ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)
         chebs = [ChebConv_Qin(in_c=in_c, out_c=num_filter, K=K)]
         if activation:
             chebs.append(complex_relu_layer_Ben())
@@ -266,22 +343,36 @@ class ChebNet_Ben(nn.Module):
         self.Chebs = torch.nn.Sequential(*chebs)
 
         last_dim = 2
-        self.Conv = nn.Conv1d(num_filter * last_dim, label_dim, kernel_size=1)
+        self.Conv = nn.Conv1d(num_filter * last_dim, label_dim, kernel_size=1)  # the input to nn.Conv1d is expected to be a 3D tensor with the shape (batch_size, in_channels, input_length)
         self.dropout = dropout
 
     def forward(self, real, imag, edges, q, edge_weight):
+        '''
+
+        Args:
+            real:
+            imag:
+            edges:
+            q:
+            edge_weight:
+
+        Returns:
+
+        '''
 
         real, imag, edges, q, edge_weight = self.Chebs((real, imag,  edges, q, edge_weight))
         # real, imag = self.cheb_Qin((real, imag, edges, q, edge_weight))
-        x = torch.cat((real, imag), dim=-1)
+        x = torch.cat((real, imag), dim=-1)     # unwind the complex X into real-valued X
 
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
 
-        x = x.unsqueeze(0)
+
+        x = x.unsqueeze(0)      # can't simplify, because the input of Conv1d is 3D
         x = x.permute((0, 2, 1))
         x = self.Conv(x)
-        x = F.log_softmax(x, dim=1)
+        x = F.log_softmax(x, dim=1)     # transforms the raw output scores (logits) into log probabilities, which are more numerically stable for computation and training
+        x = x.permute(2, 1, 0).squeeze()
         return x
 
 class ChebNet_BenX(nn.Module):

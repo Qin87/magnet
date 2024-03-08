@@ -14,13 +14,14 @@ import torch.nn.functional as F
 
 from args import parse_args
 from data_utils import get_dataset, get_idx_info, make_longtailed_data_remove, get_step_split, load_directedData, keep_all_data
-from edge_data import get_appr_directed_adj, get_second_directed_adj
+from edge_data import get_appr_directed_adj, get_second_directed_adj, in_out_degree
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_biTrainmask
 from data_model import CreatModel, load_dataset, log_file, geometric_dataset_sparse_Ben
+from nets.UGCL import Encoder, UGCL_Model
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import sparse_mx_to_torch_sparse_tensor, ChebNet
 from nets.src2 import laplacian
@@ -30,7 +31,51 @@ from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
 
 import warnings
+
+from utils0.edge_data_sign import generate_dataset_2class, load_directed_signed_graph_link2
+from utils0.perturb import composite_perturb
+
 warnings.filterwarnings("ignore")
+
+def train_UGCL(pos_edges, neg_edges,size, train_index, val_index):
+    model.train()
+
+    if args.graph:
+        pos_edges1, neg_edges1 = composite_perturb(pos_edges, neg_edges, ratio=args.perturb_ratio)
+        pos_edges2, neg_edges2 = composite_perturb(pos_edges, neg_edges, ratio=args.perturb_ratio)
+    else:
+        pos_edges1, neg_edges1 = pos_edges, neg_edges
+        pos_edges2, neg_edges2 = pos_edges, neg_edges
+
+    if args.laplacian:
+        q1, q2 = random.sample(np.arange(0, 0.5, 0.1).tolist(), 2)
+        q1, q2 = np.pi * q1, np.pi * q2
+    else:
+        q1, q2 = args.q, args.q
+
+    if args.composite:
+        pos_edges1, neg_edges1 = composite_perturb(pos_edges, neg_edges, ratio=args.perturb_ratio)
+        pos_edges2, neg_edges2 = pos_edges, neg_edges
+        q2 = random.sample(np.arange(0, 0.5, 0.1).tolist(), 1)[0]
+        q1, q2 = args.q, np.pi * q2
+    ### Augmenting
+    ####################################################################################
+
+    z1 = model(X_real, X_img, q1, pos_edges1, neg_edges1, args, size, train_index)
+    z2 = model(X_real, X_img, q2, pos_edges2, neg_edges2, args, size, train_index)
+    contrastive_loss = model.contrastive_loss(z1, z2, batch_size=args.batch_size)
+    label_loss = model.label_loss(z1, z2, data_y[data_train_mask])
+    train_loss = args.loss_weight * contrastive_loss + label_loss
+
+    train_loss.backward()
+
+    model.eval()
+    z1 = model(X_real, X_img, q1, pos_edges, neg_edges, args, size, val_index)
+    z2 = model(X_real, X_img, q2, pos_edges, neg_edges, args, size, val_index)
+    val_loss = model.label_loss(z1, z2, data_y[data_val_mask])
+
+    optimizer.step()
+    scheduler.step(val_loss, epoch)
 
 def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight,X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor, Sigedge_index, norm_real, norm_imag):
     global class_num_list, idx_info, prev_out
@@ -48,10 +93,12 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         elif args.net.startswith('DiG'):
             out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
-            out = model(X_real, X_img, edges, args.q, edge_weight)
-            out = out.permute(2, 1, 0).squeeze()
+            out = model(X_real, X_img, edges, args.q, edge_weight)      # (1,5,183)
+            # out = out.permute(2, 1, 0).squeeze()        # (183,5)
         elif args.net.startswith('Sig'):    # TODO might change
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
+
+            # out = model()
         else:
             out = model(data_x, edges)
         # type 1
@@ -169,7 +216,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         new_train_mask = torch.ones(add_num, dtype=torch.bool, device=data_x.device)
         new_train_mask = torch.cat((data_train_mask, new_train_mask), dim=0)
 
-
+        optimizer.zero_grad()
         criterion(out[new_train_mask], new_y).backward()
 
 
@@ -204,7 +251,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
             out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
-            out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+            # out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+            out = model(X_real, X_img, edges, args.q, edge_weight)
         elif args.net.startswith('Sig'):    # TODO might change
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
         else:
@@ -223,11 +271,37 @@ def test():
     elif args.net.startswith('DiG'):
         logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
-        logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+        # logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+        logits = model(X_real, X_img, edges, args.q, edge_weight)
     elif args.net.startswith('Sig'):  # TODO might change
         logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
+    accs, baccs, f1s = [], [], []
+    for mask in [data_train_mask, data_val_mask, data_test_mask]:
+        pred = logits[mask].max(1)[1]
+        y_pred = pred.cpu().numpy()
+        y_true = data_y[mask].cpu().numpy()
+        acc = pred.eq(data_y[mask]).sum().item() / mask.sum().item()
+        bacc = balanced_accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, average='macro')
+        accs.append(acc)
+        baccs.append(bacc)
+        f1s.append(f1)
+    return accs, baccs, f1s
+
+def test_UGCL():
+    model.eval()
+    # if args.net.startswith('Sym') or args.net.startswith('addSym'):
+    #     logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+    # elif args.net.startswith('DiG'):
+    #     logits = model(data_x, SparseEdges, edge_weight)
+    # elif args.net.startswith('Mag'):
+    #     logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+    # elif args.net.startswith('Sig'):  # TODO might change
+    #     logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
+    # else:
+    logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
     for mask in [data_train_mask, data_val_mask, data_test_mask]:
         pred = logits[mask].max(1)[1]
@@ -282,15 +356,58 @@ norm_imag = None
 
 gcn = True
 
-data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+pos_edges = None
+neg_edges = None
 
-n_cls = data_y.max().item() + 1
+# if not args.net.startswith('UGCL'):
+#     data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+#     n_cls = data_y.max().item() + 1
+#     model = CreatModel(args, num_features, n_cls, data_x, device)
+# else:
+#     data_name = args.dataset
+#     dataset = load_directed_signed_graph_link2(root='data/' + data_name)
+#     if 'dataset' in locals():
+#         pos_edge, neg_edge = dataset
+#         pos_edge, neg_edge = torch.tensor(pos_edge).to(device), torch.tensor(neg_edge).to(device)
+#
+#     p_max = torch.max(pos_edge).item()
+#     n_max = torch.max(neg_edge).item()
+#     size = torch.max(torch.tensor([p_max, n_max])).item() + 1
+#     n_cls = torch.max(torch.tensor([p_max, n_max])).item() + 1      # Qin
+#     datasets = generate_dataset_2class(pos_edge, neg_edge, splits=args.ensemble, test_prob=0.20, ratio=args.ratio)
+#     # for i in args.ensemble:
+#     for i in range(1):
+#         edges = datasets[i]['graph']
+#         pos_edges = datasets[i]['train']['pos_edge']
+#         neg_edges = datasets[i]['train']['neg_edge']
+#
+#         X_img = in_out_degree(edges, size).to(device)
+#         X_real = X_img.clone()
+#
+#         encoder = Encoder(X_real.size(-1), K=args.K, label_dim=n_cls,
+#                           layer=args.layer, num_filter=args.feat_dim, dropout=args.dropout)
+#         model = UGCL_Model(encoder, num_hidden=args.feat_dim, num_proj_hidden=args.feat_dim, num_label=n_cls)
+#         model = model.to(device)
+#
+#         y_train = torch.from_numpy(datasets[i]['train']['label']).long().to(args.cuda)
+#         y_val = torch.from_numpy(datasets[i]['validate']['label']).long().to(args.cuda)
+#         y_test = torch.from_numpy(datasets[i]['test']['label']).long().to(args.cuda)
+#
+#         train_index = torch.from_numpy(datasets[i]['train']['pairs']).to(args.cuda)
+#         val_index = torch.from_numpy(datasets[i]['validate']['pairs']).to(args.cuda)
+#         test_index = torch.from_numpy(datasets[i]['test']['pairs']).to(args.cuda)
+#
+#
+#
+#
+#     # num_features =1
 
-model = CreatModel(args, num_features, n_cls, data_x, device)
-model = model.to(device)
+
+# model = model.to(device)
 criterion = CrossEntropy().to(device)
 
-
+data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
@@ -309,6 +426,7 @@ if args.net.startswith('DiG'):
 elif args.net.startswith('Sym') or args.net.startswith('addSym'):
     # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
+# elif args.net.startswith(('Mag', 'Sig', 'UGCL')):
 elif args.net.startswith(('Mag', 'Sig')):
     data_x_cpu = data_x.cpu()
     X_img = torch.FloatTensor(data_x_cpu).to(device)
@@ -316,30 +434,48 @@ elif args.net.startswith(('Mag', 'Sig')):
     if args.net.startswith('Sig'):
         Sigedge_index, norm_real, norm_imag = laplacian.process_magnetic_laplacian(edge_index=edges, gcn=gcn, net_flow=args.netflow, x_real=X_real, edge_weight=edge_weight,
                                                                                    normalization='sym', return_lambda_max=False)
+# elif args.net.startswith('UGCL'):
+    # data_name = args.dataset
+    # dataset = load_directed_signed_graph_link2(root='data/' + data_name)
+    # if 'dataset' in locals():
+    #     pos_edge, neg_edge = dataset
+    #     pos_edge, neg_edge = torch.tensor(pos_edge).to(device), torch.tensor(neg_edge).to(device)
+    #
+    # p_max = torch.max(pos_edge).item()
+    # n_max = torch.max(neg_edge).item()
+    # size = torch.max(torch.tensor([p_max,n_max])).item() + 1
+    # datasets = generate_dataset_2class(pos_edge, neg_edge, splits = args.ensemble, test_prob = 0.20, ratio=args.ratio)
+    # edges = datasets[i]['graph']
+    # pos_edges = datasets[i]['train']['pos_edge']
+    # neg_edges = datasets[i]['train']['neg_edge']
+
 else:
     pass
+
+
 
 try:
     splits = data_train_maskOrigin.shape[1]
     print("splits", splits)
     if len(data_test_maskOrigin.shape) == 1:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
-except IndexError:
+except:
     splits = 1
 
 start_time = time.time()
 
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
-    print(model, file=log_file)
     # for split in range(splits - 1, -1, -1):
     for split in range(splits):
+        model = CreatModel(args, num_features, n_cls, data_x, device)
+        # print(model, file=log_file)
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         try:
             optimizer = torch.optim.Adam(
                 [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
         except:  # TODo
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=200,verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100,verbose=True)
 
         if splits == 1:
             data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
@@ -373,6 +509,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
 
         train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
+        val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
+        test_idx = data_test_mask.nonzero().squeeze()  # get the index of training data
         labels_local = data_y.view([-1])[train_idx]  # view([-1]) is "flattening" the tensor.
         train_idx_list = train_idx.cpu().tolist()
         local2global = {i: train_idx_list[i] for i in range(len(train_idx_list))}
@@ -398,8 +536,16 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         end_epoch =0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         for epoch in range(args.epoch):
-            val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor, Sigedge_index, norm_real, norm_imag)
-            accs, baccs, f1s = test()
+            if args.net.startswith('UGCL'):
+                val_loss = train_UGCL(pos_edges, neg_edges,size, train_idx, val_idx)
+
+                z1 = model(X_real, X_img, q1, pos_edges, neg_edges, args, size, test_idx)
+                z2 = model(X_real, X_img, q2, pos_edges, neg_edges, args, size, test_idx)
+                out_test = model.prediction(z1, z2)
+                accs, baccs, f1s = test_UGCL()
+            else:
+                val_loss = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, edge_Qin_in_tensor, edge_Qin_out_tensor, Sigedge_index, norm_real, norm_imag)
+                accs, baccs, f1s = test()
             train_acc, val_acc, tmp_test_acc = accs
             train_f1, val_f1, tmp_test_f1 = f1s
             val_acc_f1 = (val_acc + val_f1) / 2.

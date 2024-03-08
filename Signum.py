@@ -265,9 +265,9 @@ class SigMaNetConv(MessagePassing):
 
 
 class SigMaNetConv_Qin(MessagePassing):
+    '''
 
-    # def __init__(self, in_channels: int, out_channels: int, K: int, i_complex: bool = False, follow_math: bool = True, gcn: bool = False, net_flow: bool = True,
-    #              normalization: str = 'sym', bias: bool = True, edge_index=None, norm_real=None, norm_imag=None, **kwargs):
+    '''
     def __init__(self, in_channels: int, out_channels: int, K: int, i_complex: bool = False, follow_math: bool = True, gcn: bool = False, net_flow: bool = True,
                  normalization: str = 'sym', bias: bool = True, **kwargs):
         kwargs.setdefault('aggr', 'add')
@@ -306,7 +306,6 @@ class SigMaNetConv_Qin(MessagePassing):
 
     # Possiamo utilizzare  questa funzione per elaborare la parte Tx0=I
     def process(self, mul_L_real, mul_L_imag, weight, X_real, X_imag):
-        # data = torch.spmm(mul_L_real, X_real) sparse matrix
         Tx_0_real_real = torch.spmm(mul_L_real, X_real)
         real_real = torch.matmul(Tx_0_real_real, weight)
         Tx_0_imag_imag = torch.matmul(mul_L_imag, X_imag)
@@ -328,15 +327,6 @@ class SigMaNetConv_Qin(MessagePassing):
             # lambda_max: OptTensor = None,
     ) -> torch.FloatTensor:
         """
-        Making a forward pass of the SigMaNet Convolution layer.
-
-        Arg types:
-            * x_real, x_imag (PyTorch Float Tensor) - Node features.
-            * edge_index (PyTorch Long TensSor) - Edge indices.
-            * edge_weight (PyTorch Float Tensor, optional) - Edge weights corresponding to edge indices.
-            * lambda_max (optional, but mandatory if normalization is None) - Largest eigenvalue of Laplacian.
-        Return types:
-            * out_real, out_imag (PyTorch Float Tensor) - Hidden state tensor for all nodes, with shape (N_nodes, F_out).
         """
 
         self.n_dim = x_real.shape[0]
@@ -665,21 +655,7 @@ class SigMaNet_node_prediction_one_laplacian(nn.Module):
 
 class SigMaNet_node_prediction_one_laplacian_Qin(nn.Module):
     r"""The SigMaNet model for node classification
-    Args:
-        num_features (int): Size of each input sample.
-        hidden (int, optional): Number of hidden channels.  Default: 2.
-        K (int, optional): Order of the Chebyshev polynomial.  Default: 2.
-        label_dim (int, optional): Number of output classes.  Default: 2.
-        activation (bool, optional): whether to use activation function or not. (default: :obj:`True`)
-        layer (int, optional): Number of SigMagNetConv layers. Deafult: 2.
-        dropout (float, optional): Dropout value. (default: :obj:`0.5`)
-        normalization (str, optional): The normalization scheme for the magnetic
-            Laplacian (default: :obj:`sym`):
-            1. :obj:`None`: No normalization
-            :math:`\mathbf{L} = \mathbf{D} - \mathbf{H}^{\sigma}
-            2. :obj:`"sym"`: Symmetric normalization
-            :math:`\mathbf{L} = \mathbf{I} - \mathbf{D}^{-1/2} \mathbf{H}^{\sigma}
-            \mathbf{D}^{-1/2}`
+
     """
 
     def __init__(self, num_features: int, K: int = 1, hidden: int = 2, label_dim: int = 2, \
@@ -725,12 +701,6 @@ class SigMaNet_node_prediction_one_laplacian_Qin(nn.Module):
 
     def forward(self, real: torch.FloatTensor, imag: torch.FloatTensor, norm_real, norm_imag, edges) -> torch.FloatTensor:
         """
-        Arg types:
-            * real, imag (PyTorch Float Tensor) - Node features.
-            * edge_index (PyTorch Long Tensor) - Edge indices.
-            * edge_weight (PyTorch Float Tensor, optional) - Edge weights corresponding to edge indices.
-        Return types:
-            * log_prob (PyTorch Float Tensor) - Logarithmic class probabilities for all nodes, with shape (num_nodes, num_classes).
         """
         for cheb in self.Chebs:
             real, imag, norm_real, norm_imag, edges = cheb(real, imag, norm_real, norm_imag, edges)

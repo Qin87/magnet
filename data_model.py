@@ -17,7 +17,9 @@ from nets.Cheb_Ben import create_Cheb
 from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import create_DiGSimple, DiGCN_IB_XBN, create_DiG_IB, create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
+from nets.SD_GCN import SDGCN_Edge
 from nets.Sym_Reg import create_SymReg, create_SymReg_add
+from nets.UGCL import UGCL_Model, Encoder, UGCL_Model_Qin
 from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
@@ -68,7 +70,13 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = SigMaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.feat_dim, label_dim=n_cls,i_complex=args.i_complex, layer=args.layer,
                                                            activation=args.activation,follow_math=args.follow_math, gcn=args.gcn, net_flow=args.netflow, unwind=True).to(device)
 
-
+    elif args.net.startswith('SD'):
+        # model = SDGCN_Edge(X_real.size(-1), L_real, L_img, K=args.K, label_dim=args.num_class_link,
+        #            layer=args.layer, num_filter=args.num_filter, dropout=args.dropout)
+        model = SDGCN_Edge(X_real.size(-1), L_real, L_img, K=args.K, label_dim=args.num_class_link,
+                           layer=args.layer, num_filter=args.num_filter, dropout=args.dropout)
+    elif args.net.startswith('UGCL'):
+        model = UGCL_Model_Qin(num_hidden=args.feat_dim, num_proj_hidden=args.feat_dim, num_label=n_cls)
     else:
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
