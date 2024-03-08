@@ -200,7 +200,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             newX_img = torch.FloatTensor(new_x_cpu).to(device)
             newX_real = torch.FloatTensor(new_x_cpu).to(device)
             # out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
-            out = model(newX_real, newX_img, new_edge_index, args.q, edge_weight).permute(2, 1, 0).squeeze()
+            out = model(newX_real, newX_img, new_edge_index, args.q, edge_weight)
         elif args.net.startswith('Sig'):
             new_x_cpu = new_x.cpu()
             newX_img = torch.FloatTensor(new_x_cpu).to(device)
@@ -551,6 +551,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             val_acc_f1 = (val_acc + val_f1) / 2.
             # print('train_acc:', train_acc,'val_acc:', val_acc, 'test_acc:', accs[2])
             # if val_acc_f1 > best_val_acc_f1:
+
             # if val_f1 > best_val_f1:
             if tmp_test_f1 > best_test_f1:
                 # best_val_acc_f1 = val_acc_f1
