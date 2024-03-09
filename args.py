@@ -13,7 +13,7 @@ def parse_args():
     parser.add_argument('--AugDirect', type=int, default=1, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
-    parser.add_argument('--net', type=str, default='Mag', help='addSym, UGCL,')
+    parser.add_argument('--net', type=str, default='Sig', help='addSym, UGCL,')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=210, help='consecutively Not Improved, break')
