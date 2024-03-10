@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--net', type=str, default='addSym', help='addSym, UGCL,')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
-    parser.add_argument('--NotImproved', type=int, default=210, help='consecutively Not Improved, break')
+    parser.add_argument('--NotImproved', type=int, default=500, help='consecutively Not Improved, break, 500, 450, 410, 210')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='Cora', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='cora_ml/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
