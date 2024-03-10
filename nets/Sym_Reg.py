@@ -800,7 +800,7 @@ def create_SymReg(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
         model = SymRegLayer1BN(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = SymRegLayer2BN_Qin2(nfeat, nhid, nclass, dropout, nlayer)
+        model = SymRegLayer2BN(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = SymRegLayerXBN(nfeat, nhid, nclass, dropout, nlayer)
     return model
