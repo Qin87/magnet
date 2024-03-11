@@ -91,7 +91,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
-            out = model(data_x, SparseEdges, edge_weight)
+            if args.net[3:].startswith('Sym'):
+                # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
+                out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
+            else:
+                out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
             out = model(X_real, X_img, edges, args.q, edge_weight)      # (1,5,183)
             # out = out.permute(2, 1, 0).squeeze()        # (183,5)
@@ -432,6 +436,9 @@ if args.net.startswith('DiG'):
         SparseEdges = edge_index1
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
+    if args.net[3:].startswith('Sym'):
+        data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+
 elif args.net.startswith('Sym') or args.net.startswith('addSym'):
     # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
@@ -443,20 +450,6 @@ elif args.net.startswith(('Mag', 'Sig')):
     if args.net.startswith('Sig'):
         Sigedge_index, norm_real, norm_imag = laplacian.process_magnetic_laplacian(edge_index=edges, gcn=gcn, net_flow=args.netflow, x_real=X_real, edge_weight=edge_weight,
                                                                                    normalization='sym', return_lambda_max=False)
-# elif args.net.startswith('UGCL'):
-    # data_name = args.dataset
-    # dataset = load_directed_signed_graph_link2(root='data/' + data_name)
-    # if 'dataset' in locals():
-    #     pos_edge, neg_edge = dataset
-    #     pos_edge, neg_edge = torch.tensor(pos_edge).to(device), torch.tensor(neg_edge).to(device)
-    #
-    # p_max = torch.max(pos_edge).item()
-    # n_max = torch.max(neg_edge).item()
-    # size = torch.max(torch.tensor([p_max,n_max])).item() + 1
-    # datasets = generate_dataset_2class(pos_edge, neg_edge, splits = args.ensemble, test_prob = 0.20, ratio=args.ratio)
-    # edges = datasets[i]['graph']
-    # pos_edges = datasets[i]['train']['pos_edge']
-    # neg_edges = datasets[i]['train']['neg_edge']
 
 else:
     pass
