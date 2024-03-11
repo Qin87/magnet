@@ -276,6 +276,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 def test():
     model.eval()
     if args.net.startswith('Sym') or args.net.startswith('addSym'):
+        data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
     elif args.net.startswith('DiG'):
         if args.net[3:].startswith('Sym'):
