@@ -62,7 +62,6 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
         deg_inv_sqrt.masked_fill_(deg_inv_sqrt == float('inf'), 0)
         return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-
 # the same as GCN but remove trainable weights
 class DGCNConv(MessagePassing):
     _cached_edge_index: Optional[Tuple[Tensor, Tensor]]

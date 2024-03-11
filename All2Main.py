@@ -223,7 +223,6 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         optimizer.zero_grad()
         criterion(out[new_train_mask], new_y).backward()
 
-
     with torch.no_grad():
         model.eval()
         # type 1
@@ -258,7 +257,6 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             else:
                 out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
-            # out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
             out = model(X_real, X_img, edges, args.q, edge_weight)
         elif args.net.startswith('Sig'):    # TODO might change
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
