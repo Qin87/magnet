@@ -38,6 +38,7 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
         deg = sum(adj_t, dim=1)
         deg_inv_sqrt = deg.pow_(-0.5)
         deg_inv_sqrt.masked_fill_(deg_inv_sqrt == float('inf'), 0.)
+        from audioop import mul
         adj_t = mul(adj_t, deg_inv_sqrt.view(-1, 1))
         adj_t = mul(adj_t, deg_inv_sqrt.view(1, -1))
         return adj_t

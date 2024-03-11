@@ -193,8 +193,12 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 new_SparseEdges = edge_index1
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
-
-            out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
+            if args.net[3:].startswith('Sym'):
+                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)
+                # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+                out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
+            else:
+                out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
         elif args.net.startswith('Mag'):
             new_x_cpu = new_x.cpu()
             newX_img = torch.FloatTensor(new_x_cpu).to(device)
@@ -248,8 +252,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 SparseEdges = edge_index1
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
-
-            out = model(data_x, SparseEdges, edge_weight)
+            if args.net[3:].startswith('Sym'):
+                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+                out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+            else:
+                out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
             # out = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
             out = model(X_real, X_img, edges, args.q, edge_weight)
@@ -269,7 +276,11 @@ def test():
     if args.net.startswith('Sym') or args.net.startswith('addSym'):
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
     elif args.net.startswith('DiG'):
-        logits = model(data_x, SparseEdges, edge_weight)
+        if args.net[3:].startswith('Sym'):
+            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+            logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+        else:
+            logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
         # logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
         logits = model(X_real, X_img, edges, args.q, edge_weight)

@@ -9,7 +9,9 @@ from torch_geometric.utils import to_undirected, is_undirected
 from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
+# from nets.DGCN import DGCNConv
 from nets.DiGCN import InceptionBlock
+from nets.Sym_Reg import DGCNConv
 
 
 class DIGCNConv(MessagePassing):
@@ -330,9 +332,11 @@ class DiGCN_IB_1BN(torch.nn.Module):
         x = self.batch_norm1(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
-class DiGCN_IB_2BN_Sym(torch.nn.Module):
+
+
+class DiGCN_IB_2BN(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
-        super(DiGCN_IB_2BN_Sym, self).__init__()
+        super(DiGCN_IB_2BN, self).__init__()
         self.ib1 = InceptionBlock(num_features, hidden)
         self.ib2 = InceptionBlock(hidden, num_classes)
         self._dropout = dropout
@@ -351,6 +355,71 @@ class DiGCN_IB_2BN_Sym(torch.nn.Module):
         x = self.batch_norm1(x)
         x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
         x = x0 + x1 + x2
+        x = self.batch_norm2(x)
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class DiGCN_IB_2BN_Sym(torch.nn.Module):
+    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=2):
+        super(DiGCN_IB_2BN_Sym, self).__init__()
+        self.ib1 = InceptionBlock(input_dim, nhid)
+        self.ib2 = InceptionBlock(nhid, out_dim)
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
+
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(out_dim, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+
+        nn.init.zeros_(self.bias1)
+        nn.init.zeros_(self.bias2)
+
+        self.reg_params = list(self.ib1.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_index_tuple, edge_weight_tuple):
+        symx = self.lin1(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+
+        # symx1 += self.bias1
+        # symx2 += self.bias1
+        # symx3 += self.bias1
+
+        symx = symx1 + symx2 + symx3
+        # symx = self.batch_norm1(symx)
+        # symx = F.relu(symx)
+
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        x = x0 + x1 + x2 + symx
+        x = self.batch_norm1(x)
+        x = F.relu(x)
+
+        symx = self.lin2(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+
+        # symx1 += self.bias2
+        # symx2 += self.bias2
+        # symx3 += self.bias2
+
+        symx = symx1 + symx2 + symx3
+        # symx = self.batch_norm1(symx)
+        # symx = F.relu(symx)
+
+        x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        x = x0 + x1 + x2 + symx
         x = self.batch_norm2(x)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
@@ -511,9 +580,9 @@ def create_DiG_IB(nfeat, nhid, nclass, dropout, nlayer):
 
 def create_DiG_IB_Sym(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
-        model = DiGCN_IB_1BN(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiGCN_IB_1BN_Sym(nfeat, nhid, nclass, dropout, nlayer)
     elif nlayer == 2:
-        model = DiGCN_IB_2BN(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiGCN_IB_2BN_Sym(nfeat, nhid, nclass, dropout, nlayer)
     else:
-        model = DiGCN_IB_XBN(nfeat, nhid, nclass, dropout, nlayer)
+        model = DiGCN_IB_XBN_Sym(nfeat, nhid, nclass, dropout, nlayer)
     return model
