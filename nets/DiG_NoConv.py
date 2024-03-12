@@ -450,7 +450,6 @@ class DiGCN_IB_2BN_Sym(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-
 class DiGCN_IB_XBN_Sym(torch.nn.Module):
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=3):
         super(DiGCN_IB_XBN_Sym, self).__init__()
