@@ -471,7 +471,9 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     # for split in range(splits - 1, -1, -1):
     for split in range(splits):
         model = CreatModel(args, num_features, n_cls, data_x, device)
-        # print(model, file=log_file)
+        if split==0:
+            print(model, file=log_file)
+            print(model)
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         try:
             optimizer = torch.optim.Adam(

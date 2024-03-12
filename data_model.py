@@ -15,7 +15,7 @@ from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT, create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
-from nets.DiG_NoConv import create_DiGSimple
+from nets.DiG_NoConv import create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat
 from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -52,7 +52,13 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         else:
             if args.net[3:].startswith('Sym'):
-                model = create_DiG_IB_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                if args.net[6:].startswith('Cat'):
+                    if args.net[9:].startswith('Mix'):
+                        model = create_DiG_MixIB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                    else:
+                        model = create_DiG_IB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                else:
+                    model = create_DiG_IB_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
             else:
                 model = create_DiG_IB(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
 
@@ -88,10 +94,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
             raise NotImplementedError("Not Implemented Architecture!")
-    try:
-        print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
-    except:
-        pass
+    # try:
+    #     print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
+    # except:
+    #     pass
     model = model.to(device)
     return model
 
