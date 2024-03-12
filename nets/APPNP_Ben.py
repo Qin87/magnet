@@ -253,7 +253,7 @@ class APPNPXSimp_BN(nn.Module):
         self.conv1 = APPNP(K=10, alpha=alpha)
         self.conv2 = APPNP(K=10, alpha=alpha)
 
-        self.line3 = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(layer - 2)])
+        self.linex = nn.ModuleList([nn.Linear(hidden_dim, hidden_dim) for _ in range(layer - 2)])
         self.convx = nn.ModuleList([APPNP(K=10, alpha=alpha) for _ in range(layer - 2)])
 
         self.batch_norm1 = nn.BatchNorm1d(hidden_dim)
@@ -267,7 +267,7 @@ class APPNPXSimp_BN(nn.Module):
         x = self.line1(x)
         x = F.relu(self.batch_norm1(self.conv1(x, edge_index)))
 
-        for iter_layer, line_layer in zip(self.convx, self.line3):
+        for iter_layer, line_layer in zip(self.convx, self.linex):
             x = line_layer(x)
             x = F.relu(self.batch_norm3(iter_layer(x, edge_index)))
 
