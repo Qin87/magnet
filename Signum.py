@@ -708,8 +708,8 @@ class SigMaNet_node_prediction_one_laplacian_Qin(nn.Module):
                 real, imag = self.complex_relu(real, imag)
         if not self.unwind:
             x = real + 1j * imag
-            # if self.dropout > 0:
-            #    x = self.complex_dropout(x)
+            if self.dropout > 0:
+               x = self.complex_dropout(x)
             # x = self.complex_softmax(x)
         # Unwind operation
         else:

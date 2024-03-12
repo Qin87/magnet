@@ -239,7 +239,8 @@ class APPNP2Simp_BN(nn.Module):
         x = self.line1(x)
         x = F.relu(self.batch_norm1(self.conv1(x, edge_index)))
         x = self.line2(x)
-        x = F.relu(self.batch_norm2(self.conv2(x, edge_index)))
+        # x = F.relu(self.batch_norm2(self.conv2(x, edge_index)))
+        x = self.batch_norm2(self.conv2(x, edge_index))
         return x
 
 

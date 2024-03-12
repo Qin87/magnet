@@ -405,28 +405,21 @@ class SymRegLayer2BN_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x1 += self.bias1
-        x2 += self.bias1
-        x3 += self.bias1
 
         # x = torch.cat((x1, x2, x3), axis=-1)
         x = x1+x2+x3
         x = self.batch_norm1(x)
         x = F.relu(x)
 
-        # if self.dropout > 0:
-        #     x = F.dropout(x, self.dropout, training=self.training)
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
 
         x = self.lin2(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x1 += self.bias2
-        x2 += self.bias2
-        x3 += self.bias2
 
-        # x = torch.cat((x1, x2, x3), axis=-1)
         x = x1 + x2 + x3
         x = self.batch_norm2(x)
 
@@ -442,22 +435,18 @@ class SymRegLayerXBN_add(torch.nn.Module):
     """
     def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=3):
         super(SymRegLayerXBN_add, self).__init__()
+        self.layer = layer
         self.dropout = dropout
         self.gconv = DGCNConv()
         self.Conv = nn.Conv1d(out_dim, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
         self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
-
-
-        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
-
-        nn.init.zeros_(self.bias1)
-        nn.init.zeros_(self.bias2)
+        self.linx = nn.ModuleList([torch.nn.Linear(nhid, nhid, bias=False) for _ in range(layer - 2)])
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(out_dim)
+        self.batch_normx = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
@@ -468,29 +457,32 @@ class SymRegLayerXBN_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x1 += self.bias1
-        x2 += self.bias1
-        x3 += self.bias1
-
         x = x1+x2+x3
         x = self.batch_norm1(x)
         x = F.relu(x)
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
 
-        # if self.dropout > 0:
-        #     x = F.dropout(x, self.dropout, training=self.training)
-        for iter_layer in self.
-            x = self.lin2(x)
+        for iter_layer in self.linx:
+            x = iter_layer(x)
             x1 = self.gconv(x, edge_index)
             x2 = self.gconv(x, edge_in, in_w)
             x3 = self.gconv(x, edge_out, out_w)
 
-            x1 += self.bias2
-            x2 += self.bias2
-            x3 += self.bias2
-
-            # x = torch.cat((x1, x2, x3), axis=-1)
             x = x1 + x2 + x3
-            x = self.batch_norm2(x)
+            x = self.batch_normx(x)
+            x = F.relu(x)
+            if self.dropout > 0:
+                x = F.dropout(x, self.dropout, training=self.training)
+
+        x = self.lin2(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x = x1 + x2 + x3
+        x = self.batch_norm2(x)
+        # x = F.relu(x)     # worse
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
@@ -529,12 +521,16 @@ class SymRegLayer1BN_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x1 += self.bias1
-        x2 += self.bias1
-        x3 += self.bias1
+        # x1 += self.bias1      # test with or without bias, the result is the same
+        # x2 += self.bias1
+        # x3 += self.bias1
 
         x = x1+x2+x3
         x = self.batch_norm1(x)
+        # x = F.relu(x)     # worse so desert
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
@@ -575,18 +571,18 @@ class SymRegLayer2BN_Qin(torch.nn.Module):
         x4 = self.gconv(x, edge_Qin_in_tensor)
         x5 = self.gconv(x, edge_Qin_out_tensor)
 
-        x1 += self.bias1
-        x2 += self.bias1
-        x3 += self.bias1
-        x4 += self.bias1
-        x5 += self.bias1
+        # x1 += self.bias1
+        # x2 += self.bias1
+        # x3 += self.bias1
+        # x4 += self.bias1
+        # x5 += self.bias1
 
         x = torch.cat((x1, x2, x3, x4, x5), axis=-1)
         x = self.batch_norm1(x)
         x = F.relu(x)
 
-        # if self.dropout > 0:
-        #     x = F.dropout(x, self.dropout, training=self.training)
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
 
         x = self.lin2(x)
         x1 = self.gconv(x, edge_index)
@@ -595,11 +591,11 @@ class SymRegLayer2BN_Qin(torch.nn.Module):
         x4 = self.gconv(x, edge_Qin_in_tensor)
         x5 = self.gconv(x, edge_Qin_out_tensor)
 
-        x1 += self.bias2
-        x2 += self.bias2
-        x3 += self.bias2
-        x4 += self.bias2
-        x5 += self.bias2
+        # x1 += self.bias2
+        # x2 += self.bias2
+        # x3 += self.bias2
+        # x4 += self.bias2
+        # x5 += self.bias2
 
         x = torch.cat((x1, x2, x3, x4, x5), axis=-1)
         x = self.batch_norm2(x)
@@ -643,11 +639,11 @@ class SymRegLayer2BN_Qin_add(torch.nn.Module):
         x4 = self.gconv(x, edge_Qin_in_tensor)
         x5 = self.gconv(x, edge_Qin_out_tensor)
 
-        x1 += self.bias1
-        x2 += self.bias1
-        x3 += self.bias1
-        x4 += self.bias1
-        x5 += self.bias1
+        # x1 += self.bias1
+        # x2 += self.bias1
+        # x3 += self.bias1
+        # x4 += self.bias1
+        # x5 += self.bias1
 
         # x = torch.cat((x1, x2, x3, x4, x5), axis=-1)
         x= x1+x2+ x3+ x4+ x5
@@ -664,11 +660,11 @@ class SymRegLayer2BN_Qin_add(torch.nn.Module):
         x4 = self.gconv(x, edge_Qin_in_tensor)
         x5 = self.gconv(x, edge_Qin_out_tensor)
 
-        x1 += self.bias2
-        x2 += self.bias2
-        x3 += self.bias2
-        x4 += self.bias2
-        x5 += self.bias2
+        # x1 += self.bias2
+        # x2 += self.bias2
+        # x3 += self.bias2
+        # x4 += self.bias2
+        # x5 += self.bias2
 
         # x = torch.cat((x1, x2, x3, x4, x5), axis=-1)
         x = x1 + x2 + x3 + x4 + x5
