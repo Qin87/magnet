@@ -359,7 +359,73 @@ class DiGCN_IB_2BN(torch.nn.Module):
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
+class DiGCN_IB_1BN_Sym(torch.nn.Module):
+    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=2):
+        super(DiGCN_IB_1BN_Sym, self).__init__()
+        self.ib1 = InceptionBlock(input_dim, nhid)
+        self.ib2 = InceptionBlock(nhid, out_dim)
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(out_dim)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
 
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+
+        nn.init.zeros_(self.bias1)
+        nn.init.zeros_(self.bias2)
+
+        self.reg_params = list(self.ib1.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_index_tuple, edge_weight_tuple):
+        symx = self.lin1(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+
+
+        symx = symx1 + symx2 + symx3
+        # symx = self.batch_norm1(symx)
+        # symx = F.relu(symx)
+
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        x = x0 + x1 + x2 + symx
+        x= x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        # x = permute(0, 1, 2)
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
+        # x = self.batch_norm1(x)
+        # x = F.relu(x)
+        #
+        # symx = self.lin2(x)
+        # symx1 = self.gconv(symx, edge_index)
+        # symx2 = self.gconv(symx, edge_in, in_w)
+        # symx3 = self.gconv(symx, edge_out, out_w)
+        #
+        # # symx1 += self.bias2
+        # # symx2 += self.bias2
+        # # symx3 += self.bias2
+        #
+        # symx = symx1 + symx2 + symx3
+        # # symx = self.batch_norm1(symx)
+        # # symx = F.relu(symx)
+        #
+        # x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        # x = x0 + x1 + x2 + symx
+        # x = self.batch_norm2(x)
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
 class DiGCN_IB_2BN_Sym(torch.nn.Module):
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=2):
         super(DiGCN_IB_2BN_Sym, self).__init__()
@@ -508,7 +574,7 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(out_dim)
 
         self.gconv = DGCNConv()
-        self.Conv1 = nn.Conv1d(2*nhid, nhid, kernel_size=1)
+        self.Conv1 = nn.Conv1d(2*nhid, out_dim, kernel_size=1)
         self.Conv2 = nn.Conv1d(2*out_dim, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
@@ -545,7 +611,7 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
         x = self.Conv1(x)  # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
         # x = self.Conv1(x)
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
         # x = F.relu(x)
 
         # symx = self.lin2(x)
@@ -568,7 +634,7 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
         # x = x.permute((0, 2, 1)).squeeze()
         # x = self.batch_norm2(x)
 
-        x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
 class DiGCN_IB_2MixBN_SymCat(torch.nn.Module):
