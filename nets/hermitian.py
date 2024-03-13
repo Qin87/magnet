@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from numpy import linalg as LA
 from scipy.sparse import coo_matrix
+# from torch import triu
+from scipy.sparse import csr_matrix, triu
 
 '''
 def hermitian_decomp(A, q = 0.25):
@@ -173,18 +175,22 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
     col = col.detach().cpu().numpy()
 
     if edge_weight is None:
-        A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)   # creates a sparse matrix A where the non-zero elements are located at the coordinates specified by row and col, and each non-zero element has a value of 1.
+        A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
+        # creates a sparse matrix A where the non-zero elements are located at the coordinates specified by row and col, and each non-zero element has a value of 1.
     else:
         A = coo_matrix((edge_weight.detach().numpy(), (row, col)), shape=(size, size), dtype=np.float32)
 
-    diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)    #  creates a sparse diagonal matrix diag where all off-diagonal elements are zero, and each diagonal element has a value of 1.
+    diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
+    #  creates a sparse diagonal matrix diag where all off-diagonal elements are zero, and each diagonal element has a value of 1.
     if gcn_appr:
         A += diag
 
-    A_sym = 0.5 * (A + A.T)  # symmetrized adjacency
+    A_sym = 0.5 * (A + A.T)  # symmetrized adjacency(A_sym has 0.5)
 
     if norm:
-        d = np.array(A_sym.sum(axis=0))[0]  # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
+        d = np.array(A_sym.sum(axis=0))[0]
+        # d has 0.5,2.5,(so it's not out-degree, it's bi_edge+*0.5*uni_edge)
+        # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
         d = np.power(d, -0.5)
         D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
@@ -204,3 +210,68 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
         L = (2.0 / max_eigen) * L - diag
 
     return L
+
+def QinDirect_hermitian_decomp_sparse(row, col, size, q=0.25, norm=True,  QinDirect=True, max_eigen=2,
+                            gcn_appr=False, edge_weight=None):
+    '''
+
+    Args:
+        row: src node
+        col: tgt node
+        size: num of all nodes
+        q:
+        norm: normalization
+        laplacian: replace with QinDirect
+
+        max_eigen:
+        gcn_appr: add self-loop
+        edge_weight:
+
+    Returns:signed directed magnetic Laplacian with the Hermitian adjacency matrix
+
+    '''
+    row = row.detach().cpu().numpy()        # use this, or row = row.detach().numpy() won't work in GPU
+    col = col.detach().cpu().numpy()
+
+    # if edge_weight is None:
+    A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
+        # creates a sparse matrix A where the non-zero elements are located at the coordinates specified by row and col, and each non-zero element has a value of 1.
+    # else:
+    #     A = coo_matrix((edge_weight.detach().numpy(), (row, col)), shape=(size, size), dtype=np.float32)
+
+    diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)    #  creates a sparse diagonal matrix diag where all off-diagonal elements are zero, and each diagonal element has a value of 1.
+    if gcn_appr:
+        A += diag
+
+    A_sym = 0.5 * (A + A.T)  # symmetrized adjacency
+
+    if norm:
+        d = np.array(A_sym.sum(axis=0))[0]  # Qin note: use A is the out_degree
+        # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
+        d[d == 0] = 1
+        d = np.power(d, -0.5)
+        D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
+        A_sym = D.dot(A_sym).dot(D)
+
+
+    if QinDirect:
+        Qin_Theta= 0.5*(A + A.T)
+        diff = A - A.T
+        diff = triu(diff)
+        diff = diff + diff.T
+        diff[diff == 0] = 1
+        Qin_Theta = Qin_Theta.multiply(diff)
+
+        if norm:
+            D = diag
+        else:
+            d = np.sum(A_sym, axis=0)  # diag of degree array
+            D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
+        QinL = D - Qin_Theta.multiply(A_sym)  # element-wise  # L= D − H= D− A.P,
+
+
+    if norm:
+        # L = (2.0 / max_eigen) * L - diag
+        QinL = (2.0 / max_eigen) * QinL - diag
+
+    return QinL

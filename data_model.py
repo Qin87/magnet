@@ -25,7 +25,7 @@ from nets.UGCL import UGCL_Model, Encoder, UGCL_Model_Qin
 from nets.gat import create_gat_0
 from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
-from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor, ChebNet_Ben
+from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor, ChebNet_Ben, ChebNet_BenQin
 from nets.src2 import laplacian
 from preprocess import geometric_dataset_sparse
 
@@ -68,7 +68,11 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith('addSym'):
         model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
     elif args.net.startswith('Mag'):
-        model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
+        if args.net[3:].startswith('Qin'):
+            model = ChebNet_BenQin(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
+                                activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+        else:
+            model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                             activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
     elif args.net.startswith('Sig'):
         # model = SigMaNet_node_prediction_one_laplacian_Qin(K=args.K, num_features=X_real.size(-1), hidden=args.num_filter, label_dim=cluster_dim,
