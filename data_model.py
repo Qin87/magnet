@@ -264,3 +264,23 @@ def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gc
     #     data['L'] = multi_order_laplacian
     #     pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
     return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
+
+def edge_prediction(total_node, edge_index, sampling_src_idx,neighbor_dist_list, train_node_mask=None):
+    '''
+    predict edges for dummy nodes
+    Args:
+        total_node:
+        edge_index:
+        sampling_src_idx:
+        neighbor_dist_list:
+        train_node_mask:
+
+    Returns:
+
+    '''
+    device = edge_index.device
+    sampling_src_idx = sampling_src_idx.clone().to(device)
+
+    predict_edges = EdgePrectModel(total_node, edge_index)
+    new_edge_index = torch.cat([edge_index, predict_edges], dim=1)
+    return new_edge_index

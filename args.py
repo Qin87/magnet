@@ -10,7 +10,7 @@ def parse_args():
 
     # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, '
+    parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
     parser.add_argument('--net', type=str, default='MagQin', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, MagQin')
@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     # parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
@@ -51,9 +51,10 @@ def parse_args():
                         help='data set folder, for default format see dataset/cora/cora.edges and cora.node_labels')
 
     #  from Magnet
-    parser.add_argument('--q', type=float, default=0.5, help='q value for the phase matrix')
+    parser.add_argument('--q', type=float, default=1, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
+    parser.add_argument('-norm', '-n', action='store_true', help='if use activation function')
     parser.add_argument('-activation', '-a', action='store_true', help='if use activation function')
     # parser.add_argument('-activation', '-a', action='store_false', help='if use activation function')
 
