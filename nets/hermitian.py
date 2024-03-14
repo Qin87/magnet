@@ -273,11 +273,7 @@ def QinDirect_hermitian_decomp_sparse4(row, col, size, q=0.25, norm=True,  QinDi
     row = row.detach().cpu().numpy()        # use this, or row = row.detach().numpy() won't work in GPU
     col = col.detach().cpu().numpy()
 
-    # if edge_weight is None:
     A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
-        # creates a sparse matrix A where the non-zero elements are located at the coordinates specified by row and col, and each non-zero element has a value of 1.
-    # else:
-    #     A = coo_matrix((edge_weight.detach().numpy(), (row, col)), shape=(size, size), dtype=np.float32)
 
     diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
     #  creates a sparse diagonal matrix diag where all off-diagonal elements are zero, and each diagonal element has a value of 1.
@@ -296,13 +292,14 @@ def QinDirect_hermitian_decomp_sparse4(row, col, size, q=0.25, norm=True,  QinDi
 
 
     if QinDirect:
-        # Qin_Theta= q*(A + A.T)
+        # Qin_Theta0= q*(A + A.T)
         Qin_Theta= q*diag
         diff = A - A.T
-        diff = triu(diff)
-        diff = diff + diff.T
+        diff = triu(diff)   # extract the upper triangle of differ
+        diff = diff + diff.T    # diff is symmetric now
+        diff = q*diff
         diff[diff == 0] = 1
-        Qin_Theta = Qin_Theta.multiply(diff)
+        Qin_Theta = Qin_Theta0.multiply(diff)
 
         if norm:
             D = diag
@@ -313,6 +310,7 @@ def QinDirect_hermitian_decomp_sparse4(row, col, size, q=0.25, norm=True,  QinDi
 
             D = coo_matrix((d_1d, (diagonal_indices, diagonal_indices)), shape=(size, size), dtype=np.float32)
         QinL = D - Qin_Theta.multiply(A_sym)  # element-wise  # L= D − H= D− A.P,
+
 
     if norm:
         QinL = (2.0 / max_eigen) * QinL - diag

@@ -353,8 +353,8 @@ class SymRegLayer2BN(torch.nn.Module):
         x = self.batch_norm1(x)
         x = F.relu(x)
 
-        # if self.dropout > 0:
-        #     x = F.dropout(x, self.dropout, training=self.training)
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
 
         x = self.lin2(x)
         x1 = self.gconv(x, edge_index)
@@ -847,7 +847,7 @@ class SymRegLayerXBN(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w,  edge_Qin_in_tensor, edge_Qin_out_tensor):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -877,6 +877,8 @@ class SymRegLayerXBN(torch.nn.Module):
 
             x = torch.cat((x1, x2, x3), axis=-1)
             x = self.batch_norm3(x)
+            # if self.dropout > 0:      # without this seems faster
+            #     x = F.dropout(x, self.dropout, training=self.training)
             x = F.relu(x)
 
         x = self.lin2(x)
