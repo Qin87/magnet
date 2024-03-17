@@ -877,7 +877,7 @@ class SymRegLayerXBN(torch.nn.Module):
 
             x = torch.cat((x1, x2, x3), axis=-1)
             x = self.batch_norm3(x)
-            # if self.dropout > 0:      # without this seems faster
+            # if self.dropout > 0:      # without this is better for 4layer in cornell
             #     x = F.dropout(x, self.dropout, training=self.training)
             x = F.relu(x)
 

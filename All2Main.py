@@ -509,9 +509,11 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         # class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
         #     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
         if args.MakeImbalance:
+            print("make imbalanced")
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
         else:
+            print("not make imbalanced")
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
 

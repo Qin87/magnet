@@ -206,6 +206,7 @@ def load_directedData(args):
         dataset = load_func(root=args.data_path, name=subset)
     elif load_func == 'WikiCS':
         load_func = WikiCS
+        # dataset = load_func  # wrong
         dataset = load_func(root=args.data_path)
     elif load_func == 'cora_ml':
         dataset = citation_datasets(root='cora_ml/cora_ml.npz')
@@ -219,7 +220,7 @@ def load_directedData(args):
             print("Load data unexpected: undirected data!")
             dataset = load_dgl_bidirected(args)
     else:
-        dataset = load_syn(args.data_path + args.dataset, None)
+        dataset = load_syn(args.data_path + load_func+ '/'+ subset, None)
 
     return dataset
 

@@ -107,6 +107,9 @@ def load_raw_cora(q=0, path="../pygcn/data/cora/", dataset="cora", save_pk=False
 
 def load_syn(root, name=None):
     print(root + '.pk', 'rb')
+    print(os.path.dirname(os.path.abspath(__file__)))
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    print(os.path.dirname(os.path.abspath(__file__)))
     data = pk.load(open(root + '.pk', 'rb'))
     if os.path.isdir(root) is False:
         try:
