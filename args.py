@@ -11,13 +11,13 @@ def parse_args():
 
     # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
     parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-    parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
+    parser.add_argument('--AugDirect', type=int, default=100, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
-    parser.add_argument('--net', type=str, default='MagQin', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, MagQin')
+    parser.add_argument('--net', type=str, default='DiGib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, MagQin')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
-    parser.add_argument('--NotImproved', type=int, default=80, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
+    parser.add_argument('--NotImproved', type=int, default=210, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS'], default='Cora', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='WebKB/Cornell', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
@@ -44,12 +44,12 @@ def parse_args():
     parser.add_argument('--gdc', type=str, choices=['ppr', 'hk', 'none'], default='ppr', help='how to convert to weighted graph')
 
     parser.add_argument('-hds', '--heads', default=8, type=int)
-    parser.add_argument('--log_root', type=str, default='../logs/',
-                        help='the path saving model.t7 and the training process')
-    parser.add_argument('--log_path', type=str, default='test',
-                        help='the path saving model.t7 and the training process, the name of folder will be log/(current time)')
-    parser.add_argument('--data_path', type=str, default='./datasets/',
-                        help='data set folder, for default format see dataset/cora/cora.edges and cora.node_labels')
+    # parser.add_argument('--log_root', type=str, default='../logs/',
+    #                     help='the path saving model.t7 and the training process')
+    # parser.add_argument('--log_path', type=str, default='test',
+    #                     help='the path saving model.t7 and the training process, the name of folder will be log/(current time)')
+    # parser.add_argument('--data_path', type=str, default='./datasets/',
+    #                     help='data set folder, for default format see dataset/cora/cora.edges and cora.node_labels')
 
     #  from Magnet
     parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
@@ -64,6 +64,19 @@ def parse_args():
     parser.add_argument('--follow_math', '-F', action='store_false', help='if follow math')
     parser.add_argument('--gcn',  action='store_false', help='...')
     parser.add_argument('--i_complex',  action='store_false', help='...')
+
+    # for edge prediction
+    parser.add_argument('--task', type=str, default='three_class_digraph', help='Task: three_class_digraph,  direction, existence, ...')
+    parser.add_argument('--method_name', type=str, default='DiG', help='method name')
+    parser.add_argument('--num_class_link', type=int, default=3,
+                        help='number of classes for link direction prediction(2 or 3).')
+
+    parser.add_argument('--epochs', type=int, default=1500, help='training epochs')
+    parser.add_argument('--num_filter', type=int, default=64, help='num of filters')
+
+    parser.add_argument('--log_root', type=str, default='../logs/', help='the path saving model.t7 and the training process')
+    parser.add_argument('--log_path', type=str, default='test', help='the path saving model.t7 and the training process, the name of folder will be log/(current time)')
+    parser.add_argument('--data_path', type=str, default='../dataset/data/tmp/', help='data set folder, for default format see dataset/cora/cora.edges and cora.node_labels')
 
     args = parser.parse_args()
 

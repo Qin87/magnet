@@ -1,17 +1,16 @@
 import os
 from datetime import datetime
 
-import numpy as np
 import torch
 
-from Signum import SigMaNet_node_prediction_one_laplacian, SigMaNet_node_prediction_one_laplacian_Qin
-from edge_data import to_undirected, to_undirectedBen
+from Signum import SigMaNet_node_prediction_one_laplacian_Qin
+from edge_nets.edge_data import to_undirectedBen
 from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset, get_step_split
-from nets.APPNP_Ben import create_APPNP, create_APPNPGGPT, create_APPNPSimp
+from nets.APPNP_Ben import create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
@@ -19,15 +18,11 @@ from nets.DiG_NoConv import create_DiGSimple, create_DiG_IB_SymCat, create_DiG_M
 from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
-from nets.SD_GCN import SDGCN_Edge
+from edge_nets.SD_GCN import SDGCN_Edge
 from nets.Sym_Reg import create_SymReg, create_SymReg_add
-from nets.UGCL import UGCL_Model, Encoder, UGCL_Model_Qin
-from nets.gat import create_gat_0
-from nets.geometric_baselines import GIN_ModelBen2, ChebModelBen, APPNP_ModelBen, GATModelBen, GCNModelBen, SAGEModelBen, SAGEModelBen1
+from nets.UGCL import UGCL_Model_Qin
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
-from nets.sparse_magnet import ChebNet, sparse_mx_to_torch_sparse_tensor, ChebNet_Ben, ChebNet_BenQin
-from nets.src2 import laplacian
-from preprocess import geometric_dataset_sparse
+from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin
 
 
 def CreatModel(args, num_features, n_cls, data_x,device):
@@ -265,22 +260,22 @@ def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gc
     #     pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
     return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
 
-def edge_prediction(total_node, edge_index, sampling_src_idx,neighbor_dist_list, train_node_mask=None):
-    '''
-    predict edges for dummy nodes
-    Args:
-        total_node:
-        edge_index:
-        sampling_src_idx:
-        neighbor_dist_list:
-        train_node_mask:
-
-    Returns:
-
-    '''
-    device = edge_index.device
-    sampling_src_idx = sampling_src_idx.clone().to(device)
-
-    predict_edges = EdgePrectModel(total_node, edge_index)
-    new_edge_index = torch.cat([edge_index, predict_edges], dim=1)
-    return new_edge_index
+# def edge_prediction(total_node, edge_index, sampling_src_idx,neighbor_dist_list, train_node_mask=None):
+#     '''
+#     predict edges for dummy nodes
+#     Args:
+#         total_node:
+#         edge_index:
+#         sampling_src_idx:
+#         neighbor_dist_list:
+#         train_node_mask:
+#
+#     Returns:
+#
+#     '''
+#     device = edge_index.device
+#     sampling_src_idx = sampling_src_idx.clone().to(device)
+#
+#     predict_edges = EdgePrectModel(total_node, edge_index)
+#     new_edge_index = torch.cat([edge_index, predict_edges], dim=1)
+#     return new_edge_index

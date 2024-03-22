@@ -338,20 +338,14 @@ def QinDirect_hermitian_decomp_sparse5(row, col, size, q=0.25, norm=True,  QinDi
     A_sym = 0.5 * (A + A.T)  # symmetrized adjacency
     A_sym[A_sym == 0.5] = q
 
-       # Qin_Theta0= q*(A + A.T)
-        # Qin_Theta0= A + A.T
-        # Qin_Theta= q*diag
     diff = A - A.T
     diff = triu(diff)   # extract the upper triangle of differ
     diff = diff + diff.T    # diff is symmetric now
-    # diff = q*diff
     diff[diff == 0] = 1
-    # Qin_Theta = Qin_Theta0.multiply(diff)
     A_sym = A_sym.multiply(diff)
 
     if norm:
         A_sym_abs = np.abs(A_sym)
-        # d = np.array(A_sym.sum(axis=0))[0]  # Qin note: use A is the out_degree
         d = np.array(A_sym_abs.sum(axis=0))[0]  # Qin note: use A is the out_degree
         # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
@@ -359,7 +353,6 @@ def QinDirect_hermitian_decomp_sparse5(row, col, size, q=0.25, norm=True,  QinDi
         D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
         A_sym = D.dot(A_sym).dot(D)
 
-    if norm:
         D = diag
     else:       # without norm is worse
         d = np.sum(A_sym, axis=0)  # diag of degree array
@@ -367,14 +360,7 @@ def QinDirect_hermitian_decomp_sparse5(row, col, size, q=0.25, norm=True,  QinDi
         diagonal_indices = np.arange(size)
 
         D = coo_matrix((d_1d, (diagonal_indices, diagonal_indices)), shape=(size, size), dtype=np.float32)
-    # QinL = D - Qin_Theta.multiply(A_sym)  # element-wise  # L= D − H= D− A.P,
     QinL = D - A_sym  # element-wise  # L= D − H= D− A.P,
-    # QinL = D - diff.multiply(A_sym)  # element-wise  # L= D − H= D− A.P,
-    # QinL = D - Qin_Theta  # Qin
-
-
-    # if norm:
-    #     QinL = (2.0 / max_eigen) * QinL - diag
 
     return QinL
 
@@ -399,7 +385,6 @@ def QinDirect_hermitian_decomp_sparse6(row, col, size, q=0.25, norm=True,  QinDi
     diff = A - A.T
     diff = triu(diff)   # extract the upper triangle of differ
     diff = diff + diff.T    # diff is symmetric now
-    # diff = q*diff
     diff[diff == 0] = 1
     A_sym = A_sym.multiply(diff)
 
@@ -407,7 +392,6 @@ def QinDirect_hermitian_decomp_sparse6(row, col, size, q=0.25, norm=True,  QinDi
 
     if norm:
         A_sym_abs = np.abs(A_sym)
-        # d = np.array(A_sym.sum(axis=0))[0]  # Qin note: use A is the out_degree
         d = np.array(A_sym_abs.sum(axis=0))[0]  # Qin note: use A is the out_degree
         # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
@@ -449,11 +433,8 @@ def QinDirect_hermitian_decomp_sparse(row, col, size, q=0.25, norm=True,  QinDir
     diff = A - A.T
     diff = triu(diff)   # extract the upper triangle of differ
     diff = diff + diff.T    # diff is symmetric now
-    # diff = q*diff
     diff[diff == 0] = 1
     A_sym = A_sym.multiply(diff)
-
-    # norm = False
 
     if norm:
         A_one = A_sym

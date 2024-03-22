@@ -8,11 +8,10 @@ import scipy.sparse as sp
 from torch_geometric.utils import to_undirected
 from torch_geometric.datasets import WebKB, WikipediaNetwork
 
-from src.utils.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 
 # internel
 # import hermitian
-# from hermitian import *
+from nets.hermitian import *
 
 if __name__ == '__main__':
     print("how can I quote hermitian")

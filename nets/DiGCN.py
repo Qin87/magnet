@@ -140,23 +140,10 @@ class DiGCNet(torch.nn.Module):
         self.conv1.reset_parameters()
         self.conv2.reset_parameters()
 
-    # def forward(self, x, edge_index, index, edge_weight):
-    #     x = self.conv1(x, edge_index, edge_weight)
-    #     x = F.relu(x)
-    #     x = self.conv2(x, edge_index, edge_weight)
-    #     x = F.relu(x)
-    #
-    #     x = torch.cat((x[index[:,0]], x[index[:,1]]), axis=-1)
-    #     if self.dropout > 0:
-    #         x = F.dropout(x, self.dropout, training=self.training)
-    #     x = self.linear(x)
-    #
-    #     return F.log_softmax(x, dim=1)
-
-    def forward(self, x, edge_index, index):
-        x = self.conv1(x, edge_index)
+    def forward(self, x, edge_index, index, edge_weight):
+        x = self.conv1(x, edge_index, edge_weight)
         x = F.relu(x)
-        x = self.conv2(x, edge_index)
+        x = self.conv2(x, edge_index, edge_weight)
         x = F.relu(x)
 
         x = torch.cat((x[index[:, 0]], x[index[:, 1]]), axis=-1)
@@ -165,7 +152,6 @@ class DiGCNet(torch.nn.Module):
         x = self.linear(x)
 
         return F.log_softmax(x, dim=1)
-
 
 class InceptionBlock(torch.nn.Module):
     def __init__(self, in_dim, out_dim):

@@ -1,3 +1,5 @@
+import sys
+
 import torch
 import numpy as np
 import pickle as pk
@@ -18,8 +20,7 @@ from torch_scatter import scatter_add
 import scipy
 import os
 from joblib import Parallel, delayed
-from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-from torch_scatter import scatter_add
+
 
 
 def sub_adj(edge_index, prob, seed):
@@ -119,10 +120,21 @@ def generate_dataset_2class(edge_index, splits=10, test_prob=0.6):
 
 
 # in-out degree calculation
-def in_out_degree(edge_index, size):
-    A = coo_matrix((np.ones(len(edge_index)), (edge_index[:, 0], edge_index[:, 1])), shape=(size, size), dtype=np.float32).tocsr()
-    out_degree = np.sum(A, axis=0).T
-    in_degree = np.sum(A, axis=1)
+# def in_out_degree(edge_index, size):
+#     A = coo_matrix((np.ones(len(edge_index)), (edge_index[:, 0], edge_index[:, 1])), shape=(size, size), dtype=np.float32).tocsr()
+#     out_degree = np.sum(A, axis=0).T
+#     in_degree = np.sum(A, axis=1)
+#     degree = torch.from_numpy(np.c_[in_degree, out_degree]).float()
+#     return degree
+
+def in_out_degree(edge_index, size, weight=None):
+    if weight is None:
+        A = coo_matrix((np.ones(len(edge_index)), (edge_index[0], edge_index[1])), shape=(size, size), dtype=np.float32).tocsr()
+    else:
+        A = coo_matrix((weight, (edge_index[0], edge_index[1])), shape=(size, size), dtype=np.float32).tocsr()
+
+    out_degree = np.sum(np.abs(A), axis = 0).T
+    in_degree = np.sum(np.abs(A), axis = 1)
     degree = torch.from_numpy(np.c_[in_degree, out_degree]).float()
     return degree
 
@@ -170,6 +182,10 @@ def undirected_label2directed_label(adj, edge_pairs, task):
 
 
 def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15, 0.05], task=2, label_dim=2):
+    print(os.getcwd())
+    print(sys.argv[0])
+    script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+    os.chdir(script_directory)
     save_file = save_path + 'task' + str(task) + 'dim' + str(label_dim) + 'prob' + str(int(probs[0] * 100)) + '_' + str(int(probs[1] * 100)) + '.pk'
     if os.path.exists(save_file):
         print('File exists!')
@@ -183,7 +199,8 @@ def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15,
     # print( "undirected rate:", 1.0*np.sum(A_dense * A_dense.T)/edge_num )
 
     A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32).tocsr()
-    G = nx.from_scipy_sparse_matrix(A)  # create an undirected graph based on the adjacency
+    # G = nx.from_scipy_sparse_matrix(A)  # create an undirected graph based on the adjacency
+    G = nx.from_scipy_sparse_array(A)  # create an undirected graph based on the adjacency
 
     def iteration(ind):
         datasets = {}
@@ -343,38 +360,108 @@ def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15,
 #
 #     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype):
-    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
+# def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype):
+#     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
+#     fill_value = 1
+#     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+#     row, col = edge_index
+#     # print(row.shape, edge_weight.shape, num_nodes)   # torch.Size([623]) torch.Size([623]) 222
+#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+#     deg_inv = deg.pow(-1)
+#     deg_inv[deg_inv == float('inf')] = 0
+#     p = deg_inv[row] * edge_weight
+#
+#     # personalized pagerank p
+#     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+#     p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1]))
+#     p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense
+#     p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
+#     p_v[0:num_nodes, num_nodes] = alpha
+#     p_v[num_nodes, num_nodes] = 0.0
+#     p_ppr = p_v
+#
+#     eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(), left=True, right=False)
+#     eig_value = torch.from_numpy(eig_value.real)
+#     left_vector = torch.from_numpy(left_vector.real)
+#     val, ind = eig_value.sort(descending=True)
+#
+#     pi = left_vector[:, ind[0]]  # choose the largest eig vector
+#     pi = pi[0:num_nodes]
+#     p_ppr = p_dense
+#     pi = pi / pi.sum()  # norm pi
+#
+#     # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
+#     assert len(pi[pi < 0]) == 0
+#
+#     pi_inv_sqrt = pi.pow(-0.5)
+#     pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
+#     pi_inv_sqrt = pi_inv_sqrt.diag()
+#     pi_sqrt = pi.pow(0.5)
+#     pi_sqrt[pi_sqrt == float('inf')] = 0
+#     pi_sqrt = pi_sqrt.diag()
+#
+#     # 将所有涉及的张量移动到同一个设备上
+#     device = edge_index.device
+#     p_ppr = p_ppr.to(device)
+#     pi_inv_sqrt = pi_inv_sqrt.to(device)
+#     pi_sqrt = pi_sqrt.to(device)
+#
+#     # L_appr  Ben__L is a matrix of n*n, non zero is edges, value of L is edge weight,
+#     L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
+#
+#     # make nan to 0
+#     L[torch.isnan(L)] = 0
+#
+#     # transfer dense L to sparse
+#     L_indices = torch.nonzero(L, as_tuple=False).t()
+#     L_values = L[L_indices[0], L_indices[1]]
+#     edge_index = L_indices
+#     edge_weight = L_values
+#
+#     # row normalization
+#     row, col = edge_index
+#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+#     deg_inv_sqrt = deg.pow(-0.5)
+#     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+#
+#     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
+    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
+    from torch_scatter import scatter_add
+
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
+                                     device=edge_index.device)
     fill_value = 1
     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
     row, col = edge_index
-    # print(row.shape, edge_weight.shape, num_nodes)   # torch.Size([623]) torch.Size([623]) 222
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv = deg.pow(-1)
     deg_inv[deg_inv == float('inf')] = 0
     p = deg_inv[row] * edge_weight
 
     # personalized pagerank p
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
-    p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1]))
-    p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense
-    p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
-    p_v[0:num_nodes, num_nodes] = alpha
-    p_v[num_nodes, num_nodes] = 0.0
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense()
+    p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1]))
+    p_v[0:num_nodes,0:num_nodes] = (1-alpha) * p_dense
+    p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
+    p_v[0:num_nodes,num_nodes] = alpha
+    p_v[num_nodes,num_nodes] = 0.0
     p_ppr = p_v
 
-    eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(), left=True, right=False)
+    eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)
     eig_value = torch.from_numpy(eig_value.real)
     left_vector = torch.from_numpy(left_vector.real)
     val, ind = eig_value.sort(descending=True)
 
-    pi = left_vector[:, ind[0]]  # choose the largest eig vector
+    pi = left_vector[:,ind[0]] # choose the largest eig vector
     pi = pi[0:num_nodes]
     p_ppr = p_dense
-    pi = pi / pi.sum()  # norm pi
+    pi = pi/pi.sum()  # norm pi
 
     # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
-    assert len(pi[pi < 0]) == 0
+    assert len(pi[pi<0]) == 0
 
     pi_inv_sqrt = pi.pow(-0.5)
     pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
@@ -383,20 +470,14 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype):
     pi_sqrt[pi_sqrt == float('inf')] = 0
     pi_sqrt = pi_sqrt.diag()
 
-    # 将所有涉及的张量移动到同一个设备上
-    device = edge_index.device
-    p_ppr = p_ppr.to(device)
-    pi_inv_sqrt = pi_inv_sqrt.to(device)
-    pi_sqrt = pi_sqrt.to(device)
-
-    # L_appr  Ben__L is a matrix of n*n, non zero is edges, value of L is edge weight,
+    # L_appr
     L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
 
     # make nan to 0
     L[torch.isnan(L)] = 0
 
     # transfer dense L to sparse
-    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_indices = torch.nonzero(L,as_tuple=False).t()
     L_values = L[L_indices[0], L_indices[1]]
     edge_index = L_indices
     edge_weight = L_values
@@ -595,3 +676,19 @@ def link_prediction_evaluation(out_val, out_test, y_val, y_test):
     test_f1_micro = f1_score(pred_label, y_test, average='micro')
     return [[val_acc_full, val_acc, val_auc, val_f1_micro, val_f1_macro],
             [test_acc_full, test_acc, test_auc, test_f1_micro, test_f1_macro]]
+
+def organize4edgePred(new_x, edges, sampling_src_idx,neighbor_dist_list):
+    '''
+
+    Args:
+        new_x:
+        edges:
+        sampling_src_idx:
+        neighbor_dist_list:
+
+    Returns:
+
+    '''
+
+
+    return data
