@@ -261,6 +261,7 @@ if __name__ == "__main__":
 
 
 def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
+    device = data.device
     save_name = args.method_name + 'lr' + str(int(args.lr * 1000)) + 'num_filters' + str(int(args.num_filter)) + 'alpha' + str(int(100 * args.alpha)) + 'task_' + args.task
     args.save_name = save_name
 
@@ -269,7 +270,7 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     size = data.x.size(0)
     data.num_nodes = size
     # data_x = data.x[:old_size]
-    new_data_x = torch.arange(old_size,size)
+    new_data_x = torch.arange(old_size,size).to(device)
 
     tgt = edge_index[1]
     tgt_degree = scatter_add(torch.ones_like(tgt), tgt)
@@ -277,16 +278,16 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     src_degree = scatter_add(torch.ones_like(src), src)
     max_tgt_degree = tgt_degree.max().item() + 1
     max_src_degree = src_degree.max().item() + 1
-    mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx]
-    top_neigh = torch.multinomial(mixed_neighbor_dist + 1e-12, np.min(max_tgt_degree+max_src_degree))
+    mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx].to(device)
+    top_neigh = torch.multinomial(mixed_neighbor_dist + 1e-12, np.min(max_tgt_degree+max_src_degree)).to(device)
     # n = int(y_train.size(0) *10)  # You can adjust this as needed, without int, it's float
     x_values = new_data_x
     y_values = top_neigh
     x_values = x_values.unsqueeze(1).repeat(1, y_values.size(1))
-    x_values = x_values.view(-1, 1)
-    y_values = y_values.view(-1, 1)
+    x_values = x_values.view(-1, 1).to(device)
+    y_values = y_values.view(-1, 1).to(device)
     # tensor_reshaped = tensor.view(-1,
-    test_index = torch.cat((x_values, y_values), dim=1)
+    test_index = torch.cat((x_values, y_values), dim=1).to(device)
     # tgt_index = torch.arange(max_degree).unsqueeze(dim=0).to(device)
     # new_tgt = new_tgt[(tgt_index - aug_degree.unsqueeze(dim=1) < 0)]
 
@@ -307,7 +308,7 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     ########################################
     new_x = in_out_degree(edges, size, datasets['weights']).to(device)
     old_x = new_x[: old_size]
-    edge_weight = datasets['weights']
+    edge_weight = datasets['weights'].to(device)
 
     # get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), old_size, old_x.dtype, edge_weight)
