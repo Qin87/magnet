@@ -449,7 +449,7 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
     p_v[0:num_nodes,num_nodes] = alpha
     p_v[num_nodes,num_nodes] = 0.0
-    p_ppr = p_v.to(device)
+    p_ppr = p_v.cpu()   # for p_ppr.numpy()
 
     eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)
     eig_value = torch.from_numpy(eig_value.real).to(device)
