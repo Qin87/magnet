@@ -14,11 +14,15 @@ from nets.geometric_baselines import *
 
 try:
     from .edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj
-    from .save_settings import write_log
-    from .edge_data_new import link_class_split_new, link_class_split_new_1split
 except:
     from edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj
+try:
+    from .save_settings import write_log
+except:
     from save_settings import write_log
+try:
+    from .edge_data_new import link_class_split_new, link_class_split_new_1split
+except:
     from edge_data_new import link_class_split_new, link_class_split_new_1split
 
 # select cuda device if available
