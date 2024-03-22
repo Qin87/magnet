@@ -436,6 +436,8 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
                                      device=edge_index.device)
     fill_value = 1
     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    edge_index = edge_index.to(device)
+    edge_weight = edge_weight.to(device)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)
     deg_inv = deg.pow(-1).to(device)
