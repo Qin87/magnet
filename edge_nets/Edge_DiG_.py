@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
 
 def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
-    device = data.device
+    device = sampling_src_idx.device
     save_name = args.method_name + 'lr' + str(int(args.lr * 1000)) + 'num_filters' + str(int(args.num_filter)) + 'alpha' + str(int(100 * args.alpha)) + 'task_' + args.task
     args.save_name = save_name
 
