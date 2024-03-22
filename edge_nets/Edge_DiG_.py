@@ -416,7 +416,6 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
 
     model.load_state_dict(torch.load(log_path + '/model_latest' + '.t7'))
     model.eval()
-    model_latest = model.clone()
     out = model(new_x, edges, val_index, edge_weight)
     pred_label = out.max(dim=1)[1]
     val_acc_latest = acc(pred_label, y_val)
