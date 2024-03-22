@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pickle as pk
 import torch.optim as optim
@@ -406,12 +408,15 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     ####################
     model.load_state_dict(torch.load(log_path + '/model' + '.t7'))
     model.eval()
+    # model_val_loss_smallest = model.clone()
+    model_val_loss_smallest = copy.deepcopy(model)
     out = model(new_x, edges, val_index, edge_weight)
     pred_label = out.max(dim=1)[1]
     val_acc = acc(pred_label, y_val)
 
     model.load_state_dict(torch.load(log_path + '/model_latest' + '.t7'))
     model.eval()
+    model_latest = model.clone()
     out = model(new_x, edges, val_index, edge_weight)
     pred_label = out.max(dim=1)[1]
     val_acc_latest = acc(pred_label, y_val)
@@ -433,7 +438,8 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
         print('using the val_loss_smallest model as val_acc_latest < val_acc')
         model.load_state_dict(torch.load(log_path + '/model' + '.t7'))
         model.eval()
-        edge_pred = model(new_x, edges, test_index, edge_weight)
+        # edge_pred = model(new_x, edges, test_index, edge_weight)
+        edge_pred = model_val_loss_smallest(new_x, edges, test_index, edge_weight)
     pred_label = edge_pred.max(dim=1)[1]
     _new_edge_index = generate_Edge(test_index, pred_label)
     new_edge_index = torch.cat([data.edge_index, _new_edge_index], dim=1)
