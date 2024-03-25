@@ -281,7 +281,7 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     max_tgt_degree = tgt_degree.max().item() + 1
     max_src_degree = src_degree.max().item() + 1
     mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx].to(device)
-    top_neigh = torch.multinomial(mixed_neighbor_dist + 1e-12, np.min(max_tgt_degree+max_src_degree)).to(device)
+    top_neigh = torch.multinomial(mixed_neighbor_dist + 1e-12, min(max_tgt_degree, max_src_degree)).to(device)
     # n = int(y_train.size(0) *10)  # You can adjust this as needed, without int, it's float
     x_values = new_data_x
     y_values = top_neigh
