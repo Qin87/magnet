@@ -454,7 +454,15 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     p_ppr = p_v.cpu()   # for p_ppr.numpy()
 
     p_ppr_sparse = csr_matrix(p_ppr.numpy())
+    import time
+    start_time = time.time()
+    eig_value, left_vector = scipy.linalg.eig(p_ppr_sparse.toarray(), left=True, right=False)
+    end_time = time.time()
+    print("spare matrix", end_time - start_time)
+    start_time = time.time()
     eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)      # time consuming for large graph
+    end_time = time.time()
+    print("original matrix", end_time - start_time)
     eig_value = torch.from_numpy(eig_value.real).to(device)
     left_vector = torch.from_numpy(left_vector.real).to(device)
     val, ind = eig_value.sort(descending=True)

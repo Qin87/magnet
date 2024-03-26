@@ -351,7 +351,7 @@ class DiGCN_IB_1BN_batch(torch.nn.Module):
         edge_index, edge_index2 = edge_index_tuple
         edge_weight, edge_weight2 = edge_weight_tuple
 
-        batch_size = 1000  # Define your batch size
+        batch_size = 5000  # Define your batch size
         num_samples = features.size(0)
         num_batches = (num_samples + batch_size - 1) // batch_size
 
@@ -367,7 +367,8 @@ class DiGCN_IB_1BN_batch(torch.nn.Module):
             edge_weight2_batch = []
             for i in range(len(batch_x)):
                 node_idx = i + start_idx
-                mask = (edge_index[0] == node_idx) | (edge_index[1] == node_idx)
+                # mask = (edge_index[0] == node_idx) | (edge_index[1] == node_idx)
+                mask = (edge_index[0] == node_idx) & (edge_index[1] == node_idx)
                 edges_with_node = edge_index[:, mask]
                 node_edge_weight = edge_weight[mask]
                 edge_index_batch.append(edges_with_node)
@@ -1150,7 +1151,7 @@ def create_DiG_IB_SymCat(nfeat, nhid, nclass, dropout, nlayer):
 
 def create_DiG_MixIB_SymCat(nfeat, nhid, nclass, dropout, nlayer):
     if nlayer == 1:
-         print('mixed can not be from one layer!')
+         raise NotImplementedError('mixed can not be from one layer!')
     elif nlayer == 2:
         model = DiGCN_IB_2MixBN_SymCat(nfeat, nhid, nclass, dropout, nlayer)
     else:
