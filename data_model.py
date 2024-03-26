@@ -58,7 +58,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                 if not args.largeData:
                     model = create_DiG_IB(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                 else:
-                    model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                    model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
 
     elif args.net.startswith('Sym'):
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
