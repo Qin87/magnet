@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import pickle as pk
 import networkx as nx
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, csr_matrix
 from torch_geometric.data import Data
 from torch import Tensor
 from torch_sparse import SparseTensor, coalesce
@@ -453,7 +453,8 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     p_v[num_nodes,num_nodes] = 0.0
     p_ppr = p_v.cpu()   # for p_ppr.numpy()
 
-    eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)
+    p_ppr_sparse = csr_matrix(p_ppr.numpy())
+    eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)      # time consuming for large graph
     eig_value = torch.from_numpy(eig_value.real).to(device)
     left_vector = torch.from_numpy(left_vector.real).to(device)
     val, ind = eig_value.sort(descending=True)
@@ -474,7 +475,7 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     pi_sqrt = pi_sqrt.diag().to(device)
 
     # L_appr
-    L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
+    L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0       # a bit time consuming
 
     # make nan to 0
     L[torch.isnan(L)] = 0
@@ -493,6 +494,66 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 
     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
+def get_appr_directed_adj4large(alpha, edge_index, num_nodes, dtype, edge_weight=None, k=5):
+    device = edge_index.device
+    from torch_geometric.utils import add_self_loops
+    from torch_scatter import scatter_add
+
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype, device=device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    edge_weight = edge_weight.to(device)
+    row, col = edge_index
+
+    # Calculate the personalized PageRank matrix
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)
+    deg_inv = deg.pow(-1).to(device)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+
+    # Construct the personalized PageRank matrix
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
+    p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1])).to(device)
+    p_v[0:num_nodes,0:num_nodes] = (1-alpha) * p_dense
+    p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
+    p_v[0:num_nodes,num_nodes] = alpha
+    p_v[num_nodes,num_nodes] = 0.0
+    p_ppr = p_v.cpu()  # Convert to CPU for numpy conversion
+
+    # Compute a few dominant eigenvalues and eigenvectors
+    eig_values, left_vectors = scipy.linalg.eig(p_ppr.numpy(), k=k, which='LR')
+
+    # Sort the eigenvalues in descending order
+    ind = np.argsort(eig_values.real)[::-1]
+
+    # Choose the eigenvector corresponding to the largest eigenvalue
+    pi = left_vectors[:, ind[0]].real
+    pi = pi[0:num_nodes]
+    pi = pi / pi.sum()  # Normalize pi
+
+    # Ensure all elements of pi are positive
+    assert len(pi[pi<0]) == 0
+
+    # Compute diagonal matrices
+    pi_inv_sqrt = pi.pow(-0.5).diag().to(device)
+    pi_sqrt = pi.pow(0.5).diag().to(device)
+
+    # Compute L_appr
+    L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
+    L[torch.isnan(L)] = 0  # Make NaN values 0
+
+    # Convert dense L to sparse
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+
+    # Row normalization
+    row, col = L_indices
+    deg = scatter_add(L_values, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    return L_indices, deg_inv_sqrt[row] * L_values * deg_inv_sqrt[col]
 
 def get_second_directed_adj(edge_index, num_nodes, dtype):
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,

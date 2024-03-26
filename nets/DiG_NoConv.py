@@ -10,7 +10,7 @@ from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
 # from nets.DGCN import DGCNConv
-from nets.DiGCN import InceptionBlock
+from nets.DiGCN import InceptionBlock, InceptionBlock4batch
 from nets.Sym_Reg import DGCNConv
 
 
@@ -331,6 +331,67 @@ class DiGCN_IB_1BN(torch.nn.Module):
         x = x0 + x1 + x2
         x = self.batch_norm1(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class DiGCN_IB_1BN_batch(torch.nn.Module):
+    '''
+    for large dataset, using small batches not the whole graph
+    '''
+    def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
+        super(DiGCN_IB_1BN_batch, self).__init__()
+        self.ib1 = InceptionBlock4batch(num_features, num_classes)
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(num_classes)
+
+        self.reg_params = []
+        self.non_reg_params = self.ib1.parameters()
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+
+        batch_size = 1000  # Define your batch size
+        num_samples = features.size(0)
+        num_batches = (num_samples + batch_size - 1) // batch_size
+
+        outputs = []
+        for batch_idx in range(num_batches):
+            start_idx = batch_idx * batch_size
+            end_idx = min((batch_idx + 1) * batch_size, num_samples)
+            batch_x = x[start_idx:end_idx]
+
+            edge_index_batch = []
+            edge_weight_batch = []
+            edge_index2_batch = []
+            edge_weight2_batch = []
+            for i in range(len(batch_x)):
+                node_idx = i + start_idx
+                mask = (edge_index[0] == node_idx) | (edge_index[1] == node_idx)
+                edges_with_node = edge_index[:, mask]
+                node_edge_weight = edge_weight[mask]
+                edge_index_batch.append(edges_with_node)
+                edge_weight_batch.append(node_edge_weight)
+
+                mask2 = (edge_index2[0] == node_idx) | (edge_index2[1] == node_idx)
+                edge_index2_node = edge_index2[:, mask2]
+                edge_weight2_node = edge_weight2[mask2]
+                edge_index2_batch.append(edge_index2_node)
+                edge_weight2_batch.append(edge_weight2_node)
+
+            edge_index_batch = torch.cat(edge_index_batch, dim=1)
+            edge_weight_batch = torch.cat(edge_weight_batch, dim=0)
+            edge_index2_batch = torch.cat(edge_index2_batch, dim=1)
+            edge_weight2_batch = torch.cat(edge_weight2_batch, dim=0)
+
+            # Forward pass for the current batch
+            x0, x1, x2 = self.ib1(batch_x, edge_index_batch, edge_weight_batch,edge_index2_batch, edge_weight2_batch)
+            x = x0 + x1 + x2
+            x = self.batch_norm1(x)
+            x = F.dropout(x, p=self._dropout, training=self.training)
+            outputs.append(x)
+
+        x = torch.cat(outputs, dim=0)
         return x
 
 
@@ -1056,6 +1117,15 @@ def create_DiG_IB(nfeat, nhid, nclass, dropout, nlayer):
         model = DiGCN_IB_2BN(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = DiGCN_IB_XBN(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+def create_DiG_IB_batch(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = DiGCN_IB_1BN_batch(nfeat, nhid, nclass, dropout, nlayer)
+    elif nlayer == 2:
+        model = DiGCN_IB_2BN_batch(nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = DiGCN_IB_XBN_batch(nfeat, nhid, nclass, dropout, nlayer)
     return model
 
 def create_DiG_IB_Sym(nfeat, nhid, nclass, dropout, nlayer):

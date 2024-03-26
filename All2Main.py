@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from args import parse_args
 from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
-from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj
+from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_appr_directed_adj4large
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
@@ -419,7 +419,11 @@ criterion = CrossEntropy().to(device)
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
-    edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+    edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)     # consumiing for large graph
+    # if not args.largeData:
+    #     pass
+    # else:
+    #     edge_index1, edge_weights1 = get_appr_directed_adj4large(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib':

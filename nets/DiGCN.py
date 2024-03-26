@@ -83,6 +83,7 @@ class DIGCNConv(MessagePassing):
         edge_index, norm = self.cached_result
         return self.propagate(edge_index, x=x, norm=norm)
 
+
     def message(self, x_j, norm):
         return norm.view(-1, 1) * x_j if norm is not None else x_j
 
@@ -156,6 +157,24 @@ class DiGCNet(torch.nn.Module):
 class InceptionBlock(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super(InceptionBlock, self).__init__()
+        self.ln = Linear(in_dim, out_dim)
+        self.conv1 = DIGCNConv(in_dim, out_dim)
+        self.conv2 = DIGCNConv(in_dim, out_dim)
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
+        self.conv1.reset_parameters()
+        self.conv2.reset_parameters()
+
+    def forward(self, x, edge_index, edge_weight, edge_index2, edge_weight2):
+        x0 = self.ln(x)
+        x1 = self.conv1(x, edge_index, edge_weight)
+        x2 = self.conv2(x, edge_index2, edge_weight2)
+        return x0, x1, x2
+
+class InceptionBlock4batch(torch.nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(InceptionBlock4batch, self).__init__()
         self.ln = Linear(in_dim, out_dim)
         self.conv1 = DIGCNConv(in_dim, out_dim)
         self.conv2 = DIGCNConv(in_dim, out_dim)
