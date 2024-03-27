@@ -419,6 +419,8 @@ criterion = CrossEntropy().to(device)
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 if data_x.shape[0]>5000:
     args.largeData = True
+elif data_x.shape[0]<1000:
+    args.largeData = False
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)     # consumiing for large graph
@@ -441,7 +443,6 @@ if args.net.startswith('DiG'):
 elif args.net.startswith('Sym') or args.net.startswith('addSym'):
     # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
     data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
-# elif args.net.startswith(('Mag', 'Sig', 'UGCL')):
 elif args.net.startswith(('Mag', 'Sig')):
     data_x_cpu = data_x.cpu()
     X_img = torch.FloatTensor(data_x_cpu).to(device)
