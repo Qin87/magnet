@@ -28,7 +28,7 @@ def antiparalell(graph):
     '''
     Extraction of the antiparalell edges with same weights
     '''
-    graph_1 = nx.from_scipy_sparse_matrix(graph, create_using=nx.DiGraph)
+    graph_1 = nx.from_scipy_sparse_array(graph, create_using=nx.DiGraph)
     dictionary = dictionary_connection(graph_1)
     row, col = biconnection(graph_1, dictionary)
     return coo_matrix((np.ones(len(row)), (row, col)), shape=(graph_1.number_of_nodes(), graph_1.number_of_nodes()), dtype=np.int8)

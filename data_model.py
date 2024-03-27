@@ -1,8 +1,9 @@
 import os
 from datetime import datetime
-
 import torch
 
+from Signum_quaternion import QuaNet_node_prediction_one_laplacian
+from Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from Signum import SigMaNet_node_prediction_one_laplacian_Qin
 from edge_nets.edge_data import to_undirectedBen
 from gens import test_directed
@@ -81,12 +82,16 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                             activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
     elif args.net.startswith('Sig'):
-        # model = SigMaNet_node_prediction_one_laplacian_Qin(K=args.K, num_features=X_real.size(-1), hidden=args.num_filter, label_dim=cluster_dim,
-        #                                                i_complex=False, layer=args.layer, follow_math=args.follow_math, gcn=gcn, net_flow=args.netflow, unwind=True, edge_index=edge_index, \
-        #                                                norm_real=norm_real, norm_imag=norm_imag).to(device)
-
         model = SigMaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.feat_dim, label_dim=n_cls,i_complex=args.i_complex, layer=args.layer,
                                                            activation=args.activation,follow_math=args.follow_math, gcn=args.gcn, net_flow=args.netflow, unwind=True).to(device)
+    elif args.net.startswith('Qua'):
+        # model = QuaNet_node_prediction_one_laplacian(num_features, K=args.K,hidden=args.num_filter, label_dim=n_cls,
+        #                                              layer=args.layer, unwind=True, edge_index=edges, \
+        #                                              norm_real=norm_real, norm_imag_i=norm_imag_i, norm_imag_j=norm_imag_j, norm_imag_k=norm_imag_k, \
+        #                                              quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)
+        model = QuaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.num_filter, label_dim=n_cls,
+                                                     layer=args.layer, unwind=True,
+                                                     quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)
 
     elif args.net.startswith('SD'):
         # model = SDGCN_Edge(X_real.size(-1), L_real, L_img, K=args.K, label_dim=args.num_class_link,

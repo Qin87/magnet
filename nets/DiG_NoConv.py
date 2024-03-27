@@ -709,7 +709,6 @@ class DiGCN_IB_2BN_Sym(torch.nn.Module):
         symx2 = self.gconv(symx, edge_in, in_w)
         symx3 = self.gconv(symx, edge_out, out_w)
 
-
         symx = symx1 + symx2 + symx3
         # symx = self.batch_norm1(symx)
         # symx = F.relu(symx)
@@ -763,7 +762,6 @@ class DiGCN_IB_XBN_Sym(torch.nn.Module):
         symx1 = self.gconv(symx, edge_index)
         symx2 = self.gconv(symx, edge_in, in_w)
         symx3 = self.gconv(symx, edge_out, out_w)
-
         symx = symx1 + symx2 + symx3
 
         edge_index, edge_index2 = edge_index_tuple
@@ -780,7 +778,6 @@ class DiGCN_IB_XBN_Sym(torch.nn.Module):
             symx1 = self.gconv(symx, edge_index)
             symx2 = self.gconv(symx, edge_in, in_w)
             symx3 = self.gconv(symx, edge_out, out_w)
-
             symx = symx1 + symx2 + symx3
 
             x0, x1, x2 = self.ibx(x, edge_index, edge_weight, edge_index2, edge_weight2)
@@ -794,7 +791,6 @@ class DiGCN_IB_XBN_Sym(torch.nn.Module):
         symx1 = self.gconv(symx, edge_index)
         symx2 = self.gconv(symx, edge_in, in_w)
         symx3 = self.gconv(symx, edge_out, out_w)
-
         symx = symx1 + symx2 + symx3
 
         x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
