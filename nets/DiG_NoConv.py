@@ -606,7 +606,7 @@ class DiGCN_IB_1BN_Sym(torch.nn.Module):
         return x
 
 class DiGCN_IB_1BN_Sym_batch(torch.nn.Module):
-    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=1,, batch_size=1024):
+    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=1, batch_size=1024):
         super(DiGCN_IB_1BN_Sym_batch, self).__init__()
         self.batch_size = batch_size
         self.ib1 = InceptionBlock(input_dim, nhid)
@@ -1097,6 +1097,67 @@ class DiGCN_IB_2MixBN_SymCat(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
+class DiGCN_IB_2MixBN_SymCat_Sym(torch.nn.Module):
+    '''
+    first layer is cat(Sym, DiGib), second layer is addSym
+    '''
+    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=2):
+        super(DiGCN_IB_2MixBN_SymCat_Sym, self).__init__()
+        self.ib1 = InceptionBlock(input_dim, nhid)
+        self.ib2 = InceptionBlock(nhid, out_dim)
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
+
+        self.gconv = DGCNConv()
+        self.Conv1 = nn.Conv1d(2*nhid, nhid, kernel_size=1)
+        self.Conv2 = nn.Conv1d(2*out_dim, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+
+        nn.init.zeros_(self.bias1)
+        nn.init.zeros_(self.bias2)
+
+        self.reg_params = list(self.ib1.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_index_tuple, edge_weight_tuple):
+        symx = self.lin1(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+
+        symx = symx1 + symx2 + symx3
+
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        x = x0 + x1 + x2
+        x = torch.cat((x, symx), dim=-1)
+        #
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv1(x)  # with this block or without, almost the same result
+        x = x.permute((0, 2, 1)).squeeze()
+        # x = self.Conv1(x)
+        x = self.batch_norm1(x)
+        x = F.relu(x)
+        if self._dropout > 0:
+            x = F.dropout(x, self._dropout, training=self.training)
+
+        symx = self.lin2(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+        x = symx1 + symx2 + symx3
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
 
 class DiGCN_IB_3MixBN_SymCat(torch.nn.Module):
         '''
@@ -1191,6 +1252,101 @@ class DiGCN_IB_3MixBN_SymCat(torch.nn.Module):
                 x = F.dropout(x, self._dropout, training=self.training)
 
             return x
+
+
+class DiGCN_IB_3MixBN_SymCat_Sym(torch.nn.Module):
+    '''
+    first layer is cat(Sym, DiGib), second layer is addSym
+    '''
+
+    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=3):
+        super(DiGCN_IB_3MixBN_SymCat_Sym, self).__init__()
+        self.layer = layer
+        self.ib1 = InceptionBlock(input_dim, nhid)
+        self.ib2 = InceptionBlock(nhid, nhid)
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm3 = nn.BatchNorm1d(out_dim)
+
+        self.gconv = DGCNConv()
+        self.Conv1 = nn.Conv1d(2 * nhid, nhid, kernel_size=1)
+        self.Conv2 = nn.Conv1d(2 * out_dim, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+        self.lin2_ = torch.nn.Linear(nhid, nhid, bias=False)
+        if self.layer > 3:
+            self.ibx = nn.ModuleList([InceptionBlock(nhid, nhid) for _ in range(layer - 3)])
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+
+        nn.init.zeros_(self.bias1)
+        nn.init.zeros_(self.bias2)
+
+        self.reg_params = list(self.ib1.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_index_tuple, edge_weight_tuple):
+        # first layer---Sym + DiG
+        symx = self.lin1(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+        symx = symx1 + symx2 + symx3
+
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        x = x0 + x1 + x2
+        x = torch.cat((x, symx), dim=-1)
+        #
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv1(x)  # with this block or without, almost the same result
+        x = x.permute((0, 2, 1)).squeeze()
+        # x = self.batch_norm1(x)
+        x = F.relu(x)
+        if self._dropout > 0:
+            x = F.dropout(x, self._dropout, training=self.training)
+
+        # second layer --addSym
+        symx = self.lin2_(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+        symx = symx1 + symx2 + symx3
+        x=symx
+        # x = self.batch_norm2(x)
+        x = F.relu(x)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+
+        # more than 3 layer
+        if self.layer > 3:
+            for iter_layer in self.linx:
+                x0, x1, x2 = iter_layer(x, edge_index, edge_weight, edge_index2, edge_weight2)
+                x = x0 + x1 + x2
+
+                # x = self.batch_norm2(x)
+                x = F.relu(x)
+                if self._dropout > 0:
+                    x = F.dropout(x, self._dropout, training=self.training)
+
+        # third layer
+        symx = self.lin2(x)
+        symx1 = self.gconv(symx, edge_index)
+        symx2 = self.gconv(symx, edge_in, in_w)
+        symx3 = self.gconv(symx, edge_out, out_w)
+        x = symx1 + symx2 + symx3
+
+        # x = self.batch_norm3(x)
+        # x = F.relu(x)
+        if self._dropout > 0:
+            x = F.dropout(x, self._dropout, training=self.training)
+
+        return x
+
 
 class DiGCN_IB_2BN_Ben(torch.nn.Module):    #  obviously worse than DiGCN_IB_2BN
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
@@ -1504,4 +1660,13 @@ def create_DiG_MixIB_SymCat(nfeat, nhid, nclass, dropout, nlayer):
         model = DiGCN_IB_2MixBN_SymCat(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = DiGCN_IB_3MixBN_SymCat(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+def create_DiG_MixIB_SymCat_Sym(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+         raise NotImplementedError('mixed can not be from one layer!')
+    elif nlayer == 2:
+        model = DiGCN_IB_2MixBN_SymCat_Sym(nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = DiGCN_IB_3MixBN_SymCat_Sym(nfeat, nhid, nclass, dropout, nlayer)
     return model

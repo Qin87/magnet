@@ -14,7 +14,7 @@ from nets.APPNP_Ben import create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
-from nets.DiG_NoConv import create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch
+from nets.DiG_NoConv import create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch, create_DiG_MixIB_SymCat_Sym
 from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -49,7 +49,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             if args.net[3:].startswith('Sym'):
                 if args.net[6:].startswith('Cat'):
                     if args.net[9:].startswith('Mix'):
-                        model = create_DiG_MixIB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                        if args.net[12:].startswith('Sym'):
+                            model = create_DiG_MixIB_SymCat_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                        else:
+                            model = create_DiG_MixIB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                     else:
                         model = create_DiG_IB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                 else:
