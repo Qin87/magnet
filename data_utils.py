@@ -201,19 +201,23 @@ def load_directedData(args):
     if load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)
+        args.largeData = False
     elif load_func == 'WikipediaNetwork':
         load_func = WikipediaNetwork
         dataset = load_func(root=args.data_path, name=subset)
+        # args.largeData = True
     elif load_func == 'WikiCS':
         load_func = WikiCS
-        # dataset = load_func  # wrong
         dataset = load_func(root=args.data_path)
+        args.largeData = True
     elif load_func == 'cora_ml':
         dataset = citation_datasets(root='cora_ml/cora_ml.npz')
     elif load_func == 'citeseer_npz':
         dataset = citation_datasets(root='citeseer_npz/citeseer_npz.npz')
     elif load_func == 'dgl':    # Ben
         subset = subset.lower()
+        if subset.startswith('pub'):
+            args.largeData = True
         try:
             dataset = load_dgl_directed(subset)
         except NotImplementedError:
