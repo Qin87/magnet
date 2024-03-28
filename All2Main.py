@@ -378,6 +378,9 @@ norm_imag_i =None
 norm_imag_j = None
 norm_imag_k = None
 Quaedge_index = None
+X_img_i = None
+X_img_j = None
+X_img_k = None
 
 gcn = True
 
