@@ -377,6 +377,7 @@ norm_imag = None
 norm_imag_i =None
 norm_imag_j = None
 norm_imag_k = None
+Quaedge_index = None
 
 gcn = True
 
