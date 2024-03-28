@@ -344,17 +344,22 @@ class QuaNetConv_Qin(MessagePassing):
         Return types:
             * out_real, out_imag (PyTorch Float Tensor) - Hidden state tensor for all nodes, with shape (N_nodes, F_out).
         """
-
+        device = edge_index.device
+        X_real = X_real.to(device)
+        X_imag_1 = X_imag_1.to(device)
+        X_imag_2 = X_imag_2.to(device)
+        X_imag_3 = X_imag_3.to(device)
         self.n_dim = X_real.shape[0]
 
         # Operazione credo inutile.. ma vediamo
-        norm_imag_1 = - norm_imag_1
-        norm_imag_2 = - norm_imag_2
-        norm_imag_3 = - norm_imag_3
-        norm_real = - norm_real
+        norm_imag_1 = - norm_imag_1.to(device)
+        norm_imag_2 = - norm_imag_2.to(device)
+        norm_imag_3 = - norm_imag_3.to(device)
+        norm_real = - norm_real.to(device)
 
         # Propagazione dell'informazione
         # First-step
+
         Tx_0_real_real_1 = self.propagate(edge_index, x=X_real, norm=norm_real, size=None).to(torch.float) - self.propagate(edge_index, x=X_imag_1, norm=norm_imag_1, size=None).to(torch.float) - \
                            self.propagate(edge_index, x=X_imag_2, norm=norm_imag_2, size=None).to(torch.float) - self.propagate(edge_index, x=X_imag_3, norm=norm_imag_3, size=None).to(torch.float)
 
