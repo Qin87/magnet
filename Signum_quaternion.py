@@ -261,22 +261,22 @@ class QuaNetConv(MessagePassing):
             self.weight.size(0), self.normalization)
 
 class QuaNetConv_Qin(MessagePassing):
-    def __init__(self, in_channels: int, out_channels: int, K: int, normalization: str = 'sym', bias: bool = True, edge_index=None,
+    def __init__(self, device, in_channels: int, out_channels: int, K: int, normalization: str = 'sym', bias: bool = True, edge_index=None,
                  norm_real=None, norm_imag_i=None, norm_imag_j=None, norm_imag_k=None, quaternion_weights=False, quaternion_bias=False, **kwargs):  # norm_imag_3=None,
         kwargs.setdefault('aggr', 'add')
         super(QuaNetConv_Qin, self).__init__(**kwargs)
-        device = edge_index.device
+        # device = edge_index.device
         assert K > 0
         assert normalization in [None, 'sym'], 'Invalid normalization'
         kwargs.setdefault('flow', 'target_to_source')
 
-        self.in_channels = in_channels.to(device)
-        self.out_channels = out_channels.to(device)
-        self.normalization = normalization.to(device)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.normalization = normalization
         # if gcn: # devo eliminare i pesi creati per moltiplicarli con il self-loop e creo solo un peso nel caso Theta moltiplica tutto [(I + A)\Theta]
         K = 1  # Because I have to stop at the first stage
-        self.quaternion_weights = quaternion_weights.to(device)
-        self.quaternion_bias = quaternion_bias.to(device)
+        self.quaternion_weights = quaternion_weights
+        self.quaternion_bias = quaternion_bias
 
         if self.quaternion_weights:
             self.weight = Parameter(torch.Tensor(K, 4, in_channels, out_channels)).to(device)
@@ -295,10 +295,10 @@ class QuaNetConv_Qin(MessagePassing):
         # la creazione i valori come self
 
         self.edge_index = edge_index
-        self.norm_real = norm_real.to(device)
-        self.norm_imag_1 = norm_imag_i.to(device)
-        self.norm_imag_2 = norm_imag_j.to(device)
-        self.norm_imag_3 = norm_imag_k.to(device)
+        self.norm_real = norm_real
+        self.norm_imag_1 = norm_imag_i
+        self.norm_imag_2 = norm_imag_j
+        self.norm_imag_3 = norm_imag_k
 
         self.reset_parameters()
 
@@ -375,7 +375,6 @@ class QuaNetConv_Qin(MessagePassing):
         Tx_0_imag_imag_1 = Tx_0_imag_imag_1.to(device)
         Tx_0_imag_imag_2 = Tx_0_imag_imag_2.to(device)
         Tx_0_imag_imag_3 = Tx_0_imag_imag_3.to(device)
-        self.weight[0] = self.weight[0].to(device)
         # Second-step: multiplication with the weight of the neural network
         # Versione One (i pesi sono uguali per tutte le componenti)
         # In questo caso il tensore dei pesi è di 3 dimensioni --> [K , In-dimension, Out-dimension]
@@ -594,14 +593,14 @@ class QuaNet_node_prediction_one_laplacian_Qin(nn.Module):
             \mathbf{D}^{-1/2} Hadamard \exp(i \Theta^{(q)})`
     """
 
-    def __init__(self, num_features: int, hidden: int = 2, K: int = 1, label_dim: int = 2, \
+    def __init__(self,device, num_features: int, hidden: int = 2, K: int = 1, label_dim: int = 2, \
                  activation: bool = True, layer: int = 2, dropout: float = 0.5, normalization: str = 'sym', \
                  unwind: bool = False,
                  quaternion_weights: bool = False, quaternion_bias: bool = False):
         super(QuaNet_node_prediction_one_laplacian_Qin, self).__init__()
 
         chebs = nn.ModuleList()
-        chebs.append(QuaNetConv_Qin(in_channels=num_features, out_channels=hidden, K=K,
+        chebs.append(QuaNetConv_Qin(device, in_channels=num_features, out_channels=hidden, K=K,
                                 normalization=normalization,
                                 quaternion_weights=quaternion_weights, quaternion_bias=quaternion_bias))
         self.normalization = normalization
@@ -609,7 +608,7 @@ class QuaNet_node_prediction_one_laplacian_Qin(nn.Module):
         if self.activation:
             self.complex_relu = complex_relu_layer_different()
         for _ in range(1, layer):
-            chebs.append(QuaNetConv_Qin(in_channels=hidden, out_channels=hidden, K=K, \
+            chebs.append(QuaNetConv_Qin(device, in_channels=hidden, out_channels=hidden, K=K, \
                                     normalization=normalization, \
                                     quaternion_weights=quaternion_weights, quaternion_bias=quaternion_bias))
 

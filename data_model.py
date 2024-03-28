@@ -96,7 +96,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         #                                              layer=args.layer, unwind=True, edge_index=edges, \
         #                                              norm_real=norm_real, norm_imag_i=norm_imag_i, norm_imag_j=norm_imag_j, norm_imag_k=norm_imag_k, \
         #                                              quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)
-        model = QuaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.num_filter, label_dim=n_cls,
+        model = QuaNet_node_prediction_one_laplacian_Qin(device, num_features, K=args.K, hidden=args.num_filter, label_dim=n_cls,
                                                      layer=args.layer, unwind=True,
                                                      quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)
 
