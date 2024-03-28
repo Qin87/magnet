@@ -345,6 +345,7 @@ class QuaNetConv_Qin(MessagePassing):
             * out_real, out_imag (PyTorch Float Tensor) - Hidden state tensor for all nodes, with shape (N_nodes, F_out).
         """
         device = self.weight[0].device
+        edge_index = edge_index.to(device)
         X_real = X_real.to(device)
         X_imag_1 = X_imag_1.to(device)
         X_imag_2 = X_imag_2.to(device)
