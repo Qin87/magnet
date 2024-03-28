@@ -265,29 +265,29 @@ class QuaNetConv_Qin(MessagePassing):
                  norm_real=None, norm_imag_i=None, norm_imag_j=None, norm_imag_k=None, quaternion_weights=False, quaternion_bias=False, **kwargs):  # norm_imag_3=None,
         kwargs.setdefault('aggr', 'add')
         super(QuaNetConv_Qin, self).__init__(**kwargs)
-
+        device = edge_index.device
         assert K > 0
         assert normalization in [None, 'sym'], 'Invalid normalization'
         kwargs.setdefault('flow', 'target_to_source')
 
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.normalization = normalization
+        self.in_channels = in_channels.to(device)
+        self.out_channels = out_channels.to(device)
+        self.normalization = normalization.to(device)
         # if gcn: # devo eliminare i pesi creati per moltiplicarli con il self-loop e creo solo un peso nel caso Theta moltiplica tutto [(I + A)\Theta]
         K = 1  # Because I have to stop at the first stage
-        self.quaternion_weights = quaternion_weights
-        self.quaternion_bias = quaternion_bias
+        self.quaternion_weights = quaternion_weights.to(device)
+        self.quaternion_bias = quaternion_bias.to(device)
 
         if self.quaternion_weights:
-            self.weight = Parameter(torch.Tensor(K, 4, in_channels, out_channels))
+            self.weight = Parameter(torch.Tensor(K, 4, in_channels, out_channels)).to(device)
         else:
-            self.weight = Parameter(torch.Tensor(K, in_channels, out_channels))
+            self.weight = Parameter(torch.Tensor(K, in_channels, out_channels)).to(device)
 
         if bias:
             if self.quaternion_bias:
-                self.bias = Parameter(torch.Tensor(4, out_channels))
+                self.bias = Parameter(torch.Tensor(4, out_channels)).to(device)
             else:
-                self.bias = Parameter(torch.Tensor(out_channels))
+                self.bias = Parameter(torch.Tensor(out_channels)).to(device)
         else:
             self.register_parameter('bias', None)
 
@@ -295,10 +295,10 @@ class QuaNetConv_Qin(MessagePassing):
         # la creazione i valori come self
 
         self.edge_index = edge_index
-        self.norm_real = norm_real
-        self.norm_imag_1 = norm_imag_i
-        self.norm_imag_2 = norm_imag_j
-        self.norm_imag_3 = norm_imag_k
+        self.norm_real = norm_real.to(device)
+        self.norm_imag_1 = norm_imag_i.to(device)
+        self.norm_imag_2 = norm_imag_j.to(device)
+        self.norm_imag_3 = norm_imag_k.to(device)
 
         self.reset_parameters()
 
