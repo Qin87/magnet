@@ -3,6 +3,7 @@ from datetime import datetime
 import torch
 import sys
 sys.path.append('./Signum_quaternion/QuaNet_node_prediction_one_laplacian_Qin')
+sys.path.append('./Signum_quaternion/')
 print('sys path is',sys.path)
 
 print(os.getcwd())
