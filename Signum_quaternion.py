@@ -375,6 +375,7 @@ class QuaNetConv_Qin(MessagePassing):
         Tx_0_imag_imag_1 = Tx_0_imag_imag_1.to(device)
         Tx_0_imag_imag_2 = Tx_0_imag_imag_2.to(device)
         Tx_0_imag_imag_3 = Tx_0_imag_imag_3.to(device)
+        print(device,Tx_0_imag_imag_1.device,self.weight[0].device )
         # Second-step: multiplication with the weight of the neural network
         # Versione One (i pesi sono uguali per tutte le componenti)
         # In questo caso il tensore dei pesi è di 3 dimensioni --> [K , In-dimension, Out-dimension]
