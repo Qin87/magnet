@@ -382,7 +382,6 @@ class QuaNetConv_Qin(MessagePassing):
         if self.quaternion_weights:
             out_real, out_imag_1, out_imag_2, out_imag_3 = self.quaternion_multiplication(Tx_0_real_real_1, Tx_0_imag_imag_1, Tx_0_imag_imag_2, Tx_0_imag_imag_3)
         else:
-
             out_real = torch.matmul(Tx_0_real_real_1, self.weight[0])
             out_imag_1 = torch.matmul(Tx_0_imag_imag_1, self.weight[0])
             out_imag_2 = torch.matmul(Tx_0_imag_imag_2, self.weight[0])
