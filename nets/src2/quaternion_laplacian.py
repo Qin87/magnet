@@ -177,13 +177,15 @@ def __norm_quaternion_(
         )
         assert edge_weight_real is not None
 
+        edge_weight_imag_i = edge_weight_imag_i.to(device)
         edge_weight_imag_i = (2.0 * edge_weight_imag_i) / lambda_max
         edge_weight_imag_i.masked_fill_(edge_weight_imag_i == float("inf"), 0)
 
         _ , edge_weight_imag_i = add_self_loops(
             edge_index, edge_weight_imag_i, fill_value=0, num_nodes=num_nodes )
         assert edge_weight_imag_i is not None
- 
+
+        edge_weight_imag_j = edge_weight_imag_j.to(device)
         edge_weight_imag_j = (2.0 * edge_weight_imag_j) / lambda_max
         edge_weight_imag_j.masked_fill_(edge_weight_imag_j == float("inf"), 0)
 
@@ -191,6 +193,7 @@ def __norm_quaternion_(
             edge_index, edge_weight_imag_j, fill_value=0, num_nodes=num_nodes )
         assert edge_weight_imag_j is not None
 
+        edge_weight_imag_k = edge_weight_imag_k.to(device)
         edge_weight_imag_k = (2.0 * edge_weight_imag_k) / lambda_max
         edge_weight_imag_k.masked_fill_(edge_weight_imag_k == float("inf"), 0)
 
