@@ -7,7 +7,10 @@ sys.path.append('./Signum_quaternion/')
 print('sys path is',sys.path)
 
 print(os.getcwd())
-from Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
+try:
+    from Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
+except:
+    pass
 from Signum import SigMaNet_node_prediction_one_laplacian_Qin
 from edge_nets.edge_data import to_undirectedBen
 from gens import test_directed
