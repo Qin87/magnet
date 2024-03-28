@@ -371,15 +371,18 @@ class QuaNetConv_Qin(MessagePassing):
 
         Tx_0_imag_imag_3 = self.propagate(edge_index, x=X_imag_3, norm=norm_real, size=None).to(torch.float) + self.propagate(edge_index, x=X_imag_2, norm=norm_imag_1, size=None).to(torch.float) - \
                            self.propagate(edge_index, x=X_imag_1, norm=norm_imag_2, size=None).to(torch.float) + self.propagate(edge_index, x=X_real, norm=norm_imag_3, size=None).to(torch.float)
-
+        Tx_0_real_real_1 = Tx_0_real_real_1.to(device)
+        Tx_0_imag_imag_1 = Tx_0_imag_imag_1.to(device)
+        Tx_0_imag_imag_2 = Tx_0_imag_imag_2.to(device)
+        Tx_0_imag_imag_3 = Tx_0_imag_imag_3.to(device)
         # Second-step: multiplication with the weight of the neural network
         # Versione One (i pesi sono uguali per tutte le componenti)
         # In questo caso il tensore dei pesi è di 3 dimensioni --> [K , In-dimension, Out-dimension]
         # dove K = 1 perchè ci fermiamo a quel valore di K (K = 1)
-
         if self.quaternion_weights:
             out_real, out_imag_1, out_imag_2, out_imag_3 = self.quaternion_multiplication(Tx_0_real_real_1, Tx_0_imag_imag_1, Tx_0_imag_imag_2, Tx_0_imag_imag_3)
         else:
+
             out_real = torch.matmul(Tx_0_real_real_1, self.weight[0])
             out_imag_1 = torch.matmul(Tx_0_imag_imag_1, self.weight[0])
             out_imag_2 = torch.matmul(Tx_0_imag_imag_2, self.weight[0])
