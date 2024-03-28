@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 import torch
 
-from Signum_quaternion import QuaNet_node_prediction_one_laplacian
+print(os.getcwd())
 from Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from Signum import SigMaNet_node_prediction_one_laplacian_Qin
 from edge_nets.edge_data import to_undirectedBen
