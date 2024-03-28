@@ -162,10 +162,12 @@ def __norm_quaternion_(
         Return types:
             * edge_index, edge_weight_real, edge_weight_imag (PyTorch Float Tensor) - Magnetic laplacian tensor: edge index, real weights and imaginary weights.
         """
+        device = edge_index.device
         edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
         edge_index, edge_weight_real, edge_weight_imag_i, edge_weight_imag_j, edge_weight_imag_k = \
         get_Quaternion_Laplacian(edge_index, edge_weight, normalization, dtype, num_nodes)
-        lambda_max.to(edge_weight_real.device)
+        edge_weight_real = edge_weight_real.to(device)
+        lambda_max =lambda_max.to(device)
 
         edge_weight_real = (2.0 * edge_weight_real) / lambda_max
         edge_weight_real.masked_fill_(edge_weight_real == float("inf"), 0)
