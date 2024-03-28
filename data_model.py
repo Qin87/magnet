@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
 import torch
-
+import sys
+print('sys path is',sys.path)
 print(os.getcwd())
 from Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from Signum import SigMaNet_node_prediction_one_laplacian_Qin
