@@ -675,7 +675,7 @@ class DiGCN_IB_1BN_Sym_batch(torch.nn.Module):
 
             x0, x1, x2 = self.ib1(batch_x, edge_index_batch, edge_weight_batch,edge_index2_batch, edge_weight2_batch)
             x_batch = x0 + x1 + x2
-            x_batch = self.batch_norm1(x_batch)
+            # x_batch = self.batch_norm1(x_batch)
             x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
             outputs.append(x_batch)
 
@@ -683,6 +683,7 @@ class DiGCN_IB_1BN_Sym_batch(torch.nn.Module):
         symx = torch.cat(sym_outputs, dim=0)
 
         x = DiGx + symx
+        x = self.batch_norm1(x)
         x= x.unsqueeze(0)       # ?
         x = x.permute((0, 2, 1))
         x = self.Conv(x)
@@ -698,16 +699,16 @@ class DiGCN_IB_2BN_Sym_batch(torch.nn.Module):
         super(DiGCN_IB_2BN_Sym_batch, self).__init__()
         self.batch_size = batch_size
         self.ib1 = InceptionBlock(input_dim, nhid)
-        self.ib2 = InceptionBlock(nhid, out_dim)
+        self.ib2 = InceptionBlock(nhid, nhid)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(out_dim)
 
         self.gconv = DGCNConv()
-        self.Conv = nn.Conv1d(out_dim, out_dim, kernel_size=1)
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
-        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, nhid, bias=False)
 
         self.reg_params = list(self.ib1.parameters())
         self.non_reg_params = self.ib2.parameters()
@@ -732,10 +733,16 @@ class DiGCN_IB_2BN_Sym_batch(torch.nn.Module):
             edge_index_batch = edge_index_batch - start_idx
             edge_weight_batch = edge_weight[mask]
 
-            edge_in_batch = edge_in[:, mask]
-            in_w_batch = in_w[mask]
-            edge_out_batch = edge_out[:, mask]
-            out_w_batch = out_w[mask]
+            mask_in = ((edge_in[0] >= start_idx) & (edge_in[0] < end_idx) &
+                       (edge_in[1] >= start_idx) & (edge_in[1] < end_idx))
+            edge_in_batch = edge_in[:, mask_in]
+            edge_in_batch = edge_in_batch - start_idx
+            in_w_batch = in_w[mask_in]
+            mask_out = ((edge_out[0] >= start_idx) & (edge_out[0] < end_idx) &
+                        (edge_out[1] >= start_idx) & (edge_out[1] < end_idx))
+            edge_out_batch = edge_out[:, mask_out]
+            edge_out_batch = edge_out_batch - start_idx
+            out_w_batch = out_w[mask_out]
 
             mask2 = ((edge_index2[0] >= start_idx) & (edge_index2[0] < end_idx) &
                      (edge_index2[1] >= start_idx) & (edge_index2[1] < end_idx))
@@ -755,7 +762,7 @@ class DiGCN_IB_2BN_Sym_batch(torch.nn.Module):
 
             x0, x1, x2 = self.ib1(batch_x, edge_index_batch, edge_weight_batch, edge_index2_batch, edge_weight2_batch)
             x_batch = x0 + x1 + x2
-            x_batch = self.batch_norm1(x_batch)
+            # x_batch = self.batch_norm1(x_batch)       # without is better
             x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
             outputs.append(x_batch)
 
@@ -787,10 +794,16 @@ class DiGCN_IB_2BN_Sym_batch(torch.nn.Module):
             edge_index_batch = edge_index_batch - start_idx
             edge_weight_batch = edge_weight[mask]
 
-            edge_in_batch = edge_in[:, mask]
-            in_w_batch = in_w[mask]
-            edge_out_batch = edge_out[:, mask]
-            out_w_batch = out_w[mask]
+            mask_in = ((edge_in[0] >= start_idx) & (edge_in[0] < end_idx) &
+                       (edge_in[1] >= start_idx) & (edge_in[1] < end_idx))
+            edge_in_batch = edge_in[:, mask_in]
+            edge_in_batch = edge_in_batch - start_idx
+            in_w_batch = in_w[mask_in]
+            mask_out = ((edge_out[0] >= start_idx) & (edge_out[0] < end_idx) &
+                        (edge_out[1] >= start_idx) & (edge_out[1] < end_idx))
+            edge_out_batch = edge_out[:, mask_out]
+            edge_out_batch = edge_out_batch - start_idx
+            out_w_batch = out_w[mask_out]
 
             mask2 = ((edge_index2[0] >= start_idx) & (edge_index2[0] < end_idx) &
                      (edge_index2[1] >= start_idx) & (edge_index2[1] < end_idx))
@@ -810,7 +823,6 @@ class DiGCN_IB_2BN_Sym_batch(torch.nn.Module):
 
             x0, x1, x2 = self.ib2(batch_x, edge_index_batch, edge_weight_batch, edge_index2_batch, edge_weight2_batch)
             x_batch = x0 + x1 + x2
-            x_batch = self.batch_norm1(x_batch)
             x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
             outputs.append(x_batch)
 
@@ -818,20 +830,13 @@ class DiGCN_IB_2BN_Sym_batch(torch.nn.Module):
         symx = torch.cat(sym_outputs, dim=0)
 
         x = DiGx + symx
-        # x = x.unsqueeze(0)
-        #
-        # symx = self.lin2(x)
-        # symx1 = self.gconv(symx, edge_index)
-        # symx2 = self.gconv(symx, edge_in, in_w)
-        # symx3 = self.gconv(symx, edge_out, out_w)
-        #
-        # symx = symx1 + symx2 + symx3
-        #
-        # x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        # x = x0 + x1 + x2 + symx
+        x = x.unsqueeze(0)  # ?
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
         x = self.batch_norm2(x)
-
-        x = F.dropout(x, p=self._dropout, training=self.training)
+        x = F.dropout(x, p=self._dropout, training=self.training)       # keep is better performance
         return x
 class DiGCN_IB_2BN_Sym(torch.nn.Module):
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=2):
@@ -945,6 +950,210 @@ class DiGCN_IB_XBN_Sym(torch.nn.Module):
         x = x0 + x1 + x2 + symx
         x = self.batch_norm2(x)
 
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class DiGCN_IB_XBN_Sym_batch(torch.nn.Module):
+    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=3, batch_size=1024):
+        super(DiGCN_IB_XBN_Sym_batch, self).__init__()
+        self.batch_size = batch_size
+        self.ib1 = InceptionBlock(input_dim, nhid)
+        self.ib2 = InceptionBlock(nhid, nhid)
+        self.ibx = nn.ModuleList([InceptionBlock(nhid, nhid) for _ in range(layer-2)])
+        self._dropout = dropout
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
+        self.batch_normx = nn.BatchNorm1d(nhid)
+
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, nhid, bias=False)
+        self.linx = nn.ModuleList([torch.nn.Linear(nhid, nhid, bias=False) for _ in range(layer - 2)])
+
+        self.reg_params = list(self.ib1.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_index_tuple, edge_weight_tuple):
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+
+        batch_size = self.batch_size  # Define your batch size
+        num_samples = x.size(0)
+        num_batches = (num_samples + batch_size - 1) // batch_size
+        outputs = []
+        sym_outputs = []
+        for batch_idx in range(num_batches):
+            start_idx = batch_idx * batch_size
+            end_idx = min((batch_idx + 1) * batch_size, num_samples)
+            batch_x = x[start_idx:end_idx]
+
+            mask = ((edge_index[0] >= start_idx) & (edge_index[0] < end_idx) &
+                    (edge_index[1] >= start_idx) & (edge_index[1] < end_idx))
+            edge_index_batch = edge_index[:, mask]
+            edge_index_batch = edge_index_batch - start_idx
+            edge_weight_batch = edge_weight[mask]
+
+            mask_in = ((edge_in[0] >= start_idx) & (edge_in[0] < end_idx) &
+                       (edge_in[1] >= start_idx) & (edge_in[1] < end_idx))
+            edge_in_batch = edge_in[:, mask_in]
+            edge_in_batch = edge_in_batch - start_idx
+            in_w_batch = in_w[mask_in]
+            mask_out = ((edge_out[0] >= start_idx) & (edge_out[0] < end_idx) &
+                        (edge_out[1] >= start_idx) & (edge_out[1] < end_idx))
+            edge_out_batch = edge_out[:, mask_out]
+            edge_out_batch = edge_out_batch - start_idx
+            out_w_batch = out_w[mask_out]
+
+            mask2 = ((edge_index2[0] >= start_idx) & (edge_index2[0] < end_idx) &
+                     (edge_index2[1] >= start_idx) & (edge_index2[1] < end_idx))
+
+            edge_index2_batch = edge_index2[:, mask2]
+            edge_index2_batch = edge_index2_batch - start_idx
+            edge_weight2_batch = edge_weight2[mask2]
+
+            # Forward pass for the current batch
+            symx = self.lin1(batch_x)
+            # symx1 = self.gconv(symx, edge_index)
+            symx1 = self.gconv(symx, edge_index_batch)
+            symx2 = self.gconv(symx, edge_in_batch, in_w_batch)
+            symx3 = self.gconv(symx, edge_out_batch, out_w_batch)
+            symx_batch = symx1 + symx2 + symx3
+            sym_outputs.append(symx_batch)
+
+            x0, x1, x2 = self.ib1(batch_x, edge_index_batch, edge_weight_batch, edge_index2_batch, edge_weight2_batch)
+            x_batch = x0 + x1 + x2
+            # x_batch = self.batch_norm1(x_batch)       # without is better
+            x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
+            outputs.append(x_batch)
+        DiGx = torch.cat(outputs, dim=0)
+        symx = torch.cat(sym_outputs, dim=0)
+        x = DiGx + symx
+        x = self.batch_norm1(x)
+        x = F.relu(x)
+        if self._dropout > 0:
+            x = F.dropout(x, self._dropout, training=self.training)
+
+        for iter_layerlinx,  iter_layeribx in zip(self.linx, self.ibx):
+            edge_index, edge_index2 = edge_index_tuple
+            edge_weight, edge_weight2 = edge_weight_tuple
+
+            batch_size = self.batch_size  # Define your batch size
+            num_samples = x.size(0)
+            num_batches = (num_samples + batch_size - 1) // batch_size
+            outputs = []
+            sym_outputs = []
+            for batch_idx in range(num_batches):
+                start_idx = batch_idx * batch_size
+                end_idx = min((batch_idx + 1) * batch_size, num_samples)
+                batch_x = x[start_idx:end_idx]
+
+                mask = ((edge_index[0] >= start_idx) & (edge_index[0] < end_idx) &
+                        (edge_index[1] >= start_idx) & (edge_index[1] < end_idx))
+                edge_index_batch = edge_index[:, mask]
+                edge_index_batch = edge_index_batch - start_idx
+                edge_weight_batch = edge_weight[mask]
+
+                mask_in = ((edge_in[0] >= start_idx) & (edge_in[0] < end_idx) &
+                           (edge_in[1] >= start_idx) & (edge_in[1] < end_idx))
+                edge_in_batch = edge_in[:, mask_in]
+                edge_in_batch = edge_in_batch - start_idx
+                in_w_batch = in_w[mask_in]
+                mask_out = ((edge_out[0] >= start_idx) & (edge_out[0] < end_idx) &
+                            (edge_out[1] >= start_idx) & (edge_out[1] < end_idx))
+                edge_out_batch = edge_out[:, mask_out]
+                edge_out_batch = edge_out_batch - start_idx
+                out_w_batch = out_w[mask_out]
+
+                mask2 = ((edge_index2[0] >= start_idx) & (edge_index2[0] < end_idx) &
+                         (edge_index2[1] >= start_idx) & (edge_index2[1] < end_idx))
+
+                edge_index2_batch = edge_index2[:, mask2]
+                edge_index2_batch = edge_index2_batch - start_idx
+                edge_weight2_batch = edge_weight2[mask2]
+
+                # Forward pass for the current batch
+                symx = iter_layerlinx(batch_x)
+                # symx1 = self.gconv(symx, edge_index)
+                symx1 = self.gconv(symx, edge_index_batch)
+                symx2 = self.gconv(symx, edge_in_batch, in_w_batch)
+                symx3 = self.gconv(symx, edge_out_batch, out_w_batch)
+                symx_batch = symx1 + symx2 + symx3
+                sym_outputs.append(symx_batch)
+
+                x0, x1, x2 = iter_layeribx(batch_x, edge_index_batch, edge_weight_batch, edge_index2_batch, edge_weight2_batch)
+                x_batch = x0 + x1 + x2
+                # x_batch = self.batch_norm1(x_batch)       # without is better
+                x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
+                outputs.append(x_batch)
+            DiGx = torch.cat(outputs, dim=0)
+            symx = torch.cat(sym_outputs, dim=0)
+            x = DiGx + symx
+            x = self.batch_normx(x)
+            x = F.relu(x)
+            if self._dropout > 0:
+                x = F.dropout(x, self._dropout, training=self.training)
+
+        edge_index, edge_index2 = edge_index_tuple
+        edge_weight, edge_weight2 = edge_weight_tuple
+
+        batch_size = self.batch_size  # Define your batch size
+        num_samples = x.size(0)
+        num_batches = (num_samples + batch_size - 1) // batch_size
+        outputs = []
+        sym_outputs = []
+        for batch_idx in range(num_batches):
+            start_idx = batch_idx * batch_size
+            end_idx = min((batch_idx + 1) * batch_size, num_samples)
+            batch_x = x[start_idx:end_idx]
+
+            mask = ((edge_index[0] >= start_idx) & (edge_index[0] < end_idx) &
+                    (edge_index[1] >= start_idx) & (edge_index[1] < end_idx))
+            edge_index_batch = edge_index[:, mask]
+            edge_index_batch = edge_index_batch - start_idx
+            edge_weight_batch = edge_weight[mask]
+
+            mask_in = ((edge_in[0] >= start_idx) & (edge_in[0] < end_idx) &
+                       (edge_in[1] >= start_idx) & (edge_in[1] < end_idx))
+            edge_in_batch = edge_in[:, mask_in]
+            edge_in_batch = edge_in_batch - start_idx
+            in_w_batch = in_w[mask_in]
+            mask_out = ((edge_out[0] >= start_idx) & (edge_out[0] < end_idx) &
+                        (edge_out[1] >= start_idx) & (edge_out[1] < end_idx))
+            edge_out_batch = edge_out[:, mask_out]
+            edge_out_batch = edge_out_batch - start_idx
+            out_w_batch = out_w[mask_out]
+
+            mask2 = ((edge_index2[0] >= start_idx) & (edge_index2[0] < end_idx) &
+                     (edge_index2[1] >= start_idx) & (edge_index2[1] < end_idx))
+
+            edge_index2_batch = edge_index2[:, mask2]
+            edge_index2_batch = edge_index2_batch - start_idx
+            edge_weight2_batch = edge_weight2[mask2]
+
+            # Forward pass for the current batch
+            symx = self.lin2(batch_x)
+            symx1 = self.gconv(symx, edge_index_batch)
+            symx2 = self.gconv(symx, edge_in_batch, in_w_batch)
+            symx3 = self.gconv(symx, edge_out_batch, out_w_batch)
+            symx_batch = symx1 + symx2 + symx3
+            sym_outputs.append(symx_batch)
+
+            x0, x1, x2 = self.ib2(batch_x, edge_index_batch, edge_weight_batch, edge_index2_batch, edge_weight2_batch)
+            x_batch = x0 + x1 + x2
+            x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
+            outputs.append(x_batch)
+        DiGx = torch.cat(outputs, dim=0)
+        symx = torch.cat(sym_outputs, dim=0)
+
+        x = DiGx + symx
+        x = x.unsqueeze(0)  # ?
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
+        x = self.batch_norm2(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
