@@ -92,10 +92,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = SigMaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.feat_dim, label_dim=n_cls,i_complex=args.i_complex, layer=args.layer,
                                                            activation=args.activation,follow_math=args.follow_math, gcn=args.gcn, net_flow=args.netflow, unwind=True).to(device)
     elif args.net.startswith('Qua'):
-        # model = QuaNet_node_prediction_one_laplacian(num_features, K=args.K,hidden=args.num_filter, label_dim=n_cls,
-        #                                              layer=args.layer, unwind=True, edge_index=edges, \
-        #                                              norm_real=norm_real, norm_imag_i=norm_imag_i, norm_imag_j=norm_imag_j, norm_imag_k=norm_imag_k, \
-        #                                              quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)
         model = QuaNet_node_prediction_one_laplacian_Qin(device, num_features, K=args.K, hidden=args.num_filter, label_dim=n_cls,
                                                      layer=args.layer, unwind=True,
                                                      quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)

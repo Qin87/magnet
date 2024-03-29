@@ -207,7 +207,8 @@ class DiG_Simple1BN(nn.Module):
         # self.non_reg_params = self.Conv.parameters()
 
     def forward(self, x, edge_index, edge_weight):
-        x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
+        x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
+        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
         # x = F.dropout(x, self.dropout, training=self.training)
         # x = F.relu(x)
 
