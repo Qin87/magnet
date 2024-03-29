@@ -572,7 +572,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             net_to_print = args.net + 'NotImbal'
         if args.largeData:
             net_to_print = net_to_print +'batchSize' + str(args.batch_size)
-        # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
+        else:
+            net_to_print = net_to_print +'NoBatchTrain'
         print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
 
