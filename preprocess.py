@@ -278,16 +278,24 @@ def F_in_out_Qin(edge_index, size, edge_weight=None):
     # sparse implementation
     a = sp.csr_matrix(a)
 
-    edge_Qin_in = []
-    edge_Qin_out = []
-    for k in range(size):
-        for j in range(size):
-            if a[k,j]==1:
-                edge_Qin_in.append((k,j))
-            if a[j,k]==1:
-                edge_Qin_out.append((j,k))
+    # edge_Qin_in = []
+    # edge_Qin_out = []
+    # for k in range(size):       # very time consuming!
+    #     for j in range(size):
+    #         if a[k,j]==1:
+    #             edge_Qin_in.append((k,j))
+    #         if a[j,k]==1:
+    #             edge_Qin_out.append((j,k))
+    row_indices, col_indices = a.nonzero()
+    edge_Qin_in = list(zip(row_indices, col_indices))
+    edge_Qin_out = list(zip(col_indices, row_indices))
+
+    # Convert edge lists to tensors and move to device
     edge_Qin_in_tensor = torch.tensor(edge_Qin_in).t().to(device)
     edge_Qin_out_tensor = torch.tensor(edge_Qin_out).t().to(device)
+
+    # edge_Qin_in_tensor = torch.tensor(edge_Qin_in).t().to(device)
+    # edge_Qin_out_tensor = torch.tensor(edge_Qin_out).t().to(device)
     # edge_Qin_in = torch.from_numpy(np.vstack(a.row, a.col)).long().to(device)
 
     A_in = sp.csr_matrix(np.zeros((size, size)))
