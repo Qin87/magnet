@@ -20,7 +20,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
 from data_model import CreatModel, load_dataset, log_file
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
-from preprocess import F_in_out_Qin
+from preprocess import F_in_out_Qin, F_in_out
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -86,8 +86,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.AugDirect == 0:
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
             if args.net[3:].startswith('Sym'):
                 # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
@@ -178,11 +178,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # Sym_edges = torch.unique(Sym_edges, dim=1)
         Sym_new_y = torch.cat((data_y, _new_y), dim=0)
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all
             # y, not only train
-            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
-            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
+            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
+            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
         elif args.net.startswith('DiG'):
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), Sym_new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
@@ -199,7 +199,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
             if args.net[3:].startswith('Sym'):
-                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)
+                data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)
                 # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
                 out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
             else:
@@ -234,11 +234,10 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         # out = model(data_x, edges)
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
-            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
-            # no augmented data
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
+            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
 
         elif args.net.startswith('DiG'):
             # must keep this, don't know why, but will be error without it----to analysis it later
@@ -257,7 +256,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
             if args.net[3:].startswith('Sym'):
-                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+                data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
+                # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
                 out = model(data_x, SparseEdges, edge_weight)
@@ -280,11 +280,14 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 def test():
     model.eval()
     if args.net.startswith('Sym') or args.net.startswith('addSym'):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
-        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+        # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+        # logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
+        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith('DiG'):
         if args.net[3:].startswith('Sym'):
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
             logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             logits = model(data_x, SparseEdges, edge_weight)
@@ -387,9 +390,6 @@ gcn = True
 pos_edges = None
 neg_edges = None
 
-
-
-# model = model.to(device)
 criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
@@ -397,7 +397,7 @@ if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
     args.largeData = False
-args.largeData = True       # TODO delete it
+# args.largeData = True       # TODO delete it
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -415,11 +415,12 @@ if args.net.startswith('DiG'):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
     if args.net[3:].startswith('Sym'):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+        # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), data.edge_weight)
 
 elif args.net.startswith('Sym') or args.net.startswith('addSym'):
-    # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
-    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
 elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     data_x_cpu = data_x.cpu()
     X_img_i = torch.FloatTensor(data_x_cpu).to(device)

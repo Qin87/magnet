@@ -8,7 +8,7 @@ def parse_args():
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
 
-    parser.add_argument('--batch_size', type=int, default=100, help='batch size to train large graph')
+    parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_false', help='train in batches for large graph')
     # parser.add_argument('--to_undirected', '-tud', action='store_false', help='if convert graph to undirecteds')
 
@@ -31,7 +31,7 @@ def parse_args():
     # parser.add_argument('--MakeImbalance', type=bool, default=False, help='True for turn dataset into imbalanced')
     parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP

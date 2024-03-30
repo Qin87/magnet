@@ -339,7 +339,8 @@ class SymRegLayer2BN(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -399,7 +400,8 @@ class SymRegLayer2BN_add(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -451,14 +453,15 @@ class SymRegLayerXBN_add(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
         x = x1+x2+x3
-        x = self.batch_norm1(x)
+        x = self.batch_norm1(x)     # keep is better
         x = F.relu(x)
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
@@ -470,7 +473,7 @@ class SymRegLayerXBN_add(torch.nn.Module):
             x3 = self.gconv(x, edge_out, out_w)
 
             x = x1 + x2 + x3
-            x = self.batch_normx(x)
+            # x = self.batch_normx(x)       # without is better
             x = F.relu(x)
             if self.dropout > 0:
                 x = F.dropout(x, self.dropout, training=self.training)
@@ -481,7 +484,7 @@ class SymRegLayerXBN_add(torch.nn.Module):
         x3 = self.gconv(x, edge_out, out_w)
 
         x = x1 + x2 + x3
-        x = self.batch_norm2(x)
+        x = self.batch_norm2(x)     # keep is better
         # x = F.relu(x)     # worse
 
         x = x.unsqueeze(0)
@@ -515,7 +518,8 @@ class SymRegLayer1BN_add(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -611,7 +615,7 @@ class SymRegLayer2BN_Qin_add(torch.nn.Module):
     Don't try again to simplify it by deleting Conv, because the catenation
     """
     def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=2):
-        super(SymRegLayer2BN_Qin, self).__init__()
+        super(SymRegLayer2BN_Qin_add, self).__init__()
         self.dropout = dropout
         self.gconv = DGCNConv()
         self.Conv = nn.Conv1d(out_dim * 5, out_dim, kernel_size=1)
@@ -847,7 +851,8 @@ class SymRegLayerXBN(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
 
-    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w,  edge_Qin_in_tensor, edge_Qin_out_tensor):
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w,  edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
@@ -858,7 +863,7 @@ class SymRegLayerXBN(torch.nn.Module):
         x3 += self.bias1
 
         x = torch.cat((x1, x2, x3), axis=-1)
-        x = self.batch_norm1(x)
+        x = self.batch_norm1(x)     # keep is better
 
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
@@ -876,7 +881,7 @@ class SymRegLayerXBN(torch.nn.Module):
             x3 += biasHi
 
             x = torch.cat((x1, x2, x3), axis=-1)
-            x = self.batch_norm3(x)
+            # x = self.batch_norm3(x)       # without is better
             # if self.dropout > 0:      # without this is better for 4layer in cornell
             #     x = F.dropout(x, self.dropout, training=self.training)
             x = F.relu(x)
