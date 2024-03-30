@@ -106,9 +106,9 @@ class GIN_2_BN(nn.Module):
 
     def forward(self, x, edge_index):
         x = F.relu(self.batch_norm1(self.conv1(x, edge_index)))
-        x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv2(x, edge_index)
         x = self.batch_norm2(x)
+        x = F.dropout(x, self.dropout, training=self.training)
         return F.log_softmax(x, dim=1)
 
 class GIN_X_BN(torch.nn.Module):
@@ -130,15 +130,17 @@ class GIN_X_BN(torch.nn.Module):
         self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, edge_index):
-        x = F.relu(self.batch_norm1(self.conv1(x, edge_index)))
+        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index)))
+        x = F.relu(self.conv1(x, edge_index))
 
         for iter_layer in self.convx:
             x = F.dropout(x, self.dropout, training=self.training)
-            x = F.relu(self.batch_norm3(iter_layer(x, edge_index)))
+            # x = F.relu(self.batch_norm3(iter_layer(x, edge_index)))
+            x = F.relu(iter_layer(x, edge_index))
 
-        x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv2(x, edge_index)      # I should desert this line
         x = self.batch_norm2(x)
+        x = F.dropout(x, self.dropout, training=self.training)
 
         return x
 

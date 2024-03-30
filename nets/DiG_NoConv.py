@@ -602,7 +602,7 @@ class DiGCN_IB_1BN_Sym(torch.nn.Module):
         x = x.squeeze(0)
         x = self.batch_norm1(x)     # keep it is better performance
 
-        x = F.dropout(x, p=self._dropout, training=self.training)   # only dropout during training
+        x = F.dropout(x, p=self._dropout, training=self.training)   # only dropout during training   keep this is better
         return x
 
 class DiGCN_IB_1BN_Sym_batch(torch.nn.Module):
