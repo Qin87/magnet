@@ -59,10 +59,11 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                             else:
                                 model = create_DiG_MixIB_SymCat_Sym_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                         else:
-                            if not args.largeData:
-                                model = create_DiG_MixIB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
-                            else:
-                                model = create_DiG_MixIB_SymCat_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                            model = create_DiG_MixIB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                            # if not args.largeData:
+                            #     pass
+                            # else:  # TODO
+                            #     model = create_DiG_MixIB_SymCat_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                     else:
                         model = create_DiG_IB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                 else:
