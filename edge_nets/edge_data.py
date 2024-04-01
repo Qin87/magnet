@@ -467,12 +467,12 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     # spare matrix 693.7754142284393
     # original matrix 697.1516420841217
     # ***************
-    eig_value = torch.from_numpy(eig_value.real).to(device)
+    eig_value = torch.from_numpy(eig_value.real).to(device)     # Qin ask: why only real?
     left_vector = torch.from_numpy(left_vector.real).to(device)
     val, ind = eig_value.sort(descending=True)
 
-    pi = left_vector[:,ind[0]] # choose the largest eig vector
-    pi = pi[0:num_nodes]
+    pi = left_vector[:,ind[0]]  # choose the largest eig vector
+    pi = pi[0:num_nodes]    # X+1 back to X
     p_ppr = p_dense.to(device)
     pi = pi/pi.sum()  # norm pi
 
@@ -488,12 +488,11 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 
     # L_appr
     L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0       # a bit time consuming
-
     # make nan to 0
     L[torch.isnan(L)] = 0
 
     # transfer dense L to sparse
-    L_indices = torch.nonzero(L,as_tuple=False).t()
+    L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
     L_values = L[L_indices[0], L_indices[1]]
     edge_index = L_indices
     edge_weight = L_values
@@ -586,7 +585,7 @@ def get_second_directed_adj(edge_index, num_nodes, dtype):
     L_in_hat = L_in
     L_out_hat = L_out
 
-    L_in_hat[L_out == 0] = 0
+    L_in_hat[L_out == 0] = 0        # Qin learn: this is intersection
     L_out_hat[L_in == 0] = 0
 
     # L^{(2)}

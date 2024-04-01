@@ -461,7 +461,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ], lr=args.lr)
         except:  # TODo
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100, verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
 
         if splits == 1:
             data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(), data_val_maskOrigin.clone(), data_test_maskOrigin.clone())
