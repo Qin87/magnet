@@ -85,7 +85,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
     optimizer.zero_grad()
     if args.AugDirect == 0:
-        if args.net.startswith('Sym') or args.net.startswith('addSym'):
+        if args.net.startswith('Sym') or args.net.startswith('addSym') or args.net.startswith('para'):
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
@@ -177,7 +177,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # Sym_edges = torch.cat([edges, new_edge_index], dim=1)
         # Sym_edges = torch.unique(Sym_edges, dim=1)
         Sym_new_y = torch.cat((data_y, _new_y), dim=0)
-        if args.net.startswith('Sym') or args.net.startswith('addSym'):
+        if args.net.startswith('Sym') or args.net.startswith('addSym')  or args.net.startswith('para'):
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
             # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, Sym_new_y.size(-1), data.edge_weight)  # all edge and all
             # y, not only train
@@ -233,7 +233,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # type 1
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         # out = model(data_x, edges)
-        if args.net.startswith('Sym') or args.net.startswith('addSym'):
+        if args.net.startswith('Sym') or args.net.startswith('addSym')  or args.net.startswith('para'):
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
@@ -569,9 +569,9 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         else:
             dataset_to_print = args.undirect_dataset + str(args.to_undirected)
         if args.MakeImbalance:
-            net_to_print=args.net+'Imbal'
+            net_to_print=args.net+'_Imbal'
         else:
-            net_to_print = args.net + 'NotImbal'
+            net_to_print = args.net + '_NotImbal'
         if args.largeData:
             net_to_print = net_to_print +'_batchSize' + str(args.batch_size)
         else:

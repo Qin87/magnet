@@ -431,6 +431,62 @@ class SymRegLayer2BN_add(torch.nn.Module):
         x = x.permute((0, 2, 1)).squeeze()
         return x
 
+class SymRegLayer2BN_para_add(torch.nn.Module):
+    """
+    Don't try again to simplify it by deleting Conv, because the catenation
+    """
+    def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=2):
+        super(SymRegLayer2BN_para_add, self).__init__()
+        self.dropout = dropout
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(out_dim, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+
+        self.bias1 = nn.Parameter(torch.randn(1))
+        self.bias2 = nn.Parameter(torch.randn(1))
+        self.bias3 = nn.Parameter(torch.randn(1))  # Bias term for the second layer
+        self.bias4 = nn.Parameter(torch.randn(1))  # Bias term for the second layer
+        nn.init.constant_(self.bias1, 1)
+        nn.init.constant_(self.bias2, 1)
+        nn.init.constant_(self.bias3, 1)  # Initialize with constant value of 1
+        nn.init.constant_(self.bias4, 1)  # Initia
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
+
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())+ [self.bias1, self.bias2]
+        self.non_reg_params = self.lin2.parameters()
+
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+        x = self.lin1(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x = x1+self.bias1*x2+self.bias2*x3
+        x = self.batch_norm1(x)
+        x = F.relu(x)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+
+        x = self.lin2(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+
+        x = x1+self.bias3*x2+self.bias4*x3
+        x = self.batch_norm2(x)
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+
+        return x
+
 class SymRegLayerXBN_add(torch.nn.Module):
     """
     Don't try again to simplify it by deleting Conv, because the catenation
@@ -493,6 +549,84 @@ class SymRegLayerXBN_add(torch.nn.Module):
         x = x.permute((0, 2, 1)).squeeze()
         return x
 
+class BiasParameter(nn.Module):
+    def __init__(self):
+        super(BiasParameter, self).__init__()
+        self.bias = nn.Parameter(torch.randn(2))
+
+    def forward(self):
+        return self.bias
+class SymRegLayerXBN_para_add(torch.nn.Module):
+    """
+    Don't try again to simplify it by deleting Conv, because the catenation
+    """
+    def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=3):
+        super(SymRegLayerXBN_para_add, self).__init__()
+        self.layer = layer
+        self.dropout = dropout
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(out_dim, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+        self.linx = nn.ModuleList([torch.nn.Linear(nhid, nhid, bias=False) for _ in range(layer - 2)])
+
+        self.bias1 = BiasParameter()
+        self.bias2 = BiasParameter()
+        self.biasx = nn.ModuleList([BiasParameter() for _ in range(layer - 2)])
+        import torch.nn.init as init
+        init.ones_(self.bias1.bias)
+        init.ones_(self.bias2.bias)
+        for bias_param in self.biasx:
+            init.ones_(bias_param.bias)
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
+        self.batch_normx = nn.BatchNorm1d(nhid)
+
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
+        self.non_reg_params = self.lin2.parameters()
+
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+        x = self.lin1(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x = x1 + self.bias1.bias[0] * x2 + self.bias1.bias[1] * x3
+        x = self.batch_norm1(x)     # keep is better
+        x = F.relu(x)
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+
+        # for i, iter_layer in self.linx:
+        for i, iter_layer in zip(self.biasx, self.linx):
+            x = iter_layer(x)
+            x1 = self.gconv(x, edge_index)
+            x2 = self.gconv(x, edge_in, in_w)
+            x3 = self.gconv(x, edge_out, out_w)
+
+            x = x1 + i.bias[0] * x2 + i.bias[1] * x3
+            # x = self.batch_normx(x)       # without is better
+            x = F.relu(x)
+            if self.dropout > 0:
+                x = F.dropout(x, self.dropout, training=self.training)
+
+        x = self.lin2(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x = x1+self.bias2.bias[0]*x2+self.bias2.bias[1]*x3
+        x = self.batch_norm2(x)     # keep is better
+        # x = F.relu(x)     # worse
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)      # with this is better
+
+        return x
+
+
 class SymRegLayer1BN_add(torch.nn.Module):
     """
     Don't try again to simplify it by deleting Conv, because the catenation
@@ -540,6 +674,46 @@ class SymRegLayer1BN_add(torch.nn.Module):
         x = x.permute((0, 2, 1))
         x = self.Conv(x)    # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
+        return x
+
+class SymRegLayer1BN_para_add(torch.nn.Module):
+    """
+    Don't try again to simplify it by deleting Conv, because the catenation
+    """
+    def __init__(self, input_dim, nhid, out_dim,dropout=False, layer=2):
+        super(SymRegLayer1BN_para_add, self).__init__()
+        self.dropout = dropout
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+
+        self.bias1 = nn.Parameter(torch.randn(1))
+        self.bias2 = nn.Parameter(torch.randn(1))
+        nn.init.constant_(self.bias1, 1)
+        nn.init.constant_(self.bias2, 1)
+
+
+        self.batch_norm1 = nn.BatchNorm1d(out_dim)
+
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())+ [self.bias1, self.bias2]
+        self.non_reg_params = self.lin2.parameters()
+
+    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+        x = self.lin1(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x = x1+self.bias1*x2+self.bias2*x3
+        x = self.batch_norm1(x)
+        # x = F.relu(x)     # worse so desert
+
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+
         return x
 
 class SymRegLayer2BN_Qin(torch.nn.Module):
@@ -921,4 +1095,13 @@ def create_SymReg_add(nfeat, nhid, nclass, dropout, nlayer):
         model = SymRegLayer2BN_add(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = SymRegLayerXBN_add(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+def create_SymReg_para_add(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = SymRegLayer1BN_para_add(nfeat, nhid, nclass, dropout, nlayer)
+    elif nlayer == 2:
+        model = SymRegLayer2BN_para_add(nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = SymRegLayerXBN_para_add(nfeat, nhid, nclass, dropout, nlayer)
     return model

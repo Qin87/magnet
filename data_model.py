@@ -18,12 +18,13 @@ from nets.APPNP_Ben import create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
-from nets.DiG_NoConv import create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch, create_DiG_MixIB_SymCat_Sym, create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch
+from nets.DiG_NoConv import (create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch, create_DiG_MixIB_SymCat_Sym,
+                             create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch)
 from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
 from edge_nets.SD_GCN import SDGCN_Edge
-from nets.Sym_Reg import create_SymReg, create_SymReg_add
+from nets.Sym_Reg import create_SymReg, create_SymReg_add, create_SymReg_para_add
 from nets.UGCL import UGCL_Model_Qin
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin
@@ -82,7 +83,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith('addSym'):
-        model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        if not args.net.endswith('para'):
+            model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        else:
+            model = create_SymReg_para_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
     elif args.net.startswith('Mag'):
         if args.net[3:].startswith('Qin'):
             model = ChebNet_BenQin(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
