@@ -1,0 +1,16 @@
+log_root,../logs/
+log_path,test/DiGib/WebKB/Cornell
+data_path,../dataset/data/tmp/
+dataset,WebKB/Cornell
+split_prob,"[0.15, 0.05]"
+task,2
+method_name,DiGib
+debug,False
+num_class_link,2
+dropout,0.5
+epochs,1500
+num_filter,4
+alpha,0.1
+lr,0.005
+l2,0.0005
+save_name,DiGiblr5num_filters4alpha10task2link2
