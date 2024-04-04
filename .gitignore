@@ -6,3 +6,4 @@
 /logs/
 /dataset/data/tmp/
 *.npz
+*.t7
