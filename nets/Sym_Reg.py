@@ -444,20 +444,17 @@ class SymRegLayer2BN_para_add(torch.nn.Module):
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
         self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
 
-        self.bias1 = nn.Parameter(torch.randn(1))
-        self.bias2 = nn.Parameter(torch.randn(1))
-        self.bias3 = nn.Parameter(torch.randn(1))  # Bias term for the second layer
-        self.bias4 = nn.Parameter(torch.randn(1))  # Bias term for the second layer
-        nn.init.constant_(self.bias1, 1)
-        nn.init.constant_(self.bias2, 1)
-        nn.init.constant_(self.bias3, 1)  # Initialize with constant value of 1
-        nn.init.constant_(self.bias4, 1)  # Initia
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
+        self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
+        self.coef1 = BiasParameter()
+        self.coef2 = BiasParameter()
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(out_dim)
 
-        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())+ [self.bias1, self.bias2]
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
+        self.coefs = [self.coef1, self.coef2]
 
     # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
@@ -466,7 +463,7 @@ class SymRegLayer2BN_para_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x = x1+self.bias1*x2+self.bias2*x3
+        x = x1 + self.coef1.bias[0] * x2 + self.coef1.bias[1] * x3
         x = self.batch_norm1(x)
         x = F.relu(x)
 
@@ -479,7 +476,7 @@ class SymRegLayer2BN_para_add(torch.nn.Module):
         x3 = self.gconv(x, edge_out, out_w)
 
 
-        x = x1+self.bias3*x2+self.bias4*x3
+        x = x1 + self.coef2.bias[0] * x2 + self.coef2.bias[1] * x3
         x = self.batch_norm2(x)
 
         if self.dropout > 0:
@@ -571,14 +568,14 @@ class SymRegLayerXBN_para_add(torch.nn.Module):
         self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
         self.linx = nn.ModuleList([torch.nn.Linear(nhid, nhid, bias=False) for _ in range(layer - 2)])
 
-        self.bias1 = BiasParameter()
-        self.bias2 = BiasParameter()
-        self.biasx = nn.ModuleList([BiasParameter() for _ in range(layer - 2)])
-        import torch.nn.init as init
-        init.ones_(self.bias1.bias)
-        init.ones_(self.bias2.bias)
-        for bias_param in self.biasx:
-            init.ones_(bias_param.bias)
+        self.coef1 = BiasParameter()
+        self.coef2 = BiasParameter()
+        self.coefx = nn.ModuleList([BiasParameter() for _ in range(layer - 2)])
+
+        nn.init.ones_(self.coef1.bias)
+        nn.init.ones_(self.coef2.bias)
+        for bias_param in self.coefx:
+            nn.init.ones_(bias_param.bias)
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(out_dim)
@@ -586,6 +583,7 @@ class SymRegLayerXBN_para_add(torch.nn.Module):
 
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
+        self.coefs = [self.coef1, self.coef2, self.coefx]
 
     # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
@@ -594,14 +592,14 @@ class SymRegLayerXBN_para_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x = x1 + self.bias1.bias[0] * x2 + self.bias1.bias[1] * x3
+        x = x1 + self.coef1.bias[0] * x2 + self.coef1.bias[1] * x3
         x = self.batch_norm1(x)     # keep is better
         x = F.relu(x)
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
 
         # for i, iter_layer in self.linx:
-        for i, iter_layer in zip(self.biasx, self.linx):
+        for i, iter_layer in zip(self.coefx, self.linx):
             x = iter_layer(x)
             x1 = self.gconv(x, edge_index)
             x2 = self.gconv(x, edge_in, in_w)
@@ -618,7 +616,7 @@ class SymRegLayerXBN_para_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x = x1+self.bias2.bias[0]*x2+self.bias2.bias[1]*x3
+        x = x1 + self.coef2.bias[0] * x2 + self.coef2.bias[1] * x3
         x = self.batch_norm2(x)     # keep is better
         # x = F.relu(x)     # worse
         if self.dropout > 0:
@@ -689,16 +687,17 @@ class SymRegLayer1BN_para_add(torch.nn.Module):
         self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
         self.lin2 = torch.nn.Linear(nhid, out_dim, bias=False)
 
-        self.bias1 = nn.Parameter(torch.randn(1))
-        self.bias2 = nn.Parameter(torch.randn(1))
-        nn.init.constant_(self.bias1, 1)
-        nn.init.constant_(self.bias2, 1)
+        self.coefi = nn.Parameter(torch.randn(1))
+        self.coef2 = nn.Parameter(torch.randn(1))
+        nn.init.constant_(self.coefi, 1)
+        nn.init.constant_(self.coef2, 1)
 
 
         self.batch_norm1 = nn.BatchNorm1d(out_dim)
 
-        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())+ [self.bias1, self.bias2]
+        self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = self.lin2.parameters()
+        self.coefs = [self.coefi, self.coef2]
 
     # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
@@ -707,7 +706,7 @@ class SymRegLayer1BN_para_add(torch.nn.Module):
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        x = x1+self.bias1*x2+self.bias2*x3
+        x = x1 + self.coefi * x2 + self.coef2 * x3
         x = self.batch_norm1(x)
         # x = F.relu(x)     # worse so desert
 

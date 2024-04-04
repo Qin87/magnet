@@ -20,7 +20,8 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
 from data_model import CreatModel, load_dataset, log_file
 from nets.src2 import laplacian
-from preprocess import F_in_out_Qin
+from nets.src2.quaternion_laplacian import process_quaternion_laplacian
+from preprocess import F_in_out_Qin, F_in_out
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
 from neighbor_dist import get_PPR_adj, get_heat_adj, get_ins_neighbor_dist
@@ -82,9 +83,9 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
     optimizer.zero_grad()
     if args.AugDirect == 0:
-        if args.net.startswith('Sym')  or args.net.startswith('addSym'):
-            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+        if args.net.startswith('Sym') or args.net.startswith('addSym'):
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
             if args.net[3:].startswith('Sym'):
                 # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
@@ -92,12 +93,12 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             else:
                 out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
-            out = model(X_real, X_img, edges, args.q, edge_weight)      # (1,5,183)
+            out = model(X_real, X_img, edges, args.q, edge_weight)  # (1,5,183)
             # out = out.permute(2, 1, 0).squeeze()        # (183,5)
-        elif args.net.startswith('Sig'):    # TODO might change
+        elif args.net.startswith('Sig'):
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
-
-            # out = model()
+        elif args.net.startswith('Qua'):  # TODO might change
+            out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
         else:
             out = model(data_x, edges)
         # type 1
@@ -122,12 +123,14 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
             if args.AugDirect == 1:
                 # new_edge_index = neighbor_sampling(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
-                new_edge_index = neighbor_sampling(data_x.size(0), edges, sampling_src_idx,neighbor_dist_list)
-            elif args.AugDirect == 100:     # TODO edge prediction
-                data = Data(x=torch.tensor(new_x, dtype=torch.float),
+                new_edge_index = neighbor_sampling(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 100:
+                data100 = Data(x=torch.tensor(new_x, dtype=torch.float),
                             edge_index=torch.tensor(edges, dtype=torch.long),
                             y=torch.tensor(new_y, dtype=torch.float))
-                new_edge_index = edge_prediction(args, data, sampling_src_idx, neighbor_dist_list)
+                new_edge_index = edge_prediction(args, data100, sampling_src_idx, neighbor_dist_list)
+                # new_edge_index = edge_prediction_test()
+                # pass
             elif args.AugDirect == -1:
                 # new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
                 new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges, sampling_src_idx,neighbor_dist_list)
@@ -172,7 +175,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         else:
             sampling_src_idx, sampling_dst_idx = sampling_idx_individual_dst(class_num_list, idx_info, device)
             beta = torch.distributions.beta.Beta(2, 2)
-            lam = beta.sample((len(sampling_src_idx),) ).unsqueeze(1)
+            lam = beta.sample((len(sampling_src_idx),)).unsqueeze(1)
             new_edge_index = duplicate_neighbor(data_x.size(0), edges[:,train_edge_mask], sampling_src_idx)
             new_x = saliency_mixup(data_x, sampling_src_idx, sampling_dst_idx, lam)
 
@@ -189,11 +192,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
 
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all
             # y, not only train
-            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
-            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
+            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
+            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
         elif args.net.startswith('DiG'):
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
@@ -210,7 +213,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
             if args.net[3:].startswith('Sym'):
-                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)
+                data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)
                 # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
                 out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
             else:
@@ -225,9 +228,9 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             new_x_cpu = new_x.cpu()
             newX_img = torch.FloatTensor(new_x_cpu).to(device)
             newX_real = torch.FloatTensor(new_x_cpu).to(device)
-            NewSigedge_index, Newnorm_real,  Newnorm_imag = laplacian.process_magnetic_laplacian(edge_index=new_edge_index, gcn=gcn, net_flow=args.netflow, x_real=newX_real, edge_weight=edge_weight,
-                                                                                    normalization='sym', return_lambda_max=False)
-            out = model(newX_real, newX_img, Newnorm_real, Newnorm_imag, NewSigedge_index)     # TODO revise!
+            NewSigedge_index, Newnorm_real, Newnorm_imag = laplacian.process_magnetic_laplacian(edge_index=new_edge_index, gcn=gcn, net_flow=args.netflow, x_real=newX_real, edge_weight=edge_weight,
+                                                                                                normalization='sym', return_lambda_max=False)
+            out = model(newX_real, newX_img, Newnorm_real, Newnorm_imag, NewSigedge_index)  # TODO revise!
         else:
             out = model(new_x, new_edge_index)  # all data + aug
 
@@ -245,11 +248,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         # out = model(data_x, edges)
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
-            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
             # no augmented data
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+            # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
 
         elif args.net.startswith('DiG'):
             # must keep this, don't know why, but will be error without it----to analysis it later
@@ -268,14 +271,16 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
             if args.net[3:].startswith('Sym'):
-                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+                data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
                 out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
             out = model(X_real, X_img, edges, args.q, edge_weight)
-        elif args.net.startswith('Sig'):    # TODO might change
+        elif args.net.startswith('Sig'):
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
+        elif args.net.startswith('Qua'):  # TODO might change
+            out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
         else:
             out = model(data_x, edges)
         val_loss= F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -418,11 +423,11 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
 def test():
     model.eval()
     if args.net.startswith('Sym') or args.net.startswith('addSym'):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
-        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
+        logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith('DiG'):
         if args.net[3:].startswith('Sym'):
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
             logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             logits = model(data_x, SparseEdges, edge_weight)
@@ -431,6 +436,8 @@ def test():
         logits = model(X_real, X_img, edges, args.q, edge_weight)
     elif args.net.startswith('Sig'):  # TODO might change
         logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
+    elif args.net.startswith('Qua'):  # TODO might change
+        logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -483,6 +490,13 @@ edge_Qin_out_tensor = None
 Sigedge_index = None
 norm_real = None
 norm_imag = None
+norm_imag_i =None
+norm_imag_j = None
+norm_imag_k = None
+Quaedge_index = None
+X_img_i = None
+X_img_j = None
+X_img_k = None
 
 gcn = True
 
@@ -492,9 +506,14 @@ neg_edges = None
 criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+if data_x.shape[0] > 5000:
+    args.largeData = True
+elif data_x.shape[0] < 1000:
+    args.largeData = False
+# args.largeData = True       # TODO delete it
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
-    edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+    edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib':
@@ -509,19 +528,25 @@ if args.net.startswith('DiG'):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
     if args.net[3:].startswith('Sym'):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+        # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), data.edge_weight)
 
 elif args.net.startswith('Sym') or args.net.startswith('addSym'):
-    # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
-    data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(),data_y.size(-1),data.edge_weight)
-# elif args.net.startswith(('Mag', 'Sig', 'UGCL')):
-elif args.net.startswith(('Mag', 'Sig')):
+    data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+    # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     data_x_cpu = data_x.cpu()
+    X_img_i = torch.FloatTensor(data_x_cpu).to(device)
+    X_img_j = torch.FloatTensor(data_x_cpu).to(device)
+    X_img_k = torch.FloatTensor(data_x_cpu).to(device)
     X_img = torch.FloatTensor(data_x_cpu).to(device)
     X_real = torch.FloatTensor(data_x_cpu).to(device)
     if args.net.startswith('Sig'):
         Sigedge_index, norm_real, norm_imag = laplacian.process_magnetic_laplacian(edge_index=edges, gcn=gcn, net_flow=args.netflow, x_real=X_real, edge_weight=edge_weight,
                                                                                    normalization='sym', return_lambda_max=False)
+    elif args.net.startswith('Qua'):
+        Quaedge_index, norm_real, norm_imag_i, norm_imag_j, norm_imag_k = process_quaternion_laplacian(edge_index=edges, x_real=X_real, edge_weight=edge_weight,
+                                                                                                    normalization='sym', return_lambda_max=False)
 
 else:
     pass
@@ -549,7 +574,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
         except:  # TODo
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=100,verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
 
         if splits == 1:
             data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
@@ -576,9 +601,11 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         # class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
         #     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
         if args.MakeImbalance:
+            print("make imbalanced")
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
         else:
+            print("not make imbalanced")
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
 
@@ -593,26 +620,26 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
                           idx_info_list]  # train nodes position inside train
 
-        if args.gdc=='ppr':
-            neighbor_dist_list = get_PPR_adj(data_x, edges[:,train_edge_mask], alpha=0.05, k=128, eps=None)
-        elif args.gdc=='hk':
-            neighbor_dist_list = get_heat_adj(data_x, edges[:,train_edge_mask], t=5.0, k=None, eps=0.0001)
-        elif args.gdc=='none':
-            neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:,train_edge_mask], data_train_mask, device)
+        if args.gdc == 'ppr':
+            neighbor_dist_list = get_PPR_adj(data_x, edges[:, train_edge_mask], alpha=0.05, k=128, eps=None)
+        elif args.gdc == 'hk':
+            neighbor_dist_list = get_heat_adj(data_x, edges[:, train_edge_mask], t=5.0, k=None, eps=0.0001)
+        elif args.gdc == 'none':
+            neighbor_dist_list = get_ins_neighbor_dist(data_y.size(0), data.edge_index[:, train_edge_mask], data_train_mask, device)
         neighbor_dist_list = neighbor_dist_list.to(device)
 
         best_val_acc_f1 = 0
         best_val_f1 = 0
-        best_test_f1 =0
+        best_test_f1 = 0
         saliency, prev_out = None, None
         test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
         CountNotImproved = 0
-        end_epoch =0
+        end_epoch = 0
         # for epoch in tqdm.tqdm(range(args.epoch)):
         goodAug=False
         for epoch in range(args.epoch):
             if args.net.startswith('UGCL'):
-                val_loss = train_UGCL(pos_edges, neg_edges,size, train_idx, val_idx)
+                val_loss = train_UGCL(pos_edges, neg_edges, size, train_idx, val_idx)
 
                 z1 = model(X_real, X_img, q1, pos_edges, neg_edges, args, size, test_idx)
                 z2 = model(X_real, X_img, q2, pos_edges, neg_edges, args, size, test_idx)
@@ -657,19 +684,24 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             print(end_time - start_time, file=log_file)
             print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
             end_epoch = epoch
-            if CountNotImproved> args.NotImproved:
+            if CountNotImproved > args.NotImproved:
                 print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                 break
         if args.IsDirectedData:
             dataset_to_print = args.Direct_dataset + str(args.to_undirected)
         else:
-            dataset_to_print = args.undirect_dataset+ str(args.to_undirected)
-        # with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
-        print(args.net,args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch),'lr',args.lr)
-        print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc*100, test_bacc*100, test_f1*100))
+            dataset_to_print = args.undirect_dataset + str(args.to_undirected)
+        if args.MakeImbalance:
+            net_to_print=args.net+'_Imbal'
+        else:
+            net_to_print = args.net + '_NotImbal'
+        if args.largeData:
+            net_to_print = net_to_print +'_batchSize' + str(args.batch_size)
+        else:
+            net_to_print = net_to_print +'_NoBatchTrain'
+        print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
+        print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
 
         print(end_time - start_time, file=log_file)
-        print(args.net,args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr',args.lr, file=log_file)
-        print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100,test_f1 * 100), file=log_file)
-
-
+        print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
+        print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)

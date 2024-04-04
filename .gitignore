@@ -1,4 +1,7 @@
+*.npy
 *.log
 *.pyc
 /dataset/
 /datasets/
+/logs/
+/dataset/data/tmp/
