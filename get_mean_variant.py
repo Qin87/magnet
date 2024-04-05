@@ -1,7 +1,8 @@
 import statistics
 
 # List of F1 scores
-f1_scores = [62.10, 55.95, 38.69, 57.03, 55.14, 48.51, 62.25, 42.67, 47.83, 42.17]
+f1_scores = [45.42, 41.02, 33.42, 38.69, 34.34, 50.46, 47.74, 25.08, 37.21, 44.76]
+
 
 
 # Calculate the average (mean) of F1 scores

@@ -1,4 +1,6 @@
 import os
+from torch_geometric.datasets import Actor
+import torch_geometric.transforms as T
 
 try:
     import dgl
@@ -214,6 +216,9 @@ def load_directedData(args):
         dataset = citation_datasets(root='cora_ml/cora_ml.npz')
     elif load_func == 'citeseer_npz':
         dataset = citation_datasets(root='citeseer_npz/citeseer_npz.npz')
+    elif load_func in ['film']:
+        dataset = Actor(root='../datasets/film', transform=T.NormalizeFeatures())
+
     elif load_func == 'dgl':    # Ben
         subset = subset.lower()
         if subset.startswith('pub'):

@@ -28,7 +28,29 @@ from nets.Sym_Reg import create_SymReg, create_SymReg_add, create_SymReg_para_ad
 from nets.UGCL import UGCL_Model_Qin
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin
+import torch.nn.init as init
+# def init_weights(model):
+#     # Custom initialization for specific layers
+#     for name, param in model.named_parameters():
+#         if 'weight' in name:
+#             init.xavier_uniform_(param)  # Initialize weights using Xavier initialization
+#         elif 'bias' in name:
+#             init.constant_(param, 0)  # Initialize biases to zero
 
+def init_model(model):
+    # Initialize weights and biases of all parameters
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            if param.ndim >= 2:
+                init.xavier_uniform_(param)  # Initialize weights using Xavier initialization
+            else:
+                init.constant_(param, 0)  # Initialize biases to zero
+        elif 'bias' in name:
+            init.constant_(param, 0)  # Initialize biases to zero for bias parameters
+    # Initialize parameters of batch normalization layers
+    for module in model.modules():
+        if isinstance(module, torch.nn.BatchNorm1d):
+            module.reset_parameters()  # Res
 
 def CreatModel(args, num_features, n_cls, data_x,device):
     if args.net == 'GIN':
@@ -123,6 +145,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     # except:
     #     pass
     model = model.to(device)
+    init_model(model)
     return model
 
 
