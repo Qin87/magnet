@@ -470,7 +470,7 @@ class SymRegLayer2BN_para_add(torch.nn.Module):
         x3 = self.gconv(x, edge_out, out_w)
 
         x = x1 + self.coef1.bias[0] * x2 + self.coef1.bias[1] * x3
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
         x = F.relu(x)
 
         if self.dropout > 0:

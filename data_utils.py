@@ -35,6 +35,7 @@ def load_directedData(args):
         dataset = load_syn(args.data_path + args.dataset, None)
 def get_dataset(name, path, split_type='public'):
     import torch_geometric.transforms as T
+    from torch_geometric.datasets import Coauthor
 
     if name == "Cora" or name == "CiteSeer" or name == "PubMed":
         from torch_geometric.datasets import Planetoid
@@ -46,8 +47,11 @@ def get_dataset(name, path, split_type='public'):
         from torch_geometric.datasets import Amazon
         return Amazon(root=path, name='photo', transform=T.NormalizeFeatures())
     elif name == 'Coauthor-CS':
-        from torch_geometric.datasets import Coauthor
+
         return Coauthor(root=path, name='cs', transform=T.NormalizeFeatures())
+    elif name == 'Coauthor-physics':
+
+        return Coauthor(root=path, name='physics', transform=T.NormalizeFeatures())
     else:
         raise NotImplementedError("Not Implemented Dataset!")
 

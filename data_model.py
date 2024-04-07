@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 import torch
 import sys
+from nets.geometric_baselines import GCN_JKNet, GPRGNN
+from nets.models import pGNNNet, MLPNet, SGCNet, JKNet, APPNPNet, GPRGNNNet
 # sys.path.append('./Signum_quaternion/QuaNet_node_prediction_one_laplacian_Qin')
 # sys.path.append('./Signum_quaternion/')
 # print('sys path is',sys.path)
@@ -53,22 +55,59 @@ def init_model(model):
             module.reset_parameters()  # Res
 
 def CreatModel(args, num_features, n_cls, data_x,device):
-    if args.net == 'GIN':
+    if args.net == 'pgnn':
+        model = pGNNNet(in_channels=num_features,
+                            out_channels=n_cls,
+                            num_hid=args.feat_dim,
+                            mu=args.mu,
+                            p=args.p,
+                            K=args.K,
+                            dropout=args.dropout)
+    elif args.net == 'mlp':
+        model = MLPNet(in_channels=num_features,
+                        out_channels=n_cls,
+                        num_hid=args.feat_dim,
+                        dropout=args.dropout)
+    elif args.net == 'sgc':
+        model = SGCNet(in_channels=num_features,
+                   out_channels=n_cls,
+                   K=args.K)
+    elif args.net == 'jk':
+        model = JKNet(in_channels=num_features,
+                        out_channels=n_cls,
+                        num_hid=args.feat_dim,
+                        K=args.K,
+                        alpha=args.alpha,
+                        dropout=args.dropout)
+    elif args.net == 'appnp':
+        model = APPNPNet(in_channels=num_features,
+                            out_channels=n_cls,
+                            num_hid=args.feat_dim,
+                            K=args.K,
+                            alpha=args.alpha,
+                            dropout=args.dropout)
+    elif args.net == 'gprgnn':
+        model = GPRGNNNet(in_channels=num_features,
+                            out_channels=n_cls,
+                            num_hid=args.feat_dim,
+                            ppnp=args.ppnp,
+                            K=args.K,
+                            alpha=args.alpha,
+                            Init=args.Init,
+                            Gamma=args.Gamma,
+                            dprate=args.dprate,
+                            dropout=args.dropout)
+
+    elif args.net == 'GIN':
         model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-        # model = GIN_ModelBen(num_features, n_cls, nhid=args.feat_dim,
-        #                      dropout=args.dropout, layer=args.layer)
     elif args.net == 'Cheb':
         model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
-        # model = ChebModelBen(num_features, n_cls, K=args.K,
-        #                      filter_num=args.num_filter, dropout=args.dropout,
-        #                      layer=args.layer).to(device)
+    elif args.net == 'JKNet':
+        model = GCN_JKNet(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout)
+    elif args.net == 'GPRGNN':
+        model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
         model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
-        # model = create_APPNPGGPT(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
-        # model = create_APPNP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha).to(device)
-        # model = create_appnp(num_features, n_cls,
-        #                        filter_num=args.num_filter, alpha=args.alpha,
-        #                        dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith('DiG'):
         if not args.net[-2:] == 'ib':
             model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
@@ -140,10 +179,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
             raise NotImplementedError("Not Implemented Architecture!")
-    # try:
-    #     print(model)  # # StandGCN2((conv1): GCNConv(3703, 64)  (conv2): GCNConv(64, 6))
-    # except:
-    #     pass
     model = model.to(device)
     init_model(model)
     return model
@@ -192,7 +227,7 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         data_x = data.ndata['feat']
         dataset_num_features = data_x.shape[1]
     # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
+    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
         edges = data.edge_index.to(device)  # for torch_geometric librar
         data_y = data.y.to(device)
         data_x = data.x.to(device)

@@ -80,6 +80,10 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
+    new_edge_index=None
+    new_x = None
+    new_y = None
+    new_y_train = None
     try:
         model.train()
     except:
@@ -326,11 +330,11 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
         # print('Aug', args.AugDirect, ',edges', edges.shape[1], ',x', data_x.shape[0])
     else:
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            # data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
-            data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
+            # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all
             # y, not only train
-            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
-            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
+            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
+            out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
         elif args.net.startswith('DiG'):
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
@@ -598,14 +602,18 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             print(model, file=log_file)
             print(model)
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        if not hasattr(model, 'coefs'):
+        if hasattr(model, 'coefs'):
             optimizer = torch.optim.Adam(
-                [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ],lr=args.lr)
+                [dict(params=model.reg_params, lr=args.lr, weight_decay=5e-4), dict(params=model.non_reg_params, lr=args.lr, weight_decay=0),
+                 dict(params=model.coefs, lr=2 * args.lr, weight_decay=5e-4), ],
+            )
+        elif hasattr(model, 'reg_params'):
+            optimizer = torch.optim.Adam(
+            [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ], lr=args.lr)
         else:
-            optimizer = torch.optim.Adam(
-                [dict(params=model.reg_params,lr=args.lr, weight_decay=5e-4), dict(params=model.non_reg_params, lr=args.lr, weight_decay=0),
-                 dict(params=model.coefs, lr=10*args.lr, weight_decay=5e-4),  ],
-                )
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
+
+
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
 
         if splits == 1:
@@ -678,10 +686,10 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
                 out_test = model.prediction(z1, z2)
                 accs, baccs, f1s = test_UGCL()
             else:
-                if goodAug is False and args.AugDirect==100:
+                if goodAug is False or args.AugDirect==100:
                     val_loss, new_edge_index, new_x, new_y, new_y_train = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                   X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
-                else:
+                elif goodAug is True and args.AugDirect==100:
                     val_loss, new_edge_index, new_x, new_y, new_y_train = train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                   X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s = test()
