@@ -19,14 +19,14 @@ def parse_args():
     parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
-    parser.add_argument('--net', type=str, default='DiGSymCatib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, QuaNet, '
-                                                               'addSympara, JKNet, GPRGNN, pgnn, mlp, sgc, APPNPNet, jk, ')
+    parser.add_argument('--net', type=str, default='DiGub', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, QuaNet, '
+                                                               'addSympara, JKNet, GPRGNN, pgnn, mlp, sgc, APPNPNet, jk,DiGub ')
     parser.add_argument('--GPUdevice', type=int, default=1, help='device')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='Coauthor-physics', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='WebKB/texas', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('----Direct_dataset', type=str, default='WebKB/Cornell', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')

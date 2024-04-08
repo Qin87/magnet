@@ -109,7 +109,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'APPNP':
         model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
     elif args.net.startswith('DiG'):
-        if not args.net[-2:] == 'ib':
+        if not (args.net[-2:] == 'ib' or args.net[-2:] == 'ub'):
             model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         else:
             if args.net[3:].startswith('Sym'):

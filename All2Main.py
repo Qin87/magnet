@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from args import parse_args
 from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
 from edge_nets.Edge_DiG_ import edge_prediction
-from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj
+from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
@@ -197,8 +197,6 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             new_y = torch.cat((data_y, _new_y), dim=0)
 
 
-
-
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all y, not only train
             # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)  # all edge and all
@@ -209,8 +207,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
-            if args.net[-2:] == 'ib':
-                edge_index2, edge_weights2 = get_second_directed_adj(new_edge_index.long(), new_y.size(-1), new_x.dtype)
+            if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+                if args.net[-2:] == 'ib':
+                    edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_index2 = edge_index2.to(device)
                 edge_weights2 = edge_weights2.to(device)
                 new_SparseEdges = (edge_index1, edge_index2)
@@ -267,8 +268,11 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
-            if args.net[-2:] == 'ib':
-                edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+            if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+                if args.net[-2:] == 'ib':
+                    edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_index2 = edge_index2.to(device)
                 edge_weights2 = edge_weights2.to(device)
                 SparseEdges = (edge_index1, edge_index2)
@@ -339,8 +343,11 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
-            if args.net[-2:] == 'ib':
-                edge_index2, edge_weights2 = get_second_directed_adj(new_edge_index.long(), new_y.size(-1), new_x.dtype)
+            if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+                if args.net[-2:] == 'ib':
+                    edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_index2 = edge_index2.to(device)
                 edge_weights2 = edge_weights2.to(device)
                 new_SparseEdges = (edge_index1, edge_index2)
@@ -397,8 +404,11 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
             edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
-            if args.net[-2:] == 'ib':
-                edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+            if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+                if args.net[-2:] == 'ib':
+                    edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_index2 = edge_index2.to(device)
                 edge_weights2 = edge_weights2.to(device)
                 SparseEdges = (edge_index1, edge_index2)
@@ -549,8 +559,11 @@ if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
-    if args.net[-2:] == 'ib':
-        edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+    if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+        if args.net[-2:] == 'ib':
+            edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        else:
+            edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
         edge_index2 = edge_index2.to(device)
         edge_weights2 = edge_weights2.to(device)
         SparseEdges = (edge_index1, edge_index2)
