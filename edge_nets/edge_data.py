@@ -681,8 +681,8 @@ def get_third_directed_adj(edge_index, num_nodes, dtype):
 
 def get_4th_directed_adj(edge_index, num_nodes, dtype):
     device = edge_index.device
-    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,
-                             device=edge_index.device)
+    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,device=edge_index.device)
+
     fill_value = 1
     edge_index, edge_weight1 = add_self_loops(
         edge_index, edge_weight1, fill_value, num_nodes)
