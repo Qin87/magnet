@@ -605,6 +605,382 @@ def get_second_directed_adj(edge_index, num_nodes, dtype):
 
     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
+def get_third_directed_adj(edge_index, num_nodes, dtype):
+    device = edge_index.device
+    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight1 = add_self_loops(
+        edge_index, edge_weight1, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight1, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight1      # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
+
+    L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0        # Qin learn: this is intersection
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index2 = L_indices.to(device)
+    edge_weight2 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    edge_weight2 = deg_inv_sqrt[row] * edge_weight2 * deg_inv_sqrt[col]
+    #########################
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight2  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index2, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0  # Qin learn: this is intersection
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index3 = L_indices.to(device)
+    edge_weight3 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index3
+    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    edge_weight3 = deg_inv_sqrt[row] * edge_weight3 * deg_inv_sqrt[col]
+
+    return (edge_index2, edge_index3), (edge_weight2,edge_weight3)
+
+def get_4th_directed_adj(edge_index, num_nodes, dtype):
+    device = edge_index.device
+    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight1 = add_self_loops(
+        edge_index, edge_weight1, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight1, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight1      # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
+
+    L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0        # Qin learn: this is intersection
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index2 = L_indices.to(device)
+    edge_weight2 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    edge_weight2 = deg_inv_sqrt[row] * edge_weight2 * deg_inv_sqrt[col]
+    #########################3rd
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight2  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index2, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0  # Qin learn: this is intersection
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index3 = L_indices.to(device)
+    edge_weight3 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index3
+    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    edge_weight3 = deg_inv_sqrt[row] * edge_weight3 * deg_inv_sqrt[col]
+
+    ############################################### 4th
+    row, col = edge_index3
+    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight3  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index3, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0  # Qin learn: this is intersection
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index4 = L_indices.to(device)
+    edge_weight4 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index4
+    deg = scatter_add(edge_weight4, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    edge_weight4 = deg_inv_sqrt[row] * edge_weight4 * deg_inv_sqrt[col]
+
+
+    return (edge_index2, edge_index3, edge_index4), (edge_weight2,edge_weight3, edge_weight4)
+
+
+def get_third_directed_adj_union(edge_index, num_nodes, dtype):
+    device = edge_index.device
+    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,
+                              device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight1 = add_self_loops(
+        edge_index, edge_weight1, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight1, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight1  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
+    L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    mask2 = (L_in != 0) & (L_out_hat == 0)
+    L_out_hat[mask2] = L_in[mask2]
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index2 = L_indices.to(device)
+    edge_weight2 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    edge_weight2 = deg_inv_sqrt[row] * edge_weight2 * deg_inv_sqrt[col]
+    #########################
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight2  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index2, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
+    L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    mask2 = (L_in != 0) & (L_out_hat == 0)
+    L_out_hat[mask2] = L_in[mask2]
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index3 = L_indices.to(device)
+    edge_weight3 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index3
+    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5).to(device)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    edge_weight3 = deg_inv_sqrt[row] * edge_weight3 * deg_inv_sqrt[col]
+
+    # return edge_index2, edge_weight2, edge_index3, edge_weight3
+    return (edge_index2,edge_index3), (edge_weight2, edge_weight3)
+
+def get_4th_directed_adj_union(edge_index, num_nodes, dtype):
+    device = edge_index.device
+    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,
+                              device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight1 = add_self_loops(
+        edge_index, edge_weight1, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight1, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight1  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
+    L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    mask2 = (L_in != 0) & (L_out_hat == 0)
+    L_out_hat[mask2] = L_in[mask2]
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index2 = L_indices.to(device)
+    edge_weight2 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    edge_weight2 = deg_inv_sqrt[row] * edge_weight2 * deg_inv_sqrt[col]
+    #########################
+    row, col = edge_index2
+    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight2  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index2, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
+    L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    mask2 = (L_in != 0) & (L_out_hat == 0)
+    L_out_hat[mask2] = L_in[mask2]
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index3 = L_indices.to(device)
+    edge_weight3 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index3
+    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5).to(device)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    edge_weight3 = deg_inv_sqrt[row] * edge_weight3 * deg_inv_sqrt[col]
+
+    #################################   4th
+    row, col = edge_index3
+    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight3  # all this is same with get directed adj
+    p_dense = torch.sparse.FloatTensor(edge_index3, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
+    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+
+    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
+    L_out_hat = L_out
+
+    mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
+    L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    mask2 = (L_in != 0) & (L_out_hat == 0)
+    L_out_hat[mask2] = L_in[mask2]
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index4 = L_indices.to(device)
+    edge_weight4 = L_values.to(device)
+
+    # row normalization
+    row, col = edge_index4
+    deg = scatter_add(edge_weight4, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5).to(device)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    edge_weight4 = deg_inv_sqrt[row] * edge_weight4 * deg_inv_sqrt[col]
+
+
+    return (edge_index2,edge_index3,edge_index4), (edge_weight2, edge_weight3, edge_weight4)
+
 def get_second_directed_adj_union(edge_index, num_nodes, dtype):
     '''
     Qin change to get union
@@ -641,14 +1017,17 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype):
     L_out_hat[mask2] = L_in[mask2]
     true_count = mask1.to(torch.int).sum().item()
     true_count2 = mask2.to(torch.int).sum().item()
-    print(true_count, true_count2)
+    non_zero_in = L_in_hat.nonzero().size(0)
+    non_zero_out = L_out_hat.nonzero().size(0)
+
+    print(true_count, true_count2, non_zero_in,non_zero_out )
 
     # L_in_hat[(L_out != 0).to(torch.bool) & L_in_hat == 0] = L_out        # Qin learn: this is intersection
     # L_out_hat[(L_in != 0).to(torch.bool) & L_out_hat == 0] = L_in        # Qin learn: this is intersection
     # L_out_hat[L_in == 0] = 0
 
     # L^{(2)}
-    L = (L_in_hat + L_out_hat) / 2.0
+    L = (L_in_hat + L_out_hat) / 2.0        # 2-order symmetric_A
 
     L[torch.isnan(L)] = 0
     L_indices = torch.nonzero(L, as_tuple=False).t()

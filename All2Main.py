@@ -12,7 +12,8 @@ import torch.nn.functional as F
 from args import parse_args
 from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
 from edge_nets.Edge_DiG_ import edge_prediction
-from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union
+from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, get_third_directed_adj, get_third_directed_adj_union, get_4th_directed_adj, \
+    get_4th_directed_adj_union
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
@@ -217,6 +218,22 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 new_SparseEdges = (edge_index1, edge_index2)
                 edge_weight = (edge_weights1, edge_weights2)
                 del edge_index2, edge_weights2
+            elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+                if args.net[-2:] == 'i3':
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,)+ edge_index_tuple
+                edge_weight = (edge_weights1,)+edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
+            elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+                if args.net[-2:] == 'i4':
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,) + edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
             else:
                 new_SparseEdges = edge_index1
                 edge_weight = edge_weights1
@@ -278,6 +295,22 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 SparseEdges = (edge_index1, edge_index2)
                 edge_weight = (edge_weights1, edge_weights2)
                 del edge_index2, edge_weights2
+            elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+                if args.net[-2:] == 'i3':
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1, )+ edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
+            elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+                if args.net[-2:] == 'i4':
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,) + edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
             else:
                 SparseEdges = edge_index1
                 edge_weight = edge_weights1
@@ -353,6 +386,22 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
                 new_SparseEdges = (edge_index1, edge_index2)
                 edge_weight = (edge_weights1, edge_weights2)
                 del edge_index2, edge_weights2
+            elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+                if args.net[-2:] == 'i3':
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple  = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,) + edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
+            elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+                if args.net[-2:] == 'i4':
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,) + edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
             else:
                 new_SparseEdges = edge_index1
                 edge_weight = edge_weights1
@@ -414,6 +463,22 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
                 SparseEdges = (edge_index1, edge_index2)
                 edge_weight = (edge_weights1, edge_weights2)
                 del edge_index2, edge_weights2
+            elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+                if args.net[-2:] == 'i3':
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,) + edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
+            elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+                if args.net[-2:] == 'i4':
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:
+                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                SparseEdges = (edge_index1,) + edge_index_tuple
+                edge_weight = (edge_weights1,) + edge_weights_tuple
+                del edge_index_tuple, edge_weights_tuple
             else:
                 SparseEdges = edge_index1
                 edge_weight = edge_weights1
@@ -569,6 +634,22 @@ if args.net.startswith('DiG'):
         SparseEdges = (edge_index1, edge_index2)
         edge_weight = (edge_weights1, edge_weights2)
         del edge_index2, edge_weights2
+    elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+        if args.net[-2:] == 'i3':
+            edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        else:
+            edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+        SparseEdges = (edge_index1,)+ edge_index_tuple
+        edge_weight = (edge_weights1,)+ edge_weights_tuple
+        del edge_index_tuple, edge_weights_tuple
+    elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+        if args.net[-2:] == 'i4':
+            edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        else:
+            edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+        SparseEdges = (edge_index1,) + edge_index_tuple
+        edge_weight = (edge_weights1,) + edge_weights_tuple
+        del edge_index_tuple, edge_weights_tuple
     else:
         SparseEdges = edge_index1
         edge_weight = edge_weights1

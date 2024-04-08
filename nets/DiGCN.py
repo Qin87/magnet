@@ -166,11 +166,52 @@ class InceptionBlock(torch.nn.Module):
         self.conv1.reset_parameters()
         self.conv2.reset_parameters()
 
-    def forward(self, x, edge_index, edge_weight, edge_index2, edge_weight2):
+    # def forward(self, x, edge_index, edge_weight, edge_index2, edge_weight2):
+    #     x0 = self.ln(x)
+    #     x1 = self.conv1(x, edge_index, edge_weight)
+    #     x2 = self.conv2(x, edge_index2, edge_weight2)
+    #     return x0, x1, x2
+
+    def forward(self, data):
+        x = data.x
+        edge_index = data.edge_index
+        edge_weight = data.edge_weight
+        edge_index2 = data.edge_index2
+        edge_weight2 = data.edge_weight2
+
         x0 = self.ln(x)
         x1 = self.conv1(x, edge_index, edge_weight)
         x2 = self.conv2(x, edge_index2, edge_weight2)
-        return x0, x1, x2
+
+        if hasattr(data, 'edge_index3') and hasattr(data, 'edge_weight3'):
+            x3 = self.conv3(x, data.edge_index3, data.edge_weight3)
+            if hasattr(data, 'edge_index4') and hasattr(data, 'edge_weight4'):
+                x4 = self.conv4(x, data.edge_index4, data.edge_weight4)
+                return x0, x1, x2, x3, x4
+            else:
+                return x0, x1, x2, x3
+        else:
+            return x0, x1, x2
+
+class InceptionBlock_Qin(torch.nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(InceptionBlock_Qin, self).__init__()
+        self.ln = Linear(in_dim, out_dim)
+        self.conv1 = DIGCNConv(in_dim, out_dim)
+        self.conv2 = DIGCNConv(in_dim, out_dim)
+        self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(5)])
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
+        self.conv1.reset_parameters()
+        self.conv2.reset_parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+
+        x0 = self.ln(x)
+        for i in range(len(edge_index_tuple)):
+            x0 += self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
+        return x0
 
 class InceptionBlock4batch(torch.nn.Module):
     def __init__(self, in_dim, out_dim):

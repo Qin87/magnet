@@ -10,7 +10,7 @@ from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
 # from nets.DGCN import DGCNConv
-from nets.DiGCN import InceptionBlock, InceptionBlock4batch
+from nets.DiGCN import InceptionBlock, InceptionBlock4batch, InceptionBlock_Qin
 from nets.Sym_Reg import DGCNConv
 
 
@@ -283,32 +283,11 @@ def create_DiGSimple(nfeat, nhid, nclass, dropout, nlayer):
         model = DiG_SimpleXBN(nfeat, nhid, nclass, dropout, nlayer)
     return model
 
-class DiGCN_IB_2(torch.nn.Module):   # very slow to improve!----------so delete
-    def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
-        super(DiGCN_IB_2BN, self).__init__()
-        self.ib1 = InceptionBlock(num_features, hidden)
-        self.ib2 = InceptionBlock(hidden, num_classes)
-        self._dropout = dropout
-
-        self.reg_params = list(self.ib1.parameters())
-        self.non_reg_params = self.ib2.parameters()
-
-    def forward(self, features, edge_index_tuple, edge_weight_tuple):
-        x = features
-        edge_index, edge_index2 = edge_index_tuple
-        edge_weight, edge_weight2 = edge_weight_tuple
-        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
-        x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
-
-        x = F.dropout(x, p=self._dropout, training=self.training)
-        return x
 
 class DiGCN_IB_1BN(torch.nn.Module):
-    def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
+    def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=1):
         super(DiGCN_IB_1BN, self).__init__()
-        self.ib1 = InceptionBlock(num_features, num_classes)
+        self.ib1 = InceptionBlock_Qin(num_features, num_classes)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(num_classes)
 
@@ -317,10 +296,7 @@ class DiGCN_IB_1BN(torch.nn.Module):
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
-        edge_index, edge_index2 = edge_index_tuple
-        edge_weight, edge_weight2 = edge_weight_tuple
-        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = self.batch_norm1(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
@@ -380,8 +356,8 @@ class DiGCN_IB_1BN_batch(torch.nn.Module):
 class DiGCN_IB_2BN(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_2BN, self).__init__()
-        self.ib1 = InceptionBlock(num_features, hidden)
-        self.ib2 = InceptionBlock(hidden, num_classes)
+        self.ib1 = InceptionBlock_Qin(num_features, hidden)
+        self.ib2 = InceptionBlock_Qin(hidden, num_classes)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(hidden)
         self.batch_norm2 = nn.BatchNorm1d(num_classes)
@@ -391,13 +367,9 @@ class DiGCN_IB_2BN(torch.nn.Module):
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
-        edge_index, edge_index2 = edge_index_tuple
-        edge_weight, edge_weight2 = edge_weight_tuple
-        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = self.batch_norm1(x)
-        x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
         x = self.batch_norm2(x)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
@@ -3076,8 +3048,8 @@ class DiGCN_IB_2BN_Ben2(torch.nn.Module):    #  obviously worse than DiGCN_IB_2B
 class DiGCN_IB_XBN(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_XBN, self).__init__()
-        self.ib1 = InceptionBlock(num_features, hidden)
-        self.ib2 = InceptionBlock(hidden, num_classes)
+        self.ib1 = InceptionBlock_Qin(num_features, hidden)
+        self.ib2 = InceptionBlock_Qin(hidden, num_classes)
         self._dropout = dropout
         # self.Conv = nn.Conv1d(hidden, num_classes, kernel_size=1)
 
@@ -3086,26 +3058,24 @@ class DiGCN_IB_XBN(torch.nn.Module):
         self.batch_norm3 = nn.BatchNorm1d(hidden)
 
         self.layer = layer
-        self.ibx=nn.ModuleList([InceptionBlock(hidden,hidden) for _ in range(layer-2)])
+        self.ibx=nn.ModuleList([InceptionBlock_Qin(hidden,hidden) for _ in range(layer-2)])
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
-        edge_index, edge_index2 = edge_index_tuple
-        edge_weight, edge_weight2 = edge_weight_tuple
-        x0, x1, x2 = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        # edge_index, edge_index2 = edge_index_tuple
+        # edge_weight, edge_weight2 = edge_weight_tuple
+        # x = self.ib1(x, edge_index, edge_weight, edge_index2, edge_weight2)
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = self.batch_norm1(x)
 
         for iter_layer in self.ibx:
-            x0, x1, x2 = iter_layer(x, edge_index, edge_weight, edge_index2, edge_weight2)
-            x = x0 + x1 + x2
+            x = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
             x = self.batch_norm3(x)
 
-        x0, x1, x2 = self.ib2(x, edge_index, edge_weight, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        x = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
         x = self.batch_norm2(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
