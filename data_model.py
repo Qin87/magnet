@@ -21,7 +21,7 @@ from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import (create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch, create_DiG_MixIB_SymCat_Sym,
-                             create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiG_IB_SymCat_batch)
+                             create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiG_IB_SymCat_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid)
 from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -111,14 +111,16 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith('DiG'):
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
         # if not (args.net[-2:] == 'ib' or args.net[-2:] == 'ub' or args.net[-2:] == 'i3' or args.net[-2:] == 'u3'):
-            model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        #     model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+            model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
         else:
             if args.net[3:].startswith('Sym'):
                 if args.net[6:].startswith('Cat'):
                     if args.net[9:].startswith('Mix'):
                         if args.net[12:].startswith('Sym'):
                             if not args.largeData:
-                                model = create_DiG_MixIB_SymCat_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                                # model = create_DiG_MixIB_SymCat_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                                model = create_DiG_MixIB_SymCat_Sym_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                             else:
                                 model = create_DiG_MixIB_SymCat_Sym_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                         else:
