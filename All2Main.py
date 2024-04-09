@@ -618,7 +618,9 @@ if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
     args.largeData = False
-# args.largeData = True       # TODO delete it
+# args.largeData = True  # For temporary TODO delete it before commit
+if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
+    args.largeData = False
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
