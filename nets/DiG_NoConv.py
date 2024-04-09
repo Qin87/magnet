@@ -1150,8 +1150,8 @@ class DiGCN_IB_2BN_SymCat(torch.nn.Module):
     '''
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=2):
         super(DiGCN_IB_2BN_SymCat, self).__init__()
-        self.ib1 = InceptionBlock(input_dim, nhid)
-        self.ib2 = InceptionBlock(nhid, out_dim)
+        self.ib1 = InceptionBlock_Qin(input_dim, nhid)
+        self.ib2 = InceptionBlock_Qin(nhid, out_dim)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(out_dim)
@@ -1181,10 +1181,11 @@ class DiGCN_IB_2BN_SymCat(torch.nn.Module):
         # symx = self.batch_norm1(symx)
         # symx = F.relu(symx)
 
-        edge_index1, edge_index2 = edge_index_tuple
-        edge_weight1, edge_weight2 = edge_weight_tuple
-        x0, x1, x2 = self.ib1(x, edge_index1, edge_weight1, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        # edge_index1, edge_index2 = edge_index_tuple
+        # edge_weight1, edge_weight2 = edge_weight_tuple
+        # x0, x1, x2 = self.ib1(x, edge_index1, edge_weight1, edge_index2, edge_weight2)
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        # x = x0 + x1 + x2
         x = torch.cat((x, symx), dim=-1)
         #
         x = x.unsqueeze(0)
@@ -1206,8 +1207,9 @@ class DiGCN_IB_2BN_SymCat(torch.nn.Module):
         # symx = self.batch_norm1(symx)
         # symx = F.relu(symx)
 
-        x0, x1, x2 = self.ib2(x, edge_index1, edge_weight1, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
+        # x0, x1, x2 = self.ib2(x, edge_index1, edge_weight1, edge_index2, edge_weight2)
+        # x = x0 + x1 + x2
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
         x = torch.cat((x, symx), dim=-1)
 
         # x = self.Conv2(x)
@@ -1769,7 +1771,7 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
     '''
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=1):
         super(DiGCN_IB_1BN_SymCat, self).__init__()
-        self.ib1 = InceptionBlock(input_dim, out_dim)
+        self.ib1 = InceptionBlock_Qin(input_dim, out_dim)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(out_dim)
         self.batch_norm2= nn.BatchNorm1d(2*out_dim)
@@ -1779,11 +1781,11 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
 
         self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
 
-        self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
-
-        nn.init.zeros_(self.bias1)
-        nn.init.zeros_(self.bias2)
+        # self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
+        # self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+        #
+        # nn.init.zeros_(self.bias1)
+        # nn.init.zeros_(self.bias2)
 
         self.reg_params = list(self.ib1.parameters())
         self.non_reg_params = []
@@ -1794,17 +1796,18 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
         symx2 = self.gconv(symx, edge_in, in_w)
         symx3 = self.gconv(symx, edge_out, out_w)
         symx = symx1 + symx2 + symx3
-        symx = self.batch_norm1(symx)
+        # symx = self.batch_norm1(symx)  # without it is better!
 
-        edge_index1, edge_index2 = edge_index_tuple
-        edge_weight1, edge_weight2 = edge_weight_tuple
-        x0, x1, x2 = self.ib1(x, edge_index1, edge_weight1, edge_index2, edge_weight2)
-        x = x0 + x1 + x2
-        x = self.batch_norm1(x)
+        # edge_index1, edge_index2 = edge_index_tuple
+        # edge_weight1, edge_weight2 = edge_weight_tuple
+        # x0, x1, x2 = self.ib1(x, edge_index1, edge_weight1, edge_index2, edge_weight2)
+        # x = x0 + x1 + x2
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        # x = self.batch_norm1(x)
         x = torch.cat((x, symx), dim=-1)
-        # x = self.batch_norm2(x)
+        # x = self.batch_norm2(x)     # with this is bery bad
         if self._dropout > 0:
-            x = F.dropout(x, self._dropout, training=self.training)
+            x = F.dropout(x, self._dropout, training=self.training)     # keep this is better!
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
