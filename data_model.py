@@ -20,11 +20,11 @@ from nets.APPNP_Ben import create_APPNPSimp
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
-from nets.DiG_NoConv import (create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch, create_DiG_MixIB_SymCat_Sym,
-                             create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiG_IB_SymCat_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid,
+from nets.DiG_NoConv import (create_DiGSimple, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_MixIB_SymCat_Sym,
+                             create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_Sym_batch_nhid, create_DiG_IB_SymCat_batchConvOut, create_DiG_IB_batch_nhid, create_DiG_MixIB_SymCat_nhid, create_DiG_MixIB_SymCat_batch_nhid,
                              create_DiG_IB_SymCat_nhid, create_DiG_IB_SymCat_batch_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_batch_nhid, create_DiG_IB_nhid)
-from nets.DiG_NoConv import  create_DiG_IB
+# from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
 from edge_nets.SD_GCN import SDGCN_Edge
