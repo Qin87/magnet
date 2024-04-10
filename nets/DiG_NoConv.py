@@ -1826,12 +1826,6 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
 
-        # self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        # self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
-        #
-        # nn.init.zeros_(self.bias1)
-        # nn.init.zeros_(self.bias2)
-
         self.reg_params = list(self.ib1.parameters())
         self.non_reg_params = []
 
@@ -1841,12 +1835,12 @@ class DiGCN_IB_1BN_SymCat(torch.nn.Module):
         symx2 = self.gconv(symx, edge_in, in_w)
         symx3 = self.gconv(symx, edge_out, out_w)
         symx = symx1 + symx2 + symx3
-        symx = self.batch_norm1(symx)  # without it is better!
+        symx = self.batch_norm1(symx)
 
         DiGx = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         DiGx = self.batch_norm1(DiGx)
         x = torch.cat((DiGx, symx), dim=-1)
-        # x = self.batch_norm2(x)     # with this is bery bad
+        x = self.batch_norm2(x)     # with this and BN1 is better
         if self._dropout > 0:
             x = F.dropout(x, self._dropout, training=self.training)     # keep this is better!
 
@@ -1865,18 +1859,19 @@ class DiGCN_IB_1BN_SymCat_batch(torch.nn.Module):
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=1,  batch_size=1024):
         super(DiGCN_IB_1BN_SymCat_batch, self).__init__()
         self.batch_size = batch_size  # Define your batch size
-        self.ib1 = InceptionBlock_Qin(input_dim, out_dim)
+        self.ib1 = InceptionBlock_Qin(input_dim, nhid)
         self._dropout = dropout
-        self.batch_norm1 = nn.BatchNorm1d(out_dim)
-        self.batch_norm2= nn.BatchNorm1d(2*out_dim)
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2= nn.BatchNorm1d(2*nhid)
+        self.batch_normx= nn.BatchNorm1d(out_dim)
 
         self.gconv = DGCNConv()
-        self.Conv1 = nn.Conv1d(2*out_dim, out_dim, kernel_size=1)
+        self.Conv1 = nn.Conv1d(2*nhid, out_dim, kernel_size=1)
 
-        self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
 
         self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+        self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
 
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
@@ -1932,17 +1927,19 @@ class DiGCN_IB_1BN_SymCat_batch(torch.nn.Module):
             DiGx_batch = self.ib1(batch_x,DiGedge_indexi_batch, DiGedge_weighti_batch)
             DiGx_batch = self.batch_norm1(DiGx_batch)
             x_batch = torch.cat((DiGx_batch, symx_batch), dim=-1)
-            # x_batch = self.batch_norm1(x_batch)
+            x_batch = self.batch_norm1(x_batch)
+
+            if self._dropout > 0:
+                x_batch = F.dropout(x_batch, self._dropout, training=self.training)
             x_batch = x_batch.unsqueeze(0)
             x_batch = x_batch.permute((0, 2, 1))
             x_batch = self.Conv1(x_batch)
             x_batch = x_batch.permute((0, 2, 1)).squeeze()
-            # x_batch = self.batch_norm1(x_batch)
+            x_batch = self.batch_norm2(x_batch)
             x_batch = F.relu(x_batch)
-            if self._dropout > 0:
-                x_batch = F.dropout(x_batch, self._dropout, training=self.training)
             outputs.append(x_batch)
         x = torch.cat(outputs, dim=0)
+        # x = self.batch_normx(x)
 
         # x = x.unsqueeze(0)
         # x = x.permute((0, 2, 1))
@@ -1960,18 +1957,18 @@ class DiGCN_IB_1BN_SymCat_batchConvOut(torch.nn.Module):
     def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=1,  batch_size=1024):
         super(DiGCN_IB_1BN_SymCat_batchConvOut, self).__init__()
         self.batch_size = batch_size  # Define your batch size
-        self.ib1 = InceptionBlock_Qin(input_dim, out_dim)
+        self.ib1 = InceptionBlock_Qin(input_dim, nhid)
         self._dropout = dropout
-        self.batch_norm1 = nn.BatchNorm1d(out_dim)
-        self.batch_norm2= nn.BatchNorm1d(2*out_dim)
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2= nn.BatchNorm1d(2*nhid)
 
         self.gconv = DGCNConv()
-        self.Conv1 = nn.Conv1d(2*out_dim, out_dim, kernel_size=1)
+        self.Conv1 = nn.Conv1d(2*nhid, out_dim, kernel_size=1)
 
-        self.lin1 = torch.nn.Linear(input_dim, out_dim, bias=False)
+        self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
 
         self.bias1 = nn.Parameter(torch.Tensor(1, nhid))
-        self.bias2 = nn.Parameter(torch.Tensor(1, out_dim))
+        self.bias2 = nn.Parameter(torch.Tensor(1, nhid))
 
         nn.init.zeros_(self.bias1)
         nn.init.zeros_(self.bias2)
@@ -3689,6 +3686,27 @@ def create_DiG_IB_SymCat_batch(nfeat, nhid, nclass, dropout, nlayer, batch_size)
         model = DiGCN_IB_2BN_SymCat_batch(nfeat, nhid, nclass, dropout, nlayer, batch_size)
     else:
         model = DiGCN_IB_XBN_SymCat_batch(nfeat, nhid, nclass, dropout, nlayer, batch_size)
+    return model
+
+def create_DiG_IB_SymCat_batchConvOut(nfeat, nhid, nclass, dropout, nlayer, batch_size):
+    '''
+    revised for edge_index confusion
+    Args:
+        nfeat:
+        nhid:
+        nclass:
+        dropout:
+        nlayer:
+
+    Returns:
+
+    '''
+    if nlayer == 1:
+        model = DiGCN_IB_1BN_SymCat_batchConvOut(nfeat, nhid, nclass, dropout, nlayer, batch_size)
+    elif nlayer == 2:
+        model = DiGCN_IB_2BN_SymCat_batchConvOut(nfeat, nhid, nclass, dropout, nlayer, batch_size)
+    else:
+        model = DiGCN_IB_XBN_SymCat_batchConvOut(nfeat, nhid, nclass, dropout, nlayer, batch_size)
     return model
 
 def create_DiG_MixIB_SymCat(nfeat, nhid, nclass, dropout, nlayer):

@@ -5,8 +5,8 @@
 /datasets/
 /logs/
 /dataset/data/tmp/
-*.npz
+#*.npz
 *.t7
 *.txt
-*.pk
+#*.pk
 *.pt

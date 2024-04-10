@@ -22,7 +22,7 @@ from nets.Cheb_Ben import create_Cheb
 # from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import (create_DiGSimple, create_DiG_IB_SymCat, create_DiG_MixIB_SymCat, create_DiG_IB_batch, create_DiG_IB_Sym_batch, create_DiG_MixIB_SymCat_Sym,
                              create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiG_IB_SymCat_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid,
-                             create_DiG_MixIB_SymCat_Sym_batch_nhid)
+                             create_DiG_MixIB_SymCat_Sym_batch_nhid, create_DiG_IB_SymCat_batchConvOut)
 from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -134,7 +134,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         if not args.largeData:
                             model = create_DiG_IB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.ibx1).to(device)
                         else:
-                            model = create_DiG_IB_SymCat_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                            # model = create_DiG_IB_SymCat_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                            model = create_DiG_IB_SymCat_batchConvOut(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                 else:
                     if not args.largeData:
                         model = create_DiG_IB_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
