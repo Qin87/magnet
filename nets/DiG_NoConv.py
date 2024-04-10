@@ -515,7 +515,7 @@ class DiGCN_IB_2BN_batch(torch.nn.Module):
                 DiGedge_weighti_batch += (edge_weighti_batch,)
 
             # Forward pass for the current batch
-            x_batch = self.ib1(batch_x, DiGedge_indexi_batch, DiGedge_weighti_batatch)
+            x_batch = self.ib1(batch_x, DiGedge_indexi_batch, DiGedge_weighti_batch)
             
             x_batch = self.batch_norm1(x_batch)
             x_batch = F.dropout(x_batch, p=self._dropout, training=self.training)
