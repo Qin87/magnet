@@ -2,7 +2,7 @@
 *.log
 *.pyc
 /dataset/
-#/datasets/
+/datasets/
 /logs/
 /dataset/data/tmp/
 #*.npz
