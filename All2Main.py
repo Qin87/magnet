@@ -618,7 +618,7 @@ if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
     args.largeData = False
-# args.largeData = True  # For temporary TODO delete it before commit
+args.largeData = True  # For temporary TODO delete it before commit
 if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
     args.largeData = False
 n_cls = data_y.max().item() + 1
