@@ -4674,6 +4674,7 @@ def create_DiG_IB_Sym_nhid(nfeat, nhid, nclass, dropout, nlayer):
         model = DiGCN_IB_XBN_Sym_nhid(nfeat, nhid, nclass, dropout, nlayer)
     return model
 
+
 def create_DiG_IB_Sym(nfeat, nhid, nclass, dropout, nlayer):
     '''
     revised for edge_index confusion
