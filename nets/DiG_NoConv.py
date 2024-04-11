@@ -588,7 +588,11 @@ class DiGCN_IB_2BN_nhid_para(torch.nn.Module):
         self.reg_params = list(self.ib1.parameters())+list(self.ib2.parameters())
         self.non_reg_params = []
         # self.coefs = [self.coef1, self.coef2] + self.coefx
-        self.coefs = self.coef1+ self.coef2
+        # self.coefs = self.coef1+ self.coef2       # wrong
+        self.coefs = list(self.coef1) + list(self.coef2)
+        # self.coefs = nn.ParameterList()       # this is OK too, but above list is simpler
+        # self.coefs.extend(self.coef1)
+        # self.coefs.extend(self.coef2)
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
@@ -4684,7 +4688,7 @@ class DiGCN_IB_XBN_nhid(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_XBN_nhid, self).__init__()
         self.ib1 = InceptionBlock_Qin(num_features, hidden)
-        self.ib2 = InceptionBlock_Qin(hidden, num_classes)
+        self.ib2 = InceptionBlock_Qin(hidden, hidden)
         self._dropout = dropout
         self.Conv = nn.Conv1d(hidden, num_classes, kernel_size=1)
 
@@ -4721,7 +4725,7 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_XBN_nhid_para, self).__init__()
         self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
-        self.ib2 = InceptionBlock_Qinlist(hidden, num_classes)
+        self.ib2 = InceptionBlock_Qinlist(hidden, hidden)
         self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib1
         self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib2
         self._dropout = dropout
@@ -4737,8 +4741,8 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()
-        self.coefs = [self.coef1, self.coef2] + self.coefx
-        # self.coefs = [self.coef1, self.coef2, self.coefx]
+        self.coefs = list(self.coef1)+list(self.coef2)+list(self.coefx.parameters())
+        # self.coefs = [self.coef1, self.coef2, self.coefx]     # wrong
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
@@ -4748,8 +4752,11 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
             x += self.coef1[i] * x_list[i]
         x = self.batch_norm1(x)
 
-        for iter_layer in self.ibx:
-            x = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+        for iter_layer, iter_coef in zip(self.ibx, self.coefx):
+            x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+            x = x_list[0]
+            for i in range(1, len(x_list)):
+                x += iter_coef[i] * x_list[i]
             x = self.batch_norm3(x)
 
         x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
