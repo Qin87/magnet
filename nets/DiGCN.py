@@ -213,6 +213,26 @@ class InceptionBlock_Qin(torch.nn.Module):
             x0 += self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
         return x0
 
+class InceptionBlock_Qinlist(torch.nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(InceptionBlock_Qinlist, self).__init__()
+        self.ln = Linear(in_dim, out_dim)
+        self.conv1 = DIGCNConv(in_dim, out_dim)
+        self.conv2 = DIGCNConv(in_dim, out_dim)
+        self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(5)])
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
+        self.conv1.reset_parameters()
+        self.conv2.reset_parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+        x0 = self.ln(x)
+        x_list = [x0]
+        for i in range(len(edge_index_tuple)):
+            x_list.append(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]))
+        return x_list
+
 class InceptionBlock4batch(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super(InceptionBlock4batch, self).__init__()

@@ -620,7 +620,7 @@ if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
     args.largeData = False
-args.largeData = True  # For temporary TODO delete it before commit
+# args.largeData = True  # For temporary TODO delete it before commit
 if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
     args.largeData = False
 n_cls = data_y.max().item() + 1
@@ -703,7 +703,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         if hasattr(model, 'coefs'):
             optimizer = torch.optim.Adam(
                 [dict(params=model.reg_params, lr=args.lr, weight_decay=5e-4), dict(params=model.non_reg_params, lr=args.lr, weight_decay=0),
-                 dict(params=model.coefs, lr=2 * args.lr, weight_decay=5e-4), ],
+                 dict(params=model.coefs, lr=args.coeflr * args.lr, weight_decay=5e-4), ],
             )
         elif hasattr(model, 'reg_params'):
             optimizer = torch.optim.Adam(
