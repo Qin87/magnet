@@ -137,8 +137,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         if not args.largeData:
                             model = create_DiG_IB_SymCat_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.ibx1).to(device)
                         else:
-                            # model = create_DiG_IB_SymCat_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)        # this is better!
-                            model = create_DiG_IB_SymCat_batchConvOut(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                            model = create_DiG_IB_SymCat_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)        # this is better!
+                            # model = create_DiG_IB_SymCat_batchConvOut(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                 else:
                     if not args.largeData:
                         model = create_DiG_IB_Sym_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)

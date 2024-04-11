@@ -2,6 +2,7 @@
 #  This is old Augmentation, who don't consider the original direction of edges
 # I'll Aug edge according to original direction in MainMar1.py, and the work begins on Mar 1.
 ################################
+import statistics
 import time
 
 import random
@@ -611,6 +612,8 @@ gcn = True
 pos_edges = None
 neg_edges = None
 
+macro_F1 = []
+
 criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
@@ -774,6 +777,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         # for epoch in tqdm.tqdm(range(args.epoch)):
         goodAug=False
         for epoch in range(args.epoch):
+            # if epoch>0:     # for test  TODO delete it
+            #     raise NotImplementedError("1 epoch done right, test passed!")
             if args.net.startswith('UGCL'):
                 val_loss = train_UGCL(pos_edges, neg_edges, size, train_idx, val_idx)
 
@@ -833,7 +838,15 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             net_to_print = net_to_print +'_NoBatchTrain'
         print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
+        macro_F1.append(test_f1*100)
 
         print(end_time - start_time, file=log_file)
         print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
+average = statistics.mean(macro_F1)
+
+# Calculate the standard deviation of F1 scores
+std_dev = statistics.stdev(macro_F1)
+
+# Print the result in the specified format
+print('macro F1: '+ f"{average:.3f}±{std_dev:.2f}")
