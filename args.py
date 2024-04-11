@@ -35,7 +35,7 @@ def parse_args():
     # parser.add_argument('--MakeImbalance', type=bool, default=False, help='True for turn dataset into imbalanced')
     parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
@@ -45,6 +45,7 @@ def parse_args():
     parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
     parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
     parser.add_argument('--coeflr', type=float, default=2.0, help='coef lr get multiplied with it')
+    parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
     # parser.add_argument('--lr', type=float, default=5e-3, help='learning rate')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')
     parser.add_argument('--tau', type=int, default=2, help='temperature in the softmax function when calculating confidence-based node hardness')

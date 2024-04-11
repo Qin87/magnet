@@ -113,11 +113,7 @@ class ChebConv_Qin_Direct(nn.Module):
         f_node, e_node = edges[0], edges[1]
         laplacian = True
         gcn_appr = False
-        # try:
-            # L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
         L = QinDirect_hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, QinDirect=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
-        # except AttributeError:
-        #     L = QinDirect_hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, QinDirect=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
         multi_order_laplacian = cheb_poly_sparse(L, K=2)   # K=2 is temp by me
         L = multi_order_laplacian
         L_img = []
@@ -523,7 +519,6 @@ class ChebNet_BenQin(nn.Module):
         Returns:
 
         '''
-
         real, imag, edges, q, edge_weight = self.Chebs((real, imag,  edges, q, edge_weight))
         # real, imag = self.cheb_Qin((real, imag, edges, q, edge_weight))
         x = torch.cat((real, imag), dim=-1)     # unwind the complex X into real-valued X
