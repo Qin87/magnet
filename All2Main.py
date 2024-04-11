@@ -32,7 +32,6 @@ import warnings
 
 from utils0.perturb import composite_perturb
 from torch_geometric.data import Data
-
 warnings.filterwarnings("ignore")
 
 
@@ -780,6 +779,8 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             # if epoch>0:     # for test  TODO delete it
             #     raise NotImplementedError("1 epoch done right, test passed!")
             if args.net.startswith('UGCL'):
+
+                # val_loss = train_UGCL(pos_edges, neg_edges, size, train_idx, val_idx)
                 val_loss = train_UGCL(pos_edges, neg_edges, size, train_idx, val_idx)
 
                 z1 = model(X_real, X_img, q1, pos_edges, neg_edges, args, size, test_idx)
@@ -849,4 +850,4 @@ average = statistics.mean(macro_F1)
 std_dev = statistics.stdev(macro_F1)
 
 # Print the result in the specified format
-print('macro F1: '+ f"{average:.3f}±{std_dev:.2f}")
+print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")

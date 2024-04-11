@@ -2,8 +2,11 @@
 
 # List of AugDirect values
 #augdirect_values="2 4 20 21 22 23 231 2311"
-#net_values="DiG DiGib DiGSymib DiGSymCatib DiGSymCatMixib DiGSymCatMixSymib  DiGub DiGi3 DiGi4 DiGu3 DiGu4 "
-net_values="JKNet GPRGNN pgnn mlp sgc APPNPNet jk "
+
+#net_values="DiG DiGib DiGSymib DiGSymCatib DiGSymCatMixib DiGSymCatMixSymib  DiGub DiGi3 DiGi4 DiGu3 DiGu4 "   # tested
+#net_values="GCN GAT APPNP GIN Cheb SAGE"    # tested
+net_values="Mag MagQin Sig Qua"  #  UGCL can't work
+#net_values="JKNet GPRGNN pgnn mlp sgc jk "   # tested
 #net_values="DiGSymCatib DiGSymCatMixib DiGSymCatMixSymib "
 
 layer_values="1 2 3"

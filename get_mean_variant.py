@@ -7,6 +7,5 @@ average = statistics.mean(f1_scores)
 
 # Calculate the standard deviation of F1 scores
 std_dev = statistics.stdev(f1_scores)
-
 # Print the result in the specified format
 print(f"{average:.3f}±{std_dev:.2f}")

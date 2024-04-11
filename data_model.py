@@ -192,7 +192,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         elif args.net == "SAGE":
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
-            raise NotImplementedError("Not Implemented Architecture!")
+            raise NotImplementedError("Not Implemented Architecture!"+ args.net)
     model = model.to(device)
     init_model(model)
     return model
