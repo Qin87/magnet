@@ -620,7 +620,7 @@ if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
     args.largeData = False
-args.largeData = True  # For temporary TODO delete it before commit
+# args.largeData = True  # For temporary TODO delete it before commit
 if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
     args.largeData = False
 n_cls = data_y.max().item() + 1
@@ -700,10 +700,10 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             print(model, file=log_file)
             print(model)
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-        if hasattr(model, 'coefs'):
+        if hasattr(model, 'coefs'):     # parameter without weight_decay will typically change faster
             optimizer = torch.optim.Adam(
                 [dict(params=model.reg_params, lr=args.lr, weight_decay=5e-4), dict(params=model.non_reg_params, lr=args.lr, weight_decay=0),
-                 dict(params=model.coefs, lr=2 * args.lr, weight_decay=5e-4), ],
+                 dict(params=model.coefs, lr=args.coeflr * args.lr, weight_decay=args.wd4coef), ],
             )
         elif hasattr(model, 'reg_params'):
             optimizer = torch.optim.Adam(
@@ -851,3 +851,4 @@ std_dev = statistics.stdev(macro_F1)
 
 # Print the result in the specified format
 print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
+print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
