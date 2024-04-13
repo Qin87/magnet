@@ -28,7 +28,7 @@ for layer in $layer_values; do
   for net in $net_values; do
     nohup python3 All2Main.py --AugDirect=0 --net=$net \
     --layer=$layer  --q=0  --Direct_dataset="$Direct_dataset" --undirect_dataset=$unDirect_data \
-      >Aug0${net}_${Direct_dataset_filename}_layer${layer}_T${timestamp}.log &
+      >T${timestamp}_Aug0${net}_${Direct_dataset_filename}_layer${layer}.log &
     pid=$!
 
     wait $pid
