@@ -844,11 +844,12 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print(end_time - start_time, file=log_file)
         print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
-    average = statistics.mean(macro_F1)
+    if len(macro_F1)>1:
+        average = statistics.mean(macro_F1)
 
-    # Calculate the standard deviation of F1 scores
-    std_dev = statistics.stdev(macro_F1)
+        # Calculate the standard deviation of F1 scores
+        std_dev = statistics.stdev(macro_F1)
 
-    # Print the result in the specified format
-    print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
-    print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
+        # Print the result in the specified format
+        print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
+        print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
