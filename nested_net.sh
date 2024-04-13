@@ -10,7 +10,7 @@ GCN GAT APPNP GIN Cheb SAGE
 JKNet GPRGNN pgnn mlp sgc jk"
 layer_values="1 2 3 4 5 6 7"
 
-Direct_dataset='WebKB/texas'  # Update your Direct_dataset value
+Direct_dataset='dgl/citeseer'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 IsDirData=False
 unDirect_data='CiteSeer'
