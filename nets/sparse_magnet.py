@@ -113,7 +113,7 @@ class ChebConv_Qin_Direct(nn.Module):
         f_node, e_node = edges[0], edges[1]
         laplacian = True
         gcn_appr = False
-        L = QinDirect_hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, QinDirect=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+        L = QinDirect_hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, QinDirect=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)   # should norm
         multi_order_laplacian = cheb_poly_sparse(L, K=2)   # K=2 is temp by me
         L = multi_order_laplacian
         L_img = []

@@ -428,8 +428,18 @@ def QinDirect_hermitian_decomp_sparse(row, col, size, q=0.25, norm=True,  QinDir
         A += diag
 
     A_sym = 0.5 * (A + A.T)  # symmetrized adjacency
-    A_sym[A_sym == 0.5] = q
+    # tolerance = 1e-5
+    A_sym_tensor = torch.tensor(A_sym.toarray())
 
+    # Define tolerance for approximate comparison
+    tolerance = 1e-5  # Adjust the tolerance based on your requirements
+
+    # Replace elements close to 0.5 with the value of q
+    mask = torch.isclose(A_sym_tensor, torch.tensor(0.5), atol=tolerance)
+    A_sym[mask] = q
+    count_true = torch.sum(mask).item()
+
+    # print("Number of elements satisfying the condition:", count_true)
     diff = A - A.T
     diff = triu(diff)   # extract the upper triangle of differ
     diff = diff + diff.T    # diff is symmetric now
