@@ -2586,11 +2586,11 @@ class DiGCN_IB_2MixBN_SymCat_nhid(torch.nn.Module):
         self.ib2 = InceptionBlock_Qin(nhid, nhid)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(2*nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
 
         self.gconv = DGCNConv()
         self.Conv1 = nn.Conv1d(2*nhid, nhid, kernel_size=1)
-        self.Conv2 = nn.Conv1d(2*nhid, out_dim, kernel_size=1)
+        self.Conv2 = nn.Conv1d(nhid, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
         self.lin2 = torch.nn.Linear(nhid, nhid, bias=False)
@@ -2629,7 +2629,7 @@ class DiGCN_IB_2MixBN_SymCat_nhid(torch.nn.Module):
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
-        x = self.Conv1(x)  # with this block or without, almost the same result
+        x = self.Conv2(x)  # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
 
 
