@@ -1978,7 +1978,7 @@ class DiGCN_IB_XBN_SymCat_nhid(torch.nn.Module):
         # self.ibx = InceptionBlock_Qin(nhid, nhid)
         self._dropout = dropout
         # self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(2*nhid)
 
         self.gconv = DGCNConv()
         self.Conv1 = nn.Conv1d(2*nhid, nhid, kernel_size=1)
