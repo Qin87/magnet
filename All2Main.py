@@ -572,6 +572,8 @@ else:
     device = torch.device("cpu")
 if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
     device = torch.device("cpu")
+if args.CPU:
+    device = torch.device("cpu")
 log_directory, log_file_name_with_timestamp = log_file(args)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
@@ -695,7 +697,7 @@ start_time = time.time()
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     # for split in range(splits - 1, -1, -1):
     for split in range(splits):
-        model = CreatModel(args, num_features, n_cls, data_x, device)
+        model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
         if split==0:
             print(model, file=log_file)
             print(model)
