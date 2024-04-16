@@ -77,7 +77,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         num_hid=args.feat_dim,
                         K=args.K,
                         alpha=args.alpha,
-                        dropout=args.dropout)
+                        dropout=args.dropout,layer=args.layer)
     elif args.net == 'appnp':
         model = APPNPNet(in_channels=num_features,
                             out_channels=n_cls,
@@ -102,7 +102,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'Cheb':
         model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
     elif args.net == 'JKNet':
-        model = GCN_JKNet(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout)
+        model = GCN_JKNet(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, layer=args.layer)
     elif args.net == 'GPRGNN':
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':

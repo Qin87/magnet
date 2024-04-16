@@ -217,8 +217,7 @@ class JKNet(torch.nn.Module):
                  num_hid=16,
                  K=1,
                  alpha=0,
-                 num_layes=4,
-                 dropout=0.5):
+                 dropout=0.5,layer=4):
         super(JKNet, self).__init__()
         self.dropout = dropout
         self.conv1 = GCNConv(in_channels, num_hid)
@@ -227,7 +226,7 @@ class JKNet(torch.nn.Module):
         self.one_step = APPNP(K=K, alpha=alpha)
         self.JK = JumpingKnowledge(mode='lstm',
                                    channels=num_hid,
-                                   num_layers=num_layes)
+                                   num_layers=layer)
 
     def forward(self, x, edge_index, edge_weight=None):
         x1 = F.relu(self.conv1(x, edge_index, edge_weight))

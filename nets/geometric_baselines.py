@@ -866,7 +866,7 @@ class GCNModelBen(torch.nn.Module):
             return F.log_softmax(x, dim=1)
 
 class GCN_JKNet(torch.nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout):
+    def __init__(self, nfeat, nhid, nclass, dropout, layer):
 
         super(GCN_JKNet, self).__init__()
         self.conv1 = GCNConv(nfeat, nhid)
@@ -890,6 +890,42 @@ class GCN_JKNet(torch.nn.Module):
         x = self.lin1(x)
         # x = F.dropout(x, p=0.5, training=self.training)   # without is better
         return F.log_softmax(x, dim=1)
+
+class GCN_JKNet2(torch.nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout):
+
+        super(GCN_JKNet2, self).__init__()
+        self.conv1 = GCNConv(nfeat, nhid)
+        self.conv2 = GCNConv(nhid, nhid)
+        self.lin1 = torch.nn.Linear(nhid, nclass)
+        self.one_step = APPNP(K=1, alpha=0)
+        self.JK = JumpingKnowledge(mode='lstm',
+                                   channels=nhid,
+                                   num_layers=2
+                                   )
+
+    def forward(self, x, edge_index):
+        x1 = F.relu(self.conv1(x, edge_index))
+        x1 = F.dropout(x1, p=0.5, training=self.training)
+
+        x2 = F.relu(self.conv2(x1, edge_index))
+        x2 = F.dropout(x2, p=0.5, training=self.training)
+
+        x = self.JK([x1, x2])
+        x = self.one_step(x, edge_index)
+        x = self.lin1(x)
+        # x = F.dropout(x, p=0.5, training=self.training)   # without is better
+        return F.log_softmax(x, dim=1)
+
+def create_JK(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = GCN_JKNet(nfeat, nhid, nclass, dropout,nlayer)
+    elif nlayer == 2:
+        model = StandGCN2BN(nfeat, nhid, nclass, dropout,nlayer)
+    else:
+        model = StandGCNXBN(nfeat, nhid, nclass, dropout,nlayer)
+
+    return model
 from torch_geometric.nn import MessagePassing, APPNP
 class GPR_prop(MessagePassing):
     '''
