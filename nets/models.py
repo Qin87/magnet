@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from torch import nn
 from torch_geometric.nn import GCNConv, SGConv, GATConv, APPNP, JumpingKnowledge
 from src.pgnn_conv import pGNNConv
 from src.gpr_conv import GPR_prop
@@ -27,13 +28,12 @@ class pGNNNet(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-class MLPNet(torch.nn.Module):
+class MLPNet2(torch.nn.Module):
     def __init__(self,
-                 in_channels,
+                 in_channels,num_hid,
                  out_channels,
-                 num_hid=16,
                  dropout=0.5):
-        super(MLPNet, self).__init__()
+        super(MLPNet2, self).__init__()
         self.dropout = dropout
         self.layer1 = torch.nn.Linear(in_channels, num_hid)
         self.layer2 = torch.nn.Linear(num_hid, out_channels)
@@ -43,6 +43,50 @@ class MLPNet(torch.nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.layer2(x)
         return F.log_softmax(x, dim=1)
+
+class MLPNetX(torch.nn.Module):
+    def __init__(self,
+                 in_channels,num_hid,
+                 out_channels,
+                 dropout, layer=3):
+        super(MLPNetX, self).__init__()
+        self.dropout = dropout
+        self.layer1 = torch.nn.Linear(in_channels, num_hid)
+        self.layer2 = torch.nn.Linear(num_hid, out_channels)
+        self.layerx = nn.ModuleList([torch.nn.Linear(num_hid, num_hid) for _ in range(layer-2)])
+    def forward(self, x, edge_index=None, edge_weight=None):
+        x = torch.relu(self.layer1(x))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        for iter_layer in self.layerx:
+            x = F.relu(iter_layer(x))
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = self.layer2(x)
+        return F.log_softmax(x, dim=1)
+
+class MLPNet1(torch.nn.Module):
+    def __init__(self,
+                 in_channels,num_hid,
+                 out_channels,
+                 dropout=0.5):
+        super(MLPNet1, self).__init__()
+        self.dropout = dropout
+        self.layer1 = torch.nn.Linear(in_channels, out_channels)
+        # self.layer2 = torch.nn.Linear(num_hid, out_channels)
+
+    def forward(self, x, edge_index=None, edge_weight=None):
+        x = self.layer1(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        # x = self.layer2(x)
+        return F.log_softmax(x, dim=1)
+
+def create_MLP(nfeat, nhid, nclass, dropout, nlayer):
+    if nlayer == 1:
+        model = MLPNet1(nfeat, nhid, nclass, dropout)
+    elif nlayer == 2:
+        model = MLPNet2(nfeat, nhid, nclass, dropout)
+    else:
+        model = MLPNetX(nfeat, nhid, nclass, dropout, nlayer)
+    return model
 
 
 class GCNNet(torch.nn.Module):
