@@ -572,8 +572,10 @@ else:
     device = torch.device("cpu")
 if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
     device = torch.device("cpu")
+    print("dgl, using CPU.")
 if args.CPU:
     device = torch.device("cpu")
+    print("args.CPU true, using CPU.")
 log_directory, log_file_name_with_timestamp = log_file(args)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
