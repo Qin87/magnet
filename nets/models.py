@@ -6,17 +6,16 @@ from src.pgnn_conv import pGNNConv
 from src.gpr_conv import GPR_prop
 
 
-class pGNNNet(torch.nn.Module):
+class pGNNNet1(torch.nn.Module):
     def __init__(self,
-                 in_channels,
+                 in_channels,num_hid,
                  out_channels,
-                 num_hid=16,
                  mu=0.1,
                  p=2,
                  K=2,
                  dropout=0.5,
                  cached=True):
-        super(pGNNNet, self).__init__()
+        super(pGNNNet1, self).__init__()
         self.dropout = dropout
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.conv1 = pGNNConv(num_hid, out_channels, mu, p, K, cached=cached)
@@ -24,6 +23,54 @@ class pGNNNet(torch.nn.Module):
     def forward(self, x, edge_index, edge_weight=None):
         x = F.relu(self.lin1(x))
         x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv1(x, edge_index, edge_weight)
+        return F.log_softmax(x, dim=1)
+
+class pGNNNet2(torch.nn.Module):
+    def __init__(self,
+                 in_channels,num_hid,
+                 out_channels,
+                 mu=0.1,
+                 p=2,
+                 K=2,
+                 dropout=0.5,
+                 cached=True):
+        super(pGNNNet2, self).__init__()
+        self.dropout = dropout
+        self.lin1 = torch.nn.Linear(in_channels, num_hid)
+        self.conv1 = pGNNConv(num_hid, num_hid, mu, p, K, cached=cached)
+        self.conv2 = pGNNConv(num_hid, out_channels, mu, p, K, cached=cached)
+
+    def forward(self, x, edge_index, edge_weight=None):
+        x = F.relu(self.lin1(x))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
+        return F.log_softmax(x, dim=1)
+
+class pGNNNetX(torch.nn.Module):
+    def __init__(self,
+                 in_channels,num_hid,
+                 out_channels,
+                 mu=0.1,
+                 p=2,
+                 K=2,
+                 dropout=0.5,layer=3,
+                 cached=True):
+        super(pGNNNetX, self).__init__()
+        self.dropout = dropout
+        self.lin1 = torch.nn.Linear(in_channels, num_hid)
+        self.layerx = nn.ModuleList([pGNNConv(num_hid, num_hid, mu, p, K, cached=cached) for _ in range(layer-2)])
+
+        self.conv1 = pGNNConv(num_hid, out_channels, mu, p, K, cached=cached)
+
+    def forward(self, x, edge_index, edge_weight=None):
+        x = F.relu(self.lin1(x))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        for iter_layer in self.layerx:
+            x = F.relu(iter_layer(x, edge_index, edge_weight))
+            x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
         return F.log_softmax(x, dim=1)
 
@@ -86,6 +133,15 @@ def create_MLP(nfeat, nhid, nclass, dropout, nlayer):
         model = MLPNet2(nfeat, nhid, nclass, dropout)
     else:
         model = MLPNetX(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+def create_pgnn(nfeat, nhid, nclass,mu=0.1,p=2,K=2, dropout=0.5, layer=3):
+    if layer == 1:
+        model = pGNNNet1(nfeat, nhid, nclass,mu=0.1, p=2,K=2, dropout=0.5)
+    elif layer == 2:
+        model = pGNNNet2(nfeat, nhid, nclass,mu=0.1, p=2,K=2, dropout=0.5)
+    else:
+        model = pGNNNetX(nfeat, nhid, nclass,mu=0.1, p=2,K=2, dropout=0.5, layer=3)
     return model
 
 def create_SGC(nfeat, nhid, nclass, dropout, nlayer, K):
