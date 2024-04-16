@@ -320,7 +320,7 @@ class APPNPNet(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-class GPRGNNNet(torch.nn.Module):
+class GPRGNNNet1(torch.nn.Module):
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -332,7 +332,7 @@ class GPRGNNNet(torch.nn.Module):
                  Gamma=None,
                  dprate=0.5,
                  dropout=0.5):
-        super(GPRGNNNet, self).__init__()
+        super(GPRGNNNet1, self).__init__()
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.lin2 = torch.nn.Linear(num_hid, out_channels)
 
@@ -354,10 +354,56 @@ class GPRGNNNet(torch.nn.Module):
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.lin2(x)
 
-        if self.dprate == 0.0:
-            x = self.prop1(x, edge_index, edge_weight)
-            return F.log_softmax(x, dim=1)
-        else:
+        if self.dprate != 0.0:
             x = F.dropout(x, p=self.dprate, training=self.training)
-            x = self.prop1(x, edge_index, edge_weight)
-            return F.log_softmax(x, dim=1)
+        x = self.prop1(x, edge_index, edge_weight)
+        return F.log_softmax(x, dim=1)
+
+
+class GPRGNNNet1_Qin(torch.nn.Module):
+    '''
+    Qin want to move prop before conv
+    '''
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 num_hid,
+                 ppnp,
+                 K=10,
+                 alpha=0.1,
+                 Init='PPR',
+                 Gamma=None,
+                 dprate=0.5,
+                 dropout=0.5):
+        super(GPRGNNNet1_Qin, self).__init__()
+        self.lin1 = torch.nn.Linear(in_channels, num_hid)
+        self.lin2 = torch.nn.Linear(num_hid, out_channels)
+
+        if ppnp == 'PPNP':
+            self.prop1 = APPNP(K, alpha)
+        elif ppnp == 'GPR_prop':
+            self.prop1 = GPR_prop(K, alpha, Init, Gamma)
+
+        self.Init = Init
+        self.dprate = dprate
+        self.dropout = dropout
+
+    def reset_parameters(self):
+        self.prop1.reset_parameters()
+
+    def forward(self, x, edge_index, edge_weight=None):
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = F.relu(self.lin1(x))
+
+
+        if self.dprate != 0.0:
+            x = F.dropout(x, p=self.dprate, training=self.training)
+        x = self.prop1(x, edge_index, edge_weight)
+
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.lin2(x)
+        return F.log_softmax(x, dim=1)
+
+
+
+
