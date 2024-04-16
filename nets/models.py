@@ -88,6 +88,15 @@ def create_MLP(nfeat, nhid, nclass, dropout, nlayer):
         model = MLPNetX(nfeat, nhid, nclass, dropout, nlayer)
     return model
 
+def create_SGC(nfeat, nhid, nclass, dropout, nlayer, K):
+    if nlayer == 1:
+        model = SGCNet1(nfeat, nhid, nclass, dropout, K)
+    elif nlayer == 2:
+        model = SGCNet2(nfeat, nhid, nclass, dropout,K)
+    else:
+        model = SGCNetX(nfeat, nhid, nclass, dropout, nlayer, K)
+    return model
+
 
 class GCNNet(torch.nn.Module):
     def __init__(self,
@@ -122,17 +131,60 @@ class GCN_Encoder(torch.nn.Module):
         return x
 
 
-class SGCNet(torch.nn.Module):
+class SGCNet1(torch.nn.Module):
     def __init__(self,
-                 in_channels,
-                 out_channels,
+                 in_channels,nhid,
+                 out_channels,dropout,
                  K=2,
                  cached=True):
-        super(SGCNet, self).__init__()
+        super(SGCNet1, self).__init__()
+        self.dropout = dropout
         self.conv1 = SGConv(in_channels, out_channels, K=K, cached=cached)
 
     def forward(self, x, edge_index, edge_weight=None):
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
+        return F.log_softmax(x, dim=1)
+
+class SGCNet2(torch.nn.Module):
+    def __init__(self,
+                 in_channels,nhid,
+                 out_channels,dropout,
+                 K=2,
+                 cached=True):
+        super(SGCNet2, self).__init__()
+        self.dropout = dropout
+        self.conv1 = SGConv(in_channels, nhid, K=K, cached=cached)
+        self.conv2 = SGConv(nhid, out_channels, K=K, cached=cached)
+
+    def forward(self, x, edge_index, edge_weight=None):
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
+        return F.log_softmax(x, dim=1)
+
+
+class SGCNetX(torch.nn.Module):
+    def __init__(self,
+                 in_channels, nhid,
+                 out_channels,dropout=0.5, layer=3,
+                 K=2,
+                 cached=True):
+        super(SGCNetX, self).__init__()
+        self.dropout = dropout
+        self.conv1 = SGConv(in_channels, nhid, K=K, cached=cached)
+        self.conv2 = SGConv(nhid, out_channels, K=K, cached=cached)
+        self.layerx = nn.ModuleList([SGConv(nhid, nhid, K=K, cached=cached) for _ in range(layer-2)])
+
+    def forward(self, x, edge_index, edge_weight=None):
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+        for iter_layer in self.layerx:
+            x = F.dropout(x, self.dropout, training=self.training)
+            x = F.relu(iter_layer(x, edge_index, edge_weight))
+
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
         return F.log_softmax(x, dim=1)
 
 
