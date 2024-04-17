@@ -223,7 +223,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                     edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
                 else:
                     edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-                SparseEdges = (edge_index1,)+ edge_index_tuple
+                new_SparseEdges = (edge_index1,)+ edge_index_tuple      # typo in Apr17
                 edge_weight = (edge_weights1,)+edge_weights_tuple
                 del edge_index_tuple, edge_weights_tuple
             elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
@@ -231,7 +231,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                     edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
                 else:
                     edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-                SparseEdges = (edge_index1,) + edge_index_tuple
+                new_SparseEdges = (edge_index1,) + edge_index_tuple     # typo in Apr17
                 edge_weight = (edge_weights1,) + edge_weights_tuple
                 del edge_index_tuple, edge_weights_tuple
             else:
