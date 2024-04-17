@@ -3,7 +3,7 @@ from datetime import datetime
 import torch
 import sys
 from nets.geometric_baselines import GCN_JKNet, GPRGNN
-from nets.models import JKNet, APPNPNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1_Qin, GPRGNNNet1
+from nets.models import JKNet, APPNPNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1_Qin, GPRGNNNet1, GPRGNNNet2
 # sys.path.append('./Signum_quaternion/QuaNet_node_prediction_one_laplacian_Qin')
 # sys.path.append('./Signum_quaternion/')
 # print('sys path is',sys.path)
@@ -84,8 +84,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                             alpha=args.alpha,
                             dropout=args.dropout)
     elif args.net == 'gprgnn':
-        model = GPRGNNNet1_Qin(in_channels=num_features,
-        # model = GPRGNNNet1(in_channels=num_features,
+        # model = GPRGNNNet1_Qin(in_channels=num_features,      # a bit worse
+        model = GPRGNNNet1(in_channels=num_features,
                             out_channels=n_cls,
                             num_hid=args.feat_dim,
                             ppnp=args.ppnp,

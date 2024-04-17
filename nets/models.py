@@ -362,7 +362,7 @@ class GPRGNNNet1(torch.nn.Module):
 
 class GPRGNNNet1_Qin(torch.nn.Module):
     '''
-    Qin want to move prop before conv
+    Qin want to move prop before conv, worse
     '''
     def __init__(self,
                  in_channels,
@@ -404,9 +404,9 @@ class GPRGNNNet1_Qin(torch.nn.Module):
         x = self.lin2(x)
         return F.log_softmax(x, dim=1)
 
-class GPRGNNNet2_Qin(torch.nn.Module):
+class GPRGNNNet2(torch.nn.Module):
     '''
-    Qin want to move prop before conv
+    Qin want to move prop before conv,not use
     '''
     def __init__(self,
                  in_channels,
@@ -419,14 +419,16 @@ class GPRGNNNet2_Qin(torch.nn.Module):
                  Gamma=None,
                  dprate=0.5,
                  dropout=0.5):
-        super(GPRGNNNet2_Qin, self).__init__()
+        super(GPRGNNNet2, self).__init__()
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.lin2 = torch.nn.Linear(num_hid, out_channels)
 
         if ppnp == 'PPNP':
             self.prop1 = APPNP(K, alpha)
+            self.prop2 = APPNP(K, alpha)
         elif ppnp == 'GPR_prop':
             self.prop1 = GPR_prop(K, alpha, Init, Gamma)
+            self.prop2 = GPR_prop(K, alpha, Init, Gamma)
 
         self.Init = Init
         self.dprate = dprate
@@ -440,16 +442,19 @@ class GPRGNNNet2_Qin(torch.nn.Module):
         x = F.relu(self.lin1(x))
 
 
+
         if self.dprate != 0.0:
             x = F.dropout(x, p=self.dprate, training=self.training)
         x = self.prop1(x, edge_index, edge_weight)
 
         if self.dprate != 0.0:
             x = F.dropout(x, p=self.dprate, training=self.training)
-        x = self.prop1(x, edge_index, edge_weight)
+        x = self.prop2(x, edge_index, edge_weight)
 
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.lin2(x)
+
+
         return F.log_softmax(x, dim=1)
 
 
