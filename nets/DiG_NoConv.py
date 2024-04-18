@@ -1413,7 +1413,7 @@ class DiGCN_IB_2BN_Sym_nhid(torch.nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(nhid)
 
         self.gconv = DGCNConv()
-        self.Conv = nn.Conv1d(out_dim, out_dim, kernel_size=1)
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, nhid, bias=False)
         self.lin2 = torch.nn.Linear(nhid, nhid, bias=False)
