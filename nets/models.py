@@ -14,7 +14,7 @@ class pGNNNet1(torch.nn.Module):
                  p=2,
                  K=2,
                  dropout=0.5,
-                 cached=True):
+                 cached=False):
         super(pGNNNet1, self).__init__()
         self.dropout = dropout
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
@@ -34,7 +34,7 @@ class pGNNNet2(torch.nn.Module):
                  p=2,
                  K=2,
                  dropout=0.5,
-                 cached=True):
+                 cached=False):
         super(pGNNNet2, self).__init__()
         self.dropout = dropout
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
@@ -57,7 +57,7 @@ class pGNNNetX(torch.nn.Module):
                  p=2,
                  K=2,
                  dropout=0.5,layer=3,
-                 cached=True):
+                 cached=False):
         super(pGNNNetX, self).__init__()
         self.dropout = dropout
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
@@ -192,7 +192,7 @@ class SGCNet1(torch.nn.Module):
                  in_channels,nhid,
                  out_channels,dropout,
                  K=2,
-                 cached=True):
+                 cached=False):
         super(SGCNet1, self).__init__()
         self.dropout = dropout
         self.conv1 = SGConv(in_channels, out_channels, K=K, cached=cached)
@@ -207,7 +207,7 @@ class SGCNet2(torch.nn.Module):
                  in_channels,nhid,
                  out_channels,dropout,
                  K=2,
-                 cached=True):
+                 cached=False):
         super(SGCNet2, self).__init__()
         self.dropout = dropout
         self.conv1 = SGConv(in_channels, nhid, K=K, cached=cached)
@@ -226,7 +226,7 @@ class SGCNetX(torch.nn.Module):
                  in_channels, nhid,
                  out_channels,dropout=0.5, layer=3,
                  K=2,
-                 cached=True):
+                 cached=False):
         super(SGCNetX, self).__init__()
         self.dropout = dropout
         self.conv1 = SGConv(in_channels, nhid, K=K, cached=cached)
