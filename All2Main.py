@@ -244,19 +244,27 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
             else:
                 out = model(new_x, new_SparseEdges, edge_weight)  # all data+ aug
-        elif args.net.startswith('Mag'):
+        elif args.net.startswith(('Mag', 'Sig', 'Qua')):
             new_x_cpu = new_x.cpu()
             newX_img = torch.FloatTensor(new_x_cpu).to(device)
             newX_real = torch.FloatTensor(new_x_cpu).to(device)
-            # out = model(newX_real, newX_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
-            out = model(newX_real, newX_img, new_edge_index, args.q, edge_weight)
-        elif args.net.startswith('Sig'):
-            new_x_cpu = new_x.cpu()
-            newX_img = torch.FloatTensor(new_x_cpu).to(device)
-            newX_real = torch.FloatTensor(new_x_cpu).to(device)
-            NewSigedge_index, Newnorm_real, Newnorm_imag = laplacian.process_magnetic_laplacian(edge_index=new_edge_index, gcn=gcn, net_flow=args.netflow, x_real=newX_real, edge_weight=edge_weight,
-                                                                                                normalization='sym', return_lambda_max=False)
-            out = model(newX_real, newX_img, Newnorm_real, Newnorm_imag, NewSigedge_index)  # TODO revise!
+            if args.net.startswith('Mag'):
+                out = model(newX_real, newX_img, new_edge_index, args.q, edge_weight)
+            elif args.net.startswith('Sig'):
+                NewSigedge_index, Newnorm_real, Newnorm_imag = laplacian.process_magnetic_laplacian(edge_index=new_edge_index, gcn=gcn, net_flow=args.netflow, x_real=newX_real, edge_weight=edge_weight,
+                                                                                                    normalization='sym', return_lambda_max=False)
+                out = model(newX_real, newX_img, Newnorm_real, Newnorm_imag, NewSigedge_index)  # TODO revise!
+            elif args.net.startswith('Qua'):  # TODO might change
+                NX_img_i = torch.FloatTensor(new_x_cpu).to(device)
+                NX_img_j = torch.FloatTensor(new_x_cpu).to(device)
+                NX_img_k = torch.FloatTensor(new_x_cpu).to(device)
+                NewQuaedge_index, Nnorm_real, Nnorm_img_i, Nnorm_img_j, Nnorm_img_k = process_quaternion_laplacian(
+                    edge_index=new_edge_index, x_real=newX_real, edge_weight=edge_weight,
+                    normalization='sym', return_lambda_max=False)
+
+                out = model(newX_real, NX_img_i, NX_img_j, NX_img_k,Nnorm_img_i, Nnorm_img_j, Nnorm_img_k, Nnorm_real,NewQuaedge_index)
+
+
         else:
             out = model(new_x, new_edge_index)  # all data + aug
 
