@@ -2,15 +2,16 @@
 
 # List of AugDirect values
 #net_values="DiGSymib DiGSymCatib Qua Sig DiG DiGib DiGSymib DiGSymCatib DiGSymCatMixib"
-net_values=" DiGSymCatMixSymib  DiGub DiGi3
- DiGi4 DiGu3 DiGu4
-addSym Sym addSympara
-Mag MagQin Sig Qua
-GCN GAT APPNP GIN Cheb SAGE
-JKNet pgnn mlp sgc"
-layer_values="4"
+# DiGi4 DiGu3 DiGu4
+#addSym Sym addSympara
+#Mag MagQin Sig Qua
+#GCN GAT APPNP GIN Cheb SAGE
+#JKNet pgnn mlp sgc"
+net_values="DiGSymCatib DiGSymib addSympara"
 
-Direct_dataset='dgl/citeseer'  # Update your Direct_dataset value
+layer_values="3"
+
+Direct_dataset='dgl/cora'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 
 generate_timestamp() {

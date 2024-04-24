@@ -8,8 +8,8 @@ def parse_args():
     parser.add_argument('--dataset', type=str, default='BitCoinAlpha', help='data set selection')
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
-    parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
-    # parser.add_argument('--to_undirected', '-tud', action='store_false', help='if convert graph to undirecteds')
+    # parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
+    parser.add_argument('--to_undirected', '-tud', action='store_false', help='if convert graph to undirecteds')
 
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
@@ -19,10 +19,10 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--AugDirect', type=int, default=20, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
+    parser.add_argument('--AugDirect', type=int, default=21, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
-    parser.add_argument('--net', type=str, default='Qua', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+    parser.add_argument('--net', type=str, default='DiGu4', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4  ')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
@@ -36,7 +36,7 @@ def parse_args():
     # parser.add_argument('--MakeImbalance', type=bool, default=False, help='True for turn dataset into imbalanced')
     parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=3, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
