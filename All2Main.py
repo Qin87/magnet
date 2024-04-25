@@ -862,5 +862,5 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     if len(macro_F1)>1:
         average = statistics.mean(macro_F1)
         std_dev = statistics.stdev(macro_F1)
-        print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
-        print(net_to_print, args.layer, 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
+        print(net_to_print, args.layer,str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
+        print(net_to_print, args.layer,str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
