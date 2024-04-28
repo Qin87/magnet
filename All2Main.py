@@ -705,7 +705,8 @@ except:
     splits = 1
 
 start_time = time.time()
-
+if data_x.shape[0] > 5000 and splits >5 :
+    splits =5
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     # for split in range(splits - 1, -1, -1):
     for split in range(splits):
