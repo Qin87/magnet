@@ -8,8 +8,8 @@ def parse_args():
     parser.add_argument('--dataset', type=str, default='BitCoinAlpha', help='data set selection')
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
-    parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
-    # parser.add_argument('--to_undirected', '-tud', action='store_false', help='if convert graph to undirecteds')
+    # parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
+    parser.add_argument('--to_undirected', '-tud', action='store_false', help='if convert graph to undirecteds')
 
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
@@ -19,7 +19,7 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
+    parser.add_argument('--AugDirect', type=int, default=100, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
     parser.add_argument('--net', type=str, default='mlp', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='Coauthor-physics', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('--Direct_dataset', type=str, default='WebKB/Cornell', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')

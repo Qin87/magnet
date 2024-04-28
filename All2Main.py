@@ -137,6 +137,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 data100 = Data(x=torch.tensor(new_x, dtype=torch.float),
                             edge_index=torch.tensor(edges, dtype=torch.long),
                             y=torch.tensor(new_y, dtype=torch.float))
+                if args.to_undirected:
+                    args.task = 'existence'
                 new_edge_index = edge_prediction(args, data100, sampling_src_idx, neighbor_dist_list)
                 # new_edge_index = edge_prediction_test()
                 # pass

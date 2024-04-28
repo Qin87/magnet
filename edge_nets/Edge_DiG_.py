@@ -299,7 +299,7 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
         os.makedirs(log_path)
 
 
-    datasets = link_class_split_new_1split(data, task=args.task)
+    datasets = link_class_split_new_1split(args, data, task=args.task)
 
     results = np.zeros((10, 4))
     log_str_full = ''

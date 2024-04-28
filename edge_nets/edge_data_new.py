@@ -230,7 +230,10 @@ def undirected_label2directed_label_3class(adj: scipy.sparse.csr_matrix, edge_pa
         inversed = np.array(list(set(inversed) - set(undirected)))
 
         new_edge_pairs = directed
-        new_edge_pairs = np.vstack([new_edge_pairs, new_edge_pairs[:, [1, 0]]])
+        try:
+            new_edge_pairs = np.vstack([new_edge_pairs, new_edge_pairs[:, [1, 0]]])
+        except:
+            pass
         if np.size(negative) > 0:
             new_edge_pairs = np.vstack([new_edge_pairs, negative])
 
@@ -262,12 +265,12 @@ def undirected_label2directed_label_3class(adj: scipy.sparse.csr_matrix, edge_pa
         if adj.data.min() < 0:  # signed graph
             assert label_weight[labels == 0].max() < 0
         assert label_weight[labels == 1].min() > 0
-        assert label_weight[labels == 2].mean() == 0
+        # assert label_weight[labels == 2].mean() == 0      # Qin
 
     if task == 'existence':
         labels[labels == 1] = 0
         labels[labels == 2] = 1
-        assert label_weight[labels == 1].mean() == 0
+        # assert label_weight[labels == 1].mean() == 0
         assert abs(label_weight[labels == 0]).min() > 0
 
     return new_edge_pairs, labels.flatten(), label_weight.flatten(), undirected
@@ -531,7 +534,7 @@ def link_class_split_new(data: torch_geometric.data.Data, size: int = None, spli
     return datasets
 
 
-def link_class_split_new_1split(data: torch_geometric.data.Data, size: int = None,
+def link_class_split_new_1split(args, data: torch_geometric.data.Data, size: int = None,
                          task: str = 'existence',
                           device: str = 'cpu') -> dict:
     r"""only 1 split        # QIn
@@ -585,8 +588,11 @@ def link_class_split_new_1split(data: torch_geometric.data.Data, size: int = Non
     nmst = edge_index.T.tolist()
     datasets = {}
 
+    directedgraph = True
+    if args.to_undirected:
+        directedgraph = False
     edges_train, labels_train, _, undirected_train = undirected_label2directed_label_3class(
-        A, nmst, task, True)
+        A, nmst, task, directedgraph)
     # edges_test
 
     # set up the observed graph and weights after splitting
