@@ -16,23 +16,23 @@ from Citation import citation_datasets
 from preprocess import load_syn
 
 
-def load_directedData(args):
-    load_func, subset = args.dataset.split('/')[0], args.dataset.split('/')[1]
-    if load_func == 'WebKB':
-        load_func = WebKB
-        dataset = load_func(root=args.data_path, name=subset)
-    elif load_func == 'WikipediaNetwork':
-        load_func = WikipediaNetwork
-        dataset = load_func(root=args.data_path, name=subset)
-    elif load_func == 'WikiCS':
-        load_func = WikiCS
-        dataset = load_func(root=args.data_path)
-    elif load_func == 'cora_ml':
-        dataset = citation_datasets(root='../dataset/data/tmp/cora_ml/cora_ml.npz')
-    elif load_func == 'citeseer_npz':
-        dataset = citation_datasets(root='../dataset/data/tmp/citeseer_npz/citeseer_npz.npz')
-    else:
-        dataset = load_syn(args.data_path + args.dataset, None)
+# def load_directedData(args):
+#     load_func, subset = args.dataset.split('/')[0], args.dataset.split('/')[1]
+#     if load_func == 'WebKB':
+#         load_func = WebKB
+#         dataset = load_func(root=args.data_path, name=subset)
+#     elif load_func == 'WikipediaNetwork':
+#         load_func = WikipediaNetwork
+#         dataset = load_func(root=args.data_path, name=subset)
+#     elif load_func == 'WikiCS':
+#         load_func = WikiCS
+#         dataset = load_func(root=args.data_path)
+#     elif load_func == 'cora_ml':
+#         dataset = citation_datasets(root='../dataset/data/tmp/cora_ml/cora_ml.npz')
+#     elif load_func == 'citeseer_npz':
+#         dataset = citation_datasets(root='../dataset/data/tmp/citeseer_npz/citeseer_npz.npz')
+#     else:
+#         dataset = load_syn(args.data_path + args.dataset, None)
 def get_dataset(name, path, split_type='public'):
     import torch_geometric.transforms as T
     from torch_geometric.datasets import Coauthor
