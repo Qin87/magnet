@@ -736,7 +736,6 @@ except:
 if data_x.shape[0] > 2500 and splits > 5:
     splits = 5
 
-
 try:
     start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:

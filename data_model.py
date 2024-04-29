@@ -302,6 +302,8 @@ def log_file(args):
     if args.IsDirectedData:
         dataset_to_print = args.Direct_dataset.split('/')[0]+'_'+args.Direct_dataset.split('/')[1] if len(args.Direct_dataset.split('/')) > 1 else \
         args.Direct_dataset.split('/')[0]
+        dataset_to_print += str(args.to_undirected)
+
     else:
         dataset_to_print = args.undirect_dataset
     log_file_name = dataset_to_print+args.net+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImprEpo'+str(args.NotImproved)
