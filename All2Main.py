@@ -713,7 +713,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
         if split==0:
             print(model, file=log_file)
-            print(model)
+            print(model)j
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
         if hasattr(model, 'coefs'):     # parameter without weight_decay will typically change faster
             optimizer = torch.optim.Adam(
