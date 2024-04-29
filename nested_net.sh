@@ -23,7 +23,7 @@ for layer in $layer_values; do
     exec > $logfile 2>&1  # Redirect stdout and stderr to log file
   # Iterate over each layer value
   for net in $net_values; do
-    nohup python3 All2Main.py --AugDirect=20 --net=$net  --to_undirected \
+    nohup python3 All2MainStop.py --AugDirect=20 --net=$net  --to_undirected \
     --layer=$layer  --q=0  --Direct_dataset="$Direct_dataset"  \
       > ${Direct_dataset_filename}True_T${timestamp}_Aug20${net}_layer${layer}.log &
     pid=$!
