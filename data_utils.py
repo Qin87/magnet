@@ -6,7 +6,7 @@ try:
     import dgl
     from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
 except:
-    print("dgl not support this python!")
+    print("dgl not imported, install chardet!")
 import torch
 import numpy as np
 from torch_scatter import scatter_add
