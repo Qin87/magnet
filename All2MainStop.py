@@ -733,9 +733,8 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-if data_x.shape[0] > 5000 and splits > 5:
+if data_x.shape[0] > 2500 and splits > 5:
     splits = 5
-
 
 try:
     start_time = time.time()
@@ -889,6 +888,7 @@ try:
             macro_F1.append(test_f1*100)
 
             print(end_time - start_time, file=log_file)
+            print(end_time - start_time)
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
         last_time = time.time()
