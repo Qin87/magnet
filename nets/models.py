@@ -19,9 +19,10 @@ class pGNNNet1(torch.nn.Module):
         self.dropout = dropout
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.conv1 = pGNNConv(num_hid, out_channels, mu, p, K, cached=cached)
+        self.BN1= nn.BatchNorm1d(num_hid)
 
     def forward(self, x, edge_index, edge_weight=None):
-        x = F.relu(self.lin1(x))
+        x = F.relu(self.BN1(self.lin1(x)))      # Qin add BN Apr30
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
         return F.log_softmax(x, dim=1)
