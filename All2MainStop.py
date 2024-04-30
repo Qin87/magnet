@@ -660,6 +660,9 @@ macro_F1 = []
 criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+# if args.Direct_dataset.startswith('tel'):   # TODO delele it
+#     print("x is all 1")
+#     data_x.fill_(1)
 if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
