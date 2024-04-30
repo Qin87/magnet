@@ -65,14 +65,15 @@ class pGNNNetX(torch.nn.Module):
         self.dropout = dropout
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.layerx = nn.ModuleList([pGNNConv(num_hid, num_hid, mu, p, K, cached=cached) for _ in range(layer-2)])
+        self.BN1 = nn.BatchNorm1d(num_hid)
 
         self.conv1 = pGNNConv(num_hid, out_channels, mu, p, K, cached=cached)
 
     def forward(self, x, edge_index, edge_weight=None):
-        x = F.relu(self.lin1(x))
+        x = F.relu(self.BN1(self.lin1(x)))
         x = F.dropout(x, p=self.dropout, training=self.training)
         for iter_layer in self.layerx:
-            x = F.relu(iter_layer(x, edge_index, edge_weight))
+            x = F.relu(self.BN1(iter_layer(x, edge_index, edge_weight)))        # Qin add BN Apr30
             x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
         return F.log_softmax(x, dim=1)
