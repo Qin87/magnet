@@ -9,7 +9,7 @@
 #JKNet pgnn mlp sgc"Cheb MagQin DiGSymib DiGSymCatib
 net_values="pgnn"
 
-layer_values=" 2"
+layer_values=" 1"
 
 Direct_dataset='WebKB/texas'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
