@@ -40,9 +40,11 @@ class pGNNNet2(torch.nn.Module):
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.conv1 = pGNNConv(num_hid, num_hid, mu, p, K, cached=cached)
         self.conv2 = pGNNConv(num_hid, out_channels, mu, p, K, cached=cached)
+        self.BN1 = nn.BatchNorm1d(num_hid)
 
     def forward(self, x, edge_index, edge_weight=None):
-        x = F.relu(self.lin1(x))
+        # x = F.relu(self.lin1(x))
+        x = F.relu(self.BN1(self.lin1(x)))      # Qin add BN Apr30
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = F.relu(self.conv1(x, edge_index, edge_weight))
         x = F.dropout(x, p=self.dropout, training=self.training)
