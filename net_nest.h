@@ -9,9 +9,9 @@
 #JKNet pgnn mlp sgc"
 net_values="Cheb MagQin DiGSymib DiGSymCatib  "
 
-layer_values=" 2 "
+layer_values=" 2 3"
 
-Direct_dataset='WebKB/texas'  # Update your Direct_dataset value
+Direct_dataset='WebKB/wisconsin'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 
 generate_timestamp() {
