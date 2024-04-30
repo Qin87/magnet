@@ -7,11 +7,11 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"
-net_values="mlp"
+net_values="Cheb MagQin DiGSymib DiGSymCatib  "
 
-layer_values="1 2 3 4 5 6 7"
+layer_values=" 2 "
 
-Direct_dataset='cora_ml/'  # Update your Direct_dataset value
+Direct_dataset='WebKB/texas'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 
 generate_timestamp() {
@@ -27,9 +27,10 @@ for layer in $layer_values; do
   for net in $net_values; do
     nohup python3 All2MainStop.py --AugDirect=0 --net=$net \
     --layer=$layer  --q=0  --Direct_dataset="$Direct_dataset"  \
-      > ${Direct_dataset_filename}_T${timestamp}_Aug0${net}_layer${layer}.log &
+      > ${Direct_dataset_filename}Bala_T${timestamp}_Aug0${net}_layer${layer}.log &
     pid=$!
 
     wait $pid
   done
+
 done
