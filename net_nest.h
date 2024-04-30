@@ -7,9 +7,9 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin DiGSymib DiGSymCatib
-net_values="DiG "
+net_values="GAT Cheb SAGE GCN GIN Sig  "
 
-layer_values=" 4 5 6"
+layer_values=" 4 "
 
 Direct_dataset='WebKB/texas'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')

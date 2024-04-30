@@ -343,6 +343,7 @@ class GPRGNNNet1(torch.nn.Module):
         super(GPRGNNNet1, self).__init__()
         self.lin1 = torch.nn.Linear(in_channels, num_hid)
         self.lin2 = torch.nn.Linear(num_hid, out_channels)
+        self.BN1 = nn.BatchNorm1d(num_hid)
 
         if ppnp == 'PPNP':
             self.prop1 = APPNP(K, alpha)
@@ -358,7 +359,7 @@ class GPRGNNNet1(torch.nn.Module):
 
     def forward(self, x, edge_index, edge_weight=None):
         x = F.dropout(x, p=self.dropout, training=self.training)
-        x = F.relu(self.lin1(x))
+        x = F.relu(self.BN1(self.lin1(x)))          # Qin add BN Apr30
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.lin2(x)
 
