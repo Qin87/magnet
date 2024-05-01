@@ -4,6 +4,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
+    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
 
     parser.add_argument('--dataset', type=str, default='BitCoinAlpha', help='data set selection')
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
@@ -34,7 +35,7 @@ def parse_args():
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
     # parser.add_argument('--MakeImbalance', type=bool, default=False, help='True for turn dataset into imbalanced')
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
+
 
     # parser.add_argument('--MakeImbalance', type=bool, default=True, help='True for turn dataset into imbalanced')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
