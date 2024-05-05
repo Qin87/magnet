@@ -882,7 +882,7 @@ try:
             if args.MakeImbalance:
                 net_to_print=args.net+'_Imbal'
             else:
-                net_to_print = args.net + '_NotImbal'
+                net_to_print = args.net + '_Bal'
             if args.largeData:
                 net_to_print = net_to_print +'_batchSize' + str(args.batch_size)
             else:
@@ -901,8 +901,8 @@ try:
         if len(macro_F1)>1:
             average = statistics.mean(macro_F1)
             std_dev = statistics.stdev(macro_F1)
-            print(net_to_print, args.layer,str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
-            print(net_to_print, args.layer,str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
+            print(net_to_print, args.layer,str(args.to_undirected), "Aug", str(args.AugDirect), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
+            print(net_to_print, args.layer,str(args.to_undirected), "Aug", str(args.AugDirect), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
 
 except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
