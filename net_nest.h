@@ -7,11 +7,12 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin DiGSymib DiGSymCatib  # --MakeImbalance
-net_values="Cheb DiGSymib DiGSymCatib "
+net_values=" Cheb DiG DiGib"
 
-layer_values=" 3 4 "
+layer_values="1 2 3 4 5 "
+aug_values="1 -1 2 21 "
 
-Direct_dataset='WebKB/wisconsin'  # Update your Direct_dataset value
+Direct_dataset=" cora_ml/ "  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 
 generate_timestamp() {
@@ -24,13 +25,16 @@ for layer in $layer_values; do
   logfile="outforlayer${layer}.log"  # Adjust log file name with layer number
     exec > $logfile 2>&1  # Redirect stdout and stderr to log file
   # Iterate over each layer value
-  for net in $net_values; do
-    nohup python3 All2MainStop.py --AugDirect=0 --net=$net \
-    --layer=$layer  --q=0  --Direct_dataset="$Direct_dataset"  \
-      > ${Direct_dataset_filename}Bala_T${timestamp}_Aug0${net}_layer${layer}.log &
-    pid=$!
+  for direct_data in $Direct_dataset; do
+    for net in $net_values; do
+      for aug in $aug_values; do
+        nohup python3 All2MainStop.py --AugDirect=$aug --net=$net --MakeImbalance  --IsDirectedData  --to_undirected\
+        --layer=$layer  --q=0  --Direct_dataset="$direct_data"  \
+          > ${Direct_dataset_filename}BalaTrue_${timestamp}_Aug${aug}${net}_layer${layer}.log &
+        pid=$!
 
-    wait $pid
+        wait $pid
+      done
+    done
   done
-
 done

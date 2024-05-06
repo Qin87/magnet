@@ -15,8 +15,8 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
-    parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
+    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
-                        default='Coauthor-physics', help='dataset name')
+                        default='Cora', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
