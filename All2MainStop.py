@@ -736,8 +736,8 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-# if data_x.shape[0] > 2500 and splits > 5:     #
-#     splits = 5
+if data_x.shape[0] > 2500 and splits > 5:     #
+    splits = 5
 
 try:
     start_time = time.time()
