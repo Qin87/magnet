@@ -67,6 +67,7 @@ def log_results():
                 print("not a single split is finished")
 
 signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 def train_UGCL(pos_edges, neg_edges, size, train_index, val_index):
     model.train()
 
