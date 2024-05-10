@@ -7,13 +7,15 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin DiGSymib DiGSymCatib
-net_values="DiG  "
+net_values="MagQin Mag DiGSymib DiGSymCatib  "
+q_value=0.5
+Aug_value=0
 
-layer_values=" 2 3 4 "
+layer_values="1 2 3 4 5 "
 
-Direct_dataset='cora_ml/'  # Update your Direct_dataset value
+Direct_dataset='telegram/telegram'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
-
+unDirect_data='CiteSeer'
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }
@@ -25,9 +27,9 @@ for layer in $layer_values; do
     exec > $logfile 2>&1  # Redirect stdout and stderr to log file
   # Iterate over each layer value
   for net in $net_values; do
-    nohup python3 All2MainStop.py --AugDirect=0 --net=$net --MakeImbalance  --to_undirected\
-    --layer=$layer  --q=0  --Direct_dataset="$Direct_dataset"  \
-      > ${Direct_dataset_filename}Imbala_True${timestamp}_Aug0${net}_layer${layer}.log &
+    nohup python3 All2MainStop.py --AugDirect=$Aug_value --net=$net  \
+    --layer=$layer  --q=$q_value  --Direct_dataset="$Direct_dataset"  \
+      > ${Direct_dataset_filename}Bala_${timestamp}_Aug${Aug_value}${net}_layer${layer}q${q_value}.log &
     pid=$!
 
     wait $pid

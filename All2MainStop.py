@@ -386,7 +386,7 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
 
     optimizer.zero_grad()
     if args.AugDirect == 0:
-        if args.net.startswith('Sym')  or args.net.startswith('addSym'):
+        if args.net.startswith('Sym') or args.net.startswith('addSym'):
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
         elif args.net.startswith('DiG'):
@@ -661,9 +661,9 @@ macro_F1 = []
 criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
-# if args.Direct_dataset.startswith('tel'):   # TODO delele it
-#     print("x is all 1")
-#     data_x.fill_(1)
+if args.Direct_dataset.startswith('tel') and args.telAll1:
+    print("x is all 1")
+    data_x.fill_(1)
 if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
