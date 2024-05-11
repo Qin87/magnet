@@ -15,8 +15,8 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
-    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
+    # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
+    parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
