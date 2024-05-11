@@ -7,7 +7,7 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin DiGSymib DiGSymCatib
-net_values="Mag MagQin "
+net_values="Mag MagQin Sig"
 q_value=0
 Aug_value=0
 
@@ -15,7 +15,7 @@ layer_values="1 2 3 4 5 "
 
 Direct_dataset='telegram/telegram'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
-unDirect_data='Coauthor-physics'
+unDirect_data='Coauthor-CS'
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }
