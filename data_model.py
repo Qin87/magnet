@@ -76,13 +76,13 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         K=args.K,
                         alpha=args.alpha,
                         dropout=args.dropout,layer=args.layer)
-    elif args.net == 'appnp':
-        model = APPNPNet(in_channels=num_features,
-                            out_channels=n_cls,
-                            num_hid=args.feat_dim,
-                            K=args.K,
-                            alpha=args.alpha,
-                            dropout=args.dropout)
+    # elif args.net == 'appnp':
+    #     model = APPNPNet(in_channels=num_features,
+    #                         out_channels=n_cls,
+    #                         num_hid=args.feat_dim,
+    #                         K=args.K,
+    #                         alpha=args.alpha,
+    #                         dropout=args.dropout)
     elif args.net == 'gprgnn':
         # model = GPRGNNNet1_Qin(in_channels=num_features,      # a bit worse
         model = GPRGNNNet1(in_channels=num_features,

@@ -8,8 +8,8 @@ Implementation of KDD'23 paper [GraphSHA: Synthesizing Harder Samples for Class-
 
 This repository has been tested with the following packages:
 
-- Python == 3.8.13
-- PyTorch == 1.11.0
+- Python == 3.9.13
+- PyTorch == 2.1.0
 - PyTorch Geometric == 2.0.4
 
 Please follow official instructions to install [Pytorch](https://pytorch.org/get-started/previous-versions/) and [Pytorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html).

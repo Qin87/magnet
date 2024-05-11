@@ -67,6 +67,7 @@ def log_results():
                 print("not a single split is finished")
 
 signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 def train_UGCL(pos_edges, neg_edges, size, train_index, val_index):
     model.train()
 
@@ -736,7 +737,7 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-if data_x.shape[0] > 2500 and splits > 5:
+if data_x.shape[0] > 2500 and splits > 5:     #
     splits = 5
 
 try:
@@ -882,7 +883,7 @@ try:
             if args.MakeImbalance:
                 net_to_print=args.net+'_Imbal'
             else:
-                net_to_print = args.net + '_NotImbal'
+                net_to_print = args.net + '_Bal'
             if args.largeData:
                 net_to_print = net_to_print +'_batchSize' + str(args.batch_size)
             else:
@@ -901,8 +902,8 @@ try:
         if len(macro_F1)>1:
             average = statistics.mean(macro_F1)
             std_dev = statistics.stdev(macro_F1)
-            print(net_to_print, args.layer,str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
-            print(net_to_print, args.layer,str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
+            print(net_to_print, args.layer,str(args.to_undirected), "Aug", str(args.AugDirect), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
+            print(net_to_print, args.layer,str(args.to_undirected), "Aug", str(args.AugDirect), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
 
 except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
