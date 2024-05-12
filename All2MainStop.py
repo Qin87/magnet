@@ -39,15 +39,15 @@ def signal_handler(sig, frame):
     global end_time
     end_time = time.time()
     print("Process interrupted!")
-    calculate_time()
+    # calculate_time()
     log_results()
     sys.exit(0)
 
-def calculate_time():
-    global start_time, end_time
-    if start_time is not None and end_time is not None:
-        elapsed_time = end_time - start_time
-        print("Total time: {:.2f} seconds".format(elapsed_time))
+# def calculate_time():
+#     global start_time, end_time
+#     if start_time is not None and end_time is not None:
+#         elapsed_time = end_time - start_time
+#         # print("Total time: {:.2f} seconds".format(elapsed_time))
 
 def log_results():
     global start_time, end_time
@@ -901,8 +901,8 @@ try:
             acc_list.append(test_acc*100)
             bacc_list.append(test_bacc*100)
 
-            print(end_time - start_time, file=log_file)
-            print(end_time - start_time)
+            # print(end_time - start_time, file=log_file)
+            # print(end_time - start_time)
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
         last_time = time.time()
@@ -924,6 +924,6 @@ except KeyboardInterrupt:
 
     # Ensure end_time is recorded
     end_time = time.time()
-    calculate_time()
+    # calculate_time()
     log_results()
     sys.exit(0)
