@@ -489,17 +489,11 @@ class ChebNet_BenQin(nn.Module):
         chebs = [ChebConv_Qin_Direct(in_c=in_c, out_c=num_filter, K=K)]
         if activation:
             chebs.append(complex_relu_layer_Ben())
-        # if self.dropout > 0:
-        #     chebs.append(F.dropout())
-            # x = F.dropout(x, self.dropout, training=self.training)
 
         for i in range(1, layer):
             chebs.append(ChebConv_Qin_Direct(in_c=num_filter, out_c=num_filter, K=K))
             if activation:
                 chebs.append(complex_relu_layer_Ben())
-            # if self.dropout > 0:
-            #     chebs.append(F.dropout())
-
         self.Chebs = torch.nn.Sequential(*chebs)
 
         last_dim = 2

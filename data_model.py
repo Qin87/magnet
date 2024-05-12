@@ -76,13 +76,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         K=args.K,
                         alpha=args.alpha,
                         dropout=args.dropout,layer=args.layer)
-    # elif args.net == 'appnp':
-    #     model = APPNPNet(in_channels=num_features,
-    #                         out_channels=n_cls,
-    #                         num_hid=args.feat_dim,
-    #                         K=args.K,
-    #                         alpha=args.alpha,
-    #                         dropout=args.dropout)
     elif args.net == 'gprgnn':
         # model = GPRGNNNet1_Qin(in_channels=num_features,      # a bit worse
         model = GPRGNNNet1(in_channels=num_features,
@@ -303,10 +296,18 @@ def log_file(args):
         dataset_to_print = args.Direct_dataset.split('/')[0]+'_'+args.Direct_dataset.split('/')[1] if len(args.Direct_dataset.split('/')) > 1 else \
         args.Direct_dataset.split('/')[0]
         dataset_to_print += str(args.to_undirected)
-
     else:
         dataset_to_print = args.undirect_dataset
-    log_file_name = dataset_to_print+args.net+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImprEpo'+str(args.NotImproved)
+
+    if args.MakeImbalance:
+        net_to_print = args.net + '_Imbal'
+    else:
+        net_to_print = args.net + '_Bal'
+    if args.largeData:
+        net_to_print = net_to_print + '_batchSize' + str(args.batch_size)
+    else:
+        net_to_print = net_to_print + '_NoBatch'
+    log_file_name = dataset_to_print+'_'+net_to_print+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 
@@ -316,10 +317,6 @@ def log_file(args):
     return log_directory, log_file_name_with_timestamp
 
 def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gcn_appr=False):
-    # if subset == '':
-    #     dataset = dataset(root=root)
-    # else:
-    #     dataset = dataset(root=root, name=subset)
     if args.IsDirectedData:
         dataset = load_directedData(args)
     else:
