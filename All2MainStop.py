@@ -58,8 +58,12 @@ def log_results():
             if len(macro_F1) > 1:
                 average = statistics.mean(macro_F1)
                 std_dev = statistics.stdev(macro_F1)
-                print(net_to_print, args.layer, str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f},{len(macro_F1):2d}splits", file=log_file)
-                print(net_to_print, args.layer, str(args.to_undirected), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f},{len(macro_F1):2d}splits")
+                average_acc = statistics.mean(acc_list)
+                std_dev_acc = statistics.stdev(acc_list)
+                average_bacc = statistics.mean(bacc_list)
+                std_dev_bacc = statistics.stdev(bacc_list)
+                print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.1f}±{std_dev_acc:.1f}", "bacc", f"{average_bacc:.1f}±{std_dev_bacc:.1f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
+                print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.2f}±{std_dev_acc:.2f}", "bacc", f"{average_bacc:.2f}±{std_dev_bacc:.2f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
             elif len(macro_F1) == 1:
                 print(net_to_print, args.layer, str(args.to_undirected), 'Macro F1: ', f"{macro_F1[0]:.3f}", file=log_file)
                 print(net_to_print, args.layer, str(args.to_undirected), 'Macro F1: ', f"{macro_F1[0]:.3f}")
@@ -657,6 +661,8 @@ pos_edges = None
 neg_edges = None
 
 macro_F1 = []
+acc_list=[]
+bacc_list=[]
 
 criterion = CrossEntropy().to(device)
 
@@ -879,7 +885,7 @@ try:
             if args.IsDirectedData:
                 dataset_to_print = args.Direct_dataset + str(args.to_undirected)
             else:
-                dataset_to_print = args.undirect_dataset + str(args.to_undirected)
+                dataset_to_print = args.undirect_dataset
             if args.MakeImbalance:
                 net_to_print=args.net+'_Imbal'
             else:
@@ -891,6 +897,9 @@ try:
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             macro_F1.append(test_f1*100)
+            acc_list.append(test_acc*100)
+            bacc_list.append(test_bacc*100)
+
 
             print(end_time - start_time, file=log_file)
             print(end_time - start_time)
@@ -902,8 +911,12 @@ try:
         if len(macro_F1)>1:
             average = statistics.mean(macro_F1)
             std_dev = statistics.stdev(macro_F1)
-            print(net_to_print, args.layer,str(args.to_undirected), "Aug", str(args.AugDirect), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}")
-            print(net_to_print, args.layer,str(args.to_undirected), "Aug", str(args.AugDirect), 'Macro F1: ', f"{average:.3f}±{std_dev:.2f}", file=log_file)
+            average_acc = statistics.mean(acc_list)
+            std_dev_acc = statistics.stdev(acc_list)
+            average_bacc = statistics.mean(bacc_list)
+            std_dev_bacc = statistics.stdev(bacc_list)
+            print(net_to_print, args.layer,dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.1f}±{std_dev_acc:.1f}", "bacc", f"{average_bacc:.1f}±{std_dev_bacc:.1f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f}")
+            print(net_to_print, args.layer,dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.2f}±{std_dev_acc:.2f}", "bacc", f"{average_bacc:.2f}±{std_dev_bacc:.2f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f}", file=log_file)
 
 except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
