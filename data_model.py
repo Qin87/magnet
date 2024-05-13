@@ -307,7 +307,7 @@ def log_file(args):
         net_to_print = net_to_print + '_batchSize' + str(args.batch_size)
     else:
         net_to_print = net_to_print + '_NoBatch'
-    log_file_name = dataset_to_print+'_'+net_to_print+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)
+    log_file_name = dataset_to_print+'_'+net_to_print+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 
