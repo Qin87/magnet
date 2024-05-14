@@ -49,6 +49,7 @@ def log_results():
         with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             if args.all1:
                 print("x is all 1", file=log_file)
+                print("x is all 1")
             elapsed_time = end_time - start_time
             print("Total time: {:.2f} seconds".format(elapsed_time), file=log_file)
             print("Total time: {:.2f} seconds".format(elapsed_time))
@@ -905,6 +906,7 @@ try:
         print("Total time: {:.2f} seconds".format(elapsed_time0))
         if args.all1:
             print("x is all 1", file=log_file)
+            print("x is all 1")
         if len(macro_F1) > 1:
             average = statistics.mean(macro_F1)
             std_dev = statistics.stdev(macro_F1)
