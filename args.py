@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
-    parser.add_argument('--telAll1', '-t1', action='store_true', help='telgram all feature to 1')
+    parser.add_argument('--all1', '-t1', action='store_true', help=' all feature to 1')
 
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('-hds', '--heads', default=8, type=int)
 
     #  from Magnet
-    parser.add_argument('--q', type=float, default=0, help='q value for the phase matrix')
+    parser.add_argument('--q', type=float, default=1, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
     parser.add_argument('-norm', '-n', action='store_true', help='if use activation function')
