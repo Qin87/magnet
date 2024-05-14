@@ -43,12 +43,6 @@ def signal_handler(sig, frame):
     log_results()
     sys.exit(0)
 
-# def calculate_time():
-#     global start_time, end_time
-#     if start_time is not None and end_time is not None:
-#         elapsed_time = end_time - start_time
-#         # print("Total time: {:.2f} seconds".format(elapsed_time))
-
 def log_results():
     global start_time, end_time
     if start_time is not None and end_time is not None:
@@ -668,7 +662,7 @@ bacc_list=[]
 criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
-if args.Direct_dataset.startswith('tel') and args.telAll1:
+if args.all1:
     print("x is all 1")
     data_x.fill_(1)
 if data_x.shape[0] > 5000:

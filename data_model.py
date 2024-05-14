@@ -291,11 +291,14 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
     data_test_maskOrigin = data_test_maskOrigin.to(device)
     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
+
 def log_file(args):
     if args.IsDirectedData:
         dataset_to_print = args.Direct_dataset.split('/')[0]+'_'+args.Direct_dataset.split('/')[1] if len(args.Direct_dataset.split('/')) > 1 else \
         args.Direct_dataset.split('/')[0]
         dataset_to_print += str(args.to_undirected)
+        if args.all1:
+            dataset_to_print = 'all1'+dataset_to_print
     else:
         dataset_to_print = args.undirect_dataset
 
@@ -310,6 +313,7 @@ def log_file(args):
     log_file_name = dataset_to_print+'_'+net_to_print+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
+
 
     log_directory = "~/Documents/Benlogs/"  # Change this to your desired directory
     log_directory = os.path.expanduser(log_directory)
@@ -349,11 +353,4 @@ def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gc
 
     multi_order_laplacian = cheb_poly_sparse(L, K)
 
-    # save_name = root + '/data' + str(q) + '_' + str(K)
-    # if laplacian == False:
-    #     save_name += '_P'
-    # if save_pk:
-    #     data = {}
-    #     data['L'] = multi_order_laplacian
-    #     pk.dump(data, open(save_name + '_sparse.pk', 'wb'), protocol=pk.HIGHEST_PROTOCOL)
     return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
