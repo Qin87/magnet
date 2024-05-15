@@ -10,12 +10,12 @@ def parse_args():
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
-    parser.add_argument('--all1', '-t1', action='store_true', help=' all feature to 1')
+    parser.add_argument('--all1', '-t1', action='store_true', help=' all feature to 1')     # TODO change before git
 
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
     # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--net', type=str, default='Mag', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4  ')
     parser.add_argument('--seed', type=int, default=100, help='seed')
-    parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
+    parser.add_argument('--NotImproved', type=int, default=10, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='CiteSeer', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '

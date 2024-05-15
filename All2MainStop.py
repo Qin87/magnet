@@ -60,11 +60,11 @@ def log_results():
                 std_dev_acc = statistics.stdev(acc_list)
                 average_bacc = statistics.mean(bacc_list)
                 std_dev_bacc = statistics.stdev(bacc_list)
-                print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.1f}±{std_dev_acc:.1f}", "bacc", f"{average_bacc:.1f}±{std_dev_bacc:.1f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
-                print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.2f}±{std_dev_acc:.2f}", "bacc", f"{average_bacc:.2f}±{std_dev_bacc:.2f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
+                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_Aug" + str(args.AugDirect) + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
+                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_Aug" + str(args.AugDirect) + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
             elif len(macro_F1) == 1:
-                print(net_to_print, args.layer, str(args.to_undirected), 'Macro F1: ', f"{macro_F1[0]:.3f}", file=log_file)
-                print(net_to_print, args.layer, str(args.to_undirected), 'Macro F1: ', f"{macro_F1[0]:.3f}")
+                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}", file=log_file)
+                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}")
             else:
                 print("not a single split is finished")
 
@@ -578,30 +578,30 @@ def test():
     return accs, baccs, f1s
 
 
-def test_UGCL():
-    model.eval()
-    # if args.net.startswith('Sym') or args.net.startswith('addSym'):
-    #     logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
-    # elif args.net.startswith('DiG'):
-    #     logits = model(data_x, SparseEdges, edge_weight)
-    # elif args.net.startswith('Mag'):
-    #     logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
-    # elif args.net.startswith('Sig'):  # TODO might change
-    #     logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
-    # else:
-    logits = model(data_x, edges[:, train_edge_mask])
-    accs, baccs, f1s = [], [], []
-    for mask in [data_train_mask, data_val_mask, data_test_mask]:
-        pred = logits[mask].max(1)[1]
-        y_pred = pred.cpu().numpy()
-        y_true = data_y[mask].cpu().numpy()
-        acc = pred.eq(data_y[mask]).sum().item() / mask.sum().item()
-        bacc = balanced_accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred, average='macro')
-        accs.append(acc)
-        baccs.append(bacc)
-        f1s.append(f1)
-    return accs, baccs, f1s
+# def test_UGCL():
+#     model.eval()
+#     # if args.net.startswith('Sym') or args.net.startswith('addSym'):
+#     #     logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
+#     # elif args.net.startswith('DiG'):
+#     #     logits = model(data_x, SparseEdges, edge_weight)
+#     # elif args.net.startswith('Mag'):
+#     #     logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
+#     # elif args.net.startswith('Sig'):  # TODO might change
+#     #     logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
+#     # else:
+#     logits = model(data_x, edges[:, train_edge_mask])
+#     accs, baccs, f1s = [], [], []
+#     for mask in [data_train_mask, data_val_mask, data_test_mask]:
+#         pred = logits[mask].max(1)[1]
+#         y_pred = pred.cpu().numpy()
+#         y_true = data_y[mask].cpu().numpy()
+#         acc = pred.eq(data_y[mask]).sum().item() / mask.sum().item()
+#         bacc = balanced_accuracy_score(y_true, y_pred)
+#         f1 = f1_score(y_true, y_pred, average='macro')
+#         accs.append(acc)
+#         baccs.append(bacc)
+#         f1s.append(f1)
+#     return accs, baccs, f1s
 
 
 args = parse_args()
@@ -667,6 +667,8 @@ criterion = CrossEntropy().to(device)
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 if args.all1:
     print("x is all 1")
+    # num_features = data_x.size(0)  # Get the size of the first dimension of data_x
+    # data_x = torch.ones((num_features, 1)).to(device)
     data_x.fill_(1)
 if data_x.shape[0] > 5000:
     args.largeData = True
@@ -852,10 +854,6 @@ try:
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 val_acc_f1 = (val_acc + val_f1) / 2.
-                # print('train_acc:', train_acc,'val_acc:', val_acc, 'test_acc:', accs[2])
-                # if val_acc_f1 > best_val_acc_f1:
-
-                # if val_f1 > best_val_f1:
                 if tmp_test_f1 > best_test_f1:
                     if epoch> 5:
                         goodAug = True
@@ -881,7 +879,7 @@ try:
                     print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                     break
             if args.IsDirectedData:
-                dataset_to_print = args.Direct_dataset + str(args.to_undirected)
+                dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)
             else:
                 dataset_to_print = args.undirect_dataset
             if args.MakeImbalance:
@@ -889,9 +887,9 @@ try:
             else:
                 net_to_print = args.net + '_Bal'
             if args.largeData:
-                net_to_print = net_to_print +'_batchSize' + str(args.batch_size)
+                net_to_print = net_to_print +'_batchSize_' + str(args.batch_size)
             else:
-                net_to_print = net_to_print +'_NoBatch'
+                net_to_print = net_to_print +'_NoBatch_'
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             macro_F1.append(test_f1*100)
@@ -914,8 +912,8 @@ try:
             std_dev_acc = statistics.stdev(acc_list)
             average_bacc = statistics.mean(bacc_list)
             std_dev_bacc = statistics.stdev(bacc_list)
-            print(net_to_print, args.layer,dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.1f}±{std_dev_acc:.1f}", "bacc", f"{average_bacc:.1f}±{std_dev_bacc:.1f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f}")
-            print(net_to_print, args.layer,dataset_to_print, "Aug", str(args.AugDirect), "acc", f"{average_acc:.2f}±{std_dev_acc:.2f}", "bacc", f"{average_bacc:.2f}±{std_dev_bacc:.2f}", 'Macro F1:', f"{average:.1f}±{std_dev:.1f}", file=log_file)
+            print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+ "_acc"+ f"{average_acc:.1f}±{std_dev_acc:.1f}"+ "_bacc"+ f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+ '_Macro F1:'+ f"{average:.1f}±{std_dev:.1f}")
+            print(net_to_print+ str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+ "_acc"+ f"{average_acc:.1f}±{std_dev_acc:.1f}"+ "_bacc"+ f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+ '_Macro F1:'+ f"{average:.1f}±{std_dev:.1f}", file=log_file)
 
 except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
