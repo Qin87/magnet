@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--net', type=str, default='Mag', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4  ')
     parser.add_argument('--seed', type=int, default=100, help='seed')
-    parser.add_argument('--NotImproved', type=int, default=10, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
+    parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='CiteSeer', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
