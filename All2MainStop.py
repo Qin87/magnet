@@ -814,16 +814,35 @@ try:
                 data_num = (stats == i).sum()
                 n_data.append(int(data_num.item()))
             idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
-            # class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-            #     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+            node_train = torch.sum(data_train_mask).item()
             if args.MakeImbalance:
                 print("make imbalanced")
+                print("make imbalanced", file=log_file)
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                    data_train_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                    train_edge_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                    data_train_mask).item()))
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                    train_edge_mask).item()))
+
             else:
                 print("not make imbalanced")
+                print("not make imbalanced", file=log_file)
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                    data_train_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                    torch.sum(train_edge_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                    data_train_mask).item()))
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                    torch.sum(train_edge_mask).item()))
+
 
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
