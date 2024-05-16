@@ -27,7 +27,7 @@ for layer in $layer_values; do
     exec > $logfile 2>&1  # Redirect stdout and stderr to log file
   # Iterate over each layer value
   for net in $net_values; do
-    nohup python3 All2MainStop.py --AugDirect=$Aug_value --net=$net    --to_undirected   --MakeImbalance  --all1\
+    nohup python3 All2MainStop.py --AugDirect=$Aug_value --net=$net    --to_undirected    --all1\
     --layer=$layer  --q=$q_value  --Direct_dataset="$Direct_dataset"  --undirect_dataset="$unDirect_data" \
       > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug_value}${net}_layer${layer}q${q_value}.log &
     pid=$!

@@ -10,12 +10,12 @@ def parse_args():
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
-    parser.add_argument('--all1', '-t1', action='store_true', help=' all feature to 1')
+    parser.add_argument('--all1', '-t1', action='store_true', help=' all feature to 1')     # TODO change before git
 
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
     # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')

@@ -297,10 +297,10 @@ def log_file(args):
         dataset_to_print = args.Direct_dataset.split('/')[0]+'_'+args.Direct_dataset.split('/')[1] if len(args.Direct_dataset.split('/')) > 1 else \
         args.Direct_dataset.split('/')[0]
         dataset_to_print += str(args.to_undirected)
-        if args.all1:
-            dataset_to_print = 'all1'+dataset_to_print
     else:
         dataset_to_print = args.undirect_dataset
+    if args.all1:
+        dataset_to_print = 'all1' + dataset_to_print
 
     if args.MakeImbalance:
         net_to_print = args.net + '_Imbal'
