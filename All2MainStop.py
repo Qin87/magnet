@@ -619,7 +619,25 @@ if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
 if args.CPU:
     device = torch.device("cpu")
     print("args.CPU true, using CPU.")
-log_directory, log_file_name_with_timestamp = log_file(args)
+
+if args.IsDirectedData:
+    dataset_to_print = args.Direct_dataset.replace('/', '_')
+    if args.to_undirected:
+        dataset_to_print = dataset_to_print+ 'Undire'
+    else:
+        dataset_to_print = dataset_to_print + 'Direct'
+else:
+    dataset_to_print = args.undirect_dataset
+if args.MakeImbalance:
+    net_to_print = args.net + '_Imbal'
+else:
+    net_to_print = args.net + '_Bal'
+if args.largeData:
+    net_to_print = net_to_print + '_batchSize_' + str(args.batch_size)
+else:
+    net_to_print = net_to_print + '_NoBatch_'
+
+log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
@@ -882,16 +900,6 @@ try:
                 dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)
             else:
                 dataset_to_print = args.undirect_dataset
-            if args.MakeImbalance:
-                net_to_print=args.net+'_Imbal'
-            else:
-                net_to_print = args.net + '_Bal'
-            if args.largeData:
-                net_to_print = net_to_print +'_batchSize_' + str(args.batch_size)
-            else:
-                net_to_print = net_to_print +'_NoBatch_'
-            if args.all1:
-                net_to_print = 'all1'+ net_to_print
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             macro_F1.append(test_f1*100)
