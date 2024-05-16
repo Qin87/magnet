@@ -535,6 +535,22 @@ neg_edges = None
 
 criterion = CrossEntropy().to(device)
 
+if args.IsDirectedData:
+    if args.to_undirected:
+        dataset_to_print = args.Direct_dataset + 'Undire'
+    else:
+        dataset_to_print = args.Direct_dataset + 'Direct'
+else:
+    dataset_to_print = args.undirect_dataset
+if args.MakeImbalance:
+    net_to_print = args.net + '_Imbal'
+else:
+    net_to_print = args.net + '_NotImbal'
+if args.largeData:
+    net_to_print = net_to_print + '_batchSize' + str(args.batch_size)
+else:
+    net_to_print = net_to_print + '_NoBatchTrain'
+
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 if data_x.shape[0] > 5000:
     args.largeData = True
@@ -591,6 +607,8 @@ except:
 
 start_time = time.time()
 
+
+
 with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
     # for split in range(splits - 1, -1, -1):
     for split in range(splits):
@@ -628,16 +646,25 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             data_num = (stats == i).sum()
             n_data.append(int(data_num.item()))
         idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
-        # class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-        #     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+        node_train= torch.sum(data_train_mask).item()
         if args.MakeImbalance:
             print("make imbalanced")
-            class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+            class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask= \
                 make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+            print(dataset_to_print+'\ttotalNode_'+str(data_train_mask.size()[0])+'\t trainNodeBal_'+str(node_train)+'\t trainNodeImbal_'+str(torch.sum(
+                data_train_mask).item()))
+            print(dataset_to_print+'\ttotalEdge_'+str(edges.size()[1])+'\t trainEdgeBal_'+str(train_edge_mask.size()[0])+'\t trainEdgeImbal_'+str(torch.sum(
+                train_edge_mask).item()))
+
         else:
             print("not make imbalanced")
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
+            print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                data_train_mask).item()))
+            print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                torch.sum(
+                    train_edge_mask).item()))
 
         train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
         val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
@@ -713,18 +740,7 @@ with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
             if CountNotImproved > args.NotImproved:
                 print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                 break
-        if args.IsDirectedData:
-            dataset_to_print = args.Direct_dataset + str(args.to_undirected)
-        else:
-            dataset_to_print = args.undirect_dataset + str(args.to_undirected)
-        if args.MakeImbalance:
-            net_to_print=args.net+'_Imbal'
-        else:
-            net_to_print = args.net + '_NotImbal'
-        if args.largeData:
-            net_to_print = net_to_print +'_batchSize' + str(args.batch_size)
-        else:
-            net_to_print = net_to_print +'_NoBatchTrain'
+
         print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
         print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
 

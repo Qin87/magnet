@@ -5,6 +5,7 @@ def parse_args():
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
+    # parser.add_argument('--MakeImbalance', type=bool, default=True, help='if convert graph to undirecteds')      # TODO change before git
 
     parser.add_argument('--dataset', type=str, default='BitCoinAlpha', help='data set selection')
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
@@ -15,8 +16,8 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
-    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
+    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')  # TODO change before git
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false

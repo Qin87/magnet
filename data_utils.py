@@ -67,7 +67,7 @@ def get_idx_info(label, n_cls, train_mask, device):
 
 def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask):
     """
-
+    training split don't influence edge, but make_imbalance will cut edge.
     :param edge_index: all edges in the graph
     :param label: classes of all nodes
     :param n_data:num of train in each class
@@ -160,13 +160,19 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
     row, col = edge_index[0], edge_index[1]
     row_mask = node_mask[row]
     col_mask = node_mask[col]
-    edge_mask = row_mask & col_mask
+    edge_mask = row_mask & col_mask     #
 
     train_mask = node_mask & train_mask
     idx_info = []
     for i in range(n_cls):
         cls_indices = index_list[(label == i) & train_mask]
         idx_info.append(cls_indices)
+
+    # row, col = edge_index[0], edge_index[1]
+    # row_mask = train_mask[row]
+    # col_mask = train_mask[col]
+    # train_edge_mask = row_mask & col_mask  #
+    # # train_edge_mask = edge_mask & train_mask
 
     return list(class_num_list), train_mask, idx_info, node_mask, edge_mask
 
@@ -193,10 +199,11 @@ def keep_all_data(edge_index, label, n_data, n_cls, ratio, train_mask):
 
     train_node_mask = train_mask.to(device)
 
-    row, col = edge_index[0].to(device), edge_index[1].to(device)
-    row_mask = train_mask[row]
-    col_mask = train_mask[col]
-    edge_mask = row_mask & col_mask
+    # row, col = edge_index[0].to(device), edge_index[1].to(device)
+    # row_mask = train_mask[row]
+    # col_mask = train_mask[col]
+    # edge_mask = row_mask & col_mask
+    edge_mask = torch.ones(edge_index.size(1), dtype=torch.bool)   # Qin revise May16
     # print(torch.sum(train_mask), torch.sum(row_mask), torch.sum(col_mask), torch.sum(edge_mask))  # tensor(250) tensor(414) tensor(410) tensor(51)
 
     return class_num_list, data_train_mask, idx_info, train_node_mask, edge_mask
