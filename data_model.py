@@ -292,28 +292,10 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
 
-def log_file(args):
-    if args.IsDirectedData:
-        dataset_to_print = args.Direct_dataset.split('/')[0]+'_'+args.Direct_dataset.split('/')[1] if len(args.Direct_dataset.split('/')) > 1 else \
-        args.Direct_dataset.split('/')[0]
-        dataset_to_print += str(args.to_undirected)
-    else:
-        dataset_to_print = args.undirect_dataset
-    if args.all1:
-        dataset_to_print = 'all1' + dataset_to_print
-
-    if args.MakeImbalance:
-        net_to_print = args.net + '_Imbal'
-    else:
-        net_to_print = args.net + '_Bal'
-    if args.largeData:
-        net_to_print = net_to_print + '_batchSize' + str(args.batch_size)
-    else:
-        net_to_print = net_to_print + '_NoBatch'
+def log_file(net_to_print, dataset_to_print, args):
     log_file_name = dataset_to_print+'_'+net_to_print+'_Aug'+str(args.AugDirect)+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
-
 
     log_directory = "~/Documents/Benlogs/"  # Change this to your desired directory
     log_directory = os.path.expanduser(log_directory)
