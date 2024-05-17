@@ -34,13 +34,6 @@ from nets.UGCL import UGCL_Model_Qin
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse
 from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin
 import torch.nn.init as init
-# def init_weights(model):
-#     # Custom initialization for specific layers
-#     for name, param in model.named_parameters():
-#         if 'weight' in name:
-#             init.xavier_uniform_(param)  # Initialize weights using Xavier initialization
-#         elif 'bias' in name:
-#             init.constant_(param, 0)  # Initialize biases to zero
 
 def init_model(model):
     # Initialize weights and biases of all parameters
@@ -101,8 +94,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
     elif args.net.startswith('DiG'):
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
-        # if not (args.net[-2:] == 'ib' or args.net[-2:] == 'ub' or args.net[-2:] == 'i3' or args.net[-2:] == 'u3'):
-        #     model = create_DiGSimple(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
             model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
         else:
             if args.net[3:].startswith('Sym'):

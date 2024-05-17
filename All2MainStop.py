@@ -954,6 +954,9 @@ try:
 
 except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
+    pass
+
+finally:
 
     # Ensure end_time is recorded
     end_time = time.time()
