@@ -189,6 +189,8 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
 
     if norm:
         d = np.array(A_sym.sum(axis=0))[0]
+        # max_eigen = d.max()
+        # print("max_eigen set by Qin")
         # d has 0.5,2.5,(so it's not out-degree, it's bi_edge+*0.5*uni_edge)
         # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
@@ -207,7 +209,7 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
             D = coo_matrix((d_1d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
         L = D - Theta.multiply(A_sym)  # element-wise  # L= D − H= D− A.P,
 
-    if norm:
+    if norm:      # Qin delete this block,no use(experiments show keeping is better, in deeper layers)
         L = (2.0 / max_eigen) * L - diag
 
     return L
@@ -415,41 +417,47 @@ def QinDirect_hermitian_decomp_sparse6(row, col, size, q=0.25, norm=True,  QinDi
 def QinDirect_hermitian_decomp_sparse(row, col, size, q=0.25, norm=True,  QinDirect=True, max_eigen=2,
                             gcn_appr=False, edge_weight=None):
     '''
-    7th version of MagQin, 5th edition but no normalization+directed edge add degree 1,not q
+    8th version of MagQin, avoid float comparison
+    7th version:  5th edition but no normalization+directed edge add degree 1,not q
     '''
     row = row.detach().cpu().numpy()        # use this, or row = row.detach().numpy() won't work in GPU
     col = col.detach().cpu().numpy()
-
-    A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
+    if edge_weight is None:
+        A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
+    else:
+        A = coo_matrix((edge_weight.detach().numpy(), (row, col)), shape=(size, size), dtype=np.float32)
 
     diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
     #  creates a sparse diagonal matrix diag where all off-diagonal elements are zero, and each diagonal element has a value of 1.
     if gcn_appr:
         A += diag
 
-    A_sym = 0.5 * (A + A.T)  # symmetrized adjacency
+    A_sym_origin = 0.5 * (A + A.T)  # symmetrized adjacency
+    A_sym = A_sym_origin.copy()
+    A_sym_2 =  2* A_sym # symmetrized adjacency_ to avoid float
     # tolerance = 1e-5
-    A_sym_tensor = torch.tensor(A_sym.toarray())
+    A_sym_tensor = torch.tensor(A_sym_2.toarray())
 
-    # Define tolerance for approximate comparison
-    tolerance = 1e-5  # Adjust the tolerance based on your requirements
+    # # Define tolerance for approximate comparison
+    # tolerance = 1e-5  # Adjust the tolerance based on your requirements
+    # # Replace elements close to 0.5 with the value of q
+    # mask = torch.isclose(A_sym_tensor, torch.tensor(0.5), atol=tolerance)     # this might be very time consuming.
+    mask = (A_sym_tensor == 1)
 
-    # Replace elements close to 0.5 with the value of q
-    mask = torch.isclose(A_sym_tensor, torch.tensor(0.5), atol=tolerance)
-    A_sym[mask] = q
+    A_sym[mask] = q     # 0, (q, q) , 1
     count_true = torch.sum(mask).item()
 
     # print("Number of elements satisfying the condition:", count_true)
-    diff = A - A.T
+    diff = A - A.T      # 0, (-1, 1) , 0
     diff = triu(diff)   # extract the upper triangle of differ
     diff = diff + diff.T    # diff is symmetric now
-    diff[diff == 0] = 1
-    A_sym = A_sym.multiply(diff)
+    diff[diff == 0] = 1     # 1, (-1, 1) , 1
+    A_sym = A_sym.multiply(diff)   # 0, (-q, q), 1
 
     if norm:
-        A_one = A_sym
-        A_one[A_one != 0] = 1
-        d = np.array(A_one.sum(axis=0))[0]  # Qin note: use A is the out_degree
+        # A_one = A_sym
+        # A_one[A_one != 0] = 1
+        d = np.array(A_sym_origin.sum(axis=0))[0]  # Qin note: use A is the out_degree
         # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
         d = np.power(d, -0.5)
