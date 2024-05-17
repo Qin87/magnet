@@ -628,6 +628,8 @@ if args.IsDirectedData:
         dataset_to_print = dataset_to_print + 'Direct'
 else:
     dataset_to_print = args.undirect_dataset
+if args.all1:
+    dataset_to_print = 'all1' + dataset_to_print
 if args.MakeImbalance:
     net_to_print = args.net + '_Imbal'
 else:
@@ -636,6 +638,7 @@ if args.largeData:
     net_to_print = net_to_print + '_batchSize_' + str(args.batch_size)
 else:
     net_to_print = net_to_print + '_NoBatch_'
+
 
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
 print(args)
@@ -782,7 +785,7 @@ try:
                 )
             elif hasattr(model, 'reg_params'):
                 optimizer = torch.optim.Adam(
-                [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ], lr=args.lr)
+                    [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ], lr=args.lr)
             else:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
@@ -811,16 +814,35 @@ try:
                 data_num = (stats == i).sum()
                 n_data.append(int(data_num.item()))
             idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
-            # class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-            #     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+            node_train = torch.sum(data_train_mask).item()
             if args.MakeImbalance:
                 print("make imbalanced")
+                print("make imbalanced", file=log_file)
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     make_longtailed_data_remove(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                    data_train_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                    train_edge_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                    data_train_mask).item()))
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                    train_edge_mask).item()))
+
             else:
                 print("not make imbalanced")
+                print("not make imbalanced", file=log_file)
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     keep_all_data(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                    data_train_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                    torch.sum(train_edge_mask).item()), file = log_file)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                    data_train_mask).item()))
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                    torch.sum(train_edge_mask).item()))
+
 
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
@@ -865,10 +887,10 @@ try:
                 else:
                     if goodAug is False or args.AugDirect==100:
                         val_loss, new_edge_index, new_x, new_y, new_y_train = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
-                                      X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
+                                                                                    X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                     elif goodAug is True and args.AugDirect==100:
                         val_loss, new_edge_index, new_x, new_y, new_y_train = train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
-                                      X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
+                                                                                            X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                     accs, baccs, f1s = test()
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
@@ -903,12 +925,16 @@ try:
                 dataset_to_print = args.undirect_dataset
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
+            print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
+            print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
+            if test_f1 < 0.45:
+                print("test_f1 is less than 0.45, terminating the program.")
+                print("test_f1 is less than 0.45, terminating the program.", file=log_file)
+                sys.exit(1)
             macro_F1.append(test_f1*100)
             acc_list.append(test_acc*100)
             bacc_list.append(test_bacc*100)
 
-            print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
-            print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
         last_time = time.time()
         elapsed_time0 = last_time-start_time
         print("Total time: {:.2f} seconds".format(elapsed_time0), file=log_file)
