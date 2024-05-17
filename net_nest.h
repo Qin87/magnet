@@ -1,19 +1,19 @@
 #!/bin/bash
 
 # List of AugDirect values --MakeImbalance
-#net_values="DiGSymib DiGSymCatib Qua Sig DiG DiGib DiGSymib DiGSymCatib DiGSymCatMixib"
+#net_values="DiGSymib DiGSymCatib Qua  DiG DiGib  DiGSymCatMixib"
 # DiGi4 DiGu3 DiGu4
 #addSym Sym addSympara
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin DiGSymib DiGSymCatib
-net_values="Mag MagQin Sig "
+net_values="Mag MagQin Sig DiGSymib DiGSymCatib Qua  DiG DiGib  DiGSymCatMixib"
 q_value=0.25
 Aug_value=0
 
-layer_values="1 2 3 4 5 "
+layer_values=" 2 3 4 5 "
 
-Direct_dataset='WebKB/wisconsin'  # Update your Direct_dataset value
+Direct_dataset='cora_ml/'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 unDirect_data='Coauthor-CS'
 generate_timestamp() {
