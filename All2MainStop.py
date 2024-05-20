@@ -63,8 +63,8 @@ def log_results():
                 print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_Aug" + str(args.AugDirect) + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
                 print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_Aug" + str(args.AugDirect) + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
             elif len(macro_F1) == 1:
-                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}", file=log_file)
-                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}")
+                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split", file=log_file)
+                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split")
             else:
                 print("not a single split is finished")
 
@@ -649,7 +649,7 @@ torch.cuda.empty_cache()
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.qinchmark = False
 random.seed(seed)
 np.random.seed(seed)
 
@@ -766,7 +766,7 @@ except:
     splits = 1
 if data_x.shape[0] > 2500 and splits > 5:     #
     splits = 5
-
+Set_exit = False
 try:
     start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
@@ -842,7 +842,6 @@ try:
                     data_train_mask).item()))
                 print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
                     torch.sum(train_edge_mask).item()))
-
 
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
@@ -927,13 +926,16 @@ try:
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
-            if test_f1 < 0.45:
-                print("test_f1 is less than 0.45, terminating the program.")
-                print("test_f1 is less than 0.45, terminating the program.", file=log_file)
-                sys.exit(1)
             macro_F1.append(test_f1*100)
             acc_list.append(test_acc*100)
             bacc_list.append(test_bacc*100)
+            if  test_f1 < 0.45:
+                print("test_f1 is less than 0.45, terminating the program.")
+                print("test_f1 is less than 0.45, terminating the program.", file=log_file)
+                Set_exit = True
+                # sys.exit(1)
+            if Set_exit:
+                sys.exit(1)
 
         last_time = time.time()
         elapsed_time0 = last_time-start_time
@@ -951,6 +953,7 @@ try:
             std_dev_bacc = statistics.stdev(bacc_list)
             print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+ "_acc"+ f"{average_acc:.1f}±{std_dev_acc:.1f}"+ "_bacc"+ f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+ '_Macro F1:'+ f"{average:.1f}±{std_dev:.1f}")
             print(net_to_print+ str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+ "_acc"+ f"{average_acc:.1f}±{std_dev_acc:.1f}"+ "_bacc"+ f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+ '_Macro F1:'+ f"{average:.1f}±{std_dev:.1f}", file=log_file)
+
 
 except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
