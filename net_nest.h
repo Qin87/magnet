@@ -13,7 +13,8 @@ Aug_value=0
 
 layer_values="1 2 3 4 "    #
 
-Direct_dataset='telegram/telegram'  # Update your Direct_dataset value
+
+Direct_dataset='citeseer_npz/'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 unDirect_data='Cora'
 generate_timestamp() {
@@ -21,7 +22,7 @@ generate_timestamp() {
 }
 timestamp=$(generate_timestamp)
 
-# Iterate over each net value   --MakeImbalance
+# Iterate over each net value   --MakeImbalance  --IsDirectedData --to_undirected
 for layer in $layer_values; do
   logfile="outforlayer${layer}.log"  # Adjust log file name with layer number
     exec > $logfile 2>&1  # Redirect stdout and stderr to log file

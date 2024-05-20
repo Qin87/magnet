@@ -224,9 +224,9 @@ def load_directedData(args):
         dataset = load_func(root=args.data_path)
         args.largeData = True
     elif load_func == 'cora_ml':
-        dataset = citation_datasets(root='data/cora_ml/cora_ml.npz')
+        dataset = citation_datasets(root='data/cora_ml.npz')
     elif load_func == 'citeseer_npz':
-        dataset = citation_datasets(root='data/citeseer_npz/citeseer_npz.npz')
+        dataset = citation_datasets(root='data/citeseer_npz.npz')
     elif load_func in ['film']:
         dataset = Actor(root='../datasets/film', transform=T.NormalizeFeatures())
 
