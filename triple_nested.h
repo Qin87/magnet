@@ -22,7 +22,7 @@ generate_timestamp() {
 timestamp=$(generate_timestamp)
 
 # Iterate over each net value   --MakeImbalance  --IsDirectedData --to_undirected
-for Aug in $Aug_value:
+for Aug in $Aug_value; do
     for layer in $layer_values; do
       logfile="outforlayer${layer}.log"  # Adjust log file name with layer number
         exec > $logfile 2>&1  # Redirect stdout and stderr to log file
@@ -30,7 +30,7 @@ for Aug in $Aug_value:
       for net in $net_values; do
         nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net     --to_undirected \
         --layer=$layer  --q=$q_value  --Direct_dataset="$Direct_dataset"  --undirect_dataset="$unDirect_data" \
-          > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug_value}${net}_layer${layer}q${q_value}.log &
+          > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug}${net}_layer${layer}q${q_value}.log &
         pid=$!
 
         wait $pid
