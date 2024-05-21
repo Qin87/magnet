@@ -495,7 +495,6 @@ def QinDirect_hermitian_decomp_sparse(row, col, size, q=0.25, norm=True,  QinDir
     mask = (A_sym_tensor == 1)
 
     A_sym[mask] = q
-    # count_true = torch.sum(mask).item()
 
     # print("Number of elements satisfying the condition:", count_true)
     diff = A - A.T      # 0, (-1, 1) , 0
@@ -506,9 +505,9 @@ def QinDirect_hermitian_decomp_sparse(row, col, size, q=0.25, norm=True,  QinDir
 
     if norm:
         A_one = A_sym.copy()        # A_one = A_sym Qin attention! not copy!  Now I know all my MagQin is MagQinabs(1)(q not 0) or MagQin0
-        A_one[A_one != 0] = 1
+        A_one[A_one != 0] = 0.5
         d = np.array(A_one.sum(axis=0))[0]  # Qin note: use A is the out_degree
-        # print('A_sym_2', d)
+        # d = np.array(A_sym_origin.sum(axis=0))[0]  # Qin note: use A is the out_degree
         # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
         d = np.power(d, -0.5)
