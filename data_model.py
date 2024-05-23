@@ -93,6 +93,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'APPNP':
         model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
     elif args.net.startswith('DiG') or args.net.startswith('QinDiG'):
+
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
             model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
         else:
@@ -139,7 +140,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     print('Shoot, using batch_size:', args.batch_size)
                     # model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)     # to choose from
                     model = create_DiG_IB_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
-
     elif args.net.startswith('Sym'):
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
@@ -172,7 +172,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = UGCL_Model_Qin(num_hidden=args.feat_dim, num_proj_hidden=args.feat_dim, num_label=n_cls)
     else:
         if args.net == 'GCN':
-            model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
+            model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
             model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
         elif args.net == "SAGE":
