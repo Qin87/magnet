@@ -180,6 +180,12 @@ class ChebConv_Qin(nn.Module):
         laplacian = True
         gcn_appr = False
         L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+
+        # try:
+        #     L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+        #     # L = QinDirect_hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+        # except AttributeError:
+        #     L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
         multi_order_laplacian = cheb_poly_sparse(L, K=2)   # K=2 is temp by me
         L = multi_order_laplacian
         L_img = []

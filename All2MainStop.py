@@ -15,7 +15,7 @@ from args import parse_args
 from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
 from edge_nets.Edge_DiG_ import edge_prediction
 from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, get_third_directed_adj, get_third_directed_adj_union, get_4th_directed_adj, \
-    get_4th_directed_adj_union
+    get_4th_directed_adj_union, Qin_get_appr_directed_adj, Qin_get_second_directed_adj
 from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, saliency_mixup, \
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
@@ -113,6 +113,7 @@ def train_UGCL(pos_edges, neg_edges, size, train_index, val_index):
 
 def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
           X_img_i, X_img_j, X_img_k,norm_img_i,norm_img_j, norm_img_k, Quaedge_index):
+    print("come to train")
 
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
@@ -130,7 +131,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
-        elif args.net.startswith('DiG'):
+        elif args.net.startswith('DiG') or args.net.startswith('QinDiG'):
             if args.net[3:].startswith('Sym'):
                 # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
@@ -289,7 +290,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 NewSigedge_index, Newnorm_real, Newnorm_imag = laplacian.process_magnetic_laplacian(edge_index=new_edge_index, gcn=gcn, net_flow=args.netflow, x_real=newX_real, edge_weight=edge_weight,
                                                                                                     normalization='sym', return_lambda_max=False)
                 out = model(newX_real, newX_img, Newnorm_real, Newnorm_imag, NewSigedge_index)  # TODO revise!
-            elif args.net.startswith('Qua'):  # TODO might change
+            elif args.net.startswith('Qua'):  #
                 NX_img_i = torch.FloatTensor(new_x_cpu).to(device)
                 NX_img_j = torch.FloatTensor(new_x_cpu).to(device)
                 NX_img_k = torch.FloatTensor(new_x_cpu).to(device)
@@ -317,47 +318,83 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         # out = model(data_x, edges[:,train_edge_mask])  # train_edge_mask????
         # out = model(data_x, edges)
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
-            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)  # all original data, no augmented data
+            data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)    # long time # all original data, no augmented data
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)  # all original data,
             # no augmented data
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
 
-        elif args.net.startswith('DiG'):
+        elif args.net.startswith('DiG') or args.net.startswith('QinDiG'):
             # must keep this, don't know why, but will be error without it----to analysis it later
-            edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
-            edge_index1 = edge_index1.to(device)
-            edge_weights1 = edge_weights1.to(device)
-            if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
-                if args.net[-2:] == 'ib':
-                    edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+            if args.net.startswith('DiG'):
+                edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+                edge_index1 = edge_index1.to(device)
+                edge_weights1 = edge_weights1.to(device)
+                if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+                    if args.net[-2:] == 'ib':
+                        edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:
+                        edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                    edge_index2 = edge_index2.to(device)
+                    edge_weights2 = edge_weights2.to(device)
+                    SparseEdges = (edge_index1, edge_index2)
+                    edge_weight = (edge_weights1, edge_weights2)
+                    del edge_index2, edge_weights2
+                elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+                    if args.net[-2:] == 'i3':
+                        edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:
+                        edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                    SparseEdges = (edge_index1, )+ edge_index_tuple
+                    edge_weight = (edge_weights1,) + edge_weights_tuple
+                    del edge_index_tuple, edge_weights_tuple
+                elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+                    if args.net[-2:] == 'i4':
+                        edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:
+                        edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                    SparseEdges = (edge_index1,) + edge_index_tuple
+                    edge_weight = (edge_weights1,) + edge_weights_tuple
+                    del edge_index_tuple, edge_weights_tuple
                 else:
-                    edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-                edge_index2 = edge_index2.to(device)
-                edge_weights2 = edge_weights2.to(device)
-                SparseEdges = (edge_index1, edge_index2)
-                edge_weight = (edge_weights1, edge_weights2)
-                del edge_index2, edge_weights2
-            elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
-                if args.net[-2:] == 'i3':
-                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    SparseEdges = edge_index1
+                    edge_weight = edge_weights1
+                del edge_index1, edge_weights1
+            else:  # QinDiG
+                edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+                edge_index1 = edge_index1.to(device)
+                edge_weights1 = edge_weights1.to(device)
+                if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+                    if args.net[-2:] == 'ib':
+                        edge_index2, edge_weights2 = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:
+                        edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                    edge_index2 = edge_index2.to(device)
+                    edge_weights2 = edge_weights2.to(device)
+                    SparseEdges = (edge_index1, edge_index2)
+                    edge_weight = (edge_weights1, edge_weights2)
+                    del edge_index2, edge_weights2
+                elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+                    if args.net[-2:] == 'i3':
+                        edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:
+                        edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                    SparseEdges = (edge_index1,) + edge_index_tuple
+                    edge_weight = (edge_weights1,) + edge_weights_tuple
+                    del edge_index_tuple, edge_weights_tuple
+                elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+                    if args.net[-2:] == 'i4':
+                        edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:
+                        edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+                    SparseEdges = (edge_index1,) + edge_index_tuple
+                    edge_weight = (edge_weights1,) + edge_weights_tuple
+                    del edge_index_tuple, edge_weights_tuple
                 else:
-                    edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-                SparseEdges = (edge_index1, )+ edge_index_tuple
-                edge_weight = (edge_weights1,) + edge_weights_tuple
-                del edge_index_tuple, edge_weights_tuple
-            elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
-                if args.net[-2:] == 'i4':
-                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
-                else:
-                    edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-                SparseEdges = (edge_index1,) + edge_index_tuple
-                edge_weight = (edge_weights1,) + edge_weights_tuple
-                del edge_index_tuple, edge_weights_tuple
-            else:
-                SparseEdges = edge_index1
-                edge_weight = edge_weights1
-            del edge_index1, edge_weights1
+                    SparseEdges = edge_index1
+                    edge_weight = edge_weights1
+                del edge_index1, edge_weights1
+
             if args.net[3:].startswith('Sym'):
                 data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
@@ -367,7 +404,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             out = model(X_real, X_img, edges, args.q, edge_weight)
         elif args.net.startswith('Sig'):
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
-        elif args.net.startswith('Qua'):  # TODO might change
+        elif args.net.startswith('Qua'):  #
             out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
         else:
             out = model(data_x, edges)
@@ -549,7 +586,7 @@ def test():
     if args.net.startswith('Sym') or args.net.startswith('addSym'):
         data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith('DiG'):
+    elif args.net.startswith('DiG') or args.net.startswith('QinDiG'):
         if args.net[3:].startswith('Sym'):
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
             logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
@@ -558,9 +595,9 @@ def test():
     elif args.net.startswith('Mag'):
         # logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
         logits = model(X_real, X_img, edges, args.q, edge_weight)
-    elif args.net.startswith('Sig'):  # TODO might change
+    elif args.net.startswith('Sig'):  #
         logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
-    elif args.net.startswith('Qua'):  # TODO might change
+    elif args.net.startswith('Qua'):  #
         logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
@@ -576,32 +613,6 @@ def test():
         baccs.append(bacc)
         f1s.append(f1)
     return accs, baccs, f1s
-
-
-# def test_UGCL():
-#     model.eval()
-#     # if args.net.startswith('Sym') or args.net.startswith('addSym'):
-#     #     logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
-#     # elif args.net.startswith('DiG'):
-#     #     logits = model(data_x, SparseEdges, edge_weight)
-#     # elif args.net.startswith('Mag'):
-#     #     logits = model(X_real, X_img, edges, args.q, edge_weight).permute(2, 1, 0).squeeze()
-#     # elif args.net.startswith('Sig'):  # TODO might change
-#     #     logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
-#     # else:
-#     logits = model(data_x, edges[:, train_edge_mask])
-#     accs, baccs, f1s = [], [], []
-#     for mask in [data_train_mask, data_val_mask, data_test_mask]:
-#         pred = logits[mask].max(1)[1]
-#         y_pred = pred.cpu().numpy()
-#         y_true = data_y[mask].cpu().numpy()
-#         acc = pred.eq(data_y[mask]).sum().item() / mask.sum().item()
-#         bacc = balanced_accuracy_score(y_true, y_pred)
-#         f1 = f1_score(y_true, y_pred, average='macro')
-#         accs.append(acc)
-#         baccs.append(bacc)
-#         f1s.append(f1)
-#     return accs, baccs, f1s
 
 
 args = parse_args()
@@ -695,12 +706,49 @@ if data_x.shape[0] > 5000:
     args.largeData = True
 elif data_x.shape[0] < 1000:
     args.largeData = False
-# args.largeData = True  # For temporary TODO delete it before commit
 if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
     args.largeData = False
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
+    edge_index1 = edge_index1.to(device)
+    edge_weights1 = edge_weights1.to(device)
+    if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
+        if args.net[-2:] == 'ib':
+            edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        else:
+            edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+        edge_index2 = edge_index2.to(device)
+        edge_weights2 = edge_weights2.to(device)
+        SparseEdges = (edge_index1, edge_index2)
+        edge_weight = (edge_weights1, edge_weights2)
+        del edge_index2, edge_weights2
+    elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
+        if args.net[-2:] == 'i3':
+            edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        else:
+            edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+        SparseEdges = (edge_index1,)+ edge_index_tuple
+        edge_weight = (edge_weights1,)+ edge_weights_tuple
+        del edge_index_tuple, edge_weights_tuple
+    elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
+        if args.net[-2:] == 'i4':
+            edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+        else:
+            edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
+        SparseEdges = (edge_index1,) + edge_index_tuple
+        edge_weight = (edge_weights1,) + edge_weights_tuple
+        del edge_index_tuple, edge_weights_tuple
+    else:
+        SparseEdges = edge_index1
+        edge_weight = edge_weights1
+    del edge_index1, edge_weights1
+    if args.net[3:].startswith('Sym'):
+        # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
+        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), data.edge_weight)
+
+elif args.net.startswith('QinDiG'):
+    edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
@@ -855,7 +903,7 @@ try:
                               idx_info_list]  # train nodes position inside train
 
             if args.gdc == 'ppr':
-                neighbor_dist_list = get_PPR_adj(data_x, edges[:, train_edge_mask], alpha=0.05, k=128, eps=None)
+                neighbor_dist_list = get_PPR_adj(data_x, edges[:, train_edge_mask], alpha=0.05, k=128, eps=None)        # long time
             elif args.gdc == 'hk':
                 neighbor_dist_list = get_heat_adj(data_x, edges[:, train_edge_mask], t=5.0, k=None, eps=0.0001)
             elif args.gdc == 'none':

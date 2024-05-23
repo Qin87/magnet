@@ -4,33 +4,33 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
-    # parser.add_argument('--MakeImbalance', type=bool, default=True, help='if convert graph to undirecteds')      # TODO change before git
+    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
+    # parser.add_argument('--MakeImbalance', type=bool, default=True, help='if convert graph to undirecteds')
 
     parser.add_argument('--dataset', type=str, default='BitCoinAlpha', help='data set selection')
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
     parser.add_argument('--ratio', type=int, default=3, help='pos_neg ratio')
-    parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')
+    parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--all1', '-t1', action='store_true', help=' all feature to 1')     # TODO change before git
 
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')
-    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')  # TODO change before git
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
+    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
     parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
-    parser.add_argument('--net', type=str, default='Mag', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+    parser.add_argument('--net', type=str, default='QinDiGib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4  ')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='CiteSeer', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
@@ -57,7 +57,7 @@ def parse_args():
     parser.add_argument('-hds', '--heads', default=8, type=int)
 
     #  from Magnet
-    parser.add_argument('--q', type=float, default=1, help='q value for the phase matrix')
+    parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
     parser.add_argument('-norm', '-n', action='store_true', help='if use activation function')
@@ -101,6 +101,8 @@ def parse_args():
                         type=float,
                         default=0.1,
                         help='mu.')
+
+    parser.add_argument('--gcnconv_norm', '-gcnnorm', action='store_false', help='GCNConv forward, normalize edge_index during training')
 
 
 

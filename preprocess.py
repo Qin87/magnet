@@ -356,7 +356,7 @@ def F_in_out(edge_index, size, edge_weight=None):
 
     A_in = sp.csr_matrix(np.zeros((size, size)))
     A_out = sp.csr_matrix(np.zeros((size, size)))
-    for k in range(size):
+    for k in range(size):           # long time for size big
         A_in += np.dot(a[k, :].T, a[k, :]) / out_degree[k]      # k column multiply with itself
         A_out += np.dot(a[:, k], a[:, k].T) / in_degree[k]      # k row multiply with itself
 
