@@ -1007,10 +1007,10 @@ except KeyboardInterrupt:
     # If interrupted, the signal handler will be triggered
     pass
 
-# finally:
-#
-#     # Ensure end_time is recorded
-#     end_time = time.time()
-#     # calculate_time()
-#     log_results()
-#     sys.exit(0)
+finally:
+
+    # Ensure end_time is recorded
+    end_time = time.time()
+    # calculate_time()
+    log_results()
+    sys.exit(0)
