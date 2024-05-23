@@ -131,7 +131,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
-        elif args.net.startswith('DiG') or args.net.startswith('QinDiG'):
+        elif args.net.startswith('DiG') or args.net.startswith('Qin'):
             if args.net[3:].startswith('Sym'):
                 # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
@@ -487,7 +487,7 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
             if args.net[3:].startswith('Sym'):
-                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(new_edge_index, new_y.size(-1), data.edge_weight)
+                data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(new_edge_index, new_y.size(-1), data.edge_weight)
                 # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
                 out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
             else:
@@ -564,7 +564,7 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
             if args.net[3:].startswith('Sym'):
-                data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges, data_y.size(-1), data.edge_weight)
+                data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
                 out = model(data_x, SparseEdges, edge_weight)
