@@ -7,14 +7,14 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib
-net_values="MagQin"
+net_values="DiGib DiGSymib"
 q_value=0.5
 Aug_value=0
 
-layer_values="1 2 3 4 "    #
+layer_values=" 3 4 "    #
 
 
-Direct_dataset='citeseer_npz/'  # Update your Direct_dataset value
+Direct_dataset='telegram/telegram'  # Update your Direct_dataset value
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 unDirect_data='Cora'
 generate_timestamp() {
