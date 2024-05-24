@@ -131,7 +131,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         if args.net.startswith('Sym') or args.net.startswith('addSym'):
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
-        elif args.net.startswith('DiG') or args.net.startswith('Qin'):
+        elif args.net.startswith('DiG') or args.net.startswith('QiG'):
             if args.net[3:].startswith('Sym'):
                 # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
                 out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
@@ -324,7 +324,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             # no augmented data
             # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
 
-        elif args.net.startswith('DiG') or args.net.startswith('Qin'):
+        elif args.net.startswith('DiG') or args.net.startswith('QiG'):
             # must keep this, don't know why, but will be error without it----to analysis it later
             if args.net.startswith('DiG'):
                 edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
@@ -586,7 +586,7 @@ def test():
     if args.net.startswith('Sym') or args.net.startswith('addSym'):
         data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
         logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith('DiG') or args.net.startswith('Qin'):
+    elif args.net.startswith('DiG') or args.net.startswith('QiG'):
         if args.net[3:].startswith('Sym'):
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges, data_y.size(-1), data.edge_weight)
             logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
@@ -747,7 +747,7 @@ if args.net.startswith('DiG'):
         # data.edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor = F_in_out_Qin(edges.long(), data_y.size(-1), data.edge_weight)
         data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), data.edge_weight)
 
-elif args.net.startswith('Qin'):
+elif args.net.startswith('QiG'):
     edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
