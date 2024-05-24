@@ -7,11 +7,11 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE
 #JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib
-net_values="DiGib DiGSymib"
+net_values="QiGib QiG QiGi3 QiGi4  QiGub QiGu3 QiGu4 "
 q_value=0.5
 Aug_value=0
 
-layer_values=" 3 4 "    #
+layer_values="1 2 3 4 "    #
 
 
 Direct_dataset='telegram/telegram'  # Update your Direct_dataset value
@@ -23,15 +23,15 @@ generate_timestamp() {
 timestamp=$(generate_timestamp)
 
 # Iterate over each net value   --MakeImbalance  --IsDirectedData --to_undirected
-for Aug in $Aug_value:
+for Aug in $Aug_value; do
     for layer in $layer_values; do
       logfile="outforlayer${layer}.log"  # Adjust log file name with layer number
         exec > $logfile 2>&1  # Redirect stdout and stderr to log file
       # Iterate over each layer value
       for net in $net_values; do
-        nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net     --to_undirected \
+        nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net  --IsDirectedData   --to_undirected \
         --layer=$layer  --q=$q_value  --Direct_dataset="$Direct_dataset"  --undirect_dataset="$unDirect_data" \
-          > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug_value}${net}_layer${layer}q${q_value}.log &
+          > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug}${net}_layer${layer}q${q_value}.log &
         pid=$!
 
         wait $pid
