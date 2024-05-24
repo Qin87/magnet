@@ -16,27 +16,27 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to train large graph')
     parser.add_argument('--largeData', '--large', action='store_true', help='train in batches for large graph')
 
-    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
-    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
+    # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
+    parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
     parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
-    parser.add_argument('--net', type=str, default='QiGi3', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
-                                                               'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG,')
+    parser.add_argument('--net', type=str, default='QiGQymCatib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+                                                               'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib,')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='CiteSeer', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=3, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
