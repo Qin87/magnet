@@ -97,10 +97,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
             model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
         else:
-            if args.net[3:].startswith('Sym'):
+            if args.net[3:].startswith(('Sym', 'Qym')):
                 if args.net[6:].startswith('Cat'):
                     if args.net[9:].startswith('Mix'):
-                        if args.net[12:].startswith('Sym'):
+                        if args.net[12:].startswith(('Sym', 'Qym')):
                             if not args.largeData:
                                 # model = create_DiG_MixIB_SymCat_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                                 model = create_DiG_MixIB_SymCat_Sym_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
@@ -140,10 +140,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     print('Shoot, using batch_size:', args.batch_size)
                     # model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)     # to choose from
                     model = create_DiG_IB_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
-    elif args.net.startswith('Sym'):
+    elif args.net.startswith(('Sym', 'Qym')):
         model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
-    elif args.net.startswith('addSym'):
+    elif args.net.startswith(('addSym', 'addQym')):
         if not args.net.endswith('para'):
             model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         else:

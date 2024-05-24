@@ -315,7 +315,17 @@ def F_in_out_Qin(edge_index, size, edge_weight=None):
     edge_index = edge_index.to(device)  # Ben GPU
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor
 
-def F_in_out(edge_index, size, edge_weight=None):
+def F_in_out0(edge_index, size, edge_weight=None):
+    """
+    original SymDiGCN
+    Args:
+        edge_index:
+        size:
+        edge_weight:
+
+    Returns:
+
+    """
     device = edge_index.device
     edge_index = edge_index.long().cpu()
     if edge_weight is not None:
@@ -362,6 +372,64 @@ def F_in_out(edge_index, size, edge_weight=None):
 
     A_in = A_in.tocoo()
     A_out = A_out.tocoo()
+
+    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)
+    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
+
+    in_weight = torch.from_numpy(A_in.data).float().to(device)
+    out_weight = torch.from_numpy(A_out.data).float().to(device)
+    edge_index = edge_index.to(device)  # Ben GPU
+    return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight
+
+def F_in_out(edge_index, size, edge_weight=None):
+    """
+    Qin want to reduce time by simplify weights
+    Args:
+        edge_index:
+        size:
+        edge_weight:
+
+    Returns:
+
+    """
+    device = edge_index.device
+    edge_index = edge_index.long().cpu()
+    if edge_weight is not None:
+        a = sp.coo_matrix((edge_weight, edge_index), shape=(size, size)).tocsc()
+    else:
+        a = sp.coo_matrix((np.ones(len(edge_index[0])), edge_index), shape=(size, size)).tocsc()
+
+    out_degree = np.array(a.sum(axis=0))[0]
+    out_degree[out_degree == 0] = 1
+
+    in_degree = np.array(a.sum(axis=1))[:, 0]
+    in_degree[in_degree == 0] = 1
+    '''
+    # can be more efficient
+    a = np.zeros((size, size), dtype=np.uint8)
+    a[edge_index[0], edge_index[1]] = 1
+
+    out_degree = np.sum(a, axis = 1)
+    out_degree[out_degree == 0] = 1
+
+    in_degree = np.sum(a, axis = 0)
+    in_degree[in_degree == 0] = 1
+    '''
+
+
+    a = a.tocoo()
+    indices = torch.tensor([a.row, a.col], dtype=torch.long)
+    values = torch.tensor(a.data, dtype=torch.float)
+    a_tensor = torch.sparse.FloatTensor(indices, values, torch.Size(a.shape)).to(device)
+
+    # Convert the sparse tensor to a dense tensor for multiplication
+    a_dense = a_tensor.to_dense()
+
+    A_in = torch.mm(a_dense.T, a_dense)
+    A_out = torch.mm(a_dense, a_dense.T)
+
+    A_in = sp.coo_matrix(A_in.cpu().numpy())
+    A_out = sp.coo_matrix(A_out.cpu().numpy())
 
     edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)
     edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
