@@ -35,6 +35,35 @@ from utils0.perturb import composite_perturb
 from torch_geometric.data import Data
 warnings.filterwarnings("ignore")
 
+def pan_evaluate(model, data, w_layer):
+    model.eval()
+    with torch.no_grad():
+        # out = model(data.x, data.edge_index, w_layer)
+        out = model(data_x, SparseEdges, edge_weight, w_layer)
+        pred = out.argmax(dim=1)
+        correct = (pred[data.test_mask] == data.y[data.test_mask]).sum()
+        acc = int(correct) / int(data.test_mask.sum())
+    return acc
+def set_requires_grad(model, w_layer):
+    # for i, layer in enumerate(model.convs):
+    for i, layer in enumerate(model.convx):
+        if w_layer[i] == 1:
+            for param in layer.parameters():
+                param.requires_grad = True
+        else:
+            for param in layer.parameters():
+                param.requires_grad = False
+def pan_train(model, data, optimizer, w_layer, num_epochs=10):
+    model.train()
+    set_requires_grad(model, w_layer)
+    optimizer.zero_grad()
+    # out = model(data.x, data.edge_index, w_layer)
+    out = model(data_x, SparseEdges, edge_weight, w_layer)
+    loss = F.nll_loss(out[data.train_mask], data.y[data.train_mask])
+    loss.backward()
+    optimizer.step()
+    return loss.item()
+
 def signal_handler(sig, frame):
     global end_time
     end_time = time.time()
@@ -174,8 +203,6 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                             edge_index=torch.tensor(edges, dtype=torch.long),
                             y=torch.tensor(new_y, dtype=torch.float))
                 new_edge_index = edge_prediction(args, data100, sampling_src_idx, neighbor_dist_list)
-                # new_edge_index = edge_prediction_test()
-                # pass
             elif args.AugDirect == -1:
                 # new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges[:, train_edge_mask], sampling_src_idx,neighbor_dist_list)
                 new_edge_index = neighbor_sampling_reverse(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
@@ -240,13 +267,16 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             # y, not only train
             # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)  # all edges(aug+all edges)
             out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight)  # all edges(aug+all edges)
-        elif args.net.startswith('DiG'):
-            edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
+        elif args.net.startswith(('DiG', 'QiG')):
+            if args.net.startswith('DiG'):
+                edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
+            else:
+                edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, new_edge_index.long(), new_y.size(-1), new_x.dtype)
             edge_index1 = edge_index1.to(device)
             edge_weights1 = edge_weights1.to(device)
             if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
                 if args.net[-2:] == 'ib':
-                    edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    edge_index2, edge_weights2 = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
                 else:
                     edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_index2 = edge_index2.to(device)
@@ -775,7 +805,7 @@ if args.net.startswith('DiG'):
         else:
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), data.edge_weight)
 
-elif args.net.startswith('QiG'):
+elif args.net.startswith(('QiG', 'pan')):
     edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
@@ -962,6 +992,34 @@ try:
                     z2 = model(X_real, X_img, q2, pos_edges, neg_edges, args, size, test_idx)
                     out_test = model.prediction(z1, z2)
                     accs, baccs, f1s = test_UGCL()
+                elif args.net.startswith('pan'):
+                    num_epochs_per_stage = 100
+                    best_acc = 0.0
+                    best_layers = None
+                    best_model_state = None
+                    for i in range(1, 9):  # From 1 to 8 layers
+                        w_layer = [1] * i + [0] * (8 - i)  # One-hot encoding for selecting i layers
+                        optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
+                        print(f"Training with {i} layers unfrozen.")
+                        for epoch in range(num_epochs_per_stage):
+                            loss = pan_train(model, data, optimizer, w_layer)
+                            acc = pan_evaluate(model, data, w_layer)
+                            # if epoch == num_epochs_per_stage-1:
+
+                            # Track the best model
+                            if acc > best_acc:
+                                best_acc = acc
+                                best_layers = i
+                                best_model_state = model.state_dict()
+                                print(f'Epoch: {epoch + 1}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
+
+                    model.load_state_dict(best_model_state)
+
+                    # Evaluate the best model
+                    w_layer_best = [1] * best_layers + [0] * (8 - best_layers)
+                    final_acc = pan_evaluate(model, data, w_layer_best)
+                    print(f'Best accuracy achieved with {best_layers} layers:{best_acc:.4f}, final: {final_acc:.4f}')
+                    sys.exit(0)
                 else:
                     if goodAug is False or args.AugDirect==100:
                         val_loss, new_edge_index, new_x, new_y, new_y_train = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,

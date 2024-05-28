@@ -588,11 +588,13 @@ def link_class_split_new_1split(args, data: torch_geometric.data.Data, size: int
     nmst = edge_index.T.tolist()
     datasets = {}
 
-    directedgraph = True
-    if args.to_undirected:
-        directedgraph = False
-    edges_train, labels_train, _, undirected_train = undirected_label2directed_label_3class(
-        A, nmst, task, directedgraph)
+    directedgraph = False
+    if args.IsDirectedData:
+        directedgraph = True
+        if args.to_undirected:
+            directedgraph = False
+    edges_train, labels_train, _, undirected_train = undirected_label2directed_label_3class(A, nmst, task, directedgraph)
+
     # edges_test
 
     # set up the observed graph and weights after splitting

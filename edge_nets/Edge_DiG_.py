@@ -15,7 +15,7 @@ from nets.DiGCN import *
 from nets.geometric_baselines import *
 
 try:
-    from .edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj
+    from .edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj, Qin_get_appr_directed_adj, Qin_get_second_directed_adj
 except:
     from edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj
 try:
@@ -271,7 +271,6 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     old_size = torch.max(edge_index).item() + 1
     size = data.x.size(0)
     data.num_nodes = size
-    # data_x = data.x[:old_size]
     new_data_x = torch.arange(old_size,size).to(device)
 
     tgt = edge_index[1]
@@ -282,22 +281,17 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     max_src_degree = src_degree.max().item() + 1
     mixed_neighbor_dist = neighbor_dist_list[sampling_src_idx].to(device)
     top_neigh = torch.multinomial(mixed_neighbor_dist + 1e-12, min(max_tgt_degree, max_src_degree)).to(device)
-    # n = int(y_train.size(0) *10)  # You can adjust this as needed, without int, it's float
     x_values = new_data_x
     y_values = top_neigh
     x_values = x_values.unsqueeze(1).repeat(1, y_values.size(1))
     x_values = x_values.view(-1, 1).to(device)
     y_values = y_values.view(-1, 1).to(device)
-    # tensor_reshaped = tensor.view(-1,
     test_index = torch.cat((x_values, y_values), dim=1).to(device)
-    # tgt_index = torch.arange(max_degree).unsqueeze(dim=0).to(device)
-    # new_tgt = new_tgt[(tgt_index - aug_degree.unsqueeze(dim=1) < 0)]
 
     date_time = datetime.now().strftime('%m-%d-%H:%M:%S')
     log_path = os.path.join(args.log_root, args.log_path, args.save_name, date_time)
     if os.path.isdir(log_path) is False:
         os.makedirs(log_path)
-
 
     datasets = link_class_split_new_1split(args, data, task=args.task)
 
@@ -313,11 +307,11 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     edge_weight = datasets['weights'].to(device)
 
     # get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
-    edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), old_size, old_x.dtype, edge_weight)
+    edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), old_size, old_x.dtype, edge_weight)
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
     if args.method_name[-2:] == 'ib':
-        edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), old_size, old_x.dtype, edge_weight=edge_weight)
+        edge_index2, edge_weights2 = Qin_get_second_directed_adj(edges.long(), old_size, old_x.dtype, edge_weight=edge_weight)
         edge_index2 = edge_index2.to(device)
         edge_weights2 = edge_weights2.to(device)
         edges = (edge_index1, edge_index2)
@@ -442,7 +436,6 @@ def edge_prediction(args, data, sampling_src_idx, neighbor_dist_list):
     pred_label = edge_pred.max(dim=1)[1]
     _new_edge_index = generate_Edge(test_index, pred_label)
     new_edge_index = torch.cat([data.edge_index, _new_edge_index], dim=1)
-    # new_edge_index = torch.stack([data.edge_index, _new_edge_index])
 
     with open(log_path + '/log' + '.csv', 'w') as file:
         file.write(log_str_full)

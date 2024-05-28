@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn import GCNConv, SGConv, GATConv, APPNP, JumpingKnowledge
+
+from nets.DiG_NoConv import DiG_SimpleXBN_nhid_Pan
 from src.pgnn_conv import pGNNConv
 from src.gpr_conv import GPR_prop
 
@@ -141,6 +143,10 @@ def create_MLP(nfeat, nhid, nclass, dropout, nlayer):
         model = MLPNet2(nfeat, nhid, nclass, dropout)
     else:
         model = MLPNetX(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+def create_pan(nfeat, nhid, nclass, dropout):
+    model = DiG_SimpleXBN_nhid_Pan(nfeat, nhid, nclass, dropout, layer=5)
     return model
 
 def create_pgnn(nfeat, nhid, nclass,mu=0.1,p=2,K=2, dropout=0.5, layer=3):

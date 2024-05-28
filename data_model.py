@@ -3,7 +3,7 @@ from datetime import datetime
 import torch
 import sys
 from nets.geometric_baselines import GCN_JKNet, GPRGNN
-from nets.models import JKNet, APPNPNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1_Qin, GPRGNNNet1, GPRGNNNet2
+from nets.models import JKNet, APPNPNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1_Qin, GPRGNNNet1, GPRGNNNet2, create_pan
 # sys.path.append('./Signum_quaternion/QuaNet_node_prediction_one_laplacian_Qin')
 # sys.path.append('./Signum_quaternion/')
 # print('sys path is',sys.path)
@@ -57,6 +57,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                             p=args.p,
                             K=args.K,
                             dropout=args.dropout, layer =args.layer)
+    elif args.net == 'pan':
+        model = create_pan(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout)
     elif args.net == 'mlp':
         model = create_MLP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
     elif args.net == 'sgc':
