@@ -8,13 +8,13 @@
 #GCN GAT APPNP GIN Cheb SAGE
 
 #JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib
-net_values="WiG WiGib"
+net_values="DiGib"
 q_value=0.5
 Aug_value=0
-layer_values=" 1 2 3 4  "    #
+layer_values=" 3 4  "    #
 
 
-Direct_dataset=('cora_ml/' 'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin' 'WebKB/texas')  # Update your Direct_dataset value  'cora_ml/'  'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell'
+Direct_dataset=( 'WebKB/texas')  # Update your Direct_dataset value  'cora_ml/'  'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell'
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 unDirect_data='Cora'
 generate_timestamp() {
