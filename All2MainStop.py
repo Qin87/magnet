@@ -702,14 +702,17 @@ else:
     dataset_to_print = args.undirect_dataset
 if args.all1:
     dataset_to_print = 'all1' + dataset_to_print
+if args.net.startswith('WiG'):
+    net_to_print = args.net + str(args.W_degree)
 if args.MakeImbalance:
-    net_to_print = args.net + '_Imbal'
+    net_to_print = net_to_print + '_Imbal'
 else:
-    net_to_print = args.net + '_Bal'
+    net_to_print = net_to_print + '_Bal'
 if args.largeData:
     net_to_print = net_to_print + '_batchSize_' + str(args.batch_size)
 else:
     net_to_print = net_to_print + '_NoBatch_'
+
 
 
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
