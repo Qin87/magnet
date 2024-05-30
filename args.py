@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
+<<<<<<< HEAD
     parser.add_argument('--net', type=str, default='QiG', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib,')
     parser.add_argument('--seed', type=int, default=100, help='seed')
@@ -31,6 +32,16 @@ def parse_args():
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='Coauthor-CS', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+=======
+    parser.add_argument('--net', type=str, default='WiG', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+                                                               'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
+                                                                 'replace DiG')
+    parser.add_argument('--seed', type=int, default=100, help='seed')
+    parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
+    parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
+                        default='CiteSeer', help='dataset name')
+    parser.add_argument('--Direct_dataset', type=str, default='cora_ml/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+>>>>>>> c814200e3a915b5386d4fdde1cb19a748e08466c
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
@@ -104,7 +115,9 @@ def parse_args():
 
     parser.add_argument('--gcnconv_norm', '-gcnnorm', action='store_false', help='GCNConv forward, normalize edge_index during training')
 
+    parser.add_argument('--pan', nargs='+', type=int, default=[1 ], help='list of lay weights')
 
+    parser.add_argument('--W_degree', type=int, default=2, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight')
 
     args = parser.parse_args()
 

@@ -1,4 +1,7 @@
+import json
 import os
+
+from networkx.readwrite import json_graph
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
 
@@ -16,23 +19,6 @@ from Citation import citation_datasets
 from preprocess import load_syn
 
 
-# def load_directedData(args):
-#     load_func, subset = args.dataset.split('/')[0], args.dataset.split('/')[1]
-#     if load_func == 'WebKB':
-#         load_func = WebKB
-#         dataset = load_func(root=args.data_path, name=subset)
-#     elif load_func == 'WikipediaNetwork':
-#         load_func = WikipediaNetwork
-#         dataset = load_func(root=args.data_path, name=subset)
-#     elif load_func == 'WikiCS':
-#         load_func = WikiCS
-#         dataset = load_func(root=args.data_path)
-#     elif load_func == 'cora_ml':
-#         dataset = citation_datasets(root='../dataset/data/tmp/cora_ml/cora_ml.npz')
-#     elif load_func == 'citeseer_npz':
-#         dataset = citation_datasets(root='../dataset/data/tmp/citeseer_npz/citeseer_npz.npz')
-#     else:
-#         dataset = load_syn(args.data_path + args.dataset, None)
 def get_dataset(name, path, split_type='public'):
     import torch_geometric.transforms as T
     from torch_geometric.datasets import Coauthor
@@ -52,6 +38,26 @@ def get_dataset(name, path, split_type='public'):
     elif name == 'Coauthor-physics':
 
         return Coauthor(root=path, name='physics', transform=T.NormalizeFeatures())
+    elif name == 'ppi':     # TODO
+        dataset_dir = './data/ppi_data'
+        G = json_graph.node_link_graph(json.load(open(dataset_dir + "/ppi-G.json")))
+        labels = json.load(open(dataset_dir + "/ppi-class_map.json"))
+        labels = {int(i): l for i, l in labels.iteritems()}
+
+        train_ids = [n for n in G.nodes() if not G.node[n]['val'] and not G.node[n]['test']]
+        test_ids = [n for n in G.nodes() if G.node[n][setting]]
+        train_labels = np.array([labels[i] for i in train_ids])
+        if train_labels.ndim == 1:
+            train_labels = np.expand_dims(train_labels, 1)
+        test_labels = np.array([labels[i] for i in test_ids])
+
+        embeds = np.load(data_dir + "/val.npy")
+        id_map = {}
+        with open(data_dir + "/val.txt") as fp:
+            for i, line in enumerate(fp):
+                id_map[int(line.strip())] = i
+        train_embeds = embeds[[id_map[id] for id in train_ids]]
+        test_embeds = embeds[[id_map[id] for id in test_ids]]
     else:
         raise NotImplementedError("Not Implemented Dataset!")
 

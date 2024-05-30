@@ -303,6 +303,78 @@ class DiG_SimpleXBN_nhid(torch.nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
 
         return x
+
+class DiG_SimpleXBN_nhid_Pan(torch.nn.Module):
+    def __init__(self, input_dim,  hid_dim, out_dim, dropout, layer=3):
+        super(DiG_SimpleXBN_nhid_Pan, self).__init__()
+        self.dropout = dropout
+        self.conv1 = DIGCNConv(input_dim, hid_dim)
+        self.conv2 = DIGCNConv(hid_dim, hid_dim)
+        self.convx = nn.ModuleList([DIGCNConv(hid_dim, hid_dim) for _ in range(layer-2)])
+        self.Conv = nn.Conv1d(hid_dim, out_dim, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(hid_dim)
+        self.batch_norm2 = nn.BatchNorm1d(hid_dim)
+        self.batch_norm3 = nn.BatchNorm1d(hid_dim)
+
+        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+        self.non_reg_params = self.conv2.parameters()
+
+    def forward(self, x, edge_index, edge_weight, w_layer):
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
+
+        out_list = []
+        out_list.append(x)
+
+        for conv in self.convx:
+            x = F.dropout(x, self.dropout, training=self.training)
+            x = conv(x, edge_index, edge_weight)
+            x = F.relu(x)
+            out_list.append(x)
+
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight)
+        x = self.batch_norm2(x)
+        out_list.append(x)
+
+        # Sum up the contributions of all layers based on w_layer
+        output = sum(weight * layer_out for weight, layer_out in zip(w_layer, out_list))
+
+        x = output.unsqueeze(0).permute(0, 2, 1)
+        x = self.Conv(x)
+        x = x.permute(0, 2, 1).squeeze()
+
+        x = F.dropout(x, self.dropout, training=self.training)
+
+        return x
+
+    #     for iter_layer in self.convx:
+    #         x = F.dropout(x, self.dropout, training=self.training)
+    #         x = iter_layer(x, edge_index, edge_weight)
+    #         x = F.relu(x)
+    #
+    #     x = F.dropout(x, self.dropout, training=self.training)
+    #     x = self.conv2(x, edge_index, edge_weight)
+    #     x = self.batch_norm2(x)
+    #
+    #     x = x.unsqueeze(0)
+    #     x = x.permute((0, 2, 1))
+    #     x = self.Conv(x)
+    #     x = x.permute((0, 2, 1)).squeeze()
+    #
+    #     x = F.dropout(x, self.dropout, training=self.training)
+    #
+    #     return x
+    # def forward(self, x, edge_index):
+    #     out_list = []
+    #     for i in range(self.num_layers):
+    #         x = self.convs[i](x, edge_index)
+    #         if i < self.num_layers - 1:
+    #             x = F.relu(x)
+    #         out_list.append(F.log_softmax(x, dim=1))
+    #     return out_list
+
 class DiG_Simple2BN(nn.Module):
     def __init__(self, input_dim, hid_dim, out_dim, dropout, layer=2):
         super(DiG_Simple2BN, self).__init__()
@@ -1915,10 +1987,11 @@ class DiGCN_IB_2BN_SymCat_nhid(torch.nn.Module):
         symx2 = self.gconv(symx, edge_in, in_w)
         symx3 = self.gconv(symx, edge_out, out_w)
         symx = symx1 + symx2 + symx3
-        # symx = self.batch_norm1(symx)
+        # symx = self.batch_norm1(symx)     # worse with this
         # symx = F.relu(symx)
 
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        # x = self.batch_norm1(x)
         x = torch.cat((x, symx), dim=-1)
         #
         x = x.unsqueeze(0)
@@ -1926,7 +1999,7 @@ class DiGCN_IB_2BN_SymCat_nhid(torch.nn.Module):
         x = self.Conv1(x)  # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
         # x = self.Conv1(x)
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)       # interpret it got no improvement
         x = F.relu(x)
         if self._dropout > 0:
             x = F.dropout(x, self._dropout, training=self.training)
@@ -1937,11 +2010,11 @@ class DiGCN_IB_2BN_SymCat_nhid(torch.nn.Module):
         symx3 = self.gconv(symx, edge_out, out_w)
 
         symx = symx1 + symx2 + symx3
-        symx = self.batch_norm1(symx)
+        # symx = self.batch_norm1(symx)    # interpret this gets better!(BN only for the sum, not for the specific symx or digx)
         # symx = F.relu(symx)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
         x = torch.cat((x, symx), dim=-1)
         x = self.batch_norm2(x)
 
