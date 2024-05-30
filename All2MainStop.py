@@ -113,7 +113,7 @@ def train_UGCL(pos_edges, neg_edges, size, train_index, val_index):
 
 def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
           X_img_i, X_img_j, X_img_k,norm_img_i,norm_img_j, norm_img_k, Quaedge_index):
-    print("come to train")
+    # print("come to train")
 
     global class_num_list, idx_info, prev_out
     global data_train_mask, data_val_mask, data_test_mask
