@@ -488,6 +488,82 @@ def Qin_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=N
     # return edge_index,  torch.ones((edge_index.size(1), ), dtype=dtype,device=edge_index.device)
     return edge_index,  edge_weight
 
+def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
+    """
+    based on get_appr_directed_adj, all weights to 1
+    Args:
+        alpha:
+        edge_index:
+        num_nodes:
+        dtype:
+        edge_weight:
+
+    Returns:
+
+    """
+
+    device = edge_index.device
+    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
+    from torch_scatter import scatter_add
+
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
+                                     device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    edge_index = edge_index.to(device)
+    edge_weight = edge_weight.to(device)
+    row, col = edge_index
+    deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)      # row degree
+    deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)      # col degree
+    deg2 = deg0 + deg1
+    deg_inv = deg0.pow(-1).to(device)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+
+    # personalized pagerank p
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
+    #
+    # p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1])).to(device)  # dummy node
+    # p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense  # original P
+    # p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
+    # p_v[0:num_nodes, num_nodes] = alpha
+    # p_v[num_nodes, num_nodes] = 0.0
+    # p_ppr = p_v.cpu()
+    p_ppr = p_dense.to(device)
+    L = (p_ppr + p_ppr.t()) / 2.0  # a bit time consuming
+
+    # L = p_dense       # Qin revise
+    # # make nan to 0
+    # L[torch.isnan(L)] = 0
+    #
+    # # transfer dense L to sparse
+    L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
+    edge_index = L_indices.to(device)      # their transformed edges of this symmetric_A of digraph
+
+    # edge_weight= torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
+    if W_degree == 0:
+        edge_weight = deg0[edge_index[0]] + deg0[edge_index[1]]
+        print("Using deg0")
+    elif W_degree == 1:
+        edge_weight = deg1[edge_index[0]] + deg0[edge_index[1]]
+        print("Using deg1")
+    else:
+        edge_weight = deg2[edge_index[0]] + deg0[edge_index[1]]
+        print("Using deg2")
+
+
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+    edge_weight = edge_weight.to(device)
+
+    # return edge_index,  torch.ones((edge_index.size(1), ), dtype=dtype,device=edge_index.device)
+    return edge_index,  edge_weight
+
 
 def Qin_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     """

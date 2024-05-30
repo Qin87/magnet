@@ -28,7 +28,7 @@ for Didataset in $Direct_dataset; do
             exec > $logfile 2>&1  # Redirect stdout and stderr to log file
           # Iterate over each layer value
           for net in $net_values; do
-            nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net  --IsDirectedData    \
+            nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net      \
             --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  --undirect_dataset="$unDirect_data" \
               > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug}${net}_layer${layer}q${q_value}.log &
             pid=$!
