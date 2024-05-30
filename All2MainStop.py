@@ -704,6 +704,8 @@ if args.all1:
     dataset_to_print = 'all1' + dataset_to_print
 if args.net.startswith('WiG'):
     net_to_print = args.net + str(args.W_degree)
+else:
+    net_to_print = args.net
 if args.MakeImbalance:
     net_to_print = net_to_print + '_Imbal'
 else:
