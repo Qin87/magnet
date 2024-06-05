@@ -1,5 +1,10 @@
+import os
+from datetime import datetime
+
 import torch
 import torch.nn.functional as F
+from matplotlib import pyplot as plt
+from plotly.figure_factory import np
 from torch_geometric.nn import GCNConv
 from torch_geometric.datasets import Planetoid
 
@@ -26,7 +31,7 @@ class GCN(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 # Load the dataset
-dataset = Planetoid(root='/tmp/Cora', name='Cora')
+dataset = Planetoid(root='/tmp/CiteSeer', name='Cora')
 data = dataset[0]
 
 # Instantiate the model
@@ -58,15 +63,27 @@ def evaluate(model, data):
         acc = int(correct) / int(data.test_mask.sum())
     return acc
 
+def append_value(layer_index, value):
+    key = f'Layer {layer_index}'
+    if key in acc_data:
+        acc_data[key].append(value)
+    else:
+        print(f"Layer {layer_index} does not exist in the data structure.")
+
 # Training loop with layer freezing/unfreezing
 num_epochs_per_stage = 100
 best_acc = 0
 best_model_state = None
 acc_history = []
-log_file_name_with_timestamp = '~\Documents\Benlogs\GCN_Cora_' + str(num_epochs_per_stage) + '.log'
+
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+pan_path = os.path.expanduser('/home/qin/Documents/Benlogs')
+log_file_name_with_timestamp = pan_path+ '/GCN_Cora_' + str(num_epochs_per_stage) +'_T'+ timestamp+'.log'
+acc_data = {f'Layer {i+1}': [] for i in range(8)}
+append_value(1, 0)
+
 
 with open(log_file_name_with_timestamp, 'w+') as log_file:
-    # Perform operations on the file
     log_file.write("Test log message\n")
 
 # Check if the file has been created
@@ -75,6 +92,7 @@ print(f"File '{log_file_name_with_timestamp}' has been created.")
 with open(log_file_name_with_timestamp, 'w+') as log_file:
 
     for layer_index in range(1, 9):
+        # (1) original layer
         set_requires_grad(model, layer_index, requires_grad=True)
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
         print(f"Training with layers up to layer {layer_index} unfrozen")
@@ -96,7 +114,9 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         acc1 = acc
         print(acc)
         print(acc, file=log_file)
+        append_value(layer_index, acc)
 
+        # (2) unfreeze original lay+1
         set_requires_grad(model, layer_index+1, requires_grad=True)
         print(f"Unfreezing layer {layer_index + 1} after initial training.")
         print(f"Unfreezing layer {layer_index + 1} after initial training.", file=log_file)
@@ -111,7 +131,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
             if acc > best_acc:
                 best_acc = acc
                 best_model_state = model.state_dict()
-                best_layer_index = layer_index
+                best_layer_index = layer_index+1
 
             acc_history.append((layer_index, acc))
         print('best layer index is ' + str(best_layer_index), file=log_file)
@@ -119,11 +139,13 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         acc2 = acc
         print(acc)
         print(acc, file=log_file)
+        append_value(layer_index+1, acc)
 
-        set_requires_grad(model, layer_index+1, requires_grad=True)
+        # (3) back to original layer
+        set_requires_grad(model, layer_index, requires_grad=True)
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
-        print(f"Re-freezing layer {layer_index + 1} to compare.")
-        print(f"Re-freezing layer {layer_index + 1} to compare.", file=log_file)
+        print(f"Re-freezing layer {layer_index } to compare.")
+        print(f"Re-freezing layer {layer_index } to compare.", file=log_file)
         for epoch in range(num_epochs_per_stage):
             loss = train(model, data, optimizer)
             acc = evaluate(model, data)
@@ -141,6 +163,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         acc_1 = acc
         print(acc)
         print(acc, file=log_file)
+        append_value(layer_index, acc)
         if acc_1 > 1.5*acc2 and acc1 > 1.5*acc2:
             set_requires_grad(model, layer_index + 1, requires_grad=True)
             optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
@@ -172,3 +195,31 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
     final_acc = evaluate(model, data)
     print(f'Best accuracy achieved: {final_acc:.4f} with layers up to layer {best_layer_index } unfrozen.')
     print(f'Best accuracy achieved: {final_acc:.4f} with layers up to layer {best_layer_index } unfrozen.', file=log_file)
+
+layers = list(acc_data.keys())
+values = np.array(list(acc_data.values()))
+
+# Create a figure and axis
+fig, ax = plt.subplots()
+
+# Plot the data
+width = 0.2  # Width of each bar
+x = np.arange(len(layers))  # X axis locations for the groups
+
+# Plot each set of numbers for each layer
+for i in range(values.shape[1]):
+    ax.bar(x + i * width, values[:, i], width, label=f'Number {i+1}')
+
+# Add some text for labels, title, and custom x-axis tick labels, etc.
+ax.set_xlabel('Layers')
+ax.set_ylabel('Accuracy')
+ax.set_title('Acc per Layer')
+ax.set_xticks(x + width)
+ax.set_xticklabels(layers)
+ax.legend()
+
+# Save the plot as a file
+plt.savefig('histogram.png')
+
+# Show the plot (optional)
+plt.show()
