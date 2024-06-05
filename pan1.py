@@ -12,6 +12,9 @@ class GCN(torch.nn.Module):
             GCNConv(hidden_channels, hidden_channels),
             GCNConv(hidden_channels, hidden_channels),
             GCNConv(hidden_channels, hidden_channels),
+            GCNConv(hidden_channels, hidden_channels),
+            GCNConv(hidden_channels, hidden_channels),
+            GCNConv(hidden_channels, hidden_channels),
             GCNConv(hidden_channels, out_channels)
         ])
 
@@ -56,87 +59,116 @@ def evaluate(model, data):
     return acc
 
 # Training loop with layer freezing/unfreezing
-num_epochs_per_stage = 10
+num_epochs_per_stage = 100
 best_acc = 0
 best_model_state = None
 acc_history = []
+log_file_name_with_timestamp = '~\Documents\Benlogs\GCN_Cora_' + str(num_epochs_per_stage) + '.log'
 
-for layer_index in range(5):
+with open(log_file_name_with_timestamp, 'w+') as log_file:
+    # Perform operations on the file
+    log_file.write("Test log message\n")
 
-    set_requires_grad(model, layer_index + 1, requires_grad=True)
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
-    print(f"Training with layers up to layer {layer_index+1} unfrozen")
-    for epoch in range(num_epochs_per_stage):
-        loss = train(model, data, optimizer)
-        acc = evaluate(model, data)
-        print(f'Epoch: {epoch + 1 + (layer_index + 1) * num_epochs_per_stage}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
+# Check if the file has been created
+print(f"File '{log_file_name_with_timestamp}' has been created.")
 
-        # Compare performance and store the best model
-        if acc > best_acc:
-            best_acc = acc
-            best_model_state = model.state_dict()
-            best_layer_index = layer_index
-        acc_history.append((layer_index, acc))
-    acc1 = acc
+with open(log_file_name_with_timestamp, 'w+') as log_file:
 
-    set_requires_grad(model, layer_index+2, requires_grad=True)
-    print(f"Unfreezing layer {layer_index + 2} after initial training.")
-    # Re-train with all layers up to the current layer frozen
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
-    for epoch in range((layer_index+2)*num_epochs_per_stage):
-        loss = train(model, data, optimizer)
-        acc = evaluate(model, data)
-        print(f'Epoch: {epoch + 1 + (layer_index + 1) * num_epochs_per_stage}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
-
-        # Compare performance and store the best model
-        if acc > best_acc:
-            best_acc = acc
-            best_model_state = model.state_dict()
-            best_layer_index = layer_index
-        acc_history.append((layer_index, acc))
-    acc2 = acc
-
-    set_requires_grad(model, layer_index+1, requires_grad=True)
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
-    print(f"Re-freezing layer {layer_index + 1} to compare.")
-    for epoch in range(num_epochs_per_stage):
-        loss = train(model, data, optimizer)
-        acc = evaluate(model, data)
-        print(f'Epoch: {epoch + 1 + (layer_index + 1) * num_epochs_per_stage}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
-
-        # Compare performance and store the best model
-        if acc > best_acc:
-            best_acc = acc
-            best_model_state = model.state_dict()
-            best_layer_index = layer_index
-        acc_history.append((layer_index, acc))
-    acc_1 = acc
-    if acc_1 > 2*acc2 and acc1 > 2*acc2:
-        set_requires_grad(model, layer_index + 1, requires_grad=True)
+    for layer_index in range(1, 9):
+        set_requires_grad(model, layer_index, requires_grad=True)
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
-        # best_layer_index = layer_index
-        print(f"Re-freezing layer {layer_index + 1} due to no improvement.")
-        break
+        print(f"Training with layers up to layer {layer_index} unfrozen")
+        print(f"Training with layers up to layer {layer_index} unfrozen", file=log_file)
+        for epoch in range(num_epochs_per_stage):
+            loss = train(model, data, optimizer)
+            acc = evaluate(model, data)
+            # print(f'Epoch: {epoch + 1 + (layer_index + 1) * num_epochs_per_stage}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
 
-set_requires_grad(model, best_layer_index, requires_grad=True)
-optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
-not_improve=0
-for epoch in range(1500):
-    loss = train(model, data, optimizer)
-    acc = evaluate(model, data)
-    print(f'Epoch: {epoch + 1 }, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
+            # Compare performance and store the best model
+            if acc > best_acc:
+                best_acc = acc
+                best_model_state = model.state_dict()
+                best_layer_index = layer_index
 
-    # Compare performance and store the best model
-    if acc > best_acc:
-        best_acc = acc
-        best_model_state = model.state_dict()
-        # best_layer_index = layer_index
-    else:
-        not_improve += 1
-    if not_improve> 110:
-        break
+            acc_history.append((layer_index, acc))
+        print('best layer index is ' + str(best_layer_index), file=log_file)
+        print('best layer index is ' + str(best_layer_index))
+        acc1 = acc
+        print(acc)
+        print(acc, file=log_file)
 
-# Load the best model state
-model.load_state_dict(best_model_state)
-final_acc = evaluate(model, data)
-print(f'Best accuracy achieved: {final_acc:.4f} with layers up to layer {best_layer_index + 1} unfrozen.')
+        set_requires_grad(model, layer_index+1, requires_grad=True)
+        print(f"Unfreezing layer {layer_index + 1} after initial training.")
+        print(f"Unfreezing layer {layer_index + 1} after initial training.", file=log_file)
+        # Re-train with all layers up to the current layer frozen
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+        for epoch in range((layer_index+1)*num_epochs_per_stage):
+            loss = train(model, data, optimizer)
+            acc = evaluate(model, data)
+            # print(f'Epoch: {epoch + 1 + (layer_index + 1) * num_epochs_per_stage}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
+
+            # Compare performance and store the best model
+            if acc > best_acc:
+                best_acc = acc
+                best_model_state = model.state_dict()
+                best_layer_index = layer_index
+
+            acc_history.append((layer_index, acc))
+        print('best layer index is ' + str(best_layer_index), file=log_file)
+        print('best layer index is ' + str(best_layer_index))
+        acc2 = acc
+        print(acc)
+        print(acc, file=log_file)
+
+        set_requires_grad(model, layer_index+1, requires_grad=True)
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+        print(f"Re-freezing layer {layer_index + 1} to compare.")
+        print(f"Re-freezing layer {layer_index + 1} to compare.", file=log_file)
+        for epoch in range(num_epochs_per_stage):
+            loss = train(model, data, optimizer)
+            acc = evaluate(model, data)
+            # print(f'Epoch: {epoch + 1 + (layer_index + 1) * num_epochs_per_stage}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
+
+            # Compare performance and store the best model
+            if acc > best_acc:
+                best_acc = acc
+                best_model_state = model.state_dict()
+                best_layer_index = layer_index
+
+            acc_history.append((layer_index, acc))
+        print('best layer index is ' + str(best_layer_index), file=log_file)
+        print('best layer index is ' + str(best_layer_index))
+        acc_1 = acc
+        print(acc)
+        print(acc, file=log_file)
+        if acc_1 > 1.5*acc2 and acc1 > 1.5*acc2:
+            set_requires_grad(model, layer_index + 1, requires_grad=True)
+            optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+            # best_layer_index = layer_index
+            print(f"Re-freezing layer {layer_index + 1} due to no improvement.")
+            print(f"Re-freezing layer {layer_index + 1} due to no improvement.", file=log_file)
+            break
+
+    set_requires_grad(model, best_layer_index, requires_grad=True)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+    not_improve=0
+    for epoch in range(1500):
+        loss = train(model, data, optimizer)
+        acc = evaluate(model, data)
+        # print(f'Epoch: {epoch + 1 }, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
+
+        # Compare performance and store the best model
+        if acc > best_acc:
+            best_acc = acc
+            best_model_state = model.state_dict()
+            # best_layer_index = layer_index
+        else:
+            not_improve += 1
+        if not_improve> 110:
+            break
+
+    # Load the best model state
+    model.load_state_dict(best_model_state)
+    final_acc = evaluate(model, data)
+    print(f'Best accuracy achieved: {final_acc:.4f} with layers up to layer {best_layer_index } unfrozen.')
+    print(f'Best accuracy achieved: {final_acc:.4f} with layers up to layer {best_layer_index } unfrozen.', file=log_file)
