@@ -707,7 +707,7 @@ if args.net.startswith('WiG'):
 else:
     net_to_print = args.net
 if args.MakeImbalance:
-    net_to_print = net_to_print + '_Imbal'
+    net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
 else:
     net_to_print = net_to_print + '_Bal'
 if args.largeData:
