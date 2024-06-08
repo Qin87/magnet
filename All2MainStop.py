@@ -20,7 +20,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
-    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
+    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_variant1B, neighbor_sampling_bidegree_variant2_0AB
 from data_model import CreatModel, load_dataset, log_file
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
@@ -225,17 +225,24 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             elif args.AugDirect == 22:
                 # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 220:   # AugB
+                # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant1B(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 23:
                 # new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
-            elif args.AugDirect == 231:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 2311:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            # elif args.AugDirect == 231:  # is Aug 1
+            #     new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            # elif args.AugDirect == 2311:  the same as 231 and Aug1
+            #     new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
-            elif args.AugDirect == 230:
+            elif args.AugDirect == 230:  # AugA
                 new_edge_index = neighbor_sampling_bidegree_variant2_0(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+
+
+            elif args.AugDirect == -2:  # AugA
+                new_edge_index = neighbor_sampling_bidegree_variant2_0AB(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
 
             else:
