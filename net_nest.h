@@ -6,11 +6,11 @@
 #addSym Sym addSympara
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE  220 230 -2  0 1 -1 2 21 20  22 23 4
-#JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib
-net_values="addQympara  addQym Qym"
+#JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib GAT GCN  SAGE
+net_values="  QiG "
 q_value=0.5
 Aug_value=" 0 "
-layer_values="3 "    #
+layer_values="2 3 "    #
 
 Direct_dataset=( 'cora_ml/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin' 'WebKB/texas'
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
@@ -28,7 +28,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             exec > $logfile 2>&1  # Redirect stdout and stderr to log file
           # Iterate over each layer value
           for net in $net_values; do
-            nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net   --W_degree=1 --MakeImbalance --imb_ratio=100  --IsDirectedData  --to_undirected\
+            nohup python3 All2MainStop.py --AugDirect=$Aug --net=$net   --W_degree=1  --imb_ratio=100   --largeData --batch_size=4 \
             --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  --undirect_dataset="$unDirect_data" \
               > wrongname_${Direct_dataset_filename}Bala_Undirect_${timestamp}_Aug${Aug}${net}_layer${layer}q${q_value}.log &
             pid=$!
