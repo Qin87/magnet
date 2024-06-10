@@ -458,6 +458,16 @@ def create_DiGSimple_nhid(nfeat, nhid, nclass, dropout, nlayer):
         model = DiG_SimpleXBN_nhid(nfeat, nhid, nclass, dropout, nlayer)
     return model
 
+def create_DiGSimple_batch_nhid(nfeat, nhid, nclass, dropout, nlayer):
+
+    if nlayer == 1:
+        model = DiG_Simple1BN_batch_nhid(nfeat, nhid, nclass, dropout, nlayer)
+    elif nlayer == 2:
+        model = DiG_Simple2BN_batch_nhid(nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = DiG_SimpleXBN_batch_nhid(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
 
 class DiGCN_IB_1BN_nhid(torch.nn.Module):
     def __init__(self, num_features, nhid, n_cls, dropout=0.5, layer=1):

@@ -775,12 +775,12 @@ if args.all1:
     # num_features = data_x.size(0)  # Get the size of the first dimension of data_x
     # data_x = torch.ones((num_features, 1)).to(device)
     data_x.fill_(1)
-if data_x.shape[0] > 5000:
-    args.largeData = True
-elif data_x.shape[0] < 1000:
-    args.largeData = False
-if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
-    args.largeData = False
+# if data_x.shape[0] > 5000:
+#     args.largeData = True
+# elif data_x.shape[0] < 1000:
+#     args.largeData = False
+# if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
+#     args.largeData = False
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -894,8 +894,8 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-if data_x.shape[0] > 2500 and splits > 5:     #
-    splits = 5
+# if data_x.shape[0] > 2500 and splits > 5:     # from Jun 10, delete this because QiG is much faster
+#     splits = 5
 Set_exit = False
 try:
     start_time = time.time()
