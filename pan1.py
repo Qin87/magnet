@@ -31,7 +31,7 @@ class GCN(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 # Load the dataset
-dataset = Planetoid(root='/tmp/CiteSeer', name='Cora')
+dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer')
 data = dataset[0]
 
 # Instantiate the model
@@ -71,14 +71,15 @@ def append_value(layer_index, value):
         print(f"Layer {layer_index} does not exist in the data structure.")
 
 # Training loop with layer freezing/unfreezing
-num_epochs_per_stage = 100
+num_epochs_per_stage = 200
 best_acc = 0
 best_model_state = None
 acc_history = []
 
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-pan_path = os.path.expanduser('/home/qin/Documents/Benlogs')
-log_file_name_with_timestamp = pan_path+ '/GCN_Cora_' + str(num_epochs_per_stage) +'_T'+ timestamp+'.log'
+pan_path = os.path.expanduser('/home/qin/Documents/Benlogs/')
+log_file_name = 'GCN_CiteSeer_' + str(num_epochs_per_stage)
+log_file_name_with_timestamp = pan_path+ log_file_name +'_T' + timestamp+'.log'
 acc_data = {f'Layer {i+1}': [] for i in range(8)}
 append_value(1, 0)
 
@@ -95,6 +96,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         # (1) original layer
         set_requires_grad(model, layer_index, requires_grad=True)
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
         print(f"Training with layers up to layer {layer_index} unfrozen")
         print(f"Training with layers up to layer {layer_index} unfrozen", file=log_file)
         for epoch in range(num_epochs_per_stage):
@@ -122,6 +124,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         print(f"Unfreezing layer {layer_index + 1} after initial training.", file=log_file)
         # Re-train with all layers up to the current layer frozen
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
         for epoch in range((layer_index+1)*num_epochs_per_stage):
             loss = train(model, data, optimizer)
             acc = evaluate(model, data)
@@ -144,6 +147,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         # (3) back to original layer
         set_requires_grad(model, layer_index, requires_grad=True)
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
         print(f"Re-freezing layer {layer_index } to compare.")
         print(f"Re-freezing layer {layer_index } to compare.", file=log_file)
         for epoch in range(num_epochs_per_stage):
@@ -167,6 +171,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
         if acc_1 > 1.5*acc2 and acc1 > 1.5*acc2:
             set_requires_grad(model, layer_index + 1, requires_grad=True)
             optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
             # best_layer_index = layer_index
             print(f"Re-freezing layer {layer_index + 1} due to no improvement.")
             print(f"Re-freezing layer {layer_index + 1} due to no improvement.", file=log_file)
@@ -174,6 +179,7 @@ with open(log_file_name_with_timestamp, 'w+') as log_file:
 
     set_requires_grad(model, best_layer_index, requires_grad=True)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.1)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
     not_improve=0
     for epoch in range(1500):
         loss = train(model, data, optimizer)
@@ -213,13 +219,13 @@ for i in range(values.shape[1]):
 # Add some text for labels, title, and custom x-axis tick labels, etc.
 ax.set_xlabel('Layers')
 ax.set_ylabel('Accuracy')
-ax.set_title('Acc per Layer')
+ax.set_title(log_file_name)
 ax.set_xticks(x + width)
 ax.set_xticklabels(layers)
 ax.legend()
 
 # Save the plot as a file
-plt.savefig('histogram.png')
+plt.savefig(log_file_name+'_'+timestamp+'.png')
 
 # Show the plot (optional)
 plt.show()

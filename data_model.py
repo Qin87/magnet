@@ -24,7 +24,7 @@ from nets.DiG_NoConv import (create_DiGSimple, create_DiG_MixIB_SymCat, create_D
                              create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_Sym_batch_nhid, create_DiG_IB_SymCat_batchConvOut, create_DiG_IB_batch_nhid, create_DiG_MixIB_SymCat_nhid, create_DiG_MixIB_SymCat_batch_nhid,
                              create_DiG_IB_SymCat_nhid, create_DiG_IB_SymCat_batch_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_batch_nhid, create_DiG_IB_nhid, create_DiG_IB_Sym_nhid_para,
-                             create_DiG_IB_nhid_para)
+                             create_DiG_IB_nhid_para, create_DiGSimple_batch_nhid)
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -97,7 +97,11 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith(('DiG','QiG', 'WiG')):
 
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
-            model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
+            if not args.largeData:
+                model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
+            else:
+                print("To build batch training model in the future")
+                model = create_DiGSimple_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
         else:
             if args.net[3:].startswith(('Sym', 'Qym')):
                 if args.net[6:].startswith('Cat'):

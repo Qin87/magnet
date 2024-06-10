@@ -20,7 +20,7 @@ from gens import sampling_node_source, neighbor_sampling, duplicate_neighbor, sa
     sampling_idx_individual_dst, neighbor_sampling_BiEdge, neighbor_sampling_BiEdge_bidegree, \
     neighbor_sampling_bidegree, neighbor_sampling_bidegreeOrigin, neighbor_sampling_bidegree_variant1, \
     neighbor_sampling_bidegree_variant2, neighbor_sampling_reverse, neighbor_sampling_bidegree_variant2_1, \
-    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_
+    neighbor_sampling_bidegree_variant2_0, neighbor_sampling_bidegree_variant2_1_, neighbor_sampling_bidegree_variant1B, neighbor_sampling_bidegree_variant2_0AB
 from data_model import CreatModel, load_dataset, log_file
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
@@ -225,17 +225,24 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
             elif args.AugDirect == 22:
                 # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            elif args.AugDirect == 220:   # AugB
+                # new_edge_index = neighbor_sampling_bidegree_variant1(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
+                new_edge_index = neighbor_sampling_bidegree_variant1B(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
             elif args.AugDirect == 23:
                 # new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges[:, train_edge_mask],sampling_src_idx, neighbor_dist_list)
                 new_edge_index = neighbor_sampling_bidegree_variant2(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
-            elif args.AugDirect == 231:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
-            elif args.AugDirect == 2311:
-                new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            # elif args.AugDirect == 231:  # is Aug 1
+            #     new_edge_index = neighbor_sampling_bidegree_variant2_1(args, data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+            # elif args.AugDirect == 2311:  the same as 231 and Aug1
+            #     new_edge_index = neighbor_sampling_bidegree_variant2_1_(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
-            elif args.AugDirect == 230:
+            elif args.AugDirect == 230:  # AugA
                 new_edge_index = neighbor_sampling_bidegree_variant2_0(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
+
+
+            elif args.AugDirect == -2:  # AugA
+                new_edge_index = neighbor_sampling_bidegree_variant2_0AB(data_x.size(0), edges, sampling_src_idx, neighbor_dist_list)
 
 
             else:
@@ -707,7 +714,7 @@ if args.net.startswith('WiG'):
 else:
     net_to_print = args.net
 if args.MakeImbalance:
-    net_to_print = net_to_print + '_Imbal'
+    net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
 else:
     net_to_print = net_to_print + '_Bal'
 if args.largeData:
@@ -768,12 +775,12 @@ if args.all1:
     # num_features = data_x.size(0)  # Get the size of the first dimension of data_x
     # data_x = torch.ones((num_features, 1)).to(device)
     data_x.fill_(1)
-if data_x.shape[0] > 5000:
-    args.largeData = True
-elif data_x.shape[0] < 1000:
-    args.largeData = False
-if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
-    args.largeData = False
+# if data_x.shape[0] > 5000:
+#     args.largeData = True
+# elif data_x.shape[0] < 1000:
+#     args.largeData = False
+# if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
+#     args.largeData = False
 n_cls = data_y.max().item() + 1
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -887,8 +894,8 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-if data_x.shape[0] > 2500 and splits > 5:     #
-    splits = 5
+# if data_x.shape[0] > 2500 and splits > 5:     # from Jun 10, delete this because QiG is much faster
+#     splits = 5
 Set_exit = False
 try:
     start_time = time.time()
