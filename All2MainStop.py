@@ -1087,10 +1087,10 @@ try:
             macro_F1.append(test_f1*100)
             acc_list.append(test_acc*100)
             bacc_list.append(test_bacc*100)
-            if  test_f1 < 0.45:
-                print("test_f1 is less than 0.45, terminating the program.")
-                print("test_f1 is less than 0.45, terminating the program.", file=log_file)
-                Set_exit = True
+            # if  test_f1 < 0.45:
+            #     print("test_f1 is less than 0.45, terminating the program.")
+            #     print("test_f1 is less than 0.45, terminating the program.", file=log_file)
+            #     Set_exit = True
                 # sys.exit(1)
             if Set_exit:
                 sys.exit(1)
