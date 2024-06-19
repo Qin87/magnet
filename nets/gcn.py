@@ -328,25 +328,26 @@ class StandGCNXBN(nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(nclass)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
-        self.is_add_self_loops = True
+        self.is_add_self_loops = False  # Qin TODO True is the original
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
         self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
         x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-        # x = F.relu(self.batch_norm1(x))
+        x = self.batch_norm1(x)
         x = F.relu(x)
 
         for iter_layer in self.convx:
             x = F.dropout(x,p= self.dropout_p, training=self.training)
             x, edge_index = iter_layer(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-            # x= self.batch_norm3(x)
+            x= self.batch_norm3(x)
             x = F.relu(x)
 
         x = F.dropout(x, p= self.dropout_p, training=self.training)
         x, edge_index = self.conv2(x, edge_index, edge_weight,is_add_self_loops=self.is_add_self_loops)
         x = self.batch_norm2(x)
+        # x = F.relu(x)
         x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
         return x
 

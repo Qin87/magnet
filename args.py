@@ -20,18 +20,18 @@ def parse_args():
     # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
-    parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
+    parser.add_argument('--paraD', action='store_false', help='ib is weighted sum')     # TODO false
     parser.add_argument('--AugDirect', type=int, default=0, help='0 for noAug, 1 for one direction, 2 for bidirection aug edges, 100 for link prediction'
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
 
-    parser.add_argument('--net', type=str, default='QiGib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+    parser.add_argument('--net', type=str, default='QiGi4', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=100, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
-                        default='CiteSeer', help='dataset name')
+                        default='Cora', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='cora_ml/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
@@ -109,6 +109,8 @@ def parse_args():
     parser.add_argument('--pan', nargs='+', type=int, default=[1 ], help='list of lay weights')
 
     parser.add_argument('--W_degree', type=int, default=2, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight')
+
+    parser.add_argument('--DiGpara', type=int, default=2, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight')
 
     args = parser.parse_args()
 

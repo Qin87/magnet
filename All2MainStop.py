@@ -711,8 +711,14 @@ if args.all1:
     dataset_to_print = 'all1' + dataset_to_print
 if args.net.startswith('WiG'):
     net_to_print = args.net + str(args.W_degree)
+elif args.net.startswith('Mag'):
+    net_to_print = args.net + str(args.q)
 else:
     net_to_print = args.net
+
+if args.net[1:].startswith('iG'):
+    if args.paraD:
+        net_to_print = net_to_print + 'paraD'
 if args.MakeImbalance:
     net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
 else:
@@ -721,6 +727,8 @@ if args.largeData:
     net_to_print = net_to_print + '_batchSize_' + str(args.batch_size)
 else:
     net_to_print = net_to_print + '_NoBatch_'
+if args.feat_dim != 64:
+    net_to_print = net_to_print + '_hidden' + str(args.feat_dim)
 
 
 
@@ -775,13 +783,8 @@ if args.all1:
     # num_features = data_x.size(0)  # Get the size of the first dimension of data_x
     # data_x = torch.ones((num_features, 1)).to(device)
     data_x.fill_(1)
-# if data_x.shape[0] > 5000:
-#     args.largeData = True
-# elif data_x.shape[0] < 1000:
-#     args.largeData = False
-# if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
-#     args.largeData = False
 n_cls = data_y.max().item() + 1
+print("class number is ", n_cls)
 if args.net.startswith('DiG'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     edge_index1 = edge_index1.to(device)
@@ -1097,8 +1100,8 @@ try:
 
         last_time = time.time()
         elapsed_time0 = last_time-start_time
-        print("Total time: {:.2f} seconds".format(elapsed_time0), file=log_file)
-        print("Total time: {:.2f} seconds".format(elapsed_time0))
+        print("Total time: {} seconds".format(int(elapsed_time0)), file=log_file)
+        print("Total time: {} seconds".format(int(elapsed_time0)))
         if args.all1:
             print("x is all 1", file=log_file)
             print("x is all 1")

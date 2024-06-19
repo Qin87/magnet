@@ -94,7 +94,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
         model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
-    elif args.net.startswith(('DiG','QiG', 'WiG')):
+    elif args.net.startswith(('DiG', 'QiG', 'WiG')):
+
 
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
             if not args.largeData:

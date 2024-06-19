@@ -113,11 +113,15 @@ class MLPNetX(torch.nn.Module):
 
     def forward(self, x, edge_index=None, edge_weight=None):
         x = torch.relu(self.BN1(self.layer1(x)))    # Qin add BN Apr29
+        # x = self.BN1(self.layer1(x))  # Qin add BN Apr29
         x = F.dropout(x, p=self.dropout, training=self.training)
         for iter_layer in self.layerx:
             x = F.relu(self.BNx(iter_layer(x)))    # Qin add BN Apr29
-            x = F.dropout(x, self.dropout, training=self.training)
+            # x = self.BNx(iter_layer(x))    # Qin add BN Apr29
+            # x = F.dropout(x, self.dropout, training=self.training)
         x = self.layer2(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        # x= torch.relu(x)
         return F.log_softmax(x, dim=1)
 
 class MLPNet1(torch.nn.Module):
