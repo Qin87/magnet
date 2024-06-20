@@ -408,40 +408,6 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
                 SparseEdges = edge_index1
                 edge_weight = edge_weights1
             del edge_index1, edge_weights1
-            # else:  # Qin
-            #     edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
-            #     edge_index1 = edge_index1.to(device)
-            #     edge_weights1 = edge_weights1.to(device)
-            #     if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
-            #         if args.net[-2:] == 'ib':
-            #             edge_index2, edge_weights2 = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
-            #         else:
-            #             edge_index2, edge_weights2 = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-            #         edge_index2 = edge_index2.to(device)
-            #         edge_weights2 = edge_weights2.to(device)
-            #         SparseEdges = (edge_index1, edge_index2)
-            #         edge_weight = (edge_weights1, edge_weights2)
-            #         del edge_index2, edge_weights2
-            #     elif args.net[-2:] == 'i3' or args.net[-2:] == 'u3':
-            #         if args.net[-2:] == 'i3':
-            #             edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
-            #         else:
-            #             edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-            #         SparseEdges = (edge_index1,) + edge_index_tuple
-            #         edge_weight = (edge_weights1,) + edge_weights_tuple
-            #         del edge_index_tuple, edge_weights_tuple
-            #     elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
-            #         if args.net[-2:] == 'i4':
-            #             edge_index_tuple, edge_weights_tuple = get_4th_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
-            #         else:
-            #             edge_index_tuple, edge_weights_tuple = get_4th_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-            #         SparseEdges = (edge_index1,) + edge_index_tuple
-            #         edge_weight = (edge_weights1,) + edge_weights_tuple
-            #         del edge_index_tuple, edge_weights_tuple
-            #     else:
-            #         SparseEdges = edge_index1
-            #         edge_weight = edge_weights1
-            #     del edge_index1, edge_weights1
 
             if args.net[3:].startswith(('Sym', 'Qym')):
                 if args.net[3:].startswith('Qym'):
@@ -718,7 +684,7 @@ else:
 
 if args.net[1:].startswith('iG'):
     if args.paraD:
-        net_to_print = net_to_print + 'paraD'
+        net_to_print = net_to_print + 'paraD'+str(args.coeflr)
 if args.MakeImbalance:
     net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
 else:
@@ -826,7 +792,7 @@ if args.net.startswith('DiG'):
         else:
             data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), data.edge_weight)
 
-elif args.net.startswith(('QiG', 'WiG','pan')):
+elif args.net.startswith(('QiG', 'WiG', 'pan')):
     if args.net.startswith('WiG'):
         edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)  # consumiing for large graph
     else:
