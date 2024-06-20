@@ -975,7 +975,18 @@ try:
                     data_train_mask).item()))
                 print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
                     torch.sum(train_edge_mask).item()))
+            sorted_list = sorted(class_num_list, reverse=True)
+            sorted_list_original = sorted(n_data, reverse=True)
 
+            print('original class_num_list is ', sorted_list_original)
+            print('New      class_num_list is ', sorted_list)
+            if sorted_list[-1]:
+                imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
+                print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
+                imbalance_ratio = sorted_list[0] / sorted_list[-1]
+                print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
+            else:
+                print('the minor class has no training sample')
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
             test_idx = data_test_mask.nonzero().squeeze()  # get the index of training data
