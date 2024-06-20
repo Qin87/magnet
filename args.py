@@ -4,8 +4,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
-    # parser.add_argument('--MakeImbalance', type=bool, default=True, help='if convert graph to undirecteds')
+    # parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
+    parser.add_argument('--MakeImbalance', type=bool, default=True, help='if convert graph to undirecteds')
 
     parser.add_argument('--dataset', type=str, default='BitCoinAlpha', help='data set selection')
     parser.add_argument('--ensemble', type=int, default=5, help='number of ensemble model')
@@ -33,6 +33,7 @@ def parse_args():
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='Cora', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
