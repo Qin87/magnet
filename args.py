@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='Cora', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+    parser.add_argument('--Direct_dataset', type=str, default='dgl/pubmed', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
 
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
