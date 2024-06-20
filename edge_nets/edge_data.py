@@ -554,6 +554,12 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
     elif W_degree == 3:     # random number in [1,100]
         edge_weight = torch.randint(1, 101, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
         print("proximity weight is random number in [1,100]")
+    elif W_degree == 300:     # random number in [1,100]
+        edge_weight = torch.randint(1, 10001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
+        print("proximity weight is random number in [1,100]")
+    elif W_degree == 400:  # random number in [0.001,1]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.999 + 0.001
+        print("proximity weight is random number in [0.1,1]")
     else:                     # random number in [0.1,1]
         edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.9 + 0.1
         print("proximity weight is random number in [0.1,1]")
