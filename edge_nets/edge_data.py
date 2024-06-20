@@ -542,15 +542,21 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
     edge_index = L_indices.to(device)      # their transformed edges of this symmetric_A of digraph
 
     # edge_weight= torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
-    if W_degree == 0:
+    if W_degree == 0:  # in-degree
         edge_weight = deg0[edge_index[0]] + deg0[edge_index[1]]
         print("Using deg0")
-    elif W_degree == 1:
+    elif W_degree == 1:     # out-degree
         edge_weight = deg1[edge_index[0]] + deg0[edge_index[1]]
         print("Using deg1")
-    else:
+    elif W_degree == 2:     # total-degree
         edge_weight = deg2[edge_index[0]] + deg0[edge_index[1]]
         print("Using deg2")
+    elif W_degree == 3:     # random number in [1,100]
+        edge_weight = torch.randint(1, 101, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
+        print("proximity weight is random number in [1,100]")
+    else:                     # random number in [0.1,1]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.9 + 0.1
+        print("proximity weight is random number in [0.1,1]")
 
 
     row, col = edge_index
