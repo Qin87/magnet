@@ -5,16 +5,18 @@
 # DiGi4 DiGu3 DiGu4
 #addSym Sym addSympara
 #Mag MagQin Sig Qua
-#GCN GAT APPNP GIN Cheb SAGE
-#JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib
-net_values="Mag "
-q_value=0.25
-Aug_value=0
-layer_values="1 2  3  "    #
 
-Direct_dataset=('WebKB/Cornell'  'WebKB/wisconsin'  'WebKB/texas' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin' 'WebKB/texas'
+#GCN GAT APPNP GIN Cheb SAGE  220 230 -2  0 1 -1 2 21 20  22 23 4
+#JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib GAT GCN  SAGE  # QiGi4
+net_values="   QiGQymu4 "
+q_value=0
+Aug_value=" 0 "
+layer_values="2 3   "    #
+
+
+Direct_dataset=( 'cora_ml/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
-unDirect_data='CiteSeer'
+unDirect_data='Cora'
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }

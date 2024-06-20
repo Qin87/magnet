@@ -1045,7 +1045,7 @@ class DiGIB_1BN_Sym_nhid_para(torch.nn.Module):
         x = DiGx + symx
         x = self.batch_norm1(x)     # keep it is better performance
 
-        x= x.unsqueeze(0)
+        x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
         x = self.Conv(x)
         x = x.permute((0, 2, 1))
