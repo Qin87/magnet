@@ -100,7 +100,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                 if args.net[2:].startswith(('S', 'A', 'G')):
                     model = create_DiSAGESimple_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Jun22
             else:
-                print("To build batch training model in the future")
+                raise NotImplementedError("To build batch training model in the future")
                 model = create_DiGSimple_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
         else:
             if args.net[3:].startswith(('Sym', 'Qym')):
