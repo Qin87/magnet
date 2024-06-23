@@ -687,7 +687,7 @@ elif args.net.startswith('Mag'):
     net_to_print = args.net + str(args.q)
 else:
     net_to_print = args.net
-if args.net[1:2] == 'iA' or args.net == 'GAT':
+if args.net[1:3] == 'iA' or args.net == 'GAT':
     net_to_print = net_to_print + str(args.heads)
 
 if args.net[1:].startswith('iG'):
