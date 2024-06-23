@@ -251,9 +251,6 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
 
-    # if os.path.isdir(log_path) is False:
-    #     os.makedirs(log_path)
-
     data = dataset[0].to(device)
     global class_num_list, idx_info, prev_out, sample_times
     global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test

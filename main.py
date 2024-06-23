@@ -754,8 +754,6 @@ criterion = CrossEntropy().to(device)
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 if args.all1:
     print("x is all 1")
-    # num_features = data_x.size(0)  # Get the size of the first dimension of data_x
-    # data_x = torch.ones((num_features, 1)).to(device)
     data_x.fill_(1)
 n_cls = data_y.max().item() + 1
 print("class number is ", n_cls)
@@ -802,9 +800,9 @@ if args.net.startswith('Di'):
 
 elif args.net.startswith(('Qi', 'Wi', 'pan')):
     if args.net.startswith('Wi'):
-        edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)  # consumiing for large graph
+        edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
     else:
-        edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
+        edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
@@ -871,8 +869,6 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-# if data_x.shape[0] > 2500 and splits > 5:     # from Jun 10, delete this because QiG is much faster
-#     splits = 5
 Set_exit = False
 try:
     start_time = time.time()
