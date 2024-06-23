@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import pickle as pk
 import networkx as nx
+from matplotlib import pyplot as plt
 from scipy.sparse import coo_matrix, csr_matrix
 from torch_geometric.data import Data
 from torch import Tensor
@@ -554,15 +555,47 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
     elif W_degree == 3:     # random number in [1,100]
         edge_weight = torch.randint(1, 101, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
         print("proximity weight is random number in [1,100]")
-    elif W_degree == 300:     # random number in [1,100]
+    elif W_degree == 300:     # random number in [1,10000]
         edge_weight = torch.randint(1, 10001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
+        print("proximity weight is random number in [1,100]")
+    elif W_degree == 30000:     # random number in [1,1000000]
+        edge_weight = torch.randint(1, 1000001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
         print("proximity weight is random number in [1,100]")
     elif W_degree == 400:  # random number in [0.001,1]
         edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.999 + 0.001
         print("proximity weight is random number in [0.1,1]")
-    else:                     # random number in [0.1,1]
+    elif W_degree == 40000:  # random number in [0.00001,1]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.99999 + 0.00001
+        print("proximity weight is random number in [0.1,1]")
+    elif W_degree == 4:  # random number in [0.1,1]       # random number in [0.1,1]
         edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.9 + 0.1
         print("proximity weight is random number in [0.1,1]")
+    elif W_degree == 5:  # random number in [0.00001,100000]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
+        # random_values = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device)
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
+
+        print(f"Original Edge weight range: [{min_val}, {max_val}]")
+        # edge_weight = random_values * (10000 - 0.0001) + 0.0001
+    elif W_degree == 50:  # random number in [0.00001,100000]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
+        edge_weight = torch.abs(torch.sin(edge_weight))
+        # random_values = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device)
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
+
+        print(f"Original Edge weight range: [{min_val}, {max_val}]")
+        # edge_weight = random_values * (10000 - 0.0001) + 0.0001
+    elif W_degree == -3:   # three peaks
+        edge_weight = trimodal_distribution(edge_index.size(1), edge_index.device, dtype)
+    elif W_degree == -2:   # two peaks
+        edge_weight = trimodal_distribution2(edge_index.size(1), edge_index.device, dtype)
+    elif W_degree == -4:   # two peaks
+        edge_weight = trimodal_distribution4(edge_index.size(1), edge_index.device, dtype)
+    else:
+        print("not implemented!")
+        sys.exit()
 
 
     row, col = edge_index
@@ -572,6 +605,11 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
 
     edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
     edge_weight = edge_weight.to(device)
+
+    min_val = torch.min(edge_weight).item()
+    max_val = torch.max(edge_weight).item()
+
+    print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
 
     # return edge_index,  torch.ones((edge_index.size(1), ), dtype=dtype,device=edge_index.device)
     return edge_index,  edge_weight
@@ -605,7 +643,7 @@ def Qin_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=
     return edge_index,  edge_weight
 
 
-def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
+def get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=None):   # TODO to delete(old DiG)
     device = edge_index.device
     from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
     from torch_scatter import scatter_add
@@ -633,19 +671,7 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     p_ppr = p_v.cpu()   # for p_ppr.numpy()  # this is new P with one dummy node
 
     p_ppr_sparse = csr_matrix(p_ppr.numpy())
-    # import time
-    # start_time = time.time()
     eig_value, left_vector = scipy.linalg.eig(p_ppr_sparse.toarray(), left=True, right=False)
-    # end_time = time.time()
-    # print("spare matrix", end_time - start_time)
-    # start_time = time.time()
-    # eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)      # time consuming for large graph
-    # end_time = time.time()
-    # print("original matrix", end_time - start_time)
-    # ******************** no much difference in spare matrix or not, but spare matrix is memory efficient
-    # spare matrix 693.7754142284393
-    # original matrix 697.1516420841217
-    # ***************
     eig_value = torch.from_numpy(eig_value.real).to(device)     # Qin ask: why only real?       # converting a NumPy array containing eigenvalues to a PyTorch tensor
     left_vector = torch.from_numpy(left_vector.real).to(device)
     val, ind = eig_value.sort(descending=True)
@@ -682,68 +708,174 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
-    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]  #
 
-# def get_appr_directed_adj4large(alpha, edge_index, num_nodes, dtype, edge_weight=None, k=5):
-#     device = edge_index.device
-#     from torch_geometric.utils import add_self_loops
-#     from torch_scatter import scatter_add
-#
-#     if edge_weight is None:
-#         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype, device=device)
-#     fill_value = 1
-#     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-#     edge_weight = edge_weight.to(device)
-#     row, col = edge_index
-#
-#     # Calculate the personalized PageRank matrix
-#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)
-#     deg_inv = deg.pow(-1).to(device)
-#     deg_inv[deg_inv == float('inf')] = 0
-#     p = deg_inv[row] * edge_weight
-#
-#     # Construct the personalized PageRank matrix
-#     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
-#     p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1])).to(device)
-#     p_v[0:num_nodes,0:num_nodes] = (1-alpha) * p_dense
-#     p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
-#     p_v[0:num_nodes,num_nodes] = alpha
-#     p_v[num_nodes,num_nodes] = 0.0
-#     p_ppr = p_v.cpu()  # Convert to CPU for numpy conversion
-#
-#     # Compute a few dominant eigenvalues and eigenvectors
-#     eig_values, left_vectors = scipy.linalg.eig(p_ppr.numpy(), k=k, which='LR')
-#
-#     # Sort the eigenvalues in descending order
-#     ind = np.argsort(eig_values.real)[::-1]
-#
-#     # Choose the eigenvector corresponding to the largest eigenvalue
-#     pi = left_vectors[:, ind[0]].real
-#     pi = pi[0:num_nodes]
-#     pi = pi / pi.sum()  # Normalize pi
-#
-#     # Ensure all elements of pi are positive
-#     assert len(pi[pi<0]) == 0
-#
-#     # Compute diagonal matrices
-#     pi_inv_sqrt = pi.pow(-0.5).diag().to(device)
-#     pi_sqrt = pi.pow(0.5).diag().to(device)
-#
-#     # Compute L_appr
-#     L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
-#     L[torch.isnan(L)] = 0  # Make NaN values 0
-#
-#     # Convert dense L to sparse
-#     L_indices = torch.nonzero(L, as_tuple=False).t()
-#     L_values = L[L_indices[0], L_indices[1]]
-#
-#     # Row normalization
-#     row, col = L_indices
-#     deg = scatter_add(L_values, row, dim=0, dim_size=num_nodes)
-#     deg_inv_sqrt = deg.pow(-0.5)
-#     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-#
-#     return L_indices, deg_inv_sqrt[row] * L_values * deg_inv_sqrt[col]
+
+
+def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):       # TODO get back, new DiG, name remove 2
+    device = edge_index.device
+    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
+    from torch_scatter import scatter_add
+
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
+                                     device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    edge_index = edge_index.to(device)
+    edge_weight = edge_weight.to(device)
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)
+    deg_inv = deg.pow(-1).to(device)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+
+    # personalized pagerank p
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
+    p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1])).to(device)     # dummy node
+    p_v[0:num_nodes,0:num_nodes] = (1-alpha) * p_dense      # original P
+    p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
+    p_v[0:num_nodes,num_nodes] = alpha
+    p_v[num_nodes,num_nodes] = 0.0
+    p_ppr = p_v.cpu()   # for p_ppr.numpy()  # this is new P with one dummy node
+
+    p_ppr_sparse = csr_matrix(p_ppr.numpy())
+    eig_value, left_vector = scipy.linalg.eig(p_ppr_sparse.toarray(), left=True, right=False)
+    eig_value = torch.from_numpy(eig_value.real).to(device)     # Qin ask: why only real?       # converting a NumPy array containing eigenvalues to a PyTorch tensor
+    left_vector = torch.from_numpy(left_vector.real).to(device)
+    val, ind = eig_value.sort(descending=True)
+    #  sort the tensor eig_value in descending order and also get the corresponding indices of the sorted elements
+    #
+    pi = left_vector[:,ind[0]]  # choose the largest eig vector
+    pi = pi[0:num_nodes]    # X+1 back to X  # remove the dummy node
+    p_ppr = p_dense.to(device)
+    pi = pi/pi.sum()  # norm pi
+    #
+    # # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
+    assert len(pi[pi<0]) == 0
+    pi_inv_sqrt = pi.pow(-0.5)      # (183,) to (183,)
+    pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
+    pi_inv_sqrt = pi_inv_sqrt.diag().to(device)     # (183,) to (183, 183)
+    pi_sqrt = pi.pow(0.5)
+    pi_sqrt[pi_sqrt == float('inf')] = 0
+    pi_sqrt = pi_sqrt.diag().to(device)
+
+    # L_appr   # actually, L_appr= I-L, so this L is the equivalent their version of symmetric_A of digraph
+    L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0       # a bit time consuming
+    L[torch.isnan(L)] = 0    # make nan to 0
+    # L[torch.isnan(L)] = 1  # make nan to 1   # TODO delete it after testing(Qin use 1, original is 0)---worse
+
+    # L = (p_ppr + p_ppr.t()) / 2.0       # TODO delete it after testing
+
+    # transfer dense L to sparse
+    L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index = L_indices      # their transformed edges of this symmetric_A of digraph
+    edge_weight = L_values
+
+    # edge_weight = torch.ones(edge_index.size(1), dtype=dtype, device=edge_index.device)
+    # edge_weight= torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (0.1 - 0.00001) + 0.0001   # TODO delete this just for test
+    # perm = torch.randperm(edge_weight.size(0), device=edge_weight.device)
+    # edge_weight = edge_weight[perm]
+
+    # edge_weight = torch.abs(torch.sin(edge_weight))     # TODO delete
+    min_val = torch.min(edge_weight).item()
+    max_val = torch.max(edge_weight).item()
+
+    print(f"Original Edge weight range: [{min_val}, {max_val}]")
+
+    # plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('Absolute Edge Weight')
+    # plt.ylabel('Frequency')
+    # plt.title('Distribution of  DiG edge weights_F1=(WebKB/Cornell)')       # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
+
+    # row normalization
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+    min_val = torch.min(edge_weight).item()
+    max_val = torch.max(edge_weight).item()
+
+    print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
+
+    # delete TODO
+    # edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
+    # edge_weight = torch.cat([edge_weight, torch.ones((num_nodes,), device=edge_weight.device)])
+
+    return edge_index, edge_weight
+
+import torch
+import torch.distributions as dist
+def trimodal_distribution(size, device, dtype):
+    # Define the means and standard deviations for our three peaks
+    means = torch.tensor([0.001, 1.0, 1000.0], device=device, dtype=dtype)
+    stds = torch.tensor([0.0001, 0.1, 100.0], device=device, dtype=dtype)
+
+    # Create a categorical distribution to choose between the three peaks
+    mix = dist.Categorical(torch.ones(3, device=device))
+
+    # Create three normal distributions
+    comp = dist.Normal(means, stds)
+
+    # Create a mixture of these distributions
+    gmm = dist.MixtureSameFamily(mix, comp)
+
+    # Sample from the mixture
+    samples = gmm.sample((size,))
+
+    # Clip the values to ensure they're within [0.0001, 10000]
+    samples = torch.clamp(samples, min=0.0001, max=10000)
+
+    return samples
+
+def trimodal_distribution4(size, device, dtype):
+    # Define the means and standard deviations for our three peaks
+    means = torch.tensor([0.001, 0.01, 900, 5000.0], device=device, dtype=dtype)
+    stds = torch.tensor([10, 100, 1000, 5000], device=device, dtype=dtype)
+
+    # Create a categorical distribution to choose between the three peaks
+    mix = dist.Categorical(torch.ones(4, device=device))
+
+    # Create three normal distributions
+    comp = dist.Normal(means, stds)
+
+    # Create a mixture of these distributions
+    gmm = dist.MixtureSameFamily(mix, comp)
+
+    # Sample from the mixture
+    samples = gmm.sample((size,))
+
+    # Clip the values to ensure they're within [0.0001, 10000]
+    samples = torch.clamp(samples, min=0.0001, max=10000)
+
+    return samples
+
+def trimodal_distribution2(size, device, dtype):
+    # Define the means and standard deviations for our three peaks
+    means = torch.tensor([0.001,  1000.0], device=device, dtype=dtype)
+    stds = torch.tensor([0.0001,  100.0], device=device, dtype=dtype)
+
+    # Create a categorical distribution to choose between the three peaks
+    mix = dist.Categorical(torch.ones(2, device=device))
+
+    # Create three normal distributions
+    comp = dist.Normal(means, stds)
+
+    # Create a mixture of these distributions
+    gmm = dist.MixtureSameFamily(mix, comp)
+
+    # Sample from the mixture
+    samples = gmm.sample((size,))
+
+    # Clip the values to ensure they're within [0.0001, 10000]
+    samples = torch.clamp(samples, min=0.0001, max=10000)
+
+    return samples
 
 def Qin_get_second_directed_adj(edge_index, num_nodes, dtype):
     """

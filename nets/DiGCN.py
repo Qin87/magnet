@@ -53,7 +53,7 @@ class DIGCNConv(MessagePassing):
         self.reset_parameters()
 
     def reset_parameters(self):
-        glorot(self.weight)
+        glorot(self.weight)   # Qin, it initializes the weights in such a way that the variance of the activations remains the same across layers
         zeros(self.bias)
         self.cached_result = None
         self.cached_num_edges = None
@@ -82,7 +82,6 @@ class DIGCNConv(MessagePassing):
 
         edge_index, norm = self.cached_result
         return self.propagate(edge_index, x=x, norm=norm)
-
 
     def message(self, x_j, norm):
         return norm.view(-1, 1) * x_j if norm is not None else x_j
