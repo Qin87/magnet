@@ -25,25 +25,25 @@ def parse_args():
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
 
-    parser.add_argument('--net', type=str, default='WiGib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+    parser.add_argument('--net', type=str, default='QiA', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
                                                                  'replace DiG')
-    parser.add_argument('--seed', type=int, default=100, help='seed')
+    parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
-                        default='Cora', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/citeseer', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
+                        default='CiteSeer', help='dataset name')
+    parser.add_argument('--Direct_dataset', type=str, default='cora_ml/', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=6, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=3, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
 
-    parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
+    parser.add_argument('--feat_dim', type=int, default=128, help='feature dimension')
     parser.add_argument('--warmup', type=int, default=5, help='warmup epoch')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
     parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('--no_mask', action="store_true", help='whether to mask the self class in sampling neighbor classes. default is mask')
     parser.add_argument('--gdc', type=str, choices=['ppr', 'hk', 'none'], default='ppr', help='how to convert to weighted graph')
 
-    parser.add_argument('-hds', '--heads', default=8, type=int)
+    parser.add_argument('-hds', '--heads', default=4, type=int)
 
     #  from Magnet
     parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
@@ -108,7 +108,7 @@ def parse_args():
 
     parser.add_argument('--pan', nargs='+', type=int, default=[1 ], help='list of lay weights')
 
-    parser.add_argument('--W_degree', type=int, default=2, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight, 3 is random[1,100], 4 is random[0.1,1]')
+    parser.add_argument('--W_degree', type=int, default=50, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight, 3 is random[1,100], 4 is random[0.1,1]')
 
     parser.add_argument('--DiGpara', type=int, default=2, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight')
 

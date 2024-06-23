@@ -63,7 +63,7 @@ class GATConv(MessagePassing):
     _alpha: OptTensor
 
     def __init__(self, in_channels: Union[int, Tuple[int, int]],
-                 out_channels: int, heads: int = 1, concat: bool = True,
+                 out_channels: int, heads: int = 1, concat: bool = False,
                  negative_slope: float = 0.2, dropout: float = 0.0,
                  bias: bool = True, **kwargs):
         kwargs.setdefault('aggr', 'add')
@@ -195,9 +195,9 @@ class GATConv(MessagePassing):
         return '{}({}, {}, heads={})'.format(self.__class__.__name__,self.in_channels,self.out_channels, self.heads)
 
 class StandGAT1(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, is_add_self_loops=True):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, is_add_self_loops=True, head=8):
         super(StandGAT1, self).__init__()
-        self.conv1 = GATConv(nfeat, nclass,heads=1)
+        self.conv1 = GATConv(nfeat, nclass,heads=head)
 
         self.is_add_self_loops = is_add_self_loops
         self.reg_params = []
@@ -268,10 +268,16 @@ class StandGATX(nn.Module):
         return x
 
 class StandGAT1BN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, is_add_self_loops=True):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, is_add_self_loops=True, head=8):
         super(StandGAT1BN, self).__init__()
-        self.conv1 = GATConv(nfeat, nclass,heads=1)
-        self.batch_norm1 = nn.BatchNorm1d(nclass)
+        self.dropout = dropout
+        num_head = 1
+        head_dim = nhid // num_head
+        head_nclass = nclass // num_head
+
+        self.conv1 = GATConv(nfeat, nhid, heads=head)
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.Conv = nn.Conv1d(nhid, nclass, kernel_size=1)
 
         self.is_add_self_loops = is_add_self_loops
         self.reg_params = []
@@ -281,26 +287,33 @@ class StandGAT1BN(nn.Module):
 
         edge_index = adj
         x, edge_index = self.conv1(x,edge_index, is_add_self_loops=self.is_add_self_loops)
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.batch_norm1(x)
         # x = F.relu(x)
+
+        x = x.unsqueeze(0)      # Qin Jun22
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
 
 class StandGAT2BN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2, head=8):
         super(StandGAT2BN, self).__init__()
+        self.Conv = nn.Conv1d(nhid, nclass, kernel_size=1)
 
-        num_head = 4
+        num_head = 1
         head_dim = nhid//num_head
 
-        self.conv1 = GATConv(nfeat, head_dim, heads=num_head)
-        self.conv2 = GATConv(nhid,  nclass,   heads=1, concat=False)
+        self.conv1 = GATConv(nfeat, head_dim, heads=head)
+        self.conv2 = GATConv(nhid,  nhid,   heads=1, concat=False)
         self.dropout_p = dropout
         self.is_add_self_loops = True
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nclass)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.conv1.parameters())
         self.non_reg_params = self.conv2.parameters()
@@ -313,23 +326,30 @@ class StandGAT2BN(nn.Module):
         x = F.dropout(x, p= self.dropout_p, training=self.training)
         x, edge_index = self.conv2(x, edge_index, is_add_self_loops=self.is_add_self_loops)
         x = self.batch_norm2(x)
+
+        x = x.unsqueeze(0)      # Qin Jun22
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
         return x
 
 class StandGATXBN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3):
+    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3, head=8):
         super(StandGATXBN, self).__init__()
+        self.Conv = nn.Conv1d(nhid, nclass, kernel_size=1)
 
-        num_head = 4
+        num_head = 1
         head_dim = nhid//num_head
+        head_nclass = nclass//num_head
 
-        self.conv1 = GATConv(nfeat, head_dim, heads=num_head)
-        self.conv2 = GATConv(nhid, nclass)
-        self.convx = nn.ModuleList([GATConv(nhid, head_dim, heads=num_head) for _ in range(nlayer-2)])
+        self.conv1 = GATConv(nfeat, head_dim, heads=head)
+        self.conv2 = GATConv(nhid, head_dim, heads=head)
+        self.convx = nn.ModuleList([GATConv(nhid, head_dim, heads=head) for _ in range(nlayer-2)])
         self.dropout_p = dropout
         self.is_add_self_loops = True
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nclass)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
@@ -352,15 +372,20 @@ class StandGATXBN(nn.Module):
         x, edge_index = self.conv2(x, edge_index,edge_weight, is_add_self_loops=self.is_add_self_loops)
         x = self.batch_norm2(x)
 
+        x = x.unsqueeze(0)  # Qin Jun22
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+
         return x
 
-def create_gat(nfeat, nhid, nclass, dropout, nlayer):
+def create_gat(nfeat, nhid, nclass, dropout, nlayer, head=8):
     if nlayer == 1:
-        model = StandGAT1BN(nfeat, nhid, nclass, dropout,nlayer)
+        model = StandGAT1BN(nfeat, nhid, nclass, dropout,nlayer,head=head)
     elif nlayer == 2:
-        model = StandGAT2BN(nfeat, nhid, nclass, dropout,nlayer)
+        model = StandGAT2BN(nfeat, nhid, nclass, dropout,nlayer,head=head)
     else:
-        model = StandGATXBN(nfeat, nhid, nclass, dropout,nlayer)
+        model = StandGATXBN(nfeat, nhid, nclass, dropout,nlayer,head=head)
     return model
 
 def create_gat_0(nfeat, nhid, nclass, dropout, nlayer):
