@@ -1,4 +1,6 @@
 import sys
+
+from torch.utils.checkpoint import checkpoint
 from torch_geometric.utils import softmax, add_self_loops, remove_self_loops
 import torch
 import torch.nn as nn
@@ -11,12 +13,39 @@ from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
 # from nets.DGCN import DGCNConv
-from nets.DiGCN import InceptionBlock, InceptionBlock4batch, InceptionBlock_Qin, InceptionBlock_Qinlist
+# from nets.DiGCN import InceptionBlock, InceptionBlock4batch, InceptionBlock_Qin, InceptionBlock_Qinlist
 from nets.Sym_Reg import DGCNConv
 from typing import Union, Tuple, Optional
 from torch_geometric.typing import (OptPairTensor, Adj, Size, NoneType,
                                     OptTensor)
 from torch import Tensor
+
+class InceptionBlock_Di(torch.nn.Module):
+    def __init__(self, m, in_dim, out_dim, head=8):
+        super(InceptionBlock_Di, self).__init__()
+        self.ln = Linear(in_dim, out_dim)
+        if m == 'S':
+            self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(5)])
+        elif m == 'G':
+            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(5)])
+        elif m == 'A':
+            num_head = 1
+            head_dim = out_dim // num_head
+            self.convx = nn.ModuleList([GATConv_Qin(in_dim, head_dim,  heads=head) for _ in range(5)])
+        else:
+            raise ValueError(f"Model '{m}' not implemented")
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
+        self.convx.reset_parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+
+        x0 = self.ln(x)
+        for i in range(len(edge_index_tuple)):
+            x0 += self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
+            # torch.cuda.empty_cache()
+        return x0
 
 class DIGCNConv(MessagePassing):
     r"""The graph convolutional operator takes from Pytorch Geometric.
@@ -38,7 +67,7 @@ class DIGCNConv(MessagePassing):
             :class:`torch_geometric.nn.conv.MessagePassing`.
     """
 
-    def __init__(self, in_channels, out_channels, improved=False, cached=False,
+    def __init__(self, in_channels, out_channels, improved=False, cached=True,
                  bias=True, **kwargs):
         super(DIGCNConv, self).__init__(aggr='add', **kwargs)
 
@@ -373,12 +402,13 @@ class DiSAGEConv(MessagePassing):      #    Qin from Claude
             :class:`torch_geometric.nn.conv.MessagePassing`.
     """
 
-    def __init__(self, in_channels, out_channels, normalize=False, bias=True, **kwargs):
+    def __init__(self, in_channels, out_channels, normalize=False,  cached=True, bias=True, **kwargs):
         super(DiSAGEConv, self).__init__(aggr='mean', **kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.normalize = normalize
+        self.cached = cached
 
         self.weight = Parameter(torch.Tensor(in_channels, out_channels))
         self.weight_neighbor = Parameter(torch.Tensor(in_channels, out_channels))
@@ -394,16 +424,33 @@ class DiSAGEConv(MessagePassing):      #    Qin from Claude
         glorot(self.weight)
         glorot(self.weight_neighbor)
         zeros(self.bias)
+        self.cached_result = None
+        self.cached_num_edges = None
 
     def forward(self, x, edge_index, edge_weight=None):
         """"""
-        if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), device=edge_index.device)
+        if self.cached and self.cached_result is not None:
+            if edge_index.size(1) != self.cached_num_edges:
+                raise RuntimeError(
+                    'Cached {} number of edges, but found {}. Please '
+                    'disable the caching behavior of this layer by removing '
+                    'the `cached=True` argument in its constructor.'.format(
+                        self.cached_num_edges, edge_index.size(1)))
+
+        if not self.cached or self.cached_result is None:
+            self.cached_num_edges = edge_index.size(1)
+            if edge_weight is None:
+                edge_weight = torch.ones((edge_index.size(1),), device=edge_index.device)
+            # else:
+            #     norm = edge_weight
+            self.cached_result = edge_index, edge_weight
+
+        edge_index, edge_weight = self.cached_result
 
         return self.propagate(edge_index, x=x, edge_weight=edge_weight)
 
     def message(self, x_j, edge_weight):
-        return edge_weight.view(-1, 1) * x_j
+        return edge_weight.view(-1, 1) * x_j if edge_weight is not None else x_j
 
     def update(self, aggr_out, x):
         out = torch.matmul(x, self.weight) + torch.matmul(aggr_out, self.weight_neighbor)
@@ -561,20 +608,20 @@ class DiG_Simple1BN_nhid(nn.Module):
         return x
 
 class DiSAGE_1BN_nhid(nn.Module):
-    def __init__(self, m, input_dim, nhid, out_dim,  dropout, layer=1,  head=8):
+    def __init__(self, m, in_dim, nhid, out_dim,  dropout, layer=1,  head=8):
         super(DiSAGE_1BN_nhid, self).__init__()
         self.dropout = dropout
         if m == 'S':
-            self.conv1 = DiSAGEConv(input_dim, nhid)
+            self.conv1 = DiSAGEConv(in_dim, nhid)
         elif m == 'G':
-            self.conv1 = DIGCNConv(input_dim, nhid)
+            self.conv1 = DIGCNConv(in_dim, nhid)
         elif m == 'A':
             num_head = 1
             head_dim = nhid // num_head
 
-            self.conv1 = GATConv_Qin(input_dim, head_dim, heads=head)
+            self.conv1 = GATConv_Qin(in_dim, head_dim, heads=head)
 
-            # self.conv1 = DiGATConv(input_dim, nhid, nhid)     # little difference from GATConv_Qin
+            # self.conv1 = DiGATConv(in_dim, nhid, nhid)     # little difference from GATConv_Qin
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
@@ -640,11 +687,11 @@ class DiSAGE_2BN_nhid(nn.Module):
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, nhid)
-            self.conv2 = DiSAGEConv(nhid, ncls)
+            self.conv2 = DiSAGEConv(nhid, nhid)
             self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'G':
             self.conv1 = DIGCNConv(input_dim, nhid)
-            self.conv2 = DIGCNConv(nhid, ncls)
+            self.conv2 = DIGCNConv(nhid, nhid)
             self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'A':
             num_head = 1
@@ -941,6 +988,29 @@ def create_DiGSimple_batch_nhid(nfeat, nhid, nclass, dropout, nlayer):
         model = DiG_SimpleXBN_batch_nhid(nfeat, nhid, nclass, dropout, nlayer)
     return model
 
+class Di_IB_1BN_nhid(torch.nn.Module):
+    def __init__(self, m, num_features, nhid, n_cls, dropout=0.5, layer=1):
+        super(Di_IB_1BN_nhid, self).__init__()
+        self._dropout = dropout
+        self.ib1 = InceptionBlock_Di(m, num_features, nhid)
+        self.Conv = nn.Conv1d(nhid, n_cls, kernel_size=1)
+        self.batch_norm1 = nn.BatchNorm1d(n_cls)
+
+        self.reg_params = []
+        self.non_reg_params = self.ib1.parameters()
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
+        x = self.batch_norm1(x)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
 
 class DiGCN_IB_1BN_nhid(torch.nn.Module):
     def __init__(self, num_features, nhid, n_cls, dropout=0.5, layer=1):
@@ -1126,6 +1196,36 @@ class DiGCN_IB_2BN_nhid(torch.nn.Module):
         x = x.permute((0, 2, 1))
         x = x.squeeze(0)
 
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class Di_IB_2BN_nhid(torch.nn.Module):
+    def __init__(self, m, num_features, hidden, num_classes, dropout=0.5, layer=2):
+        super(Di_IB_2BN_nhid, self).__init__()
+        self._dropout = dropout
+
+        self.ib1 = InceptionBlock_Di(m, num_features, hidden)
+        self.ib2 = InceptionBlock_Di(m, hidden, hidden)
+        self.batch_norm1 = nn.BatchNorm1d(hidden)
+        self.batch_norm2 = nn.BatchNorm1d(hidden)
+        self.Conv = nn.Conv1d(hidden, num_classes, kernel_size=1)
+
+        self.reg_params = list(self.ib1.parameters())+list(self.ib2.parameters())
+        self.non_reg_params = []
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = self.batch_norm1(x)
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        x = self.batch_norm2(x)
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
@@ -5343,20 +5443,22 @@ class DiGCN_IB_2BN_Ben2(torch.nn.Module):    #  obviously worse than DiGCN_IB_2B
         x = self.Conv(x)  # with this block or without, almost the same result
         x = x.permute((0, 2, 1)).squeeze()
         return x
+
 class DiGCN_IB_XBN_nhid(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_XBN_nhid, self).__init__()
+        self._dropout = dropout
+
         self.ib1 = InceptionBlock_Qin(num_features, hidden)
         self.ib2 = InceptionBlock_Qin(hidden, hidden)
-        self._dropout = dropout
+        self.layer = layer
+        self.ibx = nn.ModuleList([InceptionBlock_Qin(hidden,hidden) for _ in range(layer-2)])
+
         self.Conv = nn.Conv1d(hidden, num_classes, kernel_size=1)
 
         self.batch_norm1 = nn.BatchNorm1d(hidden)
         self.batch_norm2 = nn.BatchNorm1d(hidden)
         self.batch_norm3 = nn.BatchNorm1d(hidden)
-
-        self.layer = layer
-        self.ibx=nn.ModuleList([InceptionBlock_Qin(hidden,hidden) for _ in range(layer-2)])
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()
@@ -5380,6 +5482,49 @@ class DiGCN_IB_XBN_nhid(torch.nn.Module):
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
+
+
+class Di_IB_XBN_nhid(torch.nn.Module):
+    def __init__(self, m, num_features, hidden, num_classes, dropout=0.5, layer=2):
+        super(Di_IB_XBN_nhid, self).__init__()
+        self._dropout = dropout
+
+        self.ib1 = InceptionBlock_Di(m, num_features, hidden)
+        self.ib2 = InceptionBlock_Di(m, hidden, hidden)
+        self.layer = layer
+        self.ibx = nn.ModuleList([InceptionBlock_Di(m, hidden, hidden) for _ in range(layer - 2)])
+
+        self.Conv = nn.Conv1d(hidden, num_classes, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(hidden)
+        self.batch_norm2 = nn.BatchNorm1d(hidden)
+        self.batch_norm3 = nn.BatchNorm1d(hidden)
+
+        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        x = self.batch_norm1(x)
+
+        for iter_layer in self.ibx:
+            x = F.dropout(x, p=self._dropout, training=self.training)
+            x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+            x = self.batch_norm3(x)
+
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        x = self.batch_norm2(x)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
 class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
     def __init__(self, num_features, hidden, num_classes, dropout=0.5, layer=2):
         super(DiGCN_IB_XBN_nhid_para, self).__init__()
@@ -5663,6 +5808,17 @@ def create_DiG_IB_nhid(nfeat, nhid, nclass, dropout, nlayer):
         model = DiGCN_IB_2BN_nhid(nfeat, nhid, nclass, dropout, nlayer)
     else:
         model = DiGCN_IB_XBN_nhid(nfeat, nhid, nclass, dropout, nlayer)
+    return model
+
+
+def create_Di_IB_nhid(m, nfeat, nhid, nclass, dropout, nlayer):
+
+    if nlayer == 1:
+        model = Di_IB_1BN_nhid(m, nfeat, nhid, nclass, dropout, nlayer)
+    elif nlayer == 2:
+        model = Di_IB_2BN_nhid(m, nfeat, nhid, nclass, dropout, nlayer)
+    else:
+        model = Di_IB_XBN_nhid(m, nfeat, nhid, nclass, dropout, nlayer)
     return model
 
 def create_DiG_IB_nhid_para(nfeat, nhid, nclass, dropout, nlayer):

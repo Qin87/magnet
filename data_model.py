@@ -24,7 +24,7 @@ from nets.DiG_NoConv import (create_DiGSimple, create_DiG_MixIB_SymCat, create_D
                              create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_Sym_batch_nhid, create_DiG_IB_SymCat_batchConvOut, create_DiG_IB_batch_nhid, create_DiG_MixIB_SymCat_nhid, create_DiG_MixIB_SymCat_batch_nhid,
                              create_DiG_IB_SymCat_nhid, create_DiG_IB_SymCat_batch_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_batch_nhid, create_DiG_IB_nhid, create_DiG_IB_Sym_nhid_para,
-                             create_DiG_IB_nhid_para, create_DiGSimple_batch_nhid, create_DiSAGESimple_nhid)
+                             create_DiG_IB_nhid_para, create_DiGSimple_batch_nhid, create_DiSAGESimple_nhid, create_Di_IB_nhid)
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -141,7 +141,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     if args.paraD:
                         model = create_DiG_IB_nhid_para(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                     else:
-                        model = create_DiG_IB_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                        model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
                 else:
                     print('Shoot, using batch_size:', args.batch_size)
                     # model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)     # to choose from
