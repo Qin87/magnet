@@ -67,7 +67,7 @@ class DIGCNConv(MessagePassing):
             :class:`torch_geometric.nn.conv.MessagePassing`.
     """
 
-    def __init__(self, in_channels, out_channels, improved=False, cached=True,
+    def __init__(self, in_channels, out_channels, improved=False, cached=False,
                  bias=True, **kwargs):
         super(DIGCNConv, self).__init__(aggr='add', **kwargs)
 
