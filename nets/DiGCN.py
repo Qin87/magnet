@@ -13,6 +13,8 @@ from torch_geometric.utils import add_remaining_self_loops, add_self_loops
 from torch_geometric.utils import to_undirected, is_undirected
 from torch_geometric.nn.inits import glorot, zeros
 
+from nets.DiG_NoConv import DiSAGEConv, GATConv_Qin
+
 
 class DIGCNConv(MessagePassing):
     r"""The graph convolutional operator takes from Pytorch Geometric.
@@ -196,14 +198,12 @@ class InceptionBlock_Qin(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super(InceptionBlock_Qin, self).__init__()
         self.ln = Linear(in_dim, out_dim)
-        self.conv1 = DIGCNConv(in_dim, out_dim)
-        self.conv2 = DIGCNConv(in_dim, out_dim)
         self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(5)])
 
     def reset_parameters(self):
         self.ln.reset_parameters()
-        self.conv1.reset_parameters()
-        self.conv2.reset_parameters()
+        # self.conv1.reset_parameters()
+        self.convx.reset_parameters()
 
     def forward(self, x, edge_index_tuple, edge_weight_tuple):
 
@@ -216,14 +216,14 @@ class InceptionBlock_Qinlist(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super(InceptionBlock_Qinlist, self).__init__()
         self.ln = Linear(in_dim, out_dim)
-        self.conv1 = DIGCNConv(in_dim, out_dim)
-        self.conv2 = DIGCNConv(in_dim, out_dim)
+        # self.conv1 = DIGCNConv(in_dim, out_dim)
+        # self.conv2 = DIGCNConv(in_dim, out_dim)
         self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(5)])
 
     def reset_parameters(self):
         self.ln.reset_parameters()
         self.conv1.reset_parameters()
-        self.conv2.reset_parameters()
+        self.convx.reset_parameters()
 
     def forward(self, x, edge_index_tuple, edge_weight_tuple):
         x0 = self.ln(x)

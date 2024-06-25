@@ -654,7 +654,7 @@ def test():
         f1s.append(f1)
     return accs, baccs, f1s
 
-
+start_time = time.time()
 args = parse_args()
 seed = args.seed
 cuda_device = args.GPUdevice
@@ -688,7 +688,7 @@ elif args.net.startswith('Mag'):
 else:
     net_to_print = args.net
 if args.net[1:3] == 'iA' or args.net == 'GAT':
-    net_to_print = net_to_print + str(args.heads)
+    net_to_print = net_to_print +'_Head' + str(args.heads)
 
 if args.net[1:].startswith('iG'):
     if args.paraD:
@@ -702,8 +702,7 @@ if args.largeData:
 else:
     net_to_print = net_to_print + '_NoBatch_'
 if args.feat_dim != 64:
-    net_to_print = net_to_print + '_hidden' + str(args.feat_dim)
-
+    net_to_print = net_to_print + str(args.feat_dim) + 'hid_'
 
 
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
@@ -754,8 +753,6 @@ criterion = CrossEntropy().to(device)
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 if args.all1:
     print("x is all 1")
-    # num_features = data_x.size(0)  # Get the size of the first dimension of data_x
-    # data_x = torch.ones((num_features, 1)).to(device)
     data_x.fill_(1)
 n_cls = data_y.max().item() + 1
 print("class number is ", n_cls)
@@ -802,9 +799,9 @@ if args.net.startswith('Di'):
 
 elif args.net.startswith(('Qi', 'Wi', 'pan')):
     if args.net.startswith('Wi'):
-        edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)  # consumiing for large graph
+        edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
     else:
-        edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
+        edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     edge_index1 = edge_index1.to(device)
     edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
@@ -871,11 +868,9 @@ try:
         data_test_maskOrigin = data_test_maskOrigin.unsqueeze(1).repeat(1, splits)
 except:
     splits = 1
-# if data_x.shape[0] > 2500 and splits > 5:     # from Jun 10, delete this because QiG is much faster
-#     splits = 5
 Set_exit = False
 try:
-    start_time = time.time()
+    # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ',device, file=log_file)
         # for split in range(splits - 1, -1, -1):
@@ -1097,8 +1092,8 @@ try:
             std_dev_acc = statistics.stdev(acc_list)
             average_bacc = statistics.mean(bacc_list)
             std_dev_bacc = statistics.stdev(bacc_list)
-            print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+ "_acc"+ f"{average_acc:.1f}±{std_dev_acc:.1f}"+ "_bacc"+ f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+ '_Macro F1:'+ f"{average:.1f}±{std_dev:.1f}")
-            print(net_to_print+ str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+ "_acc"+ f"{average_acc:.1f}±{std_dev_acc:.1f}"+ "_bacc"+ f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+ '_Macro F1:'+ f"{average:.1f}±{std_dev:.1f}", file=log_file)
+            print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}")
+            print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}", file=log_file)
 
 
 except KeyboardInterrupt:
