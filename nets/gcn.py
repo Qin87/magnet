@@ -317,7 +317,7 @@ class StandGCN2BN(nn.Module):
 
 
 class StandGCNXBN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3, norm=True):
+    def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
         super(StandGCNXBN, self).__init__()
         self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm)
         self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=norm)
@@ -328,7 +328,7 @@ class StandGCNXBN(nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(nclass)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
-        self.is_add_self_loops = False  # Qin TODO True is the original
+        self.is_add_self_loops = True  # Qin TODO True is the original
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
         self.non_reg_params = self.conv2.parameters()
 

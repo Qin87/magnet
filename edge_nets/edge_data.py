@@ -795,6 +795,12 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     deg_inv[deg_inv == float('inf')] = 0
     p = deg_inv[row] * edge_weight
 
+    plt.hist(deg.cpu(), bins=50, edgecolor='k')
+    plt.xlabel('degree')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of degree:Cora')       # Shuffled Absolute Value-Transformed Edge Weights
+    plt.show()
+
     # personalized pagerank p
     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
     p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1])).to(device)     # dummy node
