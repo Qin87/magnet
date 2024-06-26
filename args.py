@@ -25,13 +25,13 @@ def parse_args():
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
 
-    parser.add_argument('--net', type=str, default='WiG', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+    parser.add_argument('--net', type=str, default='QiSQymib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
-                        default='Cora', help='dataset name')
+                        default='Coauthor-CS', help='dataset name')
     parser.add_argument('--Direct_dataset', type=str, default='telegram/telegram', help='dgl/cora, dgl/citeseer, dgl/pubmed..., '
                                                                                'citeseer_npz/ , cora_ml/,  WikiCS/, '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '

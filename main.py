@@ -600,7 +600,10 @@ def train_keepAug(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdg
 
 @torch.no_grad()
 def test():
+    global edge_in, in_weight, edge_out, out_weight
+
     model.eval()
+
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         if args.AugDirect:
             if args.net.startswith(('Qym', 'addQym')):
@@ -744,8 +747,6 @@ n_cls = data_y.max().item() + 1
 print("class number is ", n_cls)
 if args.net.startswith('Di'):
     edge_index1, edge_weights1 = get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)    # consumiing for large graph
-    # edge_index1 = edge_index1.to(device)
-    # edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
         if args.net[-2:] == 'ib':
             edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
@@ -788,8 +789,6 @@ elif args.net.startswith(('Qi', 'Wi', 'pan')):
         edge_index1, edge_weights1 = WCJ_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
     else:
         edge_index1, edge_weights1 = Qin_get_appr_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
-    # edge_index1 = edge_index1.to(device)
-    # edge_weights1 = edge_weights1.to(device)
     if args.net[-2:] == 'ib' or args.net[-2:] == 'ub':
         if args.net[-2:] == 'ib':
             edge_index2, edge_weights2 = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
@@ -805,8 +804,8 @@ elif args.net.startswith(('Qi', 'Wi', 'pan')):
             edge_index_tuple, edge_weights_tuple = get_third_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
         else:
             edge_index_tuple, edge_weights_tuple = get_third_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype)
-        SparseEdges = (edge_index1,)+ edge_index_tuple
-        edge_weight = (edge_weights1,)+ edge_weights_tuple
+        SparseEdges = (edge_index1,) + edge_index_tuple
+        edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
     elif args.net[-2:] == 'i4' or args.net[-2:] == 'u4':
         if args.net[-2:] == 'i4':
