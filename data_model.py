@@ -131,7 +131,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         if args.paraD:
                             model = create_DiG_IB_Sym_nhid_para(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                         else:
-                            model = create_DiG_IB_Sym_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                            model = create_DiG_IB_Sym_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                         # model = create_DiG_IB_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                     else:
                         print('Shoot, using batch_size:', args.batch_size)
