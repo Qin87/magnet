@@ -490,6 +490,12 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
     deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)  # col degree
     deg2 = deg0 + deg1
 
+    # plt.hist(deg0.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('degree')
+    # plt.ylabel('Frequency')
+    # plt.title('Distribution of  degree0:Tel')  # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
+
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1)
 
@@ -587,6 +593,8 @@ def WCJ_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, W_degree=0, 
     deg_inv = deg0.pow(-1).to(device)
     deg_inv[deg_inv == float('inf')] = 0
     p = deg_inv[row] * edge_weight
+
+
 
     # personalized pagerank p
     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
@@ -795,11 +803,11 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     deg_inv[deg_inv == float('inf')] = 0
     p = deg_inv[row] * edge_weight
 
-    plt.hist(deg.cpu(), bins=50, edgecolor='k')
-    plt.xlabel('degree')
-    plt.ylabel('Frequency')
-    plt.title('Distribution of degree:Cora')       # Shuffled Absolute Value-Transformed Edge Weights
-    plt.show()
+    # plt.hist(deg.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('degree')
+    # plt.ylabel('Frequency')
+    # plt.title('Distribution of degree:Cora')       # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
 
     # personalized pagerank p
     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)

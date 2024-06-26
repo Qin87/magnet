@@ -6461,26 +6461,26 @@ def create_DiG_IB_SymCat_batch_nhid(m, nfeat, nclass, args):
         model = DiGCN_IB_XBN_SymCat_batch_nhid(m, nfeat, nclass, args)
     return model
 
-# def create_DiG_IB_SymCat_batchConvOut(m, nfeat, nclass, args):
-#     '''
-#     revised for edge_index confusion
-#     Args:
-#         nfeat:
-#         nhid:
-#         nclass:
-#         dropout:
-#         nlayer:
-#
-#     Returns:
-#
-#     '''
-#     if args.layer == 1:
-#         model = DiGCN_IB_1BN_SymCat_batchConvOut(m, nfeat, nclass, args)
-#     elif args.layer == 2:
-#         model = DiGCN_IB_2BN_SymCat_batchConvOut(m, nfeat, nclass, args)
-#     else:
-#         model = DiGCN_IB_XBN_SymCat_batchConvOut(m, nfeat, nclass, args)
-#     return model
+def create_DiG_IB_SymCat_batchConvOut(m, nfeat, nclass, args):
+    '''
+    revised for edge_index confusion
+    Args:
+        nfeat:
+        nhid:
+        nclass:
+        dropout:
+        nlayer:
+
+    Returns:
+
+    '''
+    if args.layer == 1:
+        model = DiGCN_IB_1BN_SymCat_batchConvOut(m, nfeat, nclass, args)
+    elif args.layer == 2:
+        model = DiGCN_IB_2BN_SymCat_batchConvOut(m, nfeat, nclass, args)
+    else:
+        model = DiGCN_IB_XBN_SymCat_batchConvOut(m, nfeat, nclass, args)
+    return model
 
 def create_DiG_MixIB_SymCat(m, nfeat, nclass, args):
     '''
