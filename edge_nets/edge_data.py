@@ -1,5 +1,4 @@
 import sys
-
 import torch
 import numpy as np
 import pickle as pk
@@ -16,8 +15,6 @@ from torch_geometric.data import Data
 from torch_geometric.utils import is_undirected, to_networkx
 from networkx.algorithms.components import is_weakly_connected
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
-from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-from torch_scatter import scatter_add
 import scipy
 import os
 from joblib import Parallel, delayed
@@ -783,8 +780,7 @@ def get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=None
 
 def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):       # TODO get back, new DiG, name remove 2
     device = edge_index.device
-    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-    from torch_scatter import scatter_add
+
 
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,

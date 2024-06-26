@@ -12,8 +12,6 @@ from torch_geometric.utils import to_undirected, is_undirected
 from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
-# from nets.DGCN import DGCNConv
-# from nets.DiGCN import InceptionBlock, InceptionBlock4batch, InceptionBlock_Qin, InceptionBlock_Qinlist
 from nets.Sym_Reg import DGCNConv
 from typing import Union, Tuple, Optional
 from torch_geometric.typing import (OptPairTensor, Adj, Size, NoneType,
@@ -2182,11 +2180,11 @@ class DiGCN_IB_XBN_Sym_nhid(torch.nn.Module):
     '''
     revised for edge_index confusion
     '''
-    def __init__(self, input_dim, nhid, out_dim, dropout=0.5, layer=3):
+    def __init__(self, m, input_dim, nhid, out_dim, dropout=0.5, layer=3):
         super(DiGCN_IB_XBN_Sym_nhid, self).__init__()
-        self.ib1 = InceptionBlock_Qin(input_dim, nhid)
-        self.ib2 = InceptionBlock_Qin(nhid, nhid)
-        self.ibx = InceptionBlock_Qin(nhid, nhid)
+        self.ib1 = InceptionBlock_Di(m, input_dim, nhid)
+        self.ib2 = InceptionBlock_Di(m, nhid, nhid)
+        self.ibx = InceptionBlock_Di(m, nhid, nhid)
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nhid)
