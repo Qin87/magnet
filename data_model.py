@@ -97,11 +97,11 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith(('Di', 'Qi', 'Wi')):        # GCN  -->  SAGE
         if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
             if not args.largeData:
-                if args.net[2:].startswith(('S', 'A', 'G')):
-                    model = create_DiSAGESimple_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Jun22
+                # model = create_DiSAGESimple_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Jun22
+                model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
             else:
                 raise NotImplementedError("To build batch training model in the future")
-                model = create_DiGSimple_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                model = create_DiGSimple_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
         else:
             if args.net[3:].startswith(('Sym', 'Qym')):
                 if args.net[6:].startswith('Cat'):
@@ -109,43 +109,43 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         if args.net[12:].startswith(('Sym', 'Qym')):
                             if not args.largeData:
                                 # model = create_DiG_MixIB_SymCat_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
-                                model = create_DiG_MixIB_SymCat_Sym_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                                model = create_DiG_MixIB_SymCat_Sym_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                             else:
                                 # model = create_DiG_MixIB_SymCat_Sym_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
-                                model = create_DiG_MixIB_SymCat_Sym_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                                model = create_DiG_MixIB_SymCat_Sym_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                         else:
                             if not args.largeData:
                                 # model = create_DiG_MixIB_SymCat(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
-                                model = create_DiG_MixIB_SymCat_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                                model = create_DiG_MixIB_SymCat_nhid(args.net[2],num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                             else:  # TODO
                                 # model = create_DiG_MixIB_SymCat_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
-                                model = create_DiG_MixIB_SymCat_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                                model = create_DiG_MixIB_SymCat_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                     else:
                         if not args.largeData:
-                            model = create_DiG_IB_SymCat_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.ibx1).to(device)
+                            model = create_DiG_IB_SymCat_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.ibx1).to(device)
                         else:
-                            model = create_DiG_IB_SymCat_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)        # this is better!
+                            model = create_DiG_IB_SymCat_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)        # this is better!
                             # model = create_DiG_IB_SymCat_batchConvOut(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
                 else:
                     if not args.largeData:
                         if args.paraD:
-                            model = create_DiG_IB_Sym_nhid_para(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                            model = create_DiG_IB_Sym_nhid_para(args.net[2], num_features,  n_cls, args).to(device)
                         else:
-                            model = create_DiG_IB_Sym_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
-                        # model = create_DiG_IB_Sym(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                            model = create_DiG_IB_Sym_nhid(args.net[2], num_features,  n_cls, args).to(device)
                     else:
                         print('Shoot, using batch_size:', args.batch_size)
-                        model = create_DiG_IB_Sym_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                        model = create_DiG_IB_Sym_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
             else:
                 if not args.largeData:
                     if args.paraD:
-                        model = create_DiG_IB_nhid_para(num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
+                        model = create_DiG_IB_nhid_para(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                     else:
-                        model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+                        # model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+                        model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args= args).to(device)
                 else:
                     print('Shoot, using batch_size:', args.batch_size)
                     # model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)     # to choose from
-                    model = create_DiG_IB_batch_nhid(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
+                    model = create_DiG_IB_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
     # elif args.net.startswith(('DiG', 'QiG', 'WiG')):
     #     if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
     #         if not args.largeData:

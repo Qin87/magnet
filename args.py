@@ -25,7 +25,7 @@ def parse_args():
                                                                  '4 for bidegree and bidirection, 20 for my bidegree(best), 21 for graphSHA bidegree, 2311 is trainmask use row-degree instead of 231 use col-deg, '
                                                                  '301 based on original direction')
 
-    parser.add_argument('--net', type=str, default='DiG', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
+    parser.add_argument('--net', type=str, default='QiCQymib', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, '
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=0, help='seed')
@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('--no_mask', action="store_true", help='whether to mask the self class in sampling neighbor classes. default is mask')
     parser.add_argument('--gdc', type=str, choices=['ppr', 'hk', 'none'], default='ppr', help='how to convert to weighted graph')
 
-    parser.add_argument('-hds', '--heads', default=4, type=int)
+    parser.add_argument('-hds', '--heads', default=8, type=int)
 
     #  from Magnet
     parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
