@@ -95,7 +95,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'APPNP':
         model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
     elif args.net.startswith(('Di', 'Qi', 'Wi')):        # GCN  -->  SAGE
-        if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
+        if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
             if not args.largeData:
                 # model = create_DiSAGESimple_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Jun22
                 model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
@@ -147,7 +147,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     # model = create_DiG_IB_batch(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)     # to choose from
                     model = create_DiG_IB_batch_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.batch_size).to(device)
     # elif args.net.startswith(('DiG', 'QiG', 'WiG')):
-    #     if args.net[-2:] not in ['ib', 'ub', 'i3', 'u3', 'i4', 'u4']:
+    #     if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
     #         if not args.largeData:
     #             model = create_DiGSimple_nhid(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)     # Apr9
     #         else:

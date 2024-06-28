@@ -22,6 +22,39 @@ from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remo
 from torch_scatter import scatter_add
 
 
+def fast_sparse_boolean_multi_hop(A, k):
+    row, col = A._indices()     # the non-zero elements in the sparse tensor
+    n = A.size(0)
+
+    # Create dictionary for fast lookup
+    neighbors = {i: set() for i in range(n)}        # Initializes a dictionary neighbors :  key i represents a node, and the corresponding value is an empty set
+    for r, c in zip(row.tolist(), col.tolist()):
+        neighbors[r].add(c)     # store the neighbors (nodes directly connected by edges) for each node
+
+    def k_hop_neighbors(node, hops):
+        if hops == 0:
+            return {node}       # Returns a set containing only the node itself
+        if hops == 1:
+            return set(neighbors[node])     # Returns the set of immediate neighbors of the node
+        prev_hop = k_hop_neighbors(node, hops - 1)
+        current_hop = set()
+        for prev_node in prev_hop:
+            current_hop.update(neighbors[prev_node])
+        return current_hop
+
+    all_hops = []
+    for hop in range(1, k + 1):
+        new_edges = set()
+        for node in range(n):
+            hop_neighbors = k_hop_neighbors(node, hop)
+            new_edges.update((node, h) for h in hop_neighbors if h != node)
+
+        new_indices = torch.tensor(list(new_edges), dtype=torch.long).t()
+        values = torch.ones(new_indices.size(1), dtype=torch.bool)
+        all_hops.append(torch.sparse_coo_tensor(new_indices, values, (n, n)).coalesce())
+
+    return tuple(all_hops)
+
 def sub_adj(edge_index, prob, seed):
     sub_train, sub_test = train_test_split(edge_index.T, test_size=prob, random_state=seed)
     sub_train, sub_val = train_test_split(sub_train, test_size=0.2, random_state=seed)
@@ -294,136 +327,213 @@ def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15,
 # Copy from DiGCN
 # https://github.com/flyingtango/DiGCN
 #################################################################################
-# def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
-# I think edge_weight shouldn't be in the parameter. so I changes it.
-#     from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-#     from torch_scatter import scatter_add
-#
-#     if edge_weight is None:
-#         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
-#                                      device=edge_index.device)
-#     fill_value = 1
-#     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-#     row, col = edge_index
-#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-#     deg_inv = deg.pow(-1)
-#     deg_inv[deg_inv == float('inf')] = 0
-#     p = deg_inv[row] * edge_weight
-#
-#     # personalized pagerank p
-#     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense()
-#     p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1]))
-#     p_v[0:num_nodes,0:num_nodes] = (1-alpha) * p_dense
-#     p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
-#     p_v[0:num_nodes,num_nodes] = alpha
-#     p_v[num_nodes,num_nodes] = 0.0
-#     p_ppr = p_v
-#
-#     eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(),left=True,right=False)
-#     eig_value = torch.from_numpy(eig_value.real)
-#     left_vector = torch.from_numpy(left_vector.real)
-#     val, ind = eig_value.sort(descending=True)
-#
-#     pi = left_vector[:,ind[0]] # choose the largest eig vector
-#     pi = pi[0:num_nodes]
-#     p_ppr = p_dense
-#     pi = pi/pi.sum()  # norm pi
-#
-#     # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
-#     assert len(pi[pi<0]) == 0
-#
-#     pi_inv_sqrt = pi.pow(-0.5)
-#     pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
-#     pi_inv_sqrt = pi_inv_sqrt.diag()
-#     pi_sqrt = pi.pow(0.5)
-#     pi_sqrt[pi_sqrt == float('inf')] = 0
-#     pi_sqrt = pi_sqrt.diag()
-#
-#     # L_appr  Ben__L is a matrix of n*n, non zero is edges, value of L is edge weight,
-#     L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
-#
-#     # make nan to 0
-#     L[torch.isnan(L)] = 0
-#
-#     # transfer dense L to sparse
-#     L_indices = torch.nonzero(L,as_tuple=False).t()
-#     L_values = L[L_indices[0], L_indices[1]]
-#     edge_index = L_indices
-#     edge_weight = L_values
-#
-#     # row normalization
-#     row, col = edge_index
-#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-#     deg_inv_sqrt = deg.pow(-0.5)
-#     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-#
-#     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+def get_pr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):     # from DiGCN, Qin never change
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                                 device=edge_index.device)
+    else:
+        edge_weight = torch.FloatTensor(edge_weight).to(edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(
+        edge_index, edge_weight, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
 
-# def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype):
-#     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
-#     fill_value = 1
-#     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-#     row, col = edge_index
-#     # print(row.shape, edge_weight.shape, num_nodes)   # torch.Size([623]) torch.Size([623]) 222
-#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-#     deg_inv = deg.pow(-1)
-#     deg_inv[deg_inv == float('inf')] = 0
-#     p = deg_inv[row] * edge_weight
-#
-#     # personalized pagerank p
-#     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
-#     p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1]))
-#     p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense
-#     p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
-#     p_v[0:num_nodes, num_nodes] = alpha
-#     p_v[num_nodes, num_nodes] = 0.0
-#     p_ppr = p_v
-#
-#     eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(), left=True, right=False)
-#     eig_value = torch.from_numpy(eig_value.real)
-#     left_vector = torch.from_numpy(left_vector.real)
-#     val, ind = eig_value.sort(descending=True)
-#
-#     pi = left_vector[:, ind[0]]  # choose the largest eig vector
-#     pi = pi[0:num_nodes]
-#     p_ppr = p_dense
-#     pi = pi / pi.sum()  # norm pi
-#
-#     # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
-#     assert len(pi[pi < 0]) == 0
-#
-#     pi_inv_sqrt = pi.pow(-0.5)
-#     pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
-#     pi_inv_sqrt = pi_inv_sqrt.diag()
-#     pi_sqrt = pi.pow(0.5)
-#     pi_sqrt[pi_sqrt == float('inf')] = 0
-#     pi_sqrt = pi_sqrt.diag()
-#
-#     # 将所有涉及的张量移动到同一个设备上
-#     device = edge_index.device
-#     p_ppr = p_ppr.to(device)
-#     pi_inv_sqrt = pi_inv_sqrt.to(device)
-#     pi_sqrt = pi_sqrt.to(device)
-#
-#     # L_appr  Ben__L is a matrix of n*n, non zero is edges, value of L is edge weight,
-#     L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
-#
-#     # make nan to 0
-#     L[torch.isnan(L)] = 0
-#
-#     # transfer dense L to sparse
-#     L_indices = torch.nonzero(L, as_tuple=False).t()
-#     L_values = L[L_indices[0], L_indices[1]]
-#     edge_index = L_indices
-#     edge_weight = L_values
-#
-#     # row normalization
-#     row, col = edge_index
-#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-#     deg_inv_sqrt = deg.pow(-0.5)
-#     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-#
-#     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+    # pagerank p
+    p_pr = (1.0 - alpha) * p_dense + alpha / num_nodes * torch.ones((num_nodes, num_nodes), dtype=dtype, device=p.device)
+
+    eig_value, left_vector = scipy.linalg.eig(p_pr.numpy(), left=True, right=False)
+    eig_value = torch.from_numpy(eig_value.real)
+    left_vector = torch.from_numpy(left_vector.real)
+    val, ind = eig_value.sort(descending=True)
+
+    # assert val[0] == 1.0
+
+    pi = left_vector[:, ind[0]]  # choose the largest eig vector
+    pi = pi / pi.sum()  # norm pi
+
+    # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
+    assert len(pi[pi < 0]) == 0
+
+    pi_inv_sqrt = pi.pow(-0.5)
+    pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
+    pi_inv_sqrt = pi_inv_sqrt.diag()
+    pi_sqrt = pi.pow(0.5)
+    pi_sqrt[pi_sqrt == float('inf')] = 0
+    pi_sqrt = pi_sqrt.diag()
+
+    # L_pr
+    L = (torch.mm(torch.mm(pi_sqrt, p_pr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_pr.t()), pi_sqrt)) / 2.0
+
+    # make nan to 0
+    L[torch.isnan(L)] = 0
+
+    # # let little possbility connection to 0, make L sparse
+    # L[ L < (1/num_nodes)] = 0
+    # L[ L < 5e-4] = 0
+
+    # transfer dense L to sparse
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index = L_indices
+    edge_weight = L_values
+
+    # row normalization
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+
+def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
+    # from DiGCN, Qin never change
+    if edge_weight == None:
+        edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                                 device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(
+        edge_index, edge_weight, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+
+    # personalized pagerank p
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1]))
+    p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense
+    p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
+    p_v[0:num_nodes, num_nodes] = alpha
+    p_v[num_nodes, num_nodes] = 0.0
+    p_ppr = p_v
+
+    eig_value, left_vector = scipy.linalg.eig(p_ppr.numpy(), left=True, right=False)
+    eig_value = torch.from_numpy(eig_value.real)
+    left_vector = torch.from_numpy(left_vector.real)
+    val, ind = eig_value.sort(descending=True)
+
+    pi = left_vector[:, ind[0]]  # choose the largest eig vector
+    pi = pi[0:num_nodes]
+    p_ppr = p_dense
+    pi = pi / pi.sum()  # norm pi
+
+    # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
+    assert len(pi[pi < 0]) == 0
+
+    pi_inv_sqrt = pi.pow(-0.5)
+    pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
+    pi_inv_sqrt = pi_inv_sqrt.diag()
+    pi_sqrt = pi.pow(0.5)
+    pi_sqrt[pi_sqrt == float('inf')] = 0
+    pi_sqrt = pi_sqrt.diag()
+
+    # L_appr
+    L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0
+
+    # make nan to 0
+    L[torch.isnan(L)] = 0
+
+    # transfer dense L to sparse
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index = L_indices
+    edge_weight = L_values
+
+    # row normalization
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+def get_second_directed_adj(edge_index, num_nodes, dtype):
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(
+        edge_index, edge_weight, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)
+    L_out = torch.mm(p_dense, p_dense.t())
+
+    L_in_hat = L_in
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index = L_indices
+    edge_weight = L_values
+
+    # row normalization
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+def Qin_get_second_directed_adj0(edge_index, num_nodes, dtype):
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(
+        edge_index, edge_weight, fill_value, num_nodes)
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv = deg.pow(-1)
+    deg_inv[deg_inv == float('inf')] = 0
+    # p = deg_inv[row] * edge_weight
+    # p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    p_dense = torch.sparse.FloatTensor(edge_index, edge_weight, torch.Size([num_nodes, num_nodes])).to_dense()
+
+    L_in = torch.mm(p_dense.t(), p_dense)
+    L_out = torch.mm(p_dense, p_dense.t())
+
+    L_in_hat = L_in
+    L_out_hat = L_out
+
+    L_in_hat[L_out == 0] = 0        # intersection
+    L_out_hat[L_in == 0] = 0
+
+    # L^{(2)}
+    L = (L_in_hat + L_out_hat) / 2.0
+
+    L[torch.isnan(L)] = 0
+    L_indices = torch.nonzero(L, as_tuple=False).t()
+    L_values = L[L_indices[0], L_indices[1]]
+    edge_index = L_indices
+    # edge_weight = L_values
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+
+    # row normalization
+    row, col = edge_index
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    deg_inv_sqrt = deg.pow(-0.5)
+    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+
+    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
 def union_edge_index(edge_index):
     # Concatenate the original edge_index with its reverse
@@ -433,25 +543,55 @@ def union_edge_index(edge_index):
     union = torch.unique(union, dim=1)
 
     return union
-def Qin_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
-    """
-    based on get_appr_directed_adj, all weights to 1
-    Args:
-        alpha:
-        edge_index:
-        num_nodes:
-        dtype:
-        edge_weight:
-
-    Returns:
-
-    """
-
+def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
     fill_value = 1
     edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
-    edge_index = torch.unique(edge_index, dim=1)
+    edge_index = torch.unique(edge_index, dim=1).to(device)
+    edge_weight = normalize_edges(edge_index, num_nodes).to(device)
+
+    return edge_index,  edge_weight
+
+def Qin_get_directed_adj0(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
+    device = edge_index.device
+    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
+    from torch_scatter import scatter_add
+
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
+                                     device=edge_index.device)
+    fill_value = 1
+    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    edge_index = edge_index.to(device)
+    edge_weight = edge_weight.to(device)
+    row, col = edge_index
+    deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)      # row degree
+    deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)      # col degree
+    deg2 = deg0 + deg1
+    deg_inv = deg0.pow(-1).to(device)
+    deg_inv[deg_inv == float('inf')] = 0
+    p = deg_inv[row] * edge_weight
+
+    # personalized pagerank p
+    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
+    #
+    # p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1])).to(device)  # dummy node
+    # p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense  # original P
+    # p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
+    # p_v[0:num_nodes, num_nodes] = alpha
+    # p_v[num_nodes, num_nodes] = 0.0
+    # p_ppr = p_v.cpu()
+    p_ppr = p_dense.to(device)
+    L = (p_ppr + p_ppr.t()) / 2.0  # a bit time consuming
+
+    # L = p_dense       # Qin revise
+    # # make nan to 0
+    # L[torch.isnan(L)] = 0
+    #
+    # # transfer dense L to sparse
+    L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
+    edge_index = L_indices.to(device)
 
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
     row, col = edge_index
@@ -459,26 +599,11 @@ def Qin_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=N
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
-    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-    edge_weight = edge_weight.to(device)
-    edge_index = edge_index.to(device)
+    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col].to(device)
 
-    return edge_index,  edge_weight
-
-def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
-    """
-    based on get_appr_directed_adj, all weights to 1
-    Args:
-        alpha:
-        edge_index:
-        num_nodes:
-        dtype:
-        edge_weight:
-
-    Returns:
-
-    """
-
+    return edge_index, edge_weight
+def WCJ_get_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
+    # random value to edge weights
     device = edge_index.device
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
@@ -490,11 +615,11 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
     deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)  # col degree
     deg2 = deg0 + deg1
 
-    # plt.hist(deg0.cpu(), bins=50, edgecolor='k')
-    # plt.xlabel('degree')
-    # plt.ylabel('Frequency')
-    # plt.title('Distribution of  degree0:Tel')  # Shuffled Absolute Value-Transformed Edge Weights
-    # plt.show()
+    plt.hist(deg0.cpu(), bins=50, edgecolor='k')
+    plt.xlabel('degree')
+    plt.ylabel('Frequency')
+    plt.title('Original Distribution of  degree0:NPZ')  # Shuffled Absolute Value-Transformed Edge Weights
+    plt.show()
 
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1)
@@ -546,148 +671,42 @@ def WCJ_get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, e
         edge_weight = trimodal_distribution(edge_index.size(1), edge_index.device, dtype)
     elif W_degree == -2:   # two peaks
         edge_weight = trimodal_distribution2(edge_index.size(1), edge_index.device, dtype)
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
+
+        print(f"Original Edge weight range: [{min_val}, {max_val}]")
     elif W_degree == -4:   # two peaks
         edge_weight = trimodal_distribution4(edge_index.size(1), edge_index.device, dtype)
     else:
         NotImplementedError('Not Implemented edge-weight type')
+
+    plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
+    plt.xlabel('Absolute Edge Weight')
+    plt.ylabel('Frequency')
+    plt.title('Original Distribution of  WiG-2 edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
+    plt.show()
+
+    # row normalization
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
     edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-    edge_weight = edge_weight.to(device)
-    edge_index = edge_index.to(device)
-
-    return edge_index,  edge_weight
-
-def WCJ_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
-    """
-    based on get_appr_directed_adj, all weights to 1
-    Args:
-        alpha:
-        edge_index:
-        num_nodes:
-        dtype:
-        edge_weight:
-
-    Returns:
-
-    """
-
-    device = edge_index.device
-    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-    from torch_scatter import scatter_add
-
-    if edge_weight is None:
-        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
-                                     device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-    edge_index = edge_index.to(device)
-    edge_weight = edge_weight.to(device)
-    row, col = edge_index
-    deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)      # row degree
-    deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)      # col degree
-    deg2 = deg0 + deg1
-    deg_inv = deg0.pow(-1).to(device)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight
-
-
-
-    # personalized pagerank p
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
-    #
-    # p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1])).to(device)  # dummy node
-    # p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense  # original P
-    # p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
-    # p_v[0:num_nodes, num_nodes] = alpha
-    # p_v[num_nodes, num_nodes] = 0.0
-    # p_ppr = p_v.cpu()
-    p_ppr = p_dense.to(device)
-    L = (p_ppr + p_ppr.t()) / 2.0  # a bit time consuming
-
-    # L = p_dense       # Qin revise
-    # # make nan to 0
-    # L[torch.isnan(L)] = 0
-    #
-    # # transfer dense L to sparse
-    L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
-    edge_index = L_indices.to(device)      # their transformed edges of this symmetric_A of digraph
-
-    # edge_weight= torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
-    if W_degree == 0:  # in-degree
-        edge_weight = deg0[edge_index[0]] + deg0[edge_index[1]]
-        print("Using deg0")
-    elif W_degree == 1:     # out-degree
-        edge_weight = deg1[edge_index[0]] + deg0[edge_index[1]]
-        print("Using deg1")
-    elif W_degree == 2:     # total-degree
-        edge_weight = deg2[edge_index[0]] + deg0[edge_index[1]]
-        print("Using deg2")
-    elif W_degree == 3:     # random number in [1,100]
-        edge_weight = torch.randint(1, 101, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
-        print("proximity weight is random number in [1,100]")
-    elif W_degree == 300:     # random number in [1,10000]
-        edge_weight = torch.randint(1, 10001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
-        print("proximity weight is random number in [1,100]")
-    elif W_degree == 30000:     # random number in [1,1000000]
-        edge_weight = torch.randint(1, 1000001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
-        print("proximity weight is random number in [1,100]")
-    elif W_degree == 400:  # random number in [0.001,1]
-        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.999 + 0.001
-        print("proximity weight is random number in [0.1,1]")
-    elif W_degree == 40000:  # random number in [0.00001,1]
-        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.99999 + 0.00001
-        print("proximity weight is random number in [0.1,1]")
-    elif W_degree == 4:  # random number in [0.1,1]       # random number in [0.1,1]
-        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.9 + 0.1
-        print("proximity weight is random number in [0.1,1]")
-    elif W_degree == 5:  # random number in [0.00001,100000]
-        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
-        # random_values = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device)
-        min_val = torch.min(edge_weight).item()
-        max_val = torch.max(edge_weight).item()
-
-        print(f"Original Edge weight range: [{min_val}, {max_val}]")
-        # edge_weight = random_values * (10000 - 0.0001) + 0.0001
-    elif W_degree == 50:  # random number in [0.00001,100000]
-        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
-        edge_weight = torch.abs(torch.sin(edge_weight))
-        # random_values = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device)
-        min_val = torch.min(edge_weight).item()
-        max_val = torch.max(edge_weight).item()
-
-        print(f"Original Edge weight range: [{min_val}, {max_val}]")
-        # edge_weight = random_values * (10000 - 0.0001) + 0.0001
-    elif W_degree == -3:   # three peaks
-        edge_weight = trimodal_distribution(edge_index.size(1), edge_index.device, dtype)
-    elif W_degree == -2:   # two peaks
-        edge_weight = trimodal_distribution2(edge_index.size(1), edge_index.device, dtype)
-    elif W_degree == -4:   # two peaks
-        edge_weight = trimodal_distribution4(edge_index.size(1), edge_index.device, dtype)
-    else:
-        print("not implemented!")
-        sys.exit()
-
-
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-
-    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-    edge_weight = edge_weight.to(device)
 
     min_val = torch.min(edge_weight).item()
     max_val = torch.max(edge_weight).item()
 
     print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
 
-    # return edge_index,  torch.ones((edge_index.size(1), ), dtype=dtype,device=edge_index.device)
-    return edge_index,  edge_weight
+    # plt.xlim(0, 2)
+    plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
+    plt.xlabel('Absolute Edge Weight')
+    plt.ylabel('Frequency')
+    plt.title('Normalized Distribution of  WiG-2 edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
+    plt.show()
 
+    return edge_index,  edge_weight
 
 def Qin_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     """
@@ -717,78 +736,8 @@ def Qin_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=
     return edge_index,  edge_weight
 
 
-def get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=None):   # TODO to delete(old DiG)
+def get_appr_directed_adj2(alpha, edge_index, num_nodes, dtype, edge_weight=None):       # TODO get back, new DiG, name remove 2
     device = edge_index.device
-    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-    from torch_scatter import scatter_add
-
-    if edge_weight is None:
-        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
-                                     device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-    edge_index = edge_index.to(device)
-    edge_weight = edge_weight.to(device)
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)
-    deg_inv = deg.pow(-1).to(device)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight
-
-    # personalized pagerank p
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
-    p_v = torch.zeros(torch.Size([num_nodes+1,num_nodes+1])).to(device)     # dummy node
-    p_v[0:num_nodes,0:num_nodes] = (1-alpha) * p_dense      # original P
-    p_v[num_nodes,0:num_nodes] = 1.0 / num_nodes
-    p_v[0:num_nodes,num_nodes] = alpha
-    p_v[num_nodes,num_nodes] = 0.0
-    p_ppr = p_v.cpu()   # for p_ppr.numpy()  # this is new P with one dummy node
-
-    p_ppr_sparse = csr_matrix(p_ppr.numpy())
-    eig_value, left_vector = scipy.linalg.eig(p_ppr_sparse.toarray(), left=True, right=False)
-    eig_value = torch.from_numpy(eig_value.real).to(device)     # Qin ask: why only real?       # converting a NumPy array containing eigenvalues to a PyTorch tensor
-    left_vector = torch.from_numpy(left_vector.real).to(device)
-    val, ind = eig_value.sort(descending=True)
-    #  sort the tensor eig_value in descending order and also get the corresponding indices of the sorted elements
-
-    pi = left_vector[:,ind[0]]  # choose the largest eig vector
-    pi = pi[0:num_nodes]    # X+1 back to X  # remove the dummy node
-    p_ppr = p_dense.to(device)
-    pi = pi/pi.sum()  # norm pi
-
-    # Note that by scaling the vectors, even the sign can change. That's why positive and negative elements might get flipped.
-    assert len(pi[pi<0]) == 0
-    pi_inv_sqrt = pi.pow(-0.5)      # (183,) to (183,)
-    pi_inv_sqrt[pi_inv_sqrt == float('inf')] = 0
-    pi_inv_sqrt = pi_inv_sqrt.diag().to(device)     # (183,) to (183, 183)
-    pi_sqrt = pi.pow(0.5)
-    pi_sqrt[pi_sqrt == float('inf')] = 0
-    pi_sqrt = pi_sqrt.diag().to(device)
-
-    # L_appr   # actually, L_appr= I-L, so this L is the equivalent their version of symmetric_A of digraph
-    L = (torch.mm(torch.mm(pi_sqrt, p_ppr), pi_inv_sqrt) + torch.mm(torch.mm(pi_inv_sqrt, p_ppr.t()), pi_sqrt)) / 2.0       # a bit time consuming
-    # make nan to 0
-    L[torch.isnan(L)] = 0
-
-    # transfer dense L to sparse
-    L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
-    L_values = L[L_indices[0], L_indices[1]]
-    edge_index = L_indices      # their transformed edges of this symmetric_A of digraph
-    edge_weight = L_values
-
-    # row normalization
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-
-    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]  #
-
-
-
-def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):       # TODO get back, new DiG, name remove 2
-    device = edge_index.device
-
 
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
@@ -863,11 +812,7 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 
     print(f"Original Edge weight range: [{min_val}, {max_val}]")
 
-    # plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
-    # plt.xlabel('Absolute Edge Weight')
-    # plt.ylabel('Frequency')
-    # plt.title('Distribution of  DiG edge weights_F1=(WebKB/Cornell)')       # Shuffled Absolute Value-Transformed Edge Weights
-    # plt.show()
+
 
     # row normalization
     row, col = edge_index
@@ -881,6 +826,11 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
     max_val = torch.max(edge_weight).item()
 
     print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
+    # plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('Absolute Edge Weight')
+    # plt.ylabel('Frequency')
+    # plt.title('Distribution of  DiG edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
 
     # delete TODO
     # edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
@@ -894,7 +844,7 @@ import torch
 import torch.distributions as dist
 def trimodal_distribution(size, device, dtype):
     # Define the means and standard deviations for our three peaks
-    means = torch.tensor([0.001, 1.0, 1000.0], device=device, dtype=dtype)
+    means = torch.tensor([0.001, 100.0, 1000.0], device=device, dtype=dtype)
     stds = torch.tensor([0.0001, 0.1, 100.0], device=device, dtype=dtype)
 
     # Create a categorical distribution to choose between the three peaks
@@ -958,167 +908,116 @@ def trimodal_distribution2(size, device, dtype):
 
     return samples
 
-def Qin_get_second_directed_adj(edge_index, num_nodes, dtype):
-    """
-    no change based on get_second_directed_adj
-    Args:
-        edge_index:
-        num_nodes:
-        dtype:
 
-    Returns:
+def fast_sparse_boolean_multi_hop_union(A, k):
+    row, col = A._indices()
+    n = A.size(0)
 
-    """
-    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
-                             device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight = add_self_loops(
-        edge_index, edge_weight, fill_value, num_nodes)
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv = deg.pow(-1)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight      # all this is same with get directed adj
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    # Create dictionaries for fast lookup of both incoming and outgoing neighbors
+    out_neighbors = {i: set() for i in range(n)}
+    in_neighbors = {i: set() for i in range(n)}
+    for r, c in zip(row.tolist(), col.tolist()):
+        out_neighbors[r].add(c)
+        in_neighbors[c].add(r)
 
-    L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
-    L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
+    def k_hop_neighbors(node, hops, neighbors_dict):
+        if hops == 0:
+            return {node}
+        if hops == 1:
+            return set(neighbors_dict[node])
+        prev_hop = k_hop_neighbors(node, hops - 1, neighbors_dict)
+        current_hop = set()
+        for prev_node in prev_hop:
+            current_hop.update(neighbors_dict[prev_node])
+        return current_hop
 
-    L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
-    L_out_hat = L_out
+    all_hops = []
+    for hop in range(1, k + 1):
+        new_edges = set()
+        for node in range(n):
+            # Compute outgoing k-hop neighbors
+            out_hop_neighbors = k_hop_neighbors(node, hop, out_neighbors)
+            # Compute incoming k-hop neighbors
+            in_hop_neighbors = k_hop_neighbors(node, hop, in_neighbors)
+            # Union of outgoing and incoming k-hop neighbors
+            hop_neighbors = out_hop_neighbors.union(in_hop_neighbors)
+            new_edges.update((node, h) for h in hop_neighbors if h != node)
 
-    L_in_hat[L_out == 0] = 0        # Qin learn: this is intersection
-    L_out_hat[L_in == 0] = 0
+        new_indices = torch.tensor(list(new_edges), dtype=torch.long).t()
+        values = torch.ones(new_indices.size(1), dtype=torch.bool)
+        all_hops.append(torch.sparse_coo_tensor(new_indices, values, (n, n)))
 
-    # L^{(2)}
-    L = (L_in_hat + L_out_hat) / 2.0
+    return tuple(all_hops)
 
-    L[torch.isnan(L)] = 0
-    L_indices = torch.nonzero(L, as_tuple=False).t()
-    L_values = L[L_indices[0], L_indices[1]]
-    edge_index = L_indices
-    edge_weight = L_values
+def sparse_boolean_multi_hop(A, k, mode='union'):
+    # Ensure A is in canonical form and convert to dense
+    A = A.coalesce().to_dense().to(torch.float32)
 
-    # row normalization
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    # Initialize all_hops list with the intersection of A*A.T and A.T*A
+    A_in = torch.mm(A, A.t())
+    A_out = torch.mm(A.t(), A)
+    if mode == 'union':
+        A_result = (A_in > 0) | (A_out > 0)  # Logical OR
+    else:
+        A_result = (A_in > 0) & (A_out > 0)  # Logical AND
+    # A_intersection = (A_in > 0).to(torch.float32) * (A_out > 0).to(torch.float32)  # Intersection
+    all_hops = [A_result.to_sparse()]
 
-    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+    # Compute k-hop neighbors using matrix multiplication and intersections
+    for hop in range(1, k):
+        A_in = torch.mm(A, A_in)
+        A_in = torch.mm(A_in, A.t())
+        A_out = torch.mm(A.t(), A_out)
+        A_out = torch.mm(A_out, A)
+        if mode == 'union':
+            A_result = (A_in > 0) | (A_out > 0)  # Logical OR
+        else:
+            A_result = (A_in > 0) & (A_out > 0)  # Logical AND
+        all_hops.append(A_result.to_sparse())
 
-def get_second_directed_adj(edge_index, num_nodes, dtype):
-    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
-                             device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight = add_self_loops(
-        edge_index, edge_weight, fill_value, num_nodes)
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv = deg.pow(-1)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight      # all this is same with get directed adj
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    return tuple(all_hops)
+def dense_boolean_multi_hop_union(A, k):
+    n = A.size(0)
+    A_current = A.coalesce()
 
-    L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
-    L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
+    # Initialize all_hops list with A (1-hop neighbors)
+    all_hops = [A_current]
 
-    L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
-    L_out_hat = L_out
+    # Compute k-hop neighbors using matrix multiplication
+    for hop in range(1, k):
+        A_next = torch.mm(A_current.to_dense(), A.to_dense())
+        A_next = A_next.to_sparse()
+        all_hops.append(A_next)
+        A_current = A_next
 
-    L_in_hat[L_out == 0] = 0        # Qin learn: this is intersection
-    L_out_hat[L_in == 0] = 0
+    return tuple(all_hops)
 
-    # L^{(2)}
-    L = (L_in_hat + L_out_hat) / 2.0
 
-    L[torch.isnan(L)] = 0
-    L_indices = torch.nonzero(L, as_tuple=False).t()
-    L_values = L[L_indices[0], L_indices[1]]
-    edge_index = L_indices
-    edge_weight = L_values
-
-    # row normalization
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-
-    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-
-def get_third_directed_adj(edge_index, num_nodes, dtype):
+def normalize_edges(edge_index, num_nodes, dtype=torch.float):
     device = edge_index.device
-    edge_weight1 = torch.ones((edge_index.size(1),), dtype=dtype,
-                             device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight1 = add_self_loops(
-        edge_index, edge_weight1, fill_value, num_nodes)
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=device)
+
     row, col = edge_index
-    deg = scatter_add(edge_weight1, row, dim=0, dim_size=num_nodes)
-    deg_inv = deg.pow(-1)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight1      # all this is same with get directed adj
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
-
-    L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
-    L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
-
-    L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
-    L_out_hat = L_out
-
-    L_in_hat[L_out == 0] = 0        # Qin learn: this is intersection
-    L_out_hat[L_in == 0] = 0
-
-    # L^{(2)}
-    L = (L_in_hat + L_out_hat) / 2.0
-
-    L[torch.isnan(L)] = 0
-    L_indices = torch.nonzero(L, as_tuple=False).t()
-    L_values = L[L_indices[0], L_indices[1]]
-    edge_index2 = L_indices.to(device)
-    edge_weight2 = L_values.to(device)
-
-    # row normalization
-    row, col = edge_index2
-    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
-    edge_weight2 = deg_inv_sqrt[row] * edge_weight2 * deg_inv_sqrt[col]
-    #########################
-    row, col = edge_index2
-    deg = scatter_add(edge_weight2, row, dim=0, dim_size=num_nodes)
-    deg_inv = deg.pow(-1)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight2  # all this is same with get directed adj
-    p_dense = torch.sparse.FloatTensor(edge_index2, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    return deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
+    device = edge_index.device
+    fill_value = 1
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
 
-    L_in = torch.mm(p_dense.t(), p_dense)  # both point to which is non_zero in L_in
-    L_out = torch.mm(p_dense, p_dense.t())  # both source from which is non_zero in L_out
+    A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool),size=(num_nodes, num_nodes)).to(device)
+    L_tuple = sparse_boolean_multi_hop(A, k-1, mode='intersection')   # much slower
 
-    L_in_hat = L_in  # because L_in and L_out are symmetric, so their T is the same as them
-    L_out_hat = L_out
+    all_hops_weight = []
+    for L in L_tuple:  # Skip L1 if not needed
+        edge_index = L._indices()
+        edge_weight = normalize_edges(edge_index, num_nodes).to(device)
+        all_hops_weight.append(edge_weight)
 
-    L_in_hat[L_out == 0] = 0  # Qin learn: this is intersection
-    L_out_hat[L_in == 0] = 0
-
-    # L^{(2)}
-    L = (L_in_hat + L_out_hat) / 2.0
-
-    L[torch.isnan(L)] = 0
-    L_indices = torch.nonzero(L, as_tuple=False).t()
-    L_values = L[L_indices[0], L_indices[1]]
-    edge_index3 = L_indices.to(device)
-    edge_weight3 = L_values.to(device)
-
-    # row normalization
-    row, col = edge_index3
-    deg = scatter_add(edge_weight3, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-    edge_weight3 = deg_inv_sqrt[row] * edge_weight3 * deg_inv_sqrt[col]
-
-    return (edge_index2, edge_index3), (edge_weight2,edge_weight3)
+    return L_tuple, tuple(all_hops_weight)
 
 def get_4th_directed_adj(edge_index, num_nodes, dtype):
     device = edge_index.device
@@ -1422,7 +1321,7 @@ def get_4th_directed_adj_union(edge_index, num_nodes, dtype):
 
     return (edge_index2,edge_index3,edge_index4), (edge_weight2, edge_weight3, edge_weight4)
 
-def get_second_directed_adj_union(edge_index, num_nodes, dtype):
+def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     '''
     Qin change to get union
     Args:
@@ -1433,56 +1332,65 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype):
     Returns:
 
     '''
-    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
-                             device=edge_index.device)
     fill_value = 1
-    edge_index, edge_weight = add_self_loops(
-        edge_index, edge_weight, fill_value, num_nodes)
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv = deg.pow(-1)
-    deg_inv[deg_inv == float('inf')] = 0
-    p = deg_inv[row] * edge_weight      # all this is same with get directed adj
-    p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
 
-    L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
-    L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
+    A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool), size=(num_nodes, num_nodes))
+    L_tuple = sparse_boolean_multi_hop(A, k-1, mode='union')
 
-    L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
-    L_out_hat = L_out
+    all_hops_weight = []
+    for L in L_tuple:  # Skip L1 if not needed
+        edge_index = L._indices()
+        edge_weight = normalize_edges(edge_index, num_nodes)
+        all_hops_weight.append(edge_weight)
 
-    mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
-    L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    return L_tuple, tuple(all_hops_weight)
+    # # row, col = edge_index
+    # # deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    # # deg_inv = deg.pow(-1)
+    # # deg_inv[deg_inv == float('inf')] = 0
+    # # p = deg_inv[row] * edge_weight      # all this is same with get directed adj
+    # # p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
+    #
+    # # L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
+    # # L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
+    # #
+    # # L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
+    # # L_out_hat = L_out
+    # #
+    # # mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
+    # # L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
+    # #
+    # # mask2 = (L_in != 0) & (L_out_hat == 0)
+    # # L_out_hat[mask2] = L_in[mask2]
+    # # true_count = mask1.to(torch.int).sum().item()
+    # # true_count2 = mask2.to(torch.int).sum().item()
+    # # non_zero_in = L_in_hat.nonzero().size(0)
+    # # non_zero_out = L_out_hat.nonzero().size(0)
+    # #
+    # # print(true_count, true_count2, non_zero_in,non_zero_out )
+    # #
+    # # # L_in_hat[(L_out != 0).to(torch.bool) & L_in_hat == 0] = L_out        # Qin learn: this is intersection
+    # # # L_out_hat[(L_in != 0).to(torch.bool) & L_out_hat == 0] = L_in        # Qin learn: this is intersection
+    # # # L_out_hat[L_in == 0] = 0
+    # #
+    # # # L^{(2)}
+    # # L = (L_in_hat + L_out_hat) / 2.0        # 2-order symmetric_A
+    # #
+    # # L[torch.isnan(L)] = 0
+    # # L_indices = torch.nonzero(L, as_tuple=False).t()
+    # # L_values = L[L_indices[0], L_indices[1]]
+    # # edge_index = L_indices
+    # # edge_weight = L_values
+    # #
+    # # # row normalization
+    # # row, col = edge_index
+    # # deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    # # deg_inv_sqrt = deg.pow(-0.5)
+    # # deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    #
+    # return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-    mask2 = (L_in != 0) & (L_out_hat == 0)
-    L_out_hat[mask2] = L_in[mask2]
-    true_count = mask1.to(torch.int).sum().item()
-    true_count2 = mask2.to(torch.int).sum().item()
-    non_zero_in = L_in_hat.nonzero().size(0)
-    non_zero_out = L_out_hat.nonzero().size(0)
-
-    print(true_count, true_count2, non_zero_in,non_zero_out )
-
-    # L_in_hat[(L_out != 0).to(torch.bool) & L_in_hat == 0] = L_out        # Qin learn: this is intersection
-    # L_out_hat[(L_in != 0).to(torch.bool) & L_out_hat == 0] = L_in        # Qin learn: this is intersection
-    # L_out_hat[L_in == 0] = 0
-
-    # L^{(2)}
-    L = (L_in_hat + L_out_hat) / 2.0        # 2-order symmetric_A
-
-    L[torch.isnan(L)] = 0
-    L_indices = torch.nonzero(L, as_tuple=False).t()
-    L_values = L[L_indices[0], L_indices[1]]
-    edge_index = L_indices
-    edge_weight = L_values
-
-    # row normalization
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-
-    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
 
 @torch.jit._overload

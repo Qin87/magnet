@@ -7,7 +7,7 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE  220 230 -2  0 1 -1 2 21 20  22 23 4
 #JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib GAT GCN  SAGE  # QiGi4  WiGib WiG WiGub WiGi3 WiGu3 WiGi4 WiGu4 DiG DiGib
-net_values=" QiC QiCQymCatMixib QiCSymCatMixSymib QiCQymib QiCib WiCQymCatib "
+net_values="  QiCi3 QiCi4  "
 q_value=0
 Aug_value=" 0 "
 layer_values="1 2 3 4 "    #

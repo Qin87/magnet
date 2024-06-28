@@ -15,7 +15,7 @@ from nets.DiGCN import *
 from nets.geometric_baselines import *
 
 try:
-    from .edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj, Qin_get_appr_directed_adj, Qin_get_second_directed_adj
+    from .edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj, Qin_get_directed_adj, Qin_get_second_directed_adj
 except:
     from edge_data import in_out_degree, get_appr_directed_adj, get_second_directed_adj
 try:
