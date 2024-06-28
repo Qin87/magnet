@@ -10,7 +10,7 @@
 net_values="  QiCi3 QiCi4  "
 q_value=0
 Aug_value=" 0 "
-layer_values="1 2 3 4 "    #
+layer_values=" 2 3 4 "    #
 
 
 Direct_dataset=( 'cora_ml/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram

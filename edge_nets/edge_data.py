@@ -1007,17 +1007,21 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     device = edge_index.device
     fill_value = 1
     edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
+    edge_index = edge_index.to(device)
 
-    A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool),size=(num_nodes, num_nodes)).to(device)
+    edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
+    A = torch.sparse_coo_tensor(edge_index, edge_weight, size=(num_nodes, num_nodes)).to(device)
     L_tuple = sparse_boolean_multi_hop(A, k-1, mode='intersection')   # much slower
 
+    all_hop_edge_index = []
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
         edge_index = L._indices()
+        all_hop_edge_index.append(edge_index)
         edge_weight = normalize_edges(edge_index, num_nodes).to(device)
         all_hops_weight.append(edge_weight)
 
-    return L_tuple, tuple(all_hops_weight)
+    return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
 def get_4th_directed_adj(edge_index, num_nodes, dtype):
     device = edge_index.device

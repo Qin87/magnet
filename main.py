@@ -673,8 +673,8 @@ if args.net.startswith('Di'):
             edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
         else:
             edge_index_tuple, edge_weights_tuple = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype, k)
-        SparseEdges = (edge_index1,edge_index_tuple)
-        edge_weight = (edge_weights1,edge_weights_tuple)
+        SparseEdges = (edge_index1, edge_index_tuple)
+        edge_weight = (edge_weights1, edge_weights_tuple)
         del edge_index_tuple, edge_weights_tuple
     else:
         SparseEdges = edge_index1
