@@ -182,7 +182,7 @@ def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_m
 
     return list(class_num_list), train_mask, idx_info, node_mask, edge_mask
 
-def keep_all_data(edge_index, label, n_data, n_cls, ratio, train_mask):
+def keep_all_data(edge_index, label, n_data, n_cls, train_mask):
     """
     just keep all training data
     :param edge_index:
