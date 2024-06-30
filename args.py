@@ -37,8 +37,6 @@ def parse_args():
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')
     # parser.add_argument('--max', action="store_true", help='synthesizing to max or mean num of training set. default is mean')
     parser.add_argument('--no_mask', action="store_true", help='whether to mask the self class in sampling neighbor classes. default is mask')
-    parser.add_argument('--gdc', type=str, choices=['ppr', 'hk', 'none'], default='ppr', help='how to convert to weighted graph')
-
     parser.add_argument('-hds', '--heads', default=8, type=int)
 
     #  from Magnet
