@@ -51,11 +51,11 @@ def log_results():
                 std_dev_acc = statistics.stdev(acc_list)
                 average_bacc = statistics.mean(bacc_list)
                 std_dev_bacc = statistics.stdev(bacc_list)
-                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_Aug" + str(args.AugDirect) + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
-                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_Aug" + str(args.AugDirect) + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
+                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
+                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
             elif len(macro_F1) == 1:
-                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split", file=log_file)
-                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_Aug"+str(args.AugDirect)+"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split")
+                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split", file=log_file)
+                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split")
             else:
                 print("not a single split is finished")
 
@@ -77,16 +77,13 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
-        # out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, edge_Qin_in_tensor, edge_Qin_out_tensor)
     elif args.net.startswith(('Di', 'Qi', 'Wi')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            # out = model(new_x, new_edge_index, edge_in, in_weight, edge_out, out_weight, new_SparseEdges, edge_weight)
             out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
             out = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
         out = model(X_real, X_img, edges, args.q, edge_weight)  # (1,5,183)
-        # out = out.permute(2, 1, 0).squeeze()        # (183,5)
     elif args.net.startswith('Sig'):
         out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
     elif args.net.startswith('Qua'):
@@ -396,8 +393,6 @@ try:
                 train_f1, val_f1, tmp_test_f1 = f1s
                 val_acc_f1 = (val_acc + val_f1) / 2.
                 if tmp_test_f1 > best_test_f1:
-                    if epoch> 5:
-                        goodAug = True
                     # best_val_acc_f1 = val_acc_f1
                     # best_val_f1 = val_f1
                     best_test_f1 = tmp_test_f1
@@ -408,7 +403,6 @@ try:
                     CountNotImproved =0
                     print('test_f1 CountNotImproved reset to 0 in epoch', epoch)
                 else:
-                    goodAug = False
                     CountNotImproved += 1
                 end_time = time.time()
                 print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
@@ -423,9 +417,9 @@ try:
                 dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)
             else:
                 dataset_to_print = args.undirect_dataset
-            print(net_to_print+'layer'+str(args.layer), dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr)
+            print(net_to_print+'layer'+str(args.layer), dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
-            print(net_to_print, args.layer, dataset_to_print, "Aug", str(args.AugDirect), 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
+            print(net_to_print, args.layer, dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100), file=log_file)
             macro_F1.append(test_f1*100)
             acc_list.append(test_acc*100)
@@ -444,8 +438,8 @@ try:
             std_dev_acc = statistics.stdev(acc_list)
             average_bacc = statistics.mean(bacc_list)
             std_dev_bacc = statistics.stdev(bacc_list)
-            print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}")
-            print(net_to_print+str(args.layer)+'_'+dataset_to_print+ "_Aug"+ str(args.AugDirect)+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}", file=log_file)
+            print(net_to_print+str(args.layer)+'_'+dataset_to_print+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}")
+            print(net_to_print+str(args.layer)+'_'+dataset_to_print+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}", file=log_file)
 
 
 except KeyboardInterrupt:
