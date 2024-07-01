@@ -11,11 +11,13 @@ Implementation of paper [Graph Transformation via Scale Invariance of Node class
 
 This repository has been tested with the following packages:
 
-- Python == 3.9
-- PyTorch == 2.1.0
-- PyTorch Geometric == 2.0.4
+- Python >= 3.9
+- PyTorch == 2.3.0
+- PyTorch Geometric == 2.5.3
 
 Please follow official instructions to install [Pytorch](https://pytorch.org/get-started/previous-versions/) and [Pytorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html).
+For pytorch-scatter,pytorch-sparse, download packages from https://pytorch-geometric.com/whl/torch-2.3.0%2Bcu121.html according to your PyTorch, Python and OS version. 
+Then pip install them. By doing this, you can solve the compatibility issues, Segmentation fault.
 
 ## Important Hyper-parameters
 
