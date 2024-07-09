@@ -377,6 +377,7 @@ class SymRegLayer2BN(torch.nn.Module):
 
         x = torch.cat((x1, x2, x3), axis=-1)
         x = self.batch_norm2(x)
+        x = F.relu(x)       # added July9
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))

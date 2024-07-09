@@ -16,7 +16,7 @@ from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
 from data_utils import load_directedData, get_dataset, get_step_split
-from nets.APPNP_Ben import create_APPNPSimp
+from nets.APPNP_Ben import create_APPNPSimp, APPNP_Model, ChebModel, SymModel
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
@@ -85,13 +85,16 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'GIN':
         model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
     elif args.net == 'Cheb':
-        model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
+        model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.num_filter, dropout=args.dropout,layer=args.layer).to(device)
+        # model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
     elif args.net == 'JKNet':
         model = GCN_JKNet(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, layer=args.layer)
     elif args.net == 'GPRGNN':
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
-        model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
+        model = APPNP_Model(num_features, n_cls,args.feat_dim, alpha=args.alpha,dropout=args.dropout, layer=args.layer).to(device)
+
+        # model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
     elif args.net.startswith(('Di', 'Qi', 'Wi')):        # GCN  -->  SAGE
         if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
             model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
@@ -117,8 +120,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     # model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
                     model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args= args).to(device)
     elif args.net.startswith(('Sym', 'Qym')):
-        model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-        # model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+        # model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
+        model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith(('addSym', 'addQym')):
         if not args.net.endswith('para'):
             model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)

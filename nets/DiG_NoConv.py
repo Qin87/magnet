@@ -820,6 +820,7 @@ class DiSAGE_1BN_nhid(nn.Module):
         # x = F.dropout(x, self.dropout, training=self.training)
         # x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
         x = self.conv1(x, edge_index, edge_weight)
+        # x = F.relu(x)
 
         x = F.dropout(x, self.dropout, training=self.training)
         x = x.unsqueeze(0)
@@ -969,6 +970,7 @@ class DiSAGE_2BN_nhid(nn.Module):
         elif m == 'G':
             self.conv1 = DIGCNConv(input_dim, nhid)
             self.conv2 = DIGCNConv(nhid, nhid)
+            # self.conv2 = DIGCNConv(nhid, ncls)
             self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'A':
             num_head = 1
@@ -992,8 +994,10 @@ class DiSAGE_2BN_nhid(nn.Module):
         # x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(self.conv1(x, edge_index, edge_weight))  # no BN here is better
         # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
-        # x = F.dropout(x, self.dropout, training=self.training)
-        x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
+        x = F.dropout(x, self.dropout, training=self.training)
+        # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
+        x = self.conv2(x, edge_index, edge_weight)
+        x = F.relu(x)
 
         x = F.dropout(x, self.dropout, training=self.training)
         x = x.unsqueeze(0)

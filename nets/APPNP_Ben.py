@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
+from nets.Sym_Reg import DGCNConv
+
+
 class APPNP_ModelBen1(nn.Module):
     def __init__(self, input_dim, nhid, out_dim, dropout, layer=1,alpha=0.1):
         super(APPNP_ModelBen1, self).__init__()
@@ -243,6 +246,162 @@ class APPNP2Simp_BN(nn.Module):
         x = self.batch_norm2(self.conv2(x, edge_index))
         return x
 
+class APPNP_Model(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, filter_num, alpha = 0.1, dropout = False, layer=3):
+        super(APPNP_Model, self).__init__()
+        self.dropout = dropout
+        self.line1 = nn.Linear(input_dim, filter_num)
+        self.line2 = nn.Linear(filter_num, filter_num)
+
+        self.conv1 = APPNP(K=10, alpha=alpha)
+        self.conv2 = APPNP(K=10, alpha=alpha)
+        self.layer = layer
+        if layer == 3:
+            self.line3 = nn.Linear(filter_num, filter_num)
+            self.conv3 = APPNP(K=10, alpha=alpha)
+
+        self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+
+    def forward(self, x, edge_index):
+        x = self.line1(x)
+        x = self.conv1(x, edge_index)
+        if self.layer == 1:
+            return self.process_output(x)
+
+        x = F.relu(x)
+        x = self.line2(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.line3(x)
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        return self.process_output(x)
+
+    def process_output(self, x):
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+        return F.log_softmax(x, dim=1)
+
+
+class SymModel(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
+        super(SymModel, self).__init__()
+        self.dropout = dropout
+        self.gconv = DGCNConv()
+        self.Conv = nn.Conv1d(filter_num * 3, out_dim, kernel_size=1)
+
+        self.lin1 = torch.nn.Linear(input_dim, filter_num, bias=False)
+        self.lin2 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
+
+        self.bias1 = nn.Parameter(torch.Tensor(1, filter_num))
+        self.bias2 = nn.Parameter(torch.Tensor(1, filter_num))
+
+        self.layer = layer
+        if layer == 3:
+            self.lin3 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
+            self.bias3 = nn.Parameter(torch.Tensor(1, filter_num))
+            nn.init.zeros_(self.bias3)
+
+        nn.init.zeros_(self.bias1)
+        nn.init.zeros_(self.bias2)
+
+    def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
+        x = self.lin1(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x1 += self.bias1
+        x2 += self.bias1
+        x3 += self.bias1
+
+        x = torch.cat((x1, x2, x3), axis=-1)
+        if self.layer == 1:
+            return self.process_output(x)
+
+        x = F.relu(x)
+
+        x = self.lin2(x)
+        x1 = self.gconv(x, edge_index)
+        x2 = self.gconv(x, edge_in, in_w)
+        x3 = self.gconv(x, edge_out, out_w)
+
+        x1 += self.bias2
+        x2 += self.bias2
+        x3 += self.bias2
+
+        x = torch.cat((x1, x2, x3), axis=-1)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.lin3(x)
+            x1 = self.gconv(x, edge_index)
+            x2 = self.gconv(x, edge_in, in_w)
+            x3 = self.gconv(x, edge_out, out_w)
+
+            x1 += self.bias3
+            x2 += self.bias3
+            x3 += self.bias3
+
+            x = torch.cat((x1, x2, x3), axis=-1)
+            x = F.relu(x)
+
+        return self.process_output(x)
+
+
+    def process_output(self, x):
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+
+        return F.log_softmax(x, dim=1)
+
+
+
+class ChebModel(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, filter_num, K, dropout = False, layer=2):
+        super(ChebModel, self).__init__()
+        self.dropout = dropout
+        self.conv1 = ChebConv(input_dim, filter_num, K)
+        self.conv2 = ChebConv(filter_num, filter_num, K)
+        self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+
+        self.layer = layer
+        if layer == 3:
+            self.conv3 = ChebConv(filter_num, filter_num, K)
+
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        if self.layer == 1:
+            return self.process_output(x)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        return self.process_output(x)
+
+    def process_output(self, x):
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0,2,1))
+        x = self.Conv(x)
+        x = x.permute((0,2,1)).squeeze()
+        return F.log_softmax(x, dim=1)
 
 class APPNPXSimp_BN(nn.Module):
     def __init__(self, in_features, hidden_dim, num_classes, dropout, layer, alpha, K):
