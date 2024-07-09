@@ -1,6 +1,7 @@
 ################################
 # compared to All2Main.py, this version to ensure that when I stop the process half way, it still could print the result.
 ################################
+import os
 import signal
 import statistics
 import sys
@@ -172,7 +173,10 @@ if args.CPU:
 
 net_to_print, dataset_to_print = get_name(args)
 
+
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
 print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
