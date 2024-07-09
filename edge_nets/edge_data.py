@@ -549,7 +549,7 @@ def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
-    edge_weight = torch.ones(edge_index.size(1))
+    edge_weight = torch.ones(edge_index.size(1)).to(device)
     edge_weight = normalize_edges(edge_index, edge_weight,  num_nodes).to(device)
 
     return edge_index,  edge_weight
@@ -1359,7 +1359,7 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
         edge_index = L._indices()
-        edge_weight = torch.ones(edge_index.size(1))
+        edge_weight = torch.ones(edge_index.size(1)).to(device)
         edge_weight = normalize_edges(edge_index, edge_weight, num_nodes)
         all_hops_weight.append(edge_weight)
 
