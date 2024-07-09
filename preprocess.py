@@ -8,6 +8,7 @@ import scipy.sparse as sp
 from torch_geometric.utils import to_undirected
 from torch_geometric.datasets import WebKB, WikipediaNetwork
 
+from edge_nets.edge_data import normalize_edges
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse, hermitian_decomp, cheb_poly
 
 # internel
@@ -431,10 +432,15 @@ def F_in_out(edge_index, size, edge_weight=None):
     A_in = sp.coo_matrix(A_in.cpu().numpy())
     A_out = sp.coo_matrix(A_out.cpu().numpy())
 
-    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)
+    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)       #  contains the row and column indices of these non-zero elements
     edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
 
-    in_weight = torch.from_numpy(A_in.data).float().to(device)
-    out_weight = torch.from_numpy(A_out.data).float().to(device)
+    # in_weight = torch.from_numpy(A_in.data).float().to(device)     # change at July 8 17:50
+    # out_weight = torch.from_numpy(A_out.data).float().to(device)
+    in_weight = torch.ones(edge_in.size(1)).to(device)
+    out_weight = torch.ones(edge_out.size(1)).to(device)
+    # in_weight = normalize_edges(edge_in, in_weight,  edge_in.size(1)).to(device)
+    # out_weight = normalize_edges(edge_out, out_weight, edge_out.size(1)).to(device)
+
     edge_index = edge_index.to(device)  # Ben GPU
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight

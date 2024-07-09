@@ -13,6 +13,8 @@ from torch_geometric.utils import add_remaining_self_loops
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_sparse import SparseTensor, fill_diag
 
+from edge_nets.edge_data import normalize_edges, normalize_edges_all1
+
 
 def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
              add_self_loops=True, dtype=None):
@@ -347,6 +349,8 @@ class SymRegLayer2BN(torch.nn.Module):
     # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
+        device = edge_index.device
+        # edge_weight = normalize_edges_all1(edge_index,  edge_in.size(1)).to(device)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
@@ -410,6 +414,7 @@ class SymRegLayer2BN_add(torch.nn.Module):
     # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
+        # edge_weight = normalize_edges_all1(edge_index)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
