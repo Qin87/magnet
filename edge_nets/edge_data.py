@@ -1029,10 +1029,11 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     all_hop_edge_index = []
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
-        edge_index = L._indices()
-        all_hop_edge_index.append(edge_index)
-        edge_weight = normalize_edges(edge_index, edge_weight, num_nodes).to(device)
-        all_hops_weight.append(edge_weight)
+        edge_indexL = L._indices()
+        all_hop_edge_index.append(edge_indexL)
+        edge_weightL = torch.ones(edge_indexL.size(1), dtype=torch.bool).to(device)
+        edge_weightL = normalize_edges(edge_indexL, edge_weightL, num_nodes).to(device)
+        all_hops_weight.append(edge_weightL)
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
