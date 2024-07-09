@@ -97,9 +97,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
             out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
-
         elif args.net.startswith(('Di', 'Qi', 'Wi')):
-
             if args.net[3:].startswith(('Sym', 'Qym')):
                 out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
@@ -121,11 +119,8 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
 @torch.no_grad()
 def test():
     global edge_in, in_weight, edge_out, out_weight
-
     model.eval()
-
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-        # logits = model(data_x, edges[:, train_edge_mask], edge_in, in_weight, edge_out, out_weight)  # change July 8 18:30
         logits = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi')):
         if args.net[3:].startswith(('Sym', 'Qym')):
@@ -251,7 +246,6 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan')):
             raise NotImplementedError("Not Implemented"+ args.net)
         SparseEdges = (edge_index1,) + edge_index_tuple
         edge_weight = (edge_weights1,) + edge_weights_tuple
-
         del edge_index_tuple, edge_weights_tuple
     else:
         SparseEdges = edge_index1
@@ -280,10 +274,8 @@ elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     elif args.net.startswith('Qua'):
         Quaedge_index, norm_real, norm_imag_i, norm_imag_j, norm_imag_k = process_quaternion_laplacian(edge_index=edges, x_real=X_real, edge_weight=edge_weight,
                                                                                                     normalization='sym', return_lambda_max=False)
-
 else:
     pass
-
 try:
     splits = data_train_maskOrigin.shape[1]
     print("splits", splits)
@@ -314,8 +306,7 @@ try:
             else:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
-
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=False)
 
             if splits == 1:
                 data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
@@ -398,17 +389,17 @@ try:
                     test_f1 = f1s[2]
                     # print('hello')
                     CountNotImproved =0
-                    print('test_f1 CountNotImproved reset to 0 in epoch', epoch)
+                    print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
                 else:
                     CountNotImproved += 1
                 end_time = time.time()
-                print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+                # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
                 print(end_time - start_time, file=log_file)
-                print(end_time - start_time)
+                # print(end_time - start_time)
                 print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
-                    print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
+                    # print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                     break
             if args.IsDirectedData:
                 dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)

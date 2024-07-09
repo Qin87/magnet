@@ -214,8 +214,8 @@ def undirected_label2directed_label(adj, edge_pairs, task):
 
 
 def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15, 0.05], task=2, label_dim=2):
-    print(os.getcwd())
-    print(sys.argv[0])
+    # print(os.getcwd())
+    # print(sys.argv[0])
     script_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
     os.chdir(script_directory)
     save_file = save_path + 'task' + str(task) + 'dim' + str(label_dim) + 'prob' + str(int(probs[0] * 100)) + '_' + str(int(probs[1] * 100)) + '.pk'
