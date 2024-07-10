@@ -8,7 +8,7 @@ import scipy.sparse as sp
 from torch_geometric.utils import to_undirected, add_self_loops
 from torch_geometric.datasets import WebKB, WikipediaNetwork
 
-from edge_nets.edge_data import normalize_edges
+from edge_nets.edge_data import normalize_edges, normalize_edges_all1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse, hermitian_decomp, cheb_poly
 
 # internel
@@ -441,10 +441,10 @@ def F_in_out(edge_index, size, edge_weight=None):
 
     # in_weight = torch.from_numpy(A_in.data).float().to(device)     # change at July 8 17:50
     # out_weight = torch.from_numpy(A_out.data).float().to(device)
-    in_weight = torch.ones(edge_in.size(1)).to(device)
-    out_weight = torch.ones(edge_out.size(1)).to(device)
-    # in_weight = normalize_edges(edge_in, in_weight,  edge_in.size(1)).to(device)
-    # out_weight = normalize_edges(edge_out, out_weight, edge_out.size(1)).to(device)
+    # in_weight = torch.ones(edge_in.size(1)).to(device)
+    # out_weight = torch.ones(edge_out.size(1)).to(device)
+    in_weight = normalize_edges_all1(edge_in)
+    out_weight = normalize_edges_all1(edge_out)
 
     edge_index = edge_index.to(device)  # Ben GPU
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight

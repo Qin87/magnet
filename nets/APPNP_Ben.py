@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
+from edge_nets.edge_data import normalize_edges_all1
 from nets.Sym_Reg import DGCNConv
 
 
@@ -293,25 +294,19 @@ class APPNP_Model(torch.nn.Module):
 class SymModel(torch.nn.Module):
     def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
         super(SymModel, self).__init__()
+        self.layer = layer
         self.dropout = dropout
         self.gconv = DGCNConv()
         self.Conv = nn.Conv1d(filter_num * 3, out_dim, kernel_size=1)
 
         self.lin1 = torch.nn.Linear(input_dim, filter_num, bias=False)
-        self.lin2 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
-
         self.bias1 = nn.Parameter(torch.Tensor(1, filter_num))
-        self.bias2 = nn.Parameter(torch.Tensor(1, filter_num))
-
-        self.layer = layer
-        if layer == 3:
-            self.lin3 = torch.nn.Linear(filter_num * 3, filter_num, bias=False)
-            self.bias3 = nn.Parameter(torch.Tensor(1, filter_num))
-            nn.init.zeros_(self.bias3)
-
         nn.init.zeros_(self.bias1)
-        nn.init.zeros_(self.bias2)
-
+        if layer > 1:
+            self.linx = nn.ModuleList([torch.nn.Linear(filter_num * 3, filter_num, bias=False) for _ in range(layer - 1)])
+            self.biasx = nn.ParameterList([nn.Parameter(torch.Tensor(1, filter_num)) for _ in range(layer - 1)])
+            for bias in self.biasx:
+                nn.init.zeros_(bias)
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
@@ -328,30 +323,19 @@ class SymModel(torch.nn.Module):
 
         x = F.relu(x)
 
-        x = self.lin2(x)
-        x1 = self.gconv(x, edge_index)
-        x2 = self.gconv(x, edge_in, in_w)
-        x3 = self.gconv(x, edge_out, out_w)
-
-        x1 += self.bias2
-        x2 += self.bias2
-        x3 += self.bias2
-
-        x = torch.cat((x1, x2, x3), axis=-1)
-        x = F.relu(x)
-
-        if self.layer == 3:
-            x = self.lin3(x)
+        for i in range(self.layer - 1):
+            x = self.linx[i](x)
             x1 = self.gconv(x, edge_index)
             x2 = self.gconv(x, edge_in, in_w)
             x3 = self.gconv(x, edge_out, out_w)
 
-            x1 += self.bias3
-            x2 += self.bias3
-            x3 += self.bias3
+            x1 += self.biasx[i]
+            x2 += self.biasx[i]
+            x3 += self.biasx[i]
 
             x = torch.cat((x1, x2, x3), axis=-1)
             x = F.relu(x)
+
 
         return self.process_output(x)
 
@@ -365,8 +349,6 @@ class SymModel(torch.nn.Module):
         x = x.permute((0, 2, 1)).squeeze()
 
         return F.log_softmax(x, dim=1)
-
-
 
 class ChebModel(torch.nn.Module):
     def __init__(self, input_dim, out_dim, filter_num, K, dropout = False, layer=2):
