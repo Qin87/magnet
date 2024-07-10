@@ -1567,7 +1567,7 @@ class Di_IB_2BN_nhid(torch.nn.Module):
         nhid = args.feat_dim
 
         self.ib1 = InceptionBlock_Di(m, input_dim, nhid,args)
-        self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
+        self.ib2 = InceptionBlock_Di(m, nhid, out_dim, args)
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nhid)
         self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
@@ -1578,17 +1578,18 @@ class Di_IB_2BN_nhid(torch.nn.Module):
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm1(x)
-        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm2(x)
-
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1))
-        x = x.squeeze(0)
-
         x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = self.batch_norm1(x)
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        # x = self.batch_norm2(x)
+
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1))
+        # x = x.squeeze(0)
+
+        # x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
 class Di_IB_2BN_nhid0(torch.nn.Module):
