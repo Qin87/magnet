@@ -5965,7 +5965,7 @@ class Di_IB_XBN_nhid(torch.nn.Module):
         # x = x.permute((0, 2, 1))
         # x = x.squeeze(0)
 
-        x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
 class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
