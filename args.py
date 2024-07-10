@@ -6,8 +6,8 @@ def parse_args():
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
 
-    # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
-    parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
+    parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
+    # parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false

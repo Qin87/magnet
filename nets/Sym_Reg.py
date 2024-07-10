@@ -515,7 +515,6 @@ class SymRegLayerXBN_add(torch.nn.Module):
         x3 = self.gconv(x, edge_out, out_w)
 
         x = x1+x2+x3
-        x = self.batch_norm1(x)     # keep is better
         x = F.relu(x)
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
@@ -527,7 +526,6 @@ class SymRegLayerXBN_add(torch.nn.Module):
             x3 = self.gconv(x, edge_out, out_w)
 
             x = x1 + x2 + x3
-            # x = self.batch_normx(x)       # without is better
             x = F.relu(x)
             if self.dropout > 0:
                 x = F.dropout(x, self.dropout, training=self.training)
@@ -538,19 +536,7 @@ class SymRegLayerXBN_add(torch.nn.Module):
         x3 = self.gconv(x, edge_out, out_w)
 
         x = x1 + x2 + x3
-        x = self.batch_norm2(x)     # keep is better
-        # x = F.relu(x)     # worse
-
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)    # with this block or without, almost the same result
-        x = x.permute((0, 2, 1)).squeeze()
         return x
-
-# class BiasParameter(nn.Module):
-#     def __init__(self):
-#         super(BiasParameter, self).__init__()
-#         self.bias = nn.Parameter(torch.randn(2))
 
 class BiasParameter(nn.Parameter):
     def __init__(self):
