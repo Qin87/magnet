@@ -641,28 +641,17 @@ class SymRegLayer1BN_add(torch.nn.Module):
         self.reg_params = list(self.lin1.parameters()) + list(self.gconv.parameters())
         self.non_reg_params = []
 
-    # def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w, edge_Qin_in_tensor, edge_Qin_out_tensor):
     def forward(self, x, edge_index, edge_in, in_w, edge_out, out_w):
         x = self.lin1(x)
         x1 = self.gconv(x, edge_index)
         x2 = self.gconv(x, edge_in, in_w)
         x3 = self.gconv(x, edge_out, out_w)
 
-        # x1 += self.bias1      # test with or without bias, the result is the same
-        # x2 += self.bias1
-        # x3 += self.bias1
-
         x = x1+x2+x3
-        # x = self.batch_norm1(x)
-        # x = F.relu(x)     # worse so desert
 
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
 
-        # x = x.unsqueeze(0)
-        # x = x.permute((0, 2, 1))
-        # x = self.Conv(x)    # with this block or without, almost the same result
-        # x = x.permute((0, 2, 1)).squeeze()
         return x
 
 class SymRegLayer1BN_para_add(torch.nn.Module):
