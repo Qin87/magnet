@@ -5933,7 +5933,7 @@ class Di_IB_XBN_nhid(torch.nn.Module):
         layer = args.layer
 
         self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
-        self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
+        self.ib2 = InceptionBlock_Di(m, nhid, out_dim, args)
         self.layer = args.layer
         self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
 
@@ -5959,11 +5959,11 @@ class Di_IB_XBN_nhid(torch.nn.Module):
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
         # x = self.batch_norm2(x)
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1))
-        x = x.squeeze(0)
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1))
+        # x = x.squeeze(0)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
