@@ -421,9 +421,8 @@ class SymRegLayer2BN_add(torch.nn.Module):
         x3 = self.gconv(x, edge_out, out_w)
 
 
-        # x = torch.cat((x1, x2, x3), axis=-1)
         x = x1+x2+x3
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
         x = F.relu(x)
 
         if self.dropout > 0:
@@ -436,12 +435,13 @@ class SymRegLayer2BN_add(torch.nn.Module):
 
 
         x = x1 + x2 + x3
-        x = self.batch_norm2(x)
-
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)    # with this block or without, almost the same result
-        x = x.permute((0, 2, 1)).squeeze()
+        # x = self.batch_norm2(x)
+        # x = F.relu(x)
+        #
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)    # with this block or without, almost the same result
+        # x = x.permute((0, 2, 1)).squeeze()
         return x
 
 class SymRegLayer2BN_para_add(torch.nn.Module):
@@ -677,7 +677,7 @@ class SymRegLayer1BN_add(torch.nn.Module):
         # x3 += self.bias1
 
         x = x1+x2+x3
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
         # x = F.relu(x)     # worse so desert
 
         if self.dropout > 0:
