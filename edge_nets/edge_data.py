@@ -959,6 +959,7 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
     A_out = torch.mm(A.t(), A)
     num_nonzero_in = torch.nonzero(A_in).size(0)
     num_nonzero_out = torch.nonzero(A_out).size(0)
+    print('number of edges:', num_nonzero_in, num_nonzero_out)
     if mode == 'union':
         A_result = (A_in > 0) | (A_out > 0)  # Logical OR
     else:
@@ -972,10 +973,15 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         A_in = torch.mm(A_in, A.t())
         A_out = torch.mm(A.t(), A_out)
         A_out = torch.mm(A_out, A)
+        num_nonzero_in = torch.nonzero(A_in).size(0)
+        num_nonzero_out = torch.nonzero(A_out).size(0)
+        print(hop,'order num of edges: ', num_nonzero_in, num_nonzero_out)
         if mode == 'union':
             A_result = (A_in > 0) | (A_out > 0)  # Logical OR
         else:
             A_result = (A_in > 0) & (A_out > 0)  # Logical AND
+        num_nonzero_result = torch.nonzero(A_result).size(0)
+        print('num of edges:', num_nonzero_result)
         all_hops.append(A_result.to_sparse())
 
     return tuple(all_hops)
