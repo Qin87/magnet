@@ -206,12 +206,17 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
         n_cls = torch.tensor(n_cls).to(device)
 
-        train_idx, valid_idx, test_idx, train_node = get_step_split(imb_ratio=args.imb_ratio,
-                                                                    valid_each=int(data.x.shape[0] * 0.1 / n_cls),
+        print("class number is ", n_cls)
+        class_counts = torch.bincount(data_y)
+        class_counts_list = class_counts.tolist()
+        print(sorted(class_counts_list, reverse=True))
+
+        train_idx, valid_idx, test_idx, train_node = get_step_split(valid_each=int(data.x.shape[0] * 0.1 / n_cls),
                                                                     labeling_ratio=0.1,
                                                                     all_idx=[i for i in range(data.x.shape[0])],
                                                                     all_label=data.y.cpu().detach().numpy(),
                                                                     nclass=n_cls)
+
 
         data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
         data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
