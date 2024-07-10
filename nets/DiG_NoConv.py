@@ -5950,15 +5950,15 @@ class Di_IB_XBN_nhid(torch.nn.Module):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = F.dropout(x, p=self._dropout, training=self.training)
-        # x = self.batch_norm1(x)
+        x = self.batch_norm1(x)
 
         for iter_layer in self.ibx:
             x = F.dropout(x, p=self._dropout, training=self.training)
             x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
-            # x = self.batch_norm3(x)
+            x = self.batch_norm3(x)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        # x = self.batch_norm2(x)
+        x = self.batch_norm2(x)
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
         x = self.Conv(x)
