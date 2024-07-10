@@ -1322,7 +1322,7 @@ class Di_IB_1BN_nhid(torch.nn.Module):
         super(Di_IB_1BN_nhid, self).__init__()
         self._dropout = args.dropout
         nhid = args.feat_dim
-        self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
+        self.ib1 = InceptionBlock_Di(m, input_dim, n_cls, args)
         self.Conv = nn.Conv1d(nhid, n_cls, kernel_size=1)
         self.batch_norm1 = nn.BatchNorm1d(n_cls)
 
@@ -1333,12 +1333,12 @@ class Di_IB_1BN_nhid(torch.nn.Module):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
 
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1))
-        x = x.squeeze(0)
-        x = self.batch_norm1(x)
+        # x = x.unsqueeze(0)
+        # x = x.permute((0, 2, 1))
+        # x = self.Conv(x)
+        # x = x.permute((0, 2, 1))
+        # x = x.squeeze(0)
+        # x = self.batch_norm1(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
