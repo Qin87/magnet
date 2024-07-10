@@ -793,19 +793,17 @@ class DiSAGE_1BN_nhid(nn.Module):
         head = args.heads
 
         if m == 'S':
-            self.conv1 = DiSAGEConv(in_dim, nhid)
+            self.conv1 = DiSAGEConv(in_dim, out_dim)
         elif m == 'G':
-            self.conv1 = DIGCNConv(in_dim, nhid)
+            self.conv1 = DIGCNConv(in_dim, out_dim)
         elif m == 'A':
             num_head = 1
-            head_dim = nhid // num_head
+            head_dim = out_dim // num_head
 
             self.conv1 = GATConv_Qin(in_dim, head_dim, heads=head)
             # self.conv1 = DiGATConv(in_dim, nhid, nhid)     # little difference from GATConv_Qin
         elif m == 'C':
-            self.conv1 = DIChebConv(in_dim, nhid, args.K)
-
-
+            self.conv1 = DIChebConv(in_dim, out_dim, args.K)
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
@@ -818,15 +816,9 @@ class DiSAGE_1BN_nhid(nn.Module):
 
     def forward(self, x, edge_index, edge_weight):
         # x = F.dropout(x, self.dropout, training=self.training)
-        # x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
         x = self.conv1(x, edge_index, edge_weight)
-        # x = F.relu(x)
+        # x = F.dropout(x, self.dropout, training=self.training)
 
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
@@ -965,24 +957,23 @@ class DiSAGE_2BN_nhid(nn.Module):
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, nhid)
-            self.conv2 = DiSAGEConv(nhid, nhid)
+            self.conv2 = DiSAGEConv(nhid, ncls)
             self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'G':
             self.conv1 = DIGCNConv(input_dim, nhid)
-            self.conv2 = DIGCNConv(nhid, nhid)
-            # self.conv2 = DIGCNConv(nhid, ncls)
+            self.conv2 = DIGCNConv(nhid, ncls)
             self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'A':
             num_head = 1
             head_dim = nhid // num_head
 
             self.conv1 = GATConv_Qin(input_dim, head_dim, heads=head)
-            self.conv2 = GATConv_Qin(nhid, head_dim, heads=head)
+            self.conv2 = GATConv_Qin(nhid, ncls//num_head, heads=head)
             self.batch_norm1 = nn.BatchNorm1d(head_dim)
             self.batch_norm2 = nn.BatchNorm1d(head_dim)
         elif m == 'C':
             self.conv1 = DIChebConv(input_dim, nhid, K)
-            self.conv2 = DIChebConv(nhid, nhid, K)
+            self.conv2 = DIChebConv(nhid, ncls, K)
             self.convx = nn.ModuleList([DIChebConv(nhid, nhid, K) for _ in range(layer - 2)])
         else:
             raise ValueError(f"Model '{m}' not implemented")
@@ -991,19 +982,9 @@ class DiSAGE_2BN_nhid(nn.Module):
         self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, edge_index, edge_weight):
-        # x = F.dropout(x, self.dropout, training=self.training)
-        x = F.relu(self.conv1(x, edge_index, edge_weight))  # no BN here is better
-        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
+        x = F.relu(self.conv1(x, edge_index, edge_weight))   # no BN here is better
         x = F.dropout(x, self.dropout, training=self.training)
-        # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
         x = self.conv2(x, edge_index, edge_weight)
-        x = F.relu(x)
-
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1)).squeeze()
 
         return x
 
@@ -1073,22 +1054,22 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, nhid)
-            self.conv2 = DiSAGEConv(nhid, nhid)
+            self.conv2 = DiSAGEConv(nhid, out_dim)
             self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'G':
             self.conv1 = DIGCNConv(input_dim, nhid)
-            self.conv2 = DIGCNConv(nhid, nhid)
+            self.conv2 = DIGCNConv(nhid, out_dim)
             self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'C':
             self.conv1 = DIChebConv(input_dim, nhid, K)
-            self.conv2 = DIChebConv(nhid, nhid, K)
+            self.conv2 = DIChebConv(nhid, out_dim, K)
             self.convx = nn.ModuleList([DIChebConv(nhid, nhid, K) for _ in range(layer - 2)])
         elif m == 'A':
             num_head = 1
             head_dim = nhid // num_head
 
             self.conv1 = GATConv_Qin(input_dim, head_dim,  heads=head)
-            self.conv2 = GATConv_Qin(nhid, head_dim,  heads=head)
+            self.conv2 = GATConv_Qin(nhid, out_dim//num_head,  heads=head)
             self.convx = nn.ModuleList([GATConv_Qin(nhid, head_dim,  heads=head) for _ in range(layer - 2)])
         else:
             raise ValueError(f"Model '{m}' not implemented")
@@ -1096,7 +1077,7 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
@@ -1105,24 +1086,16 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
     def forward(self, x, edge_index, edge_weight):
         x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(self.conv1(x, edge_index, edge_weight))
-        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
 
         for iter_layer in self.convx:
             x = F.dropout(x, self.dropout, training=self.training)
-            # x = F.relu(self.batch_norm3(iter_layer(x, edge_index, edge_weight)))
             x = F.relu(iter_layer(x, edge_index, edge_weight))
 
         x = F.dropout(x, self.dropout, training=self.training)
-        x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
-
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1)).squeeze()
-
-        x = F.dropout(x, self.dropout, training=self.training)
-
-        return x
+        # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))      # good for telegram
+        x = self.conv2(x, edge_index, edge_weight)
+        # x = self.batch_norm2(x)
+        return x   # log softmax operation, has the same dimension
 
 class DiG_SimpleXBN_nhid(torch.nn.Module):
     def __init__(self, input_dim,  nhid, out_dim, dropout, layer=3):

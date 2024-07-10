@@ -8,6 +8,8 @@ import sys
 import time
 
 import random
+from collections import Counter
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -168,7 +170,6 @@ if args.CPU:
 
 net_to_print, dataset_to_print = get_name(args)
 
-
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
@@ -218,7 +219,10 @@ criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 n_cls = data_y.max().item() + 1
-print("class number is ", n_cls)
+# print("class number is ", n_cls)
+# class_counts = torch.bincount(data_y)
+# class_counts_list = class_counts.tolist()
+# print(sorted(class_counts_list, reverse=True))
 if args.net.startswith(('Qi', 'Wi', 'Di', 'pan')):
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
@@ -329,13 +333,14 @@ try:
             for i in range(n_cls):
                 data_num = (stats == i).sum()
                 n_data.append(int(data_num.item()))
+            # print('class in data: ',n_data)
             idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
             node_train = torch.sum(data_train_mask).item()
 
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 keep_all_data(edges, data_y, n_data, n_cls,  data_train_mask)
             print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
-                data_train_mask).item()), file = log_file)
+                data_train_mask).item()), file=log_file)
             print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
                 torch.sum(train_edge_mask).item()), file = log_file)
             print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
