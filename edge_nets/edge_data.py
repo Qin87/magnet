@@ -957,6 +957,8 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
     A_in = torch.mm(A, A.t())
     A_out = torch.mm(A.t(), A)
+    num_nonzero_in = torch.nonzero(A_in).size(0)
+    num_nonzero_out = torch.nonzero(A_out).size(0)
     if mode == 'union':
         A_result = (A_in > 0) | (A_out > 0)  # Logical OR
     else:
