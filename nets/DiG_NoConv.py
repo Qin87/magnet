@@ -67,7 +67,8 @@ class InceptionBlock_Di(torch.nn.Module):
 
         x0 = self.ln(x)
         for i in range(len(edge_index_tuple)):
-            x0 += self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
+            x0 += F.dropout(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]), p=0.6, training=self.training)
+            # x0 = F.dropout(x0, p=0.5, training=self.training)
             # torch.cuda.empty_cache()
         return x0
 
@@ -815,9 +816,9 @@ class DiSAGE_1BN_nhid(nn.Module):
         self.non_reg_params = self.conv1.parameters()
 
     def forward(self, x, edge_index, edge_weight):
-        # x = F.dropout(x, self.dropout, training=self.training)
+        x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
-        # x = F.dropout(x, self.dropout, training=self.training)
+        x = F.dropout(x, self.dropout, training=self.training)
 
 
         return x
@@ -981,7 +982,7 @@ class DiSAGE_2BN_nhid(nn.Module):
         self.reg_params = list(self.conv1.parameters())
         self.non_reg_params = self.conv2.parameters()
 
-    def forward(self, x, edge_index, edge_weight):
+    def forward(self, x, edge_index, edge_weight):  # this is original DiGCN
         x = F.relu(self.conv1(x, edge_index, edge_weight))   # no BN here is better
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv2(x, edge_index, edge_weight)
@@ -1094,7 +1095,6 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))      # good for telegram
         x = self.conv2(x, edge_index, edge_weight)
-        # x = self.batch_norm2(x)
         return x   # log softmax operation, has the same dimension
 
 class DiG_SimpleXBN_nhid(torch.nn.Module):
@@ -5950,15 +5950,15 @@ class Di_IB_XBN_nhid(torch.nn.Module):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = F.dropout(x, p=self._dropout, training=self.training)
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
 
         for iter_layer in self.ibx:
             x = F.dropout(x, p=self._dropout, training=self.training)
             x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
-            x = self.batch_norm3(x)
+            # x = self.batch_norm3(x)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm2(x)
+        # x = self.batch_norm2(x)
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
         x = self.Conv(x)
