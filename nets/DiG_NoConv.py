@@ -13,6 +13,7 @@ from torch_geometric.utils import to_undirected, is_undirected
 from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
+from edge_nets.edge_data import normalize_edges_all1
 from nets.Sym_Reg import DGCNConv
 from typing import Union, Tuple, Optional
 from torch_geometric.typing import (OptPairTensor, Adj, Size, NoneType,
@@ -68,8 +69,95 @@ class InceptionBlock_Di(torch.nn.Module):
         x0 = self.ln(x)
         for i in range(len(edge_index_tuple)):
             x0 += F.dropout(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]), p=0.6, training=self.training)
-            # x0 = F.dropout(x0, p=0.5, training=self.training)
-            # torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
+        return x0
+
+
+def union_edges(edge_index_tuple):
+    concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
+    edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
+    union_tensor = torch.tensor(edges_tuples).T
+    unique_weights = normalize_edges_all1(union_tensor)
+
+    print('result:', unique_weights.size())
+    for i in range(len(edge_index_tuple)):
+        print(edge_index_tuple[i].size()[1], end=', ')
+        if unique_weights.size() == edge_index_tuple[i].size():
+            print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
+
+    return union_tensor, unique_weights
+
+def union_edges0(edge_index_tuple):
+    # device = edge_index_tuple.device
+    edge_set = set()
+    i = 0
+
+    # Assuming edge_index_tuple is a list of tensors or torch.sparse_coo_tensor
+    for edge_indices in edge_index_tuple:
+
+        if edge_indices.is_sparse:
+            edge_indices = edge_indices.to_dense()
+        edge_list = list(zip(edge_indices[0].tolist(), edge_indices[1].tolist()))
+
+        # Check if specific edge (2994, 2994) exists in edge_list
+        if (0, 0) in edge_list:
+            print('Found edge (0, 0) in edge_indices', i)
+        if ((0, 1636)) in edge_list:
+            print('Found edge (0, 1636) in edge_indices', i)
+        # Iterate over each edge in edge_indices.T (transpose of edge_indices)
+        for edge in edge_indices.T:
+            edge_tuple = tuple(edge.tolist())  # Convert edge tensor to tuple for set operations
+            if edge_tuple not in edge_set:
+                edge_set.add(edge_tuple)
+            else:
+                i += 1
+                print('Duplicate edge:',i,  edge_tuple)
+
+
+    # Extract unique edges and their weights
+    unique_edges = torch.tensor(list(edge_set)).T
+    unique_weights = normalize_edges_all1(unique_edges)
+
+    print('result:', unique_weights.size())
+    for i in range(len(edge_index_tuple)):
+        print(edge_index_tuple[i].size(), end=', ')
+        if unique_weights.size() == edge_index_tuple[i].size():
+            print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
+
+    return unique_edges, unique_weights
+
+
+class InceptionBlock_Si(torch.nn.Module):
+    def __init__(self, m, in_dim, out_dim, args):
+        super(InceptionBlock_Si, self).__init__()
+        head = args.heads
+        K = args.K
+
+        self.ln = Linear(in_dim, out_dim)
+        if m == 'S':
+            self.convx = DiSAGEConv(in_dim, out_dim)
+        elif m == 'G':
+            self.convx = DIGCNConv(in_dim, out_dim)
+        elif m == 'C':
+            self.convx = DIChebConv(in_dim, out_dim, K)
+        elif m == 'A':
+            num_head = 1
+            head_dim = out_dim // num_head
+            self.convx = GATConv_Qin(in_dim, head_dim,  heads=head)
+        else:
+            raise ValueError(f"Model '{m}' not implemented")
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
+        self.convx.reset_parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+        device = x.device
+        # print(device)
+        x0 = self.ln(x)
+
+        x0 += F.dropout(self.convx(x, edge_index_tuple, edge_weight_tuple), p=0.6, training=self.training)
+        torch.cuda.empty_cache()
         return x0
 
 
@@ -5959,14 +6047,43 @@ class Di_IB_XBN_nhid(torch.nn.Module):
             # x = self.batch_norm3(x)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        # x = self.batch_norm2(x)
-        # x = x.unsqueeze(0)
-        # x = x.permute((0, 2, 1))
-        # x = self.Conv(x)
-        # x = x.permute((0, 2, 1))
-        # x = x.squeeze(0)
 
-        # x = F.dropout(x, p=self._dropout, training=self.training)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class Si_IB_XBN_nhid(torch.nn.Module):
+    def __init__(self, m, input_dim, out_dim, args):
+        super(Si_IB_XBN_nhid, self).__init__()
+        self._dropout = args.dropout
+        nhid = args.feat_dim
+        self.layer = args.layer
+
+        if self.layer == 1:
+            self.ib1 = InceptionBlock_Si(m, input_dim, out_dim, args)
+        else:
+            self.ib1 = InceptionBlock_Si(m, input_dim, nhid, args)
+        self.ib2 = InceptionBlock_Si(m, nhid, out_dim, args)
+        if self.layer >2:
+            self.ibx = nn.ModuleList([InceptionBlock_Si(m, nhid, nhid, args) for _ in range(self.layer - 2)])
+
+        # self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        # self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        if self.layer == 1:
+            return x
+
+        if self.layer > 2:
+            for iter_layer in self.ibx:
+                x = F.dropout(x, p=self._dropout, training=self.training)
+                x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
 class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
@@ -6275,6 +6392,16 @@ def create_Di_IB_nhid(m, nfeat, nclass, args):
         model = Di_IB_1BN_nhid(m, nfeat,  nclass, args)
     elif args.layer == 2:
         model = Di_IB_2BN_nhid(m, nfeat,  nclass, args)
+    else:
+        model = Di_IB_XBN_nhid(m, nfeat,  nclass, args)
+    return model
+
+def create_Si_IB_nhid(m, nfeat, nclass, args):
+    nlayer = args.layer
+    if args.layer == 1:
+        model = Di_IB_1BN_nhid(m, nfeat,  nclass, args)
+    elif args.layer == 2:
+        model = Si_IB_2BN_nhid(m, nfeat,  nclass, args)
     else:
         model = Di_IB_XBN_nhid(m, nfeat,  nclass, args)
     return model

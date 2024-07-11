@@ -20,6 +20,7 @@ from edge_nets.Edge_DiG_ import edge_prediction
 from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, get_third_directed_adj_union, get_4th_directed_adj, \
     get_4th_directed_adj_union, WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2
 from data_model import CreatModel, load_dataset, log_file, get_name
+from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from preprocess import  F_in_out,  F_in_out_Qin,  F_in_out0
@@ -80,7 +81,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
@@ -99,7 +100,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
             out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
-        elif args.net.startswith(('Di', 'Qi', 'Wi')):
+        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
             if args.net[3:].startswith(('Sym', 'Qym')):
                 out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
@@ -124,7 +125,7 @@ def test():
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         logits = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             logits = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
@@ -219,17 +220,14 @@ criterion = CrossEntropy().to(device)
 
 data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
 n_cls = data_y.max().item() + 1
-# print("class number is ", n_cls)
-# class_counts = torch.bincount(data_y)
-# class_counts_list = class_counts.tolist()
-# print(sorted(class_counts_list, reverse=True))
-if args.net.startswith(('Qi', 'Wi', 'Di', 'pan')):
+if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
-    elif args.net.startswith(('Qi', 'pan')):
+    elif args.net.startswith(('Qi', 'pan', 'Si')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
+
     else:
         raise NotImplementedError("Not Implemented"+ args.net)
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
@@ -251,6 +249,10 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan')):
         SparseEdges = (edge_index1,) + edge_index_tuple
         edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
+        if args.net.startswith('Si'):
+            SparseEdges, edge_weight = union_edges(SparseEdges)
+            SparseEdges = SparseEdges.to(device)
+            edge_weight = edge_weight.to(device)
     else:
         SparseEdges = edge_index1
         edge_weight = edge_weights1

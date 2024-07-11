@@ -964,7 +964,7 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         A_result = (A_in > 0) | (A_out > 0)  # Logical OR
     else:
         A_result = (A_in > 0) & (A_out > 0)  # Logical AND
-    # A_intersection = (A_in > 0).to(torch.float32) * (A_out > 0).to(torch.float32)  # Intersection
+    # A_result = A_result.nonzero(as_tuple=False).T
     all_hops = [A_result.to_sparse()]
 
     # Compute k-hop neighbors using matrix multiplication and intersections
@@ -1350,29 +1350,24 @@ def get_4th_directed_adj_union(edge_index, num_nodes, dtype):
 def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     '''
     Qin change to get union
-    Args:
-        edge_index:
-        num_nodes:
-        dtype:
-
-    Returns:
-
     '''
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO
 
     A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool).to(device), size=(num_nodes, num_nodes))
     L_tuple = sparse_boolean_multi_hop(A, k-1, mode='union')
 
+    all_edge_index = []
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
         edge_index = L._indices()
         edge_weight = torch.ones(edge_index.size(1)).to(device)
         edge_weight = normalize_edges(edge_index, edge_weight, num_nodes)
+        all_edge_index.append(edge_index)
         all_hops_weight.append(edge_weight)
 
-    return L_tuple, tuple(all_hops_weight)
+    return tuple(all_edge_index), tuple(all_hops_weight)
     # # row, col = edge_index
     # # deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     # # deg_inv = deg.pow(-1)
