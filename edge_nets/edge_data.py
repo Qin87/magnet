@@ -1368,53 +1368,6 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
         all_hops_weight.append(edge_weight)
 
     return tuple(all_edge_index), tuple(all_hops_weight)
-    # # row, col = edge_index
-    # # deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    # # deg_inv = deg.pow(-1)
-    # # deg_inv[deg_inv == float('inf')] = 0
-    # # p = deg_inv[row] * edge_weight      # all this is same with get directed adj
-    # # p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes, num_nodes])).to_dense()
-    #
-    # # L_in = torch.mm(p_dense.t(), p_dense)    # both point to which is non_zero in L_in
-    # # L_out = torch.mm(p_dense, p_dense.t())   # both source from which is non_zero in L_out
-    # #
-    # # L_in_hat = L_in   # because L_in and L_out are symmetric, so their T is the same as them
-    # # L_out_hat = L_out
-    # #
-    # # mask1 = (L_out != 0) & (L_in_hat == 0)  # Create boolean mask
-    # # L_in_hat[mask1] = L_out[mask1]  # Update L_in_hat where mask is True
-    # #
-    # # mask2 = (L_in != 0) & (L_out_hat == 0)
-    # # L_out_hat[mask2] = L_in[mask2]
-    # # true_count = mask1.to(torch.int).sum().item()
-    # # true_count2 = mask2.to(torch.int).sum().item()
-    # # non_zero_in = L_in_hat.nonzero().size(0)
-    # # non_zero_out = L_out_hat.nonzero().size(0)
-    # #
-    # # print(true_count, true_count2, non_zero_in,non_zero_out )
-    # #
-    # # # L_in_hat[(L_out != 0).to(torch.bool) & L_in_hat == 0] = L_out        # Qin learn: this is intersection
-    # # # L_out_hat[(L_in != 0).to(torch.bool) & L_out_hat == 0] = L_in        # Qin learn: this is intersection
-    # # # L_out_hat[L_in == 0] = 0
-    # #
-    # # # L^{(2)}
-    # # L = (L_in_hat + L_out_hat) / 2.0        # 2-order symmetric_A
-    # #
-    # # L[torch.isnan(L)] = 0
-    # # L_indices = torch.nonzero(L, as_tuple=False).t()
-    # # L_values = L[L_indices[0], L_indices[1]]
-    # # edge_index = L_indices
-    # # edge_weight = L_values
-    # #
-    # # # row normalization
-    # # row, col = edge_index
-    # # deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    # # deg_inv_sqrt = deg.pow(-0.5)
-    # # deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-    #
-    # return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-
-
 
 @torch.jit._overload
 def maybe_num_nodes(edge_index, num_nodes=None):

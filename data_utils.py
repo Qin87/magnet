@@ -33,7 +33,6 @@ def get_dataset(name, path, split_type='public'):
         from torch_geometric.datasets import Amazon
         return Amazon(root=path, name='photo', transform=T.NormalizeFeatures())
     elif name == 'Coauthor-CS':
-
         return Coauthor(root=path, name='cs', transform=T.NormalizeFeatures())
     elif name == 'Coauthor-physics':
 
@@ -218,19 +217,15 @@ def keep_all_data_classBalanced(edge_index, label, n_data, n_cls, train_mask):
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Direct_dataset.split('/')[0], args.Direct_dataset.split('/')[1]
-    # print("dataset is ", load_func, subset)  # Ben WebKB
     if load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)
-        # args.largeData = False
     elif load_func == 'WikipediaNetwork':
         load_func = WikipediaNetwork
         dataset = load_func(root=args.data_path, name=subset)
-        # args.largeData = True
     elif load_func == 'WikiCS':
         load_func = WikiCS
         dataset = load_func(root=args.data_path)
-        # args.largeData = True
     elif load_func == 'cora_ml':
         dataset = citation_datasets(root='data/cora_ml.npz')
     elif load_func == 'citeseer_npz':
@@ -240,8 +235,6 @@ def load_directedData(args):
 
     elif load_func == 'dgl':    # Ben
         subset = subset.lower()
-        # if subset.startswith('pub'):
-        #     args.largeData = True
         try:
             dataset = load_dgl_directed(subset)
         except NotImplementedError:
@@ -258,7 +251,6 @@ def load_directedData(args):
 def load_dgl_directed(subset):
     if subset == 'citeseer':    # Nodes: 3327, Edges: 9228, Number of Classes: 6
         return CiteseerGraphDataset(reverse_edge=False)
-
     elif subset == 'cora':  # Nodes: 2708, Edges: 10556, Number of Classes: 7
         return CoraGraphDataset(reverse_edge=False)
     elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
@@ -276,6 +268,65 @@ def load_dgl_directed(subset):
     else:
         raise NotImplementedError
     return dataset
+
+
+def create_split(data, indices, num_node, split_idx, percls_trn=20, val_lb=30, Flag=1):
+    train_index = torch.cat([i[:percls_trn] for i in indices], dim=0)  # the first 20 nodes
+
+    if Flag == 0:
+        rest_index = torch.cat([i[percls_trn:] for i in indices], dim=0)
+        rest_index = rest_index[torch.randperm(rest_index.size(0))]
+
+        data.train_mask[train_index, split_idx] = True
+        data.val_mask[rest_index[:val_lb], split_idx] = True
+        data.test_mask[rest_index[val_lb:], split_idx] = True
+
+    else:
+        val_index = torch.cat([i[percls_trn:percls_trn + val_lb] for i in indices], dim=0)  # val_lb is 30 per class
+        rest_index = torch.cat([i[percls_trn + val_lb:] for i in indices], dim=0)
+        rest_index = rest_index[torch.randperm(rest_index.size(0))]
+
+        data.train_mask[train_index, split_idx] = True
+        data.val_mask[val_index, split_idx] = True
+        data.test_mask[rest_index, split_idx] = True
+
+    return data
+
+
+def random_planetoid_splits(data, y, percls_trn=20, val_lb=30, Flag=1):
+    # flag=1, val-ls is num per class(30 is paper Pitfall for GNN);  while flag=0, val-lb is total val.  # Qin
+    # Set new random planetoid splits:
+    # * round(train_rate*len(data)/num_classes) * num_classes labels for training
+    # * val_rate*len(data) labels for validation
+    # * rest labels for testing
+    num_node = y.size()[0]
+    indices = []
+    for i in range(y.max().item() + 1):
+        index = (y == i).nonzero().view(-1)
+        index = index[torch.randperm(index.size(0))]
+        indices.append(index)
+
+    num_splits = 10  # Number of splits
+
+    # Initialize masks with shape (num_node, num_splits)
+    data.train_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
+    data.val_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
+    data.test_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
+
+    data = create_split(data, indices, num_node, 0, percls_trn, val_lb, Flag)
+    for split_idx in range(1, num_splits-1):
+        indices = [i[torch.randperm(i.size(0))] for i in indices]
+
+        data = create_split(data, indices, num_node, split_idx, percls_trn, val_lb, Flag)
+
+    return data
+
+
+
+def index_to_mask(index, size):
+    mask = torch.zeros(size, dtype=torch.bool, device=index.device)
+    mask[index] = True
+    return mask
 
 def get_step_split(valid_each, labeling_ratio, all_idx, all_label, nclass):
     imb_ratio =1

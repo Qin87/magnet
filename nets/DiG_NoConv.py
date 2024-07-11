@@ -82,7 +82,7 @@ def union_edges(edge_index_tuple):
     print('result:', unique_weights.size())
     for i in range(len(edge_index_tuple)):
         print(edge_index_tuple[i].size()[1], end=', ')
-        if unique_weights.size() == edge_index_tuple[i].size():
+        if unique_weights.size() == edge_index_tuple[i].size()[1]:
             print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
 
     return union_tensor, unique_weights

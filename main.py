@@ -330,12 +330,18 @@ try:
                     except:
                         data_test_mask = data_test_maskOrigin.clone()
 
+
+            n_data0 = []  # num of train in each class
+            for i in range(n_cls):
+                data_num = (data_y == i).sum()
+                n_data0.append(int(data_num.item()))
+            print('class in data: ', sorted(n_data0))
+
             stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
             n_data = []  # num of train in each class
             for i in range(n_cls):
                 data_num = (stats == i).sum()
                 n_data.append(int(data_num.item()))
-            # print('class in data: ',n_data)
             idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
             node_train = torch.sum(data_train_mask).item()
 

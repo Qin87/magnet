@@ -15,7 +15,7 @@ from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
-from data_utils import load_directedData, get_dataset, get_step_split
+from data_utils import load_directedData, get_dataset, get_step_split, random_planetoid_splits
 from nets.APPNP_Ben import create_APPNPSimp, APPNP_Model, ChebModel, SymModel
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
@@ -174,7 +174,6 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
     except:
         data.edge_weight = None
 
-
     # copy GraphSHA
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
         try:
@@ -190,12 +189,15 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         try:
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
         except:
-            data_train_maskOrigin = data.ndata['train_mask']
-            data_val_maskOrigin = data.ndata['val_mask']
-            data_test_maskOrigin = data.ndata['test_mask']
+            try:
+                data_train_maskOrigin = data.ndata['train_mask']
+                data_val_maskOrigin = data.ndata['val_mask']
+                data_test_maskOrigin = data.ndata['test_mask']
+            except:
+                data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
+                data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(),data.val_mask.clone(), data.test_mask.clone())
         data_x = data.ndata['feat']
         dataset_num_features = data_x.shape[1]
-    # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
     elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
         edges = data.edge_index.to(device)  # for torch_geometric librar
         data_y = data.y.to(device)
@@ -239,8 +241,9 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         except:
             dataset_num_features = data_x.shape[1]
 
-    IsDirectedGraph = test_directed(edges)
-    print("This is directed graph: ", IsDirectedGraph)
+    # IsDirectedGraph = test_directed(edges)        # time consuming
+    IsDirectedGraph = args.IsDirectedData
+    # print("This is directed graph: ", IsDirectedGraph)
     print("data_x", data_x.shape)  # [11701, 300])
 
     if IsDirectedGraph and args.to_undirected:
@@ -292,38 +295,3 @@ def log_file(net_to_print, dataset_to_print, args):
     log_directory = os.path.expanduser(log_directory)
 
     return log_directory, log_file_name_with_timestamp
-
-def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gcn_appr=False):
-    if args.IsDirectedData:
-        dataset = load_directedData(args)
-    else:
-        path = args.data_path
-        path = osp.join(path, args.undirect_dataset)
-        dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-    # dataset = load_directedData(args)
-
-    size = dataset[0].y.size(-1)
-    # adj = torch.zeros(size, size).data.numpy().astype('uint8')
-    # adj[dataset[0].edge_index[0], dataset[0].edge_index[1]] = 1
-
-    f_node, e_node = dataset[0].edge_index[0], dataset[0].edge_index[1]
-
-    label = dataset[0].y.data.numpy().astype('int')
-    X = dataset[0].x.data.numpy().astype('float32')
-    train_mask = dataset[0].train_mask.data.numpy().astype('bool_')
-    val_mask = dataset[0].val_mask.data.numpy().astype('bool_')
-    test_mask = dataset[0].test_mask.data.numpy().astype('bool_')
-
-    if load_only:
-        return X, label, train_mask, val_mask, test_mask
-
-    try:
-        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
-                                    max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=dataset[0].edge_weight)
-    except AttributeError:
-        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
-                                    max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
-
-    multi_order_laplacian = cheb_poly_sparse(L, K)
-
-    return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
