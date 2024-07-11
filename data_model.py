@@ -24,7 +24,7 @@ from nets.DiG_NoConv import (create_DiGSimple, create_DiG_MixIB_SymCat, create_D
                              create_DiG_MixIB_SymCat_batch, create_DiG_MixIB_SymCat_Sym_batch, create_DiGSimple_nhid, create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_Sym_batch_nhid, create_DiG_IB_SymCat_batchConvOut, create_DiG_IB_batch_nhid, create_DiG_MixIB_SymCat_nhid, create_DiG_MixIB_SymCat_batch_nhid,
                              create_DiG_IB_SymCat_nhid, create_DiG_IB_SymCat_batch_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_batch_nhid, create_DiG_IB_nhid, create_DiG_IB_Sym_nhid_para,
-                             create_DiG_IB_nhid_para, create_DiGSimple_batch_nhid, create_DiSAGESimple_nhid, create_Di_IB_nhid)
+                             create_DiG_IB_nhid_para, create_DiGSimple_batch_nhid, create_DiSAGESimple_nhid, create_Di_IB_nhid, Si_IB_XBN_nhid)
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.DiG_NoConv import create_DiG_IB_Sym
 from nets.GIN_Ben import create_GIN
@@ -93,9 +93,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
         model = APPNP_Model(num_features, n_cls,args.feat_dim, alpha=args.alpha,dropout=args.dropout, layer=args.layer).to(device)
-
-        # model = create_APPNPSimp(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, alpha=args.alpha, K=10).to(device)
-    elif args.net.startswith(('Di', 'Qi', 'Wi')):        # GCN  -->  SAGE
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):        # GCN  -->  SAGE
         if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
             model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
         else:
@@ -117,8 +115,10 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                 if args.paraD:
                     model = create_DiG_IB_nhid_para(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                 else:
-                    # model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-                    model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args= args).to(device)
+                    if args.net.startswith('Si'):
+                        model = Si_IB_XBN_nhid(args.net[2], num_features, n_cls, args=args).to(device)
+                    else:
+                        model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)
     elif args.net.startswith(('Sym', 'Qym')):
         # model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
