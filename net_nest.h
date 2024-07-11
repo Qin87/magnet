@@ -7,13 +7,13 @@
 #Mag MagQin Sig Qua
 #GCN GAT APPNP GIN Cheb SAGE  220 230 -2  0 1 -1 2 21 20  22 23 4
 #JKNet pgnn mlp sgc"Cheb MagQin  DiGSymib DiGSymCatib  DiG DiGib  DiGSymCatMixib DiGSymCatMixSymib GAT GCN  SAGE  # QiGi4  WiGib WiG WiGub WiGi3 WiGu3 WiGi4 WiGu4 DiG DiGib  # DiGu2 DiGi2 addSym Sym
-net_values="  Qym1 Sym1 addQym1 addSym1 "
+net_values="  Qym  "
 q_value=0
 Aug_value=" 0 "
-layer_values=" 1 2 3 4"    #
+layer_values=" 2 "    #
 
 
-Direct_dataset=( 'cora_ml/'  'citeseer_npz/')  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+Direct_dataset=( 'telegram/telegram'  'citeseer_npz/')  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 unDirect_data='PubMed'
 generate_timestamp() {
