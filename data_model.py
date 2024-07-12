@@ -190,19 +190,27 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         #     edges = (edge_index[0], edge_index[1])  # Convert to (source, target) format
         #     data_y = data.ndata['label']  # Assuming 'label' contains the node labels
         # else:
-        try:
+        num_edge_types = len(data.etypes)
+
+        if num_edge_types == 1:
+            # Only one edge type, retrieve edges normally
             edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
-        except:         # multiple edge types
+        else:
+            # Multiple edge types
             print("Edge types:", data.etypes)
             all_src = []
             all_dst = []
+
             for etype in data.etypes:
                 src, dst = data.edges(etype=etype)
                 all_src.append(src)
                 all_dst.append(dst)
+
+            # Concatenate all source and destination nodes
             all_src = torch.cat(all_src)
             all_dst = torch.cat(all_dst)
 
+            # Combine source and destination to form edges
             edges = torch.stack([all_src, all_dst]).to(device)
             # print(data.canonical_etypes)
             # print(data.etypes)
@@ -213,21 +221,14 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
             data_x = data.ndata['feat']
         except:
             data_x = data.ndata['feature']
-        if args.Direct_dataset.split('/')[1].startswith(('reddit','yelp', 'amazon')):
+        if args.Direct_dataset.split('/')[1].startswith('reddit'):
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        elif args.Direct_dataset.split('/')[1].startswith(('yelp', 'amazon')):
+            data = random_planetoid_splits(data, data_y, train_ratio=0.7, val_ratio=0.1, Flag=0)
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
         else:
             data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
-        # try:
-        #     data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
-        # except:
-        #     try:
-        #         data_train_maskOrigin = data.ndata['train_mask']
-        #         data_val_maskOrigin = data.ndata['val_mask']
-        #         data_test_maskOrigin = data.ndata['test_mask']
-        #     except:
-        #         data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
-        #         data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(),data.val_mask.clone(), data.test_mask.clone())
 
         dataset_num_features = data_x.shape[1]
     elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:

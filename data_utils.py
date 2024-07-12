@@ -285,55 +285,41 @@ def load_dgl_directed(subset):
         raise NotImplementedError
     return dataset
 
-
-def create_split(data, indices, num_node, split_idx, percls_trn=20, val_lb=30, Flag=1):
-    train_index = torch.cat([i[:percls_trn] for i in indices], dim=0)  # the first 20 nodes
-
-    if Flag == 0:
-        rest_index = torch.cat([i[percls_trn:] for i in indices], dim=0)
-        rest_index = rest_index[torch.randperm(rest_index.size(0))]
-
-        data.train_mask[train_index, split_idx] = True
-        data.val_mask[rest_index[:val_lb], split_idx] = True
-        data.test_mask[rest_index[val_lb:], split_idx] = True
-
-    else:
-        val_index = torch.cat([i[percls_trn:percls_trn + val_lb] for i in indices], dim=0)  # val_lb is 30 per class
-        rest_index = torch.cat([i[percls_trn + val_lb:] for i in indices], dim=0)
-        rest_index = rest_index[torch.randperm(rest_index.size(0))]
-
-        data.train_mask[train_index, split_idx] = True
-        data.val_mask[val_index, split_idx] = True
-        data.test_mask[rest_index, split_idx] = True
-
-    return data
-
-
-def random_planetoid_splits(data, y, percls_trn=20, val_lb=30, Flag=1):
-    # flag=1, val-ls is num per class(30 is paper Pitfall for GNN);  while flag=0, val-lb is total val.  # Qin
-    # Set new random planetoid splits:
-    # * round(train_rate*len(data)/num_classes) * num_classes labels for training
-    # * val_rate*len(data) labels for validation
-    # * rest labels for testing
+def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=20,  val_lb=30, num_splits=10, Flag=1):
+    # Set new random planetoid splits based on provided ratios
     num_node = y.size()[0]
-    indices = []
-    for i in range(y.max().item() + 1):
-        index = (y == i).nonzero().view(-1)
-        index = index[torch.randperm(index.size(0))]
-        indices.append(index)
-
-    num_splits = 10  # Number of splits
+    # indices = []
+    # for i in range(y.max().item() + 1):
+    #     index = (y == i).nonzero().view(-1)
+    #     index = index[torch.randperm(index.size(0))]
+    #     indices.append(index)
 
     # Initialize masks with shape (num_node, num_splits)
     data.train_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
     data.val_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
     data.test_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
 
-    data = create_split(data, indices, num_node, 0, percls_trn, val_lb, Flag)
-    for split_idx in range(1, num_splits):
-        indices = [i[torch.randperm(i.size(0))] for i in indices]
+    for split_idx in range(num_splits):
+        # indices = [i[torch.randperm(i.size(0))] for i in indices]     # shuffled
+        for i in range(y.max().item() + 1):
+            index = (y == i).nonzero().view(-1)
+            index = index[torch.randperm(index.size(0))]
+            if Flag == 1:
+                train_size = percls_trn
+                val_size = val_lb
+            else:       # If Flag is 0, use ratio split
+                total = index.size(0)
+                train_size = int(train_ratio * total)
+                val_size = int(val_ratio * total)
 
-        data = create_split(data, indices, num_node, split_idx, percls_trn, val_lb, Flag)
+            train_indices = index[:train_size]
+            val_indices = index[train_size:train_size + val_size]
+            test_indices = index[train_size + val_size:]
+
+            # Assign masks
+            data.train_mask[train_indices, split_idx] = 1
+            data.val_mask[val_indices, split_idx] = 1
+            data.test_mask[test_indices, split_idx] = 1
 
     return data
 
