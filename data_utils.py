@@ -288,19 +288,11 @@ def load_dgl_directed(subset):
 def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=20,  val_lb=30, num_splits=10, Flag=1):
     # Set new random planetoid splits based on provided ratios
     num_node = y.size()[0]
-    # indices = []
-    # for i in range(y.max().item() + 1):
-    #     index = (y == i).nonzero().view(-1)
-    #     index = index[torch.randperm(index.size(0))]
-    #     indices.append(index)
-
-    # Initialize masks with shape (num_node, num_splits)
     data.train_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
     data.val_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
     data.test_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
 
     for split_idx in range(num_splits):
-        # indices = [i[torch.randperm(i.size(0))] for i in indices]     # shuffled
         for i in range(y.max().item() + 1):
             index = (y == i).nonzero().view(-1)
             index = index[torch.randperm(index.size(0))]
