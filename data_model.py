@@ -164,7 +164,7 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
         path = osp.join(path, args.undirect_dataset)
         dataset = get_dataset(args.undirect_dataset, path, split_type='full')
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
+    # print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
 
     data = dataset[0].to(device)
     global class_num_list, idx_info, prev_out, sample_times
@@ -178,28 +178,42 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
         edge_types = data.etypes
         print("Available edge types:", edge_types)
-        if args.Direct_dataset.split('/')[1].startswith('bgs'):
-            # selected_edge_types = ['rdftype', 'ontology#isWorkedOnBy', 'ontology#dealtWithIn']        # rifa
-            selected_edge_types = ['EarthMaterialClass', 'hasEarthMaterialClass', 'Lexicon']
-            # Extract edge indices for selected edge types
-            edge_index = []
-            for etype in selected_edge_types:
-                # if etype in data.etypes:
+        # if args.Direct_dataset.split('/')[1].startswith('bgs'):
+        #     # selected_edge_types = ['rdftype', 'ontology#isWorkedOnBy', 'ontology#dealtWithIn']        # rifa
+        #     selected_edge_types = ['EarthMaterialClass', 'hasEarthMaterialClass', 'Lexicon']
+        #     # Extract edge indices for selected edge types
+        #     edge_index = []
+        #     for etype in selected_edge_types:
+        #         # if etype in data.etypes:
+        #         src, dst = data.edges(etype=etype)
+        #         edge_index.append((src, dst))
+        #     edges = (edge_index[0], edge_index[1])  # Convert to (source, target) format
+        #     data_y = data.ndata['label']  # Assuming 'label' contains the node labels
+        # else:
+        try:
+            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
+        except:         # multiple edge types
+            print("Edge types:", data.etypes)
+            all_src = []
+            all_dst = []
+            for etype in data.etypes:
                 src, dst = data.edges(etype=etype)
-                edge_index.append((src, dst))
-            edges = (edge_index[0], edge_index[1])  # Convert to (source, target) format
-            data_y = data.ndata['label']  # Assuming 'label' contains the node labels
-        else:
-            try:
-                edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
-            except:
-                print(data.canonical_etypes)
-                print(data.etypes)
-                edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
-            data_y = data.ndata['label'].to(device)
+                all_src.append(src)
+                all_dst.append(dst)
+            all_src = torch.cat(all_src)
+            all_dst = torch.cat(all_dst)
+
+            edges = torch.stack([all_src, all_dst]).to(device)
+            # print(data.canonical_etypes)
+            # print(data.etypes)
+            # edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
+        data_y = data.ndata['label'].to(device)
         print(data.ndata.keys())
-        data_x = data.ndata['feat']
-        if args.Direct_dataset.split('/')[1].startswith('reddit'):
+        try:
+            data_x = data.ndata['feat']
+        except:
+            data_x = data.ndata['feature']
+        if args.Direct_dataset.split('/')[1].startswith(('reddit','yelp', 'amazon')):
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
         else:
             data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)

@@ -7,7 +7,7 @@ import torch_geometric.transforms as T
 
 try:
     import dgl
-    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset
+    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset, FraudDataset
 except:
     print("dgl not imported, install chardet!")
 import torch
@@ -266,6 +266,12 @@ def load_dgl_directed(subset):
     elif subset == 'reddit':
         from dgl.data import RedditDataset
         dataset = RedditDataset()
+    elif subset == 'yelp':
+        dataset = FraudDataset('yelp')
+    elif subset == 'amazon':
+        dataset = FraudDataset('amazon')
+
+    # all below not working
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
         dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't have data_x  #
         #  assortative , node classification
