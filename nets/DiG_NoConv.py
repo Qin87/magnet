@@ -87,6 +87,22 @@ def union_edges(edge_index_tuple):
 
     return union_tensor, unique_weights
 
+def last_edges(edge_index_tuple):
+    # concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
+    # edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
+    # union_tensor = torch.tensor(edges_tuples).T
+    # unique_weights = normalize_edges_all1(union_tensor)
+    edges= edge_index_tuple[-1]
+    weights = normalize_edges_all1(edges)
+
+    # print('result:', unique_weights.size())
+    # for i in range(len(edge_index_tuple)):
+    #     print(edge_index_tuple[i].size()[1], end=', ')
+    #     if unique_weights.size() == edge_index_tuple[i].size()[1]:
+    #         print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
+
+    return edges, weights
+
 def union_edges0(edge_index_tuple):
     # device = edge_index_tuple.device
     edge_set = set()
