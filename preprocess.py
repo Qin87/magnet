@@ -395,8 +395,8 @@ def F_in_out(edge_index, size, edge_weight=None):
     """
     device = edge_index.device
 
-    fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=size)        # TODO added July10-16:40
+    # fill_value = 1
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=size)        # TODO added July10-16:40
 
     edge_index = edge_index.long().cpu()
     if edge_weight is not None:
