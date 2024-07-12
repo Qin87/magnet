@@ -176,27 +176,45 @@ def load_dataset(args,device, laplacian=True, gcn_appr=False):
 
     # copy GraphSHA
     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-        try:
-            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
-        except:
-            print(data.canonical_etypes)
-            print(data.etypes)
-            edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
-
-        data_y = data.ndata['label'].to(device)
-        print(data.ndata.keys())
-
-        try:
-            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
-        except:
+        edge_types = data.etypes
+        print("Available edge types:", edge_types)
+        if args.Direct_dataset.split('/')[1].startswith('bgs'):
+            # selected_edge_types = ['rdftype', 'ontology#isWorkedOnBy', 'ontology#dealtWithIn']        # rifa
+            selected_edge_types = ['EarthMaterialClass', 'hasEarthMaterialClass', 'Lexicon']
+            # Extract edge indices for selected edge types
+            edge_index = []
+            for etype in selected_edge_types:
+                # if etype in data.etypes:
+                src, dst = data.edges(etype=etype)
+                edge_index.append((src, dst))
+            edges = (edge_index[0], edge_index[1])  # Convert to (source, target) format
+            data_y = data.ndata['label']  # Assuming 'label' contains the node labels
+        else:
             try:
-                data_train_maskOrigin = data.ndata['train_mask']
-                data_val_maskOrigin = data.ndata['val_mask']
-                data_test_maskOrigin = data.ndata['test_mask']
+                edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
             except:
-                data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
-                data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(),data.val_mask.clone(), data.test_mask.clone())
+                print(data.canonical_etypes)
+                print(data.etypes)
+                edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
+            data_y = data.ndata['label'].to(device)
+        print(data.ndata.keys())
         data_x = data.ndata['feat']
+        if args.Direct_dataset.split('/')[1].startswith('reddit'):
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        else:
+            data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+        # try:
+        #     data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        # except:
+        #     try:
+        #         data_train_maskOrigin = data.ndata['train_mask']
+        #         data_val_maskOrigin = data.ndata['val_mask']
+        #         data_test_maskOrigin = data.ndata['test_mask']
+        #     except:
+        #         data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
+        #         data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(),data.val_mask.clone(), data.test_mask.clone())
+
         dataset_num_features = data_x.shape[1]
     elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
         edges = data.edge_index.to(device)  # for torch_geometric librar

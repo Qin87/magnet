@@ -7,7 +7,7 @@ import torch_geometric.transforms as T
 
 try:
     import dgl
-    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
+    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset
 except:
     print("dgl not imported, install chardet!")
 import torch
@@ -255,14 +255,24 @@ def load_dgl_directed(subset):
         return CoraGraphDataset(reverse_edge=False)
     elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
         dataset = PubmedGraphDataset(reverse_edge=False)
-    elif subset== 'coauthor':   # bidirected
+    elif subset== 'coauthor-cs':   # bidirected
         dataset = CoauthorCSDataset()
+    elif subset== 'coauthor-ph':   # bidirected
+        dataset = CoauthorPhysicsDataset()
+    elif subset == 'computer':
+        dataset = AmazonCoBuyComputerDataset()
+    elif subset == 'photo':
+        dataset = AmazonCoBuyPhotoDataset()
+    elif subset == 'reddit':
+        from dgl.data import RedditDataset
+        dataset = RedditDataset()
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
-        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't work
+        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't have data_x  #
+        #  assortative , node classification
     elif subset =='mutag':  # Nodes: 27163, Edges: 148100 (including reverse edges), 2 class
-        dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)
+        dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)   # for graph classification
     elif subset == 'bgs':   # Nodes: 94806,  Edges: 672884 (including reverse edges), 2 class
-        dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)
+        dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)     # not work to load
     elif subset == 'am':   # Nodes: 881680  Edges: 5668682 (including reverse edges)
         dataset = dgl.data.rdf.AMDataset(insert_reverse=False)
     else:
@@ -314,7 +324,7 @@ def random_planetoid_splits(data, y, percls_trn=20, val_lb=30, Flag=1):
     data.test_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
 
     data = create_split(data, indices, num_node, 0, percls_trn, val_lb, Flag)
-    for split_idx in range(1, num_splits-1):
+    for split_idx in range(1, num_splits):
         indices = [i[torch.randperm(i.size(0))] for i in indices]
 
         data = create_split(data, indices, num_node, split_idx, percls_trn, val_lb, Flag)

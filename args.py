@@ -18,7 +18,8 @@ def parse_args():
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed', 'Amazon-Photo', 'Amazon-Computers', 'Coauthor-CS', 'Coauthor-physics'],
                         default='PubMed', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/coauthor', help='citeseer_npz/ , cora_ml/, dgl/pubmed...,   WikiCS/ '
+    parser.add_argument('--Direct_dataset', type=str, default='dgl/reddit', help='citeseer_npz/ , cora_ml/, dgl/pubmed, '
+                                                                                'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, ...,   WikiCS/ '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, telegram/telegram, film/')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
