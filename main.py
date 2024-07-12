@@ -78,7 +78,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     new_y_train = None
     model.train()
 
-    edges = edge_in   # TODO only for test
+    # edges = edge_in   # TODO only for test
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
