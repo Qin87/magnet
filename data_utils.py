@@ -225,7 +225,8 @@ def load_directedData(args):
         dataset = load_func(root=args.data_path, name=subset)
     elif load_func == 'WikiCS':
         load_func = WikiCS
-        dataset = load_func(root=args.data_path)
+        # dataset = load_func(root=args.data_path)        # get undirected
+        dataset = load_func(root=args.data_path, is_undirected=False)
     elif load_func == 'cora_ml':
         dataset = citation_datasets(root='data/cora_ml.npz')
     elif load_func == 'citeseer_npz':
@@ -317,10 +318,6 @@ def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=
 
 
 
-def index_to_mask(index, size):
-    mask = torch.zeros(size, dtype=torch.bool, device=index.device)
-    mask[index] = True
-    return mask
 
 def get_step_split(valid_each, labeling_ratio, all_idx, all_label, nclass):
     imb_ratio =1

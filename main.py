@@ -77,14 +77,14 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     new_y = None
     new_y_train = None
     model.train()
-
-    edges = edge_in   # TODO only for test
+    if args.net.endswith('ymN1'):   # without 1st-order edges
+        biedges = edge_in
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-        out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+        out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
+            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
             out = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -100,10 +100,10 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     with torch.no_grad():
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-            out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
         elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
             if args.net[3:].startswith(('Sym', 'Qym')):
-                out = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+                out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
                 out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
@@ -125,10 +125,10 @@ def test():
     global edge_in, in_weight, edge_out, out_weight
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-        logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight)
+        logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            logits = model(data_x, edges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+            logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -226,14 +226,10 @@ if torch.cuda.is_available():
 else:
     print("cuda is not available, using CPU.")
     device = torch.device("cpu")
-# if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-#     device = torch.device("cpu")
-#     print("dgl, using CPU.")
 if args.CPU:
     device = torch.device("cpu")
     print("args.CPU true, using CPU.")
 
-# data = data.to(device)
 data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
@@ -283,15 +279,15 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
     if args.net[3:].startswith('Qym'):
-        edges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), edges_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), edges_weight)
     elif args.net[3:].startswith('Sym'):
-        edges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), edges_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), edges_weight)
 
 elif args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
     if args.net.startswith(('Qym', 'addQym')):
-        edges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),edges_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),edges_weight)
     else:
-        edges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(),data_y.size(-1),edges_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(),data_y.size(-1),edges_weight)
 elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     data_x_cpu = data_x.cpu()
     X_img_i = torch.FloatTensor(data_x_cpu).to(device)

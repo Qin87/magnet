@@ -354,7 +354,7 @@ def load_dataset(args):
 
         if num_edge_types == 1:
             # Only one edge type, retrieve edges normally
-            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
+            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
         else:
             # Multiple edge types
             print("Edge types:", data.etypes)
@@ -431,9 +431,9 @@ def load_dataset(args):
         except:
             dataset_num_features = data_x.shape[1]
 
-    # IsDirectedGraph = test_directed(edges)        # time consuming
-    IsDirectedGraph = args.IsDirectedData
-    # print("This is directed graph: ", IsDirectedGraph)
+    IsDirectedGraph = test_directed(edges)        # time consuming
+    # IsDirectedGraph = args.IsDirectedData
+    print("This is directed graph: ", IsDirectedGraph)
     print("data_x", data_x.shape)  # [11701, 300])
 
     if IsDirectedGraph and args.to_undirected:
