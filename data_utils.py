@@ -271,7 +271,9 @@ def load_dgl_directed(subset):
         dataset = FraudDataset('yelp')
     elif subset == 'amazon':
         dataset = FraudDataset('amazon')
-
+    elif subset == 'flickr':
+        from dgl.data import FlickrDataset
+        dataset = FlickrDataset()
     # all below not working
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
         dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't have data_x  #
