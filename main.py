@@ -157,18 +157,6 @@ start_time = time.time()
 args = parse_args()
 seed = args.seed
 cuda_device = args.GPUdevice
-# if torch.cuda.is_available():
-#     print("cuda Device Index:", cuda_device)
-#     device = torch.device("cuda:%d" % cuda_device)
-# else:
-#     print("cuda is not available, using CPU.")
-#     device = torch.device("cpu")
-# if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-#     device = torch.device("cpu")
-#     print("dgl, using CPU.")
-# if args.CPU:
-#     device = torch.device("cpu")
-#     print("args.CPU true, using CPU.")
 
 net_to_print, dataset_to_print = get_name(args)
 
@@ -210,16 +198,14 @@ X_img_k = None
 
 gcn = True
 
-pos_edges = None
-neg_edges = None
-
 macro_F1 = []
 acc_list = []
 bacc_list = []
 
 
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args)
-
+load_time = time.time()
+print('time after loading data: ', load_time - start_time)
 if torch.cuda.is_available():
     print("cuda Device Index:", cuda_device)
     device = torch.device("cuda:%d" % cuda_device)
@@ -363,7 +349,7 @@ try:
             for i in range(n_cls):
                 data_num = (stats == i).sum()
                 n_data.append(int(data_num.item()))
-            idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
+            # idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
             node_train = torch.sum(data_train_mask).item()
 
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
@@ -399,6 +385,7 @@ try:
             idx_info_local = [torch.tensor(list(map(global2local.get, cls_idx))) for cls_idx in
                               idx_info_list]  # train nodes position inside train
 
+            best_val_loss = 100
             best_val_acc_f1 = 0
             best_val_f1 = 0
             best_test_f1 = 0
@@ -414,15 +401,16 @@ try:
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 val_acc_f1 = (val_acc + val_f1) / 2.
-                if tmp_test_f1 > best_test_f1:
-                    # best_val_acc_f1 = val_acc_f1
-                    # best_val_f1 = val_f1
-                    best_test_f1 = tmp_test_f1
+                # if tmp_test_f1 > best_test_f1:
+                #     best_test_f1 = tmp_test_f1
+                # best_val_acc_f1 = val_acc_f1
+                # best_val_f1 = val_f1
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
                     test_acc = accs[2]
                     test_bacc = baccs[2]
                     test_f1 = f1s[2]
-                    # print('hello')
-                    CountNotImproved =0
+                    CountNotImproved = 0
                     print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
                 else:
                     CountNotImproved += 1

@@ -7,7 +7,7 @@ import torch_geometric.transforms as T
 
 try:
     import dgl
-    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset, FraudDataset
+    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset, FraudDataset, FlickrDataset, YelpDataset
 except:
     print("dgl not imported, install chardet!")
 import torch
@@ -22,7 +22,6 @@ from preprocess import load_syn
 def get_dataset(name, path, split_type='public'):
     import torch_geometric.transforms as T
     from torch_geometric.datasets import Coauthor
-
     if name == "Cora" or name == "CiteSeer" or name == "PubMed":
         from torch_geometric.datasets import Planetoid
         dataset = Planetoid(path, name, transform=T.NormalizeFeatures(), split=split_type)
@@ -35,7 +34,6 @@ def get_dataset(name, path, split_type='public'):
     elif name == 'Coauthor-CS':
         return Coauthor(root=path, name='cs', transform=T.NormalizeFeatures())
     elif name == 'Coauthor-physics':
-
         return Coauthor(root=path, name='physics', transform=T.NormalizeFeatures())
     elif name == 'ppi':     # TODO
         dataset_dir = './data/ppi_data'
@@ -69,6 +67,15 @@ def get_idx_info(label, n_cls, train_mask, device):
         cls_indices = index_list[((label == i) & train_mask).to(device)]
         idx_info.append(cls_indices)
     return idx_info
+
+def get_idx_info_multilabel(label, n_cls, train_mask, device):
+    index_list = torch.arange(len(label)).to(device)
+    idx_info = []
+    for i in range(n_cls):
+        cls_indices = index_list[((label[i] == 1) & train_mask).to(device)]
+        idx_info.append(cls_indices)
+    return idx_info
+
 
 def make_longtailed_data_remove(edge_index, label, n_data, n_cls, ratio, train_mask):
     """
@@ -267,13 +274,14 @@ def load_dgl_directed(subset):
     elif subset == 'reddit':
         from dgl.data import RedditDataset
         dataset = RedditDataset()
-    elif subset == 'yelp':
+    elif subset == 'Fyelp':
         dataset = FraudDataset('yelp')
-    elif subset == 'amazon':
+    elif subset == 'Famazon':
         dataset = FraudDataset('amazon')
     elif subset == 'flickr':
-        from dgl.data import FlickrDataset
         dataset = FlickrDataset()
+    elif subset == 'yelp':
+        dataset = YelpDataset()
     # all below not working
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
         dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't have data_x  #
@@ -298,7 +306,7 @@ def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=
     for split_idx in range(num_splits):
         for i in range(y.max().item() + 1):
             index = (y == i).nonzero().view(-1)
-            index = index[torch.randperm(index.size(0))]
+
             if Flag == 1:
                 train_size = percls_trn
                 val_size = val_lb
@@ -315,6 +323,7 @@ def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=
             data.train_mask[train_indices, split_idx] = 1
             data.val_mask[val_indices, split_idx] = 1
             data.test_mask[test_indices, split_idx] = 1
+        index = index[torch.randperm(index.size(0))]
 
     return data
 
