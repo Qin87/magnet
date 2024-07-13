@@ -7,7 +7,7 @@ import torch_geometric.transforms as T
 
 try:
     import dgl
-    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset
+    from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset, FraudDataset
 except:
     print("dgl not imported, install chardet!")
 import torch
@@ -33,7 +33,6 @@ def get_dataset(name, path, split_type='public'):
         from torch_geometric.datasets import Amazon
         return Amazon(root=path, name='photo', transform=T.NormalizeFeatures())
     elif name == 'Coauthor-CS':
-
         return Coauthor(root=path, name='cs', transform=T.NormalizeFeatures())
     elif name == 'Coauthor-physics':
 
@@ -218,19 +217,16 @@ def keep_all_data_classBalanced(edge_index, label, n_data, n_cls, train_mask):
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Direct_dataset.split('/')[0], args.Direct_dataset.split('/')[1]
-    # print("dataset is ", load_func, subset)  # Ben WebKB
     if load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)
-        # args.largeData = False
     elif load_func == 'WikipediaNetwork':
         load_func = WikipediaNetwork
         dataset = load_func(root=args.data_path, name=subset)
-        # args.largeData = True
     elif load_func == 'WikiCS':
         load_func = WikiCS
-        dataset = load_func(root=args.data_path)
-        # args.largeData = True
+        # dataset = load_func(root=args.data_path)        # get undirected
+        dataset = load_func(root=args.data_path, is_undirected=False)
     elif load_func == 'cora_ml':
         dataset = citation_datasets(root='data/cora_ml.npz')
     elif load_func == 'citeseer_npz':
@@ -240,8 +236,6 @@ def load_directedData(args):
 
     elif load_func == 'dgl':    # Ben
         subset = subset.lower()
-        # if subset.startswith('pub'):
-        #     args.largeData = True
         try:
             dataset = load_dgl_directed(subset)
         except NotImplementedError:
@@ -258,24 +252,74 @@ def load_directedData(args):
 def load_dgl_directed(subset):
     if subset == 'citeseer':    # Nodes: 3327, Edges: 9228, Number of Classes: 6
         return CiteseerGraphDataset(reverse_edge=False)
-
     elif subset == 'cora':  # Nodes: 2708, Edges: 10556, Number of Classes: 7
         return CoraGraphDataset(reverse_edge=False)
     elif subset == 'pubmed':    # Nodes: 19717, Edges: 88651
         dataset = PubmedGraphDataset(reverse_edge=False)
-    elif subset== 'coauthor':   # bidirected
+    elif subset== 'coauthor-cs':   # bidirected
         dataset = CoauthorCSDataset()
+    elif subset== 'coauthor-ph':   # bidirected
+        dataset = CoauthorPhysicsDataset()
+    elif subset == 'computer':
+        dataset = AmazonCoBuyComputerDataset()
+    elif subset == 'photo':
+        dataset = AmazonCoBuyPhotoDataset()
+    elif subset == 'reddit':
+        from dgl.data import RedditDataset
+        dataset = RedditDataset()
+    elif subset == 'yelp':
+        dataset = FraudDataset('yelp')
+    elif subset == 'amazon':
+        dataset = FraudDataset('amazon')
+    elif subset == 'flickr':
+        from dgl.data import FlickrDataset
+        dataset = FlickrDataset()
+    # all below not working
     elif subset == 'aifb':  # Nodes: 7262, Edges: 48810 (including reverse edges)
-        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't work
+        dataset = dgl.data.rdf.AIFBDataset(insert_reverse=False)    # don't have data_x  #
+        #  assortative , node classification
     elif subset =='mutag':  # Nodes: 27163, Edges: 148100 (including reverse edges), 2 class
-        dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)
+        dataset = dgl.data.rdf.MUTAGDataset(insert_reverse=False)   # for graph classification
     elif subset == 'bgs':   # Nodes: 94806,  Edges: 672884 (including reverse edges), 2 class
-        dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)
+        dataset = dgl.data.rdf.BGSDataset(insert_reverse=False)     # not work to load
     elif subset == 'am':   # Nodes: 881680  Edges: 5668682 (including reverse edges)
         dataset = dgl.data.rdf.AMDataset(insert_reverse=False)
     else:
         raise NotImplementedError
     return dataset
+
+def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=20,  val_lb=30, num_splits=10, Flag=1):
+    # Set new random planetoid splits based on provided ratios
+    num_node = y.size()[0]
+    data.train_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
+    data.val_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
+    data.test_mask = torch.zeros(num_node, num_splits, dtype=torch.bool)
+
+    for split_idx in range(num_splits):
+        for i in range(y.max().item() + 1):
+            index = (y == i).nonzero().view(-1)
+            index = index[torch.randperm(index.size(0))]
+            if Flag == 1:
+                train_size = percls_trn
+                val_size = val_lb
+            else:       # If Flag is 0, use ratio split
+                total = index.size(0)
+                train_size = int(train_ratio * total)
+                val_size = int(val_ratio * total)
+
+            train_indices = index[:train_size]
+            val_indices = index[train_size:train_size + val_size]
+            test_indices = index[train_size + val_size:]
+
+            # Assign masks
+            data.train_mask[train_indices, split_idx] = 1
+            data.val_mask[val_indices, split_idx] = 1
+            data.test_mask[test_indices, split_idx] = 1
+
+    return data
+
+
+
 
 def get_step_split(valid_each, labeling_ratio, all_idx, all_label, nclass):
     imb_ratio =1

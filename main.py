@@ -20,7 +20,7 @@ from edge_nets.Edge_DiG_ import edge_prediction
 from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, get_third_directed_adj_union, get_4th_directed_adj, \
     get_4th_directed_adj_union, WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2
 from data_model import CreatModel, load_dataset, log_file, get_name
-from nets.DiG_NoConv import union_edges
+from nets.DiG_NoConv import union_edges, last_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from preprocess import  F_in_out,  F_in_out_Qin,  F_in_out0
@@ -77,13 +77,14 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     new_y = None
     new_y_train = None
     model.train()
-
+    if args.net.endswith('ymN1'):   # without 1st-order edges
+        biedges = edge_in
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-        out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
+        out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
+            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
             out = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -99,10 +100,10 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     with torch.no_grad():
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-            out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
+            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
         elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
             if args.net[3:].startswith(('Sym', 'Qym')):
-                out = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+                out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
                 out = model(data_x, SparseEdges, edge_weight)
         elif args.net.startswith('Mag'):
@@ -124,10 +125,10 @@ def test():
     global edge_in, in_weight, edge_out, out_weight
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-        logits = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight)
+        logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            logits = model(data_x, data.edge_index, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
+            logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             logits = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -156,18 +157,18 @@ start_time = time.time()
 args = parse_args()
 seed = args.seed
 cuda_device = args.GPUdevice
-if torch.cuda.is_available():
-    print("cuda Device Index:", cuda_device)
-    device = torch.device("cuda:%d" % cuda_device)
-else:
-    print("cuda is not available, using CPU.")
-    device = torch.device("cpu")
-if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-    device = torch.device("cpu")
-    print("dgl, using CPU.")
-if args.CPU:
-    device = torch.device("cpu")
-    print("args.CPU true, using CPU.")
+# if torch.cuda.is_available():
+#     print("cuda Device Index:", cuda_device)
+#     device = torch.device("cuda:%d" % cuda_device)
+# else:
+#     print("cuda is not available, using CPU.")
+#     device = torch.device("cpu")
+# if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
+#     device = torch.device("cpu")
+#     print("dgl, using CPU.")
+# if args.CPU:
+#     device = torch.device("cpu")
+#     print("args.CPU true, using CPU.")
 
 net_to_print, dataset_to_print = get_name(args)
 
@@ -216,9 +217,28 @@ macro_F1 = []
 acc_list = []
 bacc_list = []
 
-criterion = CrossEntropy().to(device)
 
-data, data_x, data_y, edges, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args, device)
+data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args)
+
+if torch.cuda.is_available():
+    print("cuda Device Index:", cuda_device)
+    device = torch.device("cuda:%d" % cuda_device)
+else:
+    print("cuda is not available, using CPU.")
+    device = torch.device("cpu")
+if args.CPU:
+    device = torch.device("cpu")
+    print("args.CPU true, using CPU.")
+
+data_x = data_x.to(device)
+data_y = data_y.to(device)
+edges = edges.to(device)
+data_train_maskOrigin = data_train_maskOrigin.to(device)
+data_val_maskOrigin = data_val_maskOrigin.to(device)
+data_test_maskOrigin = data_test_maskOrigin.to(device)
+
+
+criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
 if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
     if args.net.startswith('Wi'):
@@ -250,7 +270,8 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
         edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
         if args.net.startswith('Si'):
-            SparseEdges, edge_weight = union_edges(SparseEdges)
+            # SparseEdges, edge_weight = union_edges(SparseEdges)
+            SparseEdges, edge_weight = last_edges(SparseEdges)
             SparseEdges = SparseEdges.to(device)
             edge_weight = edge_weight.to(device)
     else:
@@ -258,15 +279,15 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
     if args.net[3:].startswith('Qym'):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), data.edge_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), edges_weight)
     elif args.net[3:].startswith('Sym'):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), data.edge_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), edges_weight)
 
 elif args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
     if args.net.startswith(('Qym', 'addQym')):
-        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),data.edge_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),edges_weight)
     else:
-        data.edge_index, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(),data_y.size(-1),data.edge_weight)
+        biedges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(),data_y.size(-1),edges_weight)
 elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     data_x_cpu = data_x.cpu()
     X_img_i = torch.FloatTensor(data_x_cpu).to(device)
@@ -294,8 +315,8 @@ try:
     # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ',device, file=log_file)
-        # for split in range(splits - 1, -1, -1):
-        for split in range(splits):
+        for split in range(splits - 1, -1, -1):
+        # for split in range(splits):
             model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
             if split==0:
                 print(model, file=log_file)
@@ -330,12 +351,18 @@ try:
                     except:
                         data_test_mask = data_test_maskOrigin.clone()
 
+
+            n_data0 = []  # num of train in each class
+            for i in range(n_cls):
+                data_num = (data_y == i).sum()
+                n_data0.append(int(data_num.item()))
+            print('class in data: ', sorted(n_data0))
+
             stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
             n_data = []  # num of train in each class
             for i in range(n_cls):
                 data_num = (stats == i).sum()
                 n_data.append(int(data_num.item()))
-            # print('class in data: ',n_data)
             idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
             node_train = torch.sum(data_train_mask).item()
 

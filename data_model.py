@@ -15,7 +15,7 @@ from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
 import os.path as osp
 
-from data_utils import load_directedData, get_dataset, get_step_split
+from data_utils import load_directedData, get_dataset, get_step_split, random_planetoid_splits
 from nets.APPNP_Ben import create_APPNPSimp, APPNP_Model, ChebModel, SymModel
 from nets.Cheb_Ben import create_Cheb
 # from nets.DGCN import SymModel
@@ -156,105 +156,141 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     return model
 
 
-def load_dataset(args,device, laplacian=True, gcn_appr=False):
-    if args.IsDirectedData:
-        dataset = load_directedData(args)
-    else:
-        path = args.data_path
-        path = osp.join(path, args.undirect_dataset)
-        dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
-
-    data = dataset[0].to(device)
-    global class_num_list, idx_info, prev_out, sample_times
-    global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
-    try:
-        data.edge_weight = torch.FloatTensor(data.edge_weight)
-    except:
-        data.edge_weight = None
-
-
-    # copy GraphSHA
-    if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
-        try:
-            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
-        except:
-            print(data.canonical_etypes)
-            print(data.etypes)
-            edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
-
-        data_y = data.ndata['label'].to(device)
-        print(data.ndata.keys())
-
-        try:
-            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
-        except:
-            data_train_maskOrigin = data.ndata['train_mask']
-            data_val_maskOrigin = data.ndata['val_mask']
-            data_test_maskOrigin = data.ndata['test_mask']
-        data_x = data.ndata['feat']
-        dataset_num_features = data_x.shape[1]
-    # elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo']:
-    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
-        edges = data.edge_index.to(device)  # for torch_geometric librar
-        data_y = data.y.to(device)
-        data_x = data.x.to(device)
-        dataset_num_features = dataset.num_features
-
-        data_y = data_y.long()
-        n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
-        n_cls = torch.tensor(n_cls).to(device)
-
-        print("class number is ", n_cls)
-        class_counts = torch.bincount(data_y)
-        class_counts_list = class_counts.tolist()
-        print(sorted(class_counts_list, reverse=True))
-
-        train_idx, valid_idx, test_idx, train_node = get_step_split(valid_each=int(data.x.shape[0] * 0.1 / n_cls),
-                                                                    labeling_ratio=0.1,
-                                                                    all_idx=[i for i in range(data.x.shape[0])],
-                                                                    all_label=data.y.cpu().detach().numpy(),
-                                                                    nclass=n_cls)
-
-
-        data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
-        data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
-        data_test_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
-        data_train_maskOrigin[train_idx] = True
-        data_val_maskOrigin[valid_idx] = True
-        data_test_maskOrigin[test_idx] = True
-        train_idx = data_train_maskOrigin.nonzero().squeeze()
-        train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
-
-        class_num_list = [len(item) for item in train_node]
-        idx_info = [torch.tensor(item) for item in train_node]
-    else:
-        edges = data.edge_index  # for torch_geometric librar
-        data_y = data.y
-        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(),data.test_mask.clone())
-        data_x = data.x
-        try:
-            dataset_num_features = dataset.num_features
-        except:
-            dataset_num_features = data_x.shape[1]
-
-    IsDirectedGraph = test_directed(edges)
-    print("This is directed graph: ", IsDirectedGraph)
-    print("data_x", data_x.shape)  # [11701, 300])
-
-    if IsDirectedGraph and args.to_undirected:
-        edges = to_undirectedBen(edges)
-        print("Converted to undirected data")
-
-    data = data.to(device)
-    data_x = data_x.to(device)
-    data_y = data_y.long().to(device)
-    edges = edges.to(device)
-    data_train_maskOrigin = data_train_maskOrigin.to(device)
-    data_val_maskOrigin = data_val_maskOrigin.to(device)
-    data_test_maskOrigin = data_test_maskOrigin.to(device)
-    return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
+# def load_dataset(args,device, laplacian=True, gcn_appr=False):
+#     if args.IsDirectedData:
+#         dataset = load_directedData(args)
+#     else:
+#         path = args.data_path
+#         path = osp.join(path, args.undirect_dataset)
+#         dataset = get_dataset(args.undirect_dataset, path, split_type='full')
+#     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+#     # print("The Dataset is ", dataset, "from DirectedData: ", args.IsDirectedData)
+#
+#     data = dataset[0].to(device)
+#     global class_num_list, idx_info, prev_out, sample_times
+#     global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
+#     try:
+#         data.edge_weight = torch.FloatTensor(data.edge_weight)
+#     except:
+#         data.edge_weight = None
+#
+#     # copy GraphSHA
+#     if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
+#         edge_types = data.etypes
+#         print("Available edge types:", edge_types)
+#         # if args.Direct_dataset.split('/')[1].startswith('bgs'):
+#         #     # selected_edge_types = ['rdftype', 'ontology#isWorkedOnBy', 'ontology#dealtWithIn']        # rifa
+#         #     selected_edge_types = ['EarthMaterialClass', 'hasEarthMaterialClass', 'Lexicon']
+#         #     # Extract edge indices for selected edge types
+#         #     edge_index = []
+#         #     for etype in selected_edge_types:
+#         #         # if etype in data.etypes:
+#         #         src, dst = data.edges(etype=etype)
+#         #         edge_index.append((src, dst))
+#         #     edges = (edge_index[0], edge_index[1])  # Convert to (source, target) format
+#         #     data_y = data.ndata['label']  # Assuming 'label' contains the node labels
+#         # else:
+#         num_edge_types = len(data.etypes)
+#
+#         if num_edge_types == 1:
+#             # Only one edge type, retrieve edges normally
+#             edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0).to(device)
+#         else:
+#             # Multiple edge types
+#             print("Edge types:", data.etypes)
+#             all_src = []
+#             all_dst = []
+#
+#             for etype in data.etypes:
+#                 src, dst = data.edges(etype=etype)
+#                 all_src.append(src)
+#                 all_dst.append(dst)
+#
+#             # Concatenate all source and destination nodes
+#             all_src = torch.cat(all_src)
+#             all_dst = torch.cat(all_dst)
+#
+#             # Combine source and destination to form edges
+#             edges = torch.stack([all_src, all_dst]).to(device)
+#             # print(data.canonical_etypes)
+#             # print(data.etypes)
+#             # edges = torch.cat((data.edges(etype='rdftype')[0].unsqueeze(0), data.edges(etype='rdftype')[1].unsqueeze(0)), dim=0).to(device)
+#         data_y = data.ndata['label'].to(device)
+#         print(data.ndata.keys())
+#         try:
+#             data_x = data.ndata['feat']
+#         except:
+#             data_x = data.ndata['feature']
+#         if args.Direct_dataset.split('/')[1].startswith('reddit'):
+#             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+#         elif args.Direct_dataset.split('/')[1].startswith(('yelp', 'amazon')):
+#             data = random_planetoid_splits(data, data_y, train_ratio=0.7, val_ratio=0.1, Flag=0)
+#             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+#         else:
+#             data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
+#             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+#
+#         dataset_num_features = data_x.shape[1]
+#     elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
+#         edges = data.edge_index.to(device)  # for torch_geometric librar
+#         data_y = data.y.to(device)
+#         data_x = data.x.to(device)
+#         dataset_num_features = dataset.num_features
+#
+#         data_y = data_y.long()
+#         n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
+#         n_cls = torch.tensor(n_cls).to(device)
+#
+#         print("class number is ", n_cls)
+#         class_counts = torch.bincount(data_y)
+#         class_counts_list = class_counts.tolist()
+#         print(sorted(class_counts_list, reverse=True))
+#
+#         train_idx, valid_idx, test_idx, train_node = get_step_split(valid_each=int(data.x.shape[0] * 0.1 / n_cls),
+#                                                                     labeling_ratio=0.1,
+#                                                                     all_idx=[i for i in range(data.x.shape[0])],
+#                                                                     all_label=data.y.cpu().detach().numpy(),
+#                                                                     nclass=n_cls)
+#
+#
+#         data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
+#         data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
+#         data_test_maskOrigin = torch.zeros(data.x.shape[0]).bool().to(device)
+#         data_train_maskOrigin[train_idx] = True
+#         data_val_maskOrigin[valid_idx] = True
+#         data_test_maskOrigin[test_idx] = True
+#         train_idx = data_train_maskOrigin.nonzero().squeeze()
+#         train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
+#
+#         class_num_list = [len(item) for item in train_node]
+#         idx_info = [torch.tensor(item) for item in train_node]
+#     else:
+#         edges = data.edge_index  # for torch_geometric librar
+#         data_y = data.y
+#         data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(),data.test_mask.clone())
+#         data_x = data.x
+#         try:
+#             dataset_num_features = dataset.num_features
+#         except:
+#             dataset_num_features = data_x.shape[1]
+#
+#     # IsDirectedGraph = test_directed(edges)        # time consuming
+#     IsDirectedGraph = args.IsDirectedData
+#     # print("This is directed graph: ", IsDirectedGraph)
+#     print("data_x", data_x.shape)  # [11701, 300])
+#
+#     if IsDirectedGraph and args.to_undirected:
+#         edges = to_undirectedBen(edges)
+#         print("Converted to undirected data")
+#
+#     data = data.to(device)
+#     data_x = data_x.to(device)
+#     data_y = data_y.long().to(device)
+#     edges = edges.to(device)
+#     data_train_maskOrigin = data_train_maskOrigin.to(device)
+#     data_val_maskOrigin = data_val_maskOrigin.to(device)
+#     data_test_maskOrigin = data_test_maskOrigin.to(device)
+#     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
 def get_name(args):
     if args.IsDirectedData:
@@ -293,37 +329,115 @@ def log_file(net_to_print, dataset_to_print, args):
 
     return log_directory, log_file_name_with_timestamp
 
-def geometric_dataset_sparse_Ben(q, K, args,load_only=False,  laplacian=True, gcn_appr=False):
+def load_dataset(args):
     if args.IsDirectedData:
         dataset = load_directedData(args)
     else:
         path = args.data_path
         path = osp.join(path, args.undirect_dataset)
         dataset = get_dataset(args.undirect_dataset, path, split_type='full')
-    # dataset = load_directedData(args)
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    size = dataset[0].y.size(-1)
-    # adj = torch.zeros(size, size).data.numpy().astype('uint8')
-    # adj[dataset[0].edge_index[0], dataset[0].edge_index[1]] = 1
-
-    f_node, e_node = dataset[0].edge_index[0], dataset[0].edge_index[1]
-
-    label = dataset[0].y.data.numpy().astype('int')
-    X = dataset[0].x.data.numpy().astype('float32')
-    train_mask = dataset[0].train_mask.data.numpy().astype('bool_')
-    val_mask = dataset[0].val_mask.data.numpy().astype('bool_')
-    test_mask = dataset[0].test_mask.data.numpy().astype('bool_')
-
-    if load_only:
-        return X, label, train_mask, val_mask, test_mask
-
+    data = dataset[0]
+    global class_num_list, idx_info, prev_out, sample_times
+    global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
     try:
-        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
-                                    max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=dataset[0].edge_weight)
-    except AttributeError:
-        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian,
-                                    max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=None)
+        edges_weight = torch.FloatTensor(data.edge_weight)
+    except:
+        edges_weight = None
 
-    multi_order_laplacian = cheb_poly_sparse(L, K)
+    # copy GraphSHA
+    if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
+        edge_types = data.etypes
+        print("Available edge types:", edge_types)
+        num_edge_types = len(data.etypes)
 
-    return X, label, train_mask, val_mask, test_mask, multi_order_laplacian
+        if num_edge_types == 1:
+            # Only one edge type, retrieve edges normally
+            edges = torch.cat((data.edges()[0].unsqueeze(0), data.edges()[1].unsqueeze(0)), dim=0)
+        else:
+            # Multiple edge types
+            print("Edge types:", data.etypes)
+            all_src = []
+            all_dst = []
+
+            for etype in data.etypes:
+                src, dst = data.edges(etype=etype)
+                all_src.append(src)
+                all_dst.append(dst)
+
+            # Concatenate all source and destination nodes
+            all_src = torch.cat(all_src)
+            all_dst = torch.cat(all_dst)
+
+            # Combine source and destination to form edges
+            edges = torch.stack([all_src, all_dst])
+        data_y = data.ndata['label']
+        print(data.ndata.keys())
+        try:
+            data_x = data.ndata['feat']
+        except:
+            data_x = data.ndata['feature']
+        if args.Direct_dataset.split('/')[1].startswith('reddit'):
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
+        elif args.Direct_dataset.split('/')[1].startswith(('yelp', 'amazon')):
+            data = random_planetoid_splits(data, data_y, train_ratio=0.7, val_ratio=0.1, Flag=0)
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+        else:
+            data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+
+        dataset_num_features = data_x.shape[1]
+    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
+        edges = data.edge_index  # for torch_geometric librar
+        data_y = data.y
+        data_x = data.x
+        dataset_num_features = dataset.num_features
+
+        data_y = data_y.long()
+        n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
+        n_cls = torch.tensor(n_cls)
+
+        print("class number is ", n_cls)
+        class_counts = torch.bincount(data_y)
+        class_counts_list = class_counts.tolist()
+        print(sorted(class_counts_list, reverse=True))
+
+        train_idx, valid_idx, test_idx, train_node = get_step_split(valid_each=int(data.x.shape[0] * 0.1 / n_cls),
+                                                                    labeling_ratio=0.1,
+                                                                    all_idx=[i for i in range(data.x.shape[0])],
+                                                                    all_label=data.y.cpu().detach().numpy(),
+                                                                    nclass=n_cls)
+
+
+        data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool()
+        data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool()
+        data_test_maskOrigin = torch.zeros(data.x.shape[0]).bool()
+        data_train_maskOrigin[train_idx] = True
+        data_val_maskOrigin[valid_idx] = True
+        data_test_maskOrigin[test_idx] = True
+        train_idx = data_train_maskOrigin.nonzero().squeeze()
+        train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
+
+        class_num_list = [len(item) for item in train_node]
+        idx_info = [torch.tensor(item) for item in train_node]
+    else:
+        edges = data.edge_index  # for torch_geometric librar
+        data_y = data.y
+        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(),data.test_mask.clone())
+        data_x = data.x
+        try:
+            dataset_num_features = dataset.num_features
+        except:
+            dataset_num_features = data_x.shape[1]
+
+    IsDirectedGraph = test_directed(edges)        # time consuming
+    # IsDirectedGraph = args.IsDirectedData
+    print("This is directed graph: ", IsDirectedGraph)
+    print("data_x", data_x.shape)  # [11701, 300])
+
+    if IsDirectedGraph and args.to_undirected:
+        edges = to_undirectedBen(edges)
+        print("Converted to undirected data")
+
+    return data_x, data_y, edges, edges_weight, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
