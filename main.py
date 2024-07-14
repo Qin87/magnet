@@ -239,8 +239,8 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
         k = int(args.net[-1])
         if args.net[-2] == 'i':
-            if args.net.startswith('Di') and k==2:
-                edge_list =[]
+            if args.net.startswith('Di') and k == 2:
+                edge_list = []
                 edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_list.append(edge_index_tuple)
                 edge_index_tuple = tuple(edge_list)

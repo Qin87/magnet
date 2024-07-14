@@ -960,6 +960,26 @@ def union_sparse_tensors(A_in, A_out):
 
     return torch.sparse_coo_tensor(unique_indices, values, size=A_in.size(), dtype=torch.float32)
 
+def intersect_sparse_tensors(A_in, A_out):
+    device = A_in.device
+    indices_in = A_in.indices().t()
+    indices_out = A_out.indices().t()
+
+    # Convert indices to hash tables for efficient lookup
+    set_in = set(map(tuple, indices_in.tolist()))
+    set_out = set(map(tuple, indices_out.tolist()))
+
+    # Find intersection
+    intersection = set_in.intersection(set_out)
+
+    if not intersection:
+        return torch.sparse_coo_tensor([], [], size=A_in.size(), dtype=torch.float32, device=device)
+
+    intersection_indices = torch.tensor(list(intersection), dtype=torch.long, device=device).t()
+    values = torch.ones(len(intersection), dtype=torch.float32, device=device)
+
+    return torch.sparse_coo_tensor(intersection_indices, values, size=A_in.size(), dtype=torch.float32)
+
 
 def sparse_boolean_multi_hop(A, k, mode='union'):
     # Ensure A is in canonical form
@@ -972,16 +992,15 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
     A_out = torch.sparse.mm(A.transpose(0, 1), A)
     num_nonzero_in = A_in._nnz()
     num_nonzero_out = A_out._nnz()
-    print('number of edges:', num_nonzero_in, num_nonzero_out)
+    print('number of edges in-out :', num_nonzero_in, num_nonzero_out)
 
     if mode == 'union':
         A_result = union_sparse_tensors(A_in, A_out)
     else:
-        A_result = A_in.mul(A_out)  # Intersection by element-wise multiplication
-    num_nonzero_result0 = A_result._nnz()
-    # print('num of edges:', num_nonzero_result)
-    num_nonzero_result = A_in.mul(A_out)._nnz()
-    print('num of intersection edges and union:', num_nonzero_result, num_nonzero_result0)
+        A_result = intersect_sparse_tensors(A_in, A_out)  # Intersection by element-wise multiplication
+    num_nonzero_resulti = intersect_sparse_tensors(A_in, A_out)._nnz()      # TODO delete this after data collection
+    num_nonzero_resultu = union_sparse_tensors(A_in, A_out)._nnz()
+    print('num of intersection edges and union:', num_nonzero_resulti, num_nonzero_resultu)
 
     # Convert the result to a boolean sparse matrix
     A_result = A_result.coalesce()
@@ -1000,11 +1019,10 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         if mode == 'union':
             A_result = union_sparse_tensors(A_in, A_out)
         else:
-            A_result = A_in.mul(A_out)  # Intersection by element-wise multiplication
-        num_nonzero_result0 = A_result._nnz()
-        # print('### num of edges:', num_nonzero_result)
-        num_nonzero_result = A_in.mul(A_out)._nnz()
-        print('### num of intersection edges and union:', num_nonzero_result, num_nonzero_result0)
+            A_result = intersect_sparse_tensors(A_in, A_out)        # Intersection by element-wise multiplication
+        num_nonzero_resulti = intersect_sparse_tensors(A_in, A_out)._nnz()      # TODO delete this after data collection
+        num_nonzero_resultu = union_sparse_tensors(A_in, A_out)._nnz()
+        print('## num of intersection edges and union:', num_nonzero_resulti, num_nonzero_resultu)
         all_hops.append(A_result.to_sparse())
 
     return tuple(all_hops)
@@ -1376,7 +1394,7 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     '''
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO add back after no-selfloop test
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO add back after no-selfloop test
 
     A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool).to(device), size=(num_nodes, num_nodes))
     L_tuple = sparse_boolean_multi_hop(A, k-1, mode='union')
