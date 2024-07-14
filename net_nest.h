@@ -1,6 +1,6 @@
 #!/bin/bash
 
-net_values="  QiGu2 "
+net_values="  QiG GCN QiGi2"
 q_value=0
 layer_values=" 2 3    "    #
 

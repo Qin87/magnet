@@ -1050,7 +1050,7 @@ def normalize_edges_all1(edge_index, dtype=torch.float):
 def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     device = edge_index.device
     fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
