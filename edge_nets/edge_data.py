@@ -546,7 +546,7 @@ def union_edge_index(edge_index):
 def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_weight = torch.ones(edge_index.size(1)).to(device)
@@ -950,38 +950,61 @@ def fast_sparse_boolean_multi_hop_union(A, k):
 
     return tuple(all_hops)
 
+def union_sparse_tensors(A_in, A_out):
+    device = A_in.device
+    indices_in = A_in.indices()
+    indices_out = A_out.indices()
+    combined_indices = torch.cat([indices_in, indices_out], dim=1)
+    unique_indices = torch.unique(combined_indices, dim=1).to(device)
+    values = torch.ones(unique_indices.size(1), dtype=torch.float32).to(device)
+
+    return torch.sparse_coo_tensor(unique_indices, values, size=A_in.size(), dtype=torch.float32)
+
+
 def sparse_boolean_multi_hop(A, k, mode='union'):
-    # Ensure A is in canonical form and convert to dense
-    A = A.coalesce().to_dense().to(torch.float32)
+    # Ensure A is in canonical form
+    device = A.device
+    A = A.coalesce()
+    A = A.to(torch.float32)
 
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
-    A_in = torch.mm(A, A.t())
-    A_out = torch.mm(A.t(), A)
-    num_nonzero_in = torch.nonzero(A_in).size(0)
-    num_nonzero_out = torch.nonzero(A_out).size(0)
+    A_in = torch.sparse.mm(A, A.transpose(0, 1))
+    A_out = torch.sparse.mm(A.transpose(0, 1), A)
+    num_nonzero_in = A_in._nnz()
+    num_nonzero_out = A_out._nnz()
     print('number of edges:', num_nonzero_in, num_nonzero_out)
-    if mode == 'union':
-        A_result = (A_in > 0) | (A_out > 0)  # Logical OR
-    else:
-        A_result = (A_in > 0) & (A_out > 0)  # Logical AND
-    # A_result = A_result.nonzero(as_tuple=False).T
-    all_hops = [A_result.to_sparse()]
 
+    if mode == 'union':
+        A_result = union_sparse_tensors(A_in, A_out)
+    else:
+        A_result = A_in.mul(A_out)  # Intersection by element-wise multiplication
+    num_nonzero_result0 = A_result._nnz()
+    # print('num of edges:', num_nonzero_result)
+    num_nonzero_result = A_in.mul(A_out)._nnz()
+    print('num of intersection edges and union:', num_nonzero_result, num_nonzero_result0)
+
+    # Convert the result to a boolean sparse matrix
+    A_result = A_result.coalesce()
+    A_result = torch.sparse_coo_tensor(A_result.indices(), A_result.values() > 0, A_result.size())
+
+    all_hops = [A_result]
     # Compute k-hop neighbors using matrix multiplication and intersections
     for hop in range(1, k):
         A_in = torch.mm(A, A_in)
         A_in = torch.mm(A_in, A.t())
         A_out = torch.mm(A.t(), A_out)
         A_out = torch.mm(A_out, A)
-        num_nonzero_in = torch.nonzero(A_in).size(0)
-        num_nonzero_out = torch.nonzero(A_out).size(0)
-        print(hop,'order num of edges: ', num_nonzero_in, num_nonzero_out)
+        num_nonzero_in = A_in._nnz()
+        num_nonzero_out = A_out._nnz()
+        print(hop+2, 'order num of edges: ', num_nonzero_in, num_nonzero_out)
         if mode == 'union':
-            A_result = (A_in > 0) | (A_out > 0)  # Logical OR
+            A_result = union_sparse_tensors(A_in, A_out)
         else:
-            A_result = (A_in > 0) & (A_out > 0)  # Logical AND
-        num_nonzero_result = torch.nonzero(A_result).size(0)
-        print('num of edges:', num_nonzero_result)
+            A_result = A_in.mul(A_out)  # Intersection by element-wise multiplication
+        num_nonzero_result0 = A_result._nnz()
+        # print('### num of edges:', num_nonzero_result)
+        num_nonzero_result = A_in.mul(A_out)._nnz()
+        print('### num of intersection edges and union:', num_nonzero_result, num_nonzero_result0)
         all_hops.append(A_result.to_sparse())
 
     return tuple(all_hops)
@@ -1027,7 +1050,7 @@ def normalize_edges_all1(edge_index, dtype=torch.float):
 def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
@@ -1353,7 +1376,7 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     '''
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO add back after no-selfloop test
 
     A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool).to(device), size=(num_nodes, num_nodes))
     L_tuple = sparse_boolean_multi_hop(A, k-1, mode='union')
