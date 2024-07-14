@@ -1,6 +1,6 @@
 #!/bin/bash
 
-net_values="  QiG GCN QiGi2"
+net_values="  QiG GCN QiGi2 QiGu2"
 q_value=0
 layer_values=" 2 3    "    #
 
@@ -16,9 +16,8 @@ timestamp=$(generate_timestamp)
 # Iterate over each net value   --MakeImbalance  --IsDirectedData --to_undirected  for Didataset in $Direct_dataset; do All2MainStop.py
 for Didataset in "${Direct_dataset[@]}"; do
         for layer in $layer_values; do
-          logfile="outforlayer${layer}.log"  # Adjust log file name with layer number
-            exec > $logfile 2>&1  # Redirect stdout and stderr to log file
-          # Iterate over each layer value
+          logfile="outforlayer${layer}.log"
+          exec > $logfile 2>&1  # Redirect stdout and stderr to log file
           for net in $net_values; do
             nohup python3  main.py   --net=$net   --W_degree=5       \
             --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  --undirect_dataset="$unDirect_data" \

@@ -546,7 +546,7 @@ def union_edge_index(edge_index):
 def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_weight = torch.ones(edge_index.size(1)).to(device)
@@ -724,9 +724,6 @@ def Qin_get_appr_directed_adj0(alpha, edge_index, num_nodes, dtype, edge_weight=
     """
 
     device = edge_index.device
-    from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
-    from torch_scatter import scatter_add
-
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
@@ -1068,7 +1065,7 @@ def normalize_edges_all1(edge_index, dtype=torch.float):
 def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     device = edge_index.device
     fill_value = 1
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)

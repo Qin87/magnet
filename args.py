@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed'],
                         default='PubMed', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram, dgl/yelp'
+    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram, dgl/yelp'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  ...,   WikiCS/ '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/')
