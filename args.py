@@ -13,10 +13,10 @@ def parse_args():
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram, dgl/yelp'
-                                                                                'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  ...,   WikiCS/ '
-                                                                              ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
-                                                                              'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/')
+    parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/ ,'
+                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
+                                                                                'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp ...,  '
+                                                                              )
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
     parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')

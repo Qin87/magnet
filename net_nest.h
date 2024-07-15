@@ -1,13 +1,12 @@
 #!/bin/bash
 
-net_values="  QiGi2 "
+net_values="QiG  QiGi2  QiGu2  QiGi3 QiGu3  QiGi4 QiGu4"
 q_value=0
-layer_values=" 2 3    "    #
+layer_values="1 2 3  4  "    #
 
 
-Direct_dataset=( 'citeseer_npz/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+Direct_dataset=( 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
-unDirect_data='PubMed'
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }
@@ -21,7 +20,7 @@ for Didataset in "${Direct_dataset[@]}"; do
           for net in $net_values; do
             nohup python3  main.py   --net=$net   --W_degree=5       \
             --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  --undirect_dataset="$unDirect_data" \
-              >SelfLoop${Direct_dataset_filename}_${timestamp}_${net}_layer${layer}q${q_value}.log &
+              >NoSelfLoop${Direct_dataset_filename}_${timestamp}_${net}_layer${layer}q${q_value}.log &
             pid=$!
 
             wait $pid
