@@ -29,8 +29,9 @@
       <excludeFolder url="file://$MODULE_DIR$/logs/test/Magnet/cora_ml/Magnetlr5num_filters1q0layer2/03-15-17:46:56" />
       <excludeFolder url="file://$MODULE_DIR$/logs/test/Magnet/cora_ml/Magnetlr5num_filters1q0layer2/03-15-17:49:18" />
       <excludeFolder url="file://$MODULE_DIR$/logs/test/Magnet/telegram" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="$USER_HOME$/anaconda3 (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
