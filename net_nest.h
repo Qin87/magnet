@@ -22,11 +22,6 @@ for Didataset in "${Direct_dataset[@]}"; do
             # Run the Python script with parameters and log output
             python3 main.py --net="$net" --W_degree=5 --layer="$layer" --q="$q_value" --Dataset="$Didataset" > "NoSelfLoop_${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
-
-//            nohup python3 main.py --net="$net" --W_degree=5 --layer="$layer" --q="$q_value" --Dataset="$Didataset" \
-//                > "NoSelfLoop_${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log" &
-//            pid=$!
-//            wait $pid
         done
     done
 done
