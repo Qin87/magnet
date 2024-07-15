@@ -429,6 +429,7 @@ def F_in_out(edge_index, size, edge_weight=None):
 
     # Convert the sparse tensor to a dense tensor for multiplication
     a_dense = a_tensor.to_dense()
+    num_nodes = a_dense.size(0)
 
     A_in = torch.mm(a_dense.T, a_dense)
     A_out = torch.mm(a_dense, a_dense.T)
@@ -443,8 +444,8 @@ def F_in_out(edge_index, size, edge_weight=None):
     # out_weight = torch.from_numpy(A_out.data).float().to(device)
     # in_weight = torch.ones(edge_in.size(1)).to(device)
     # out_weight = torch.ones(edge_out.size(1)).to(device)
-    in_weight = normalize_edges_all1(edge_in)
-    out_weight = normalize_edges_all1(edge_out)
+    in_weight = normalize_edges_all1(num_nodes, edge_in)
+    out_weight = normalize_edges_all1(num_nodes, edge_out)
 
     edge_index = edge_index.to(device)  # Ben GPU
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight

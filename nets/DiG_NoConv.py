@@ -73,19 +73,19 @@ class InceptionBlock_Di(torch.nn.Module):
         return x0
 
 
-def union_edges(edge_index_tuple):
-    concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
-    edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
-    union_tensor = torch.tensor(edges_tuples).T
-    unique_weights = normalize_edges_all1(union_tensor)
-
-    print('result:', unique_weights.size())
-    for i in range(len(edge_index_tuple)):
-        print(edge_index_tuple[i].size()[1], end=', ')
-        if unique_weights.size() == edge_index_tuple[i].size()[1]:
-            print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
-
-    return union_tensor, unique_weights
+# def union_edges(edge_index_tuple):
+#     concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
+#     edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
+#     union_tensor = torch.tensor(edges_tuples).T
+#     unique_weights = normalize_edges_all1(union_tensor)
+#
+#     print('result:', unique_weights.size())
+#     for i in range(len(edge_index_tuple)):
+#         print(edge_index_tuple[i].size()[1], end=', ')
+#         if unique_weights.size() == edge_index_tuple[i].size()[1]:
+#             print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
+#
+#     return union_tensor, unique_weights
 
 def last_edges(edge_index_tuple):
     # concatenated_tensor = torch.cat(edge_index_tuple, dim=1)

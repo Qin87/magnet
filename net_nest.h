@@ -19,7 +19,7 @@ for Didataset in "${Direct_dataset[@]}"; do
           exec > $logfile 2>&1  # Redirect stdout and stderr to log file
           for net in $net_values; do
             nohup python3  main.py   --net=$net   --W_degree=5       \
-            --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  --undirect_dataset="$unDirect_data" \
+            --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  \
               >NoSelfLoop${Direct_dataset_filename}_${timestamp}_${net}_layer${layer}q${q_value}.log &
             pid=$!
 

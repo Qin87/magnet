@@ -1140,12 +1140,12 @@ def normalize_edges(edge_index, edge_weight, num_nodes, dtype=torch.float):
 
     return deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-def normalize_edges_all1(edge_index, dtype=torch.float):
+def normalize_edges_all1(num_nodes, edge_index, dtype=torch.float):
     device = edge_index.device
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=device)
 
     row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=edge_index.size(1))
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
@@ -1155,6 +1155,7 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     device = edge_index.device
     fill_value = 1
     # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
+    edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
@@ -1166,7 +1167,7 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     for L in L_tuple:  # Skip L1 if not needed
         edge_indexL = L._indices()
         all_hop_edge_index.append(edge_indexL)
-        edge_weightL = normalize_edges_all1(edge_indexL).to(device)
+        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL).to(device)
         all_hops_weight.append(edge_weightL)
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
@@ -1488,7 +1489,7 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
         edge_indexL = L._indices()
-        edge_weightL = normalize_edges_all1(edge_indexL)
+        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL)
         all_edge_index.append(edge_indexL)
         all_hops_weight.append(edge_weightL)
 

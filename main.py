@@ -20,7 +20,7 @@ from edge_nets.Edge_DiG_ import edge_prediction
 from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, \
      WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0
 from data_model import CreatModel, load_dataset, log_file, get_name
-from nets.DiG_NoConv import union_edges, last_edges
+from nets.DiG_NoConv import last_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from preprocess import  F_in_out,  F_in_out_Qin,  F_in_out0
@@ -70,7 +70,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
           X_img_i, X_img_j, X_img_k,norm_img_i,norm_img_j, norm_img_k, Quaedge_index):
     # print("come to train")
 
-    global class_num_list, idx_info, prev_out
+    global class_num_list, idx_info, prev_out, biedges
     global data_train_mask, data_val_mask, data_test_mask
     new_edge_index=None
     new_x = None
@@ -175,6 +175,7 @@ torch.backends.cudnn.qinchmark = False
 random.seed(seed)
 np.random.seed(seed)
 
+biedges = None
 edge_in = None
 in_weight = None
 edge_out = None
@@ -315,7 +316,7 @@ try:
                 if args.net.startswith('ym'):
                     print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size(), file=log_file)
                     print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size())
-                elif args.net[1:].startswith('i'):
+                elif args.net[1:].startswith('i') and isinstance(edge_weight, tuple):
                     print('edge size:', end=' ', file=log_file)
                     print('edge size:', end=' ')
                     for i in edge_weight:
