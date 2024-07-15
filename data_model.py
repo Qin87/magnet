@@ -378,49 +378,21 @@ def load_dataset(args):
             data_x = data.ndata['feat']
         except:
             data_x = data.ndata['feature']
-        if args.Direct_dataset.split('/')[1].startswith('reddit'):
+        if args.Direct_dataset.split('/')[1].startswith(('reddit', 'yelp')):
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.ndata['train_mask'].clone(), data.ndata['val_mask'].clone(), data.ndata['test_mask'].clone())
-        elif args.Direct_dataset.split('/')[1].startswith(('yelp', 'amazon')):
+
+        elif args.Direct_dataset.split('/')[1].startswith(('Fyelp', 'Famazon')):
             data = random_planetoid_splits(data, data_y, train_ratio=0.7, val_ratio=0.1, Flag=0)
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
         else:
             data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
 
+        # for multi-label dataset
+        if args.Direct_dataset.split('/')[1].startswith('yelp'):
+            data_y = data_y[:, 1]
         dataset_num_features = data_x.shape[1]
-    elif not args.IsDirectedData and args.undirect_dataset in ['Coauthor-CS', 'Amazon-Computers', 'Amazon-Photo', 'Coauthor-physics']:
-        edges = data.edge_index  # for torch_geometric librar
-        data_y = data.y
-        data_x = data.x
-        dataset_num_features = dataset.num_features
 
-        data_y = data_y.long()
-        n_cls = (data_y.max() - data_y.min() + 1).cpu().numpy()
-        n_cls = torch.tensor(n_cls)
-
-        print("class number is ", n_cls)
-        class_counts = torch.bincount(data_y)
-        class_counts_list = class_counts.tolist()
-        print(sorted(class_counts_list, reverse=True))
-
-        train_idx, valid_idx, test_idx, train_node = get_step_split(valid_each=int(data.x.shape[0] * 0.1 / n_cls),
-                                                                    labeling_ratio=0.1,
-                                                                    all_idx=[i for i in range(data.x.shape[0])],
-                                                                    all_label=data.y.cpu().detach().numpy(),
-                                                                    nclass=n_cls)
-
-
-        data_train_maskOrigin = torch.zeros(data.x.shape[0]).bool()
-        data_val_maskOrigin = torch.zeros(data.x.shape[0]).bool()
-        data_test_maskOrigin = torch.zeros(data.x.shape[0]).bool()
-        data_train_maskOrigin[train_idx] = True
-        data_val_maskOrigin[valid_idx] = True
-        data_test_maskOrigin[test_idx] = True
-        train_idx = data_train_maskOrigin.nonzero().squeeze()
-        train_edge_mask = torch.ones(data.edge_index.shape[1], dtype=torch.bool)
-
-        class_num_list = [len(item) for item in train_node]
-        idx_info = [torch.tensor(item) for item in train_node]
     else:
         edges = data.edge_index  # for torch_geometric librar
         data_y = data.y
