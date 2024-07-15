@@ -103,44 +103,44 @@ def last_edges(edge_index_tuple):
 
     return edges, weights
 
-def union_edges0(edge_index_tuple):
-    # device = edge_index_tuple.device
-    edge_set = set()
-    i = 0
-
-    # Assuming edge_index_tuple is a list of tensors or torch.sparse_coo_tensor
-    for edge_indices in edge_index_tuple:
-
-        if edge_indices.is_sparse:
-            edge_indices = edge_indices.to_dense()
-        edge_list = list(zip(edge_indices[0].tolist(), edge_indices[1].tolist()))
-
-        # Check if specific edge (2994, 2994) exists in edge_list
-        if (0, 0) in edge_list:
-            print('Found edge (0, 0) in edge_indices', i)
-        if ((0, 1636)) in edge_list:
-            print('Found edge (0, 1636) in edge_indices', i)
-        # Iterate over each edge in edge_indices.T (transpose of edge_indices)
-        for edge in edge_indices.T:
-            edge_tuple = tuple(edge.tolist())  # Convert edge tensor to tuple for set operations
-            if edge_tuple not in edge_set:
-                edge_set.add(edge_tuple)
-            else:
-                i += 1
-                print('Duplicate edge:',i,  edge_tuple)
-
-
-    # Extract unique edges and their weights
-    unique_edges = torch.tensor(list(edge_set)).T
-    unique_weights = normalize_edges_all1(unique_edges)
-
-    print('result:', unique_weights.size())
-    for i in range(len(edge_index_tuple)):
-        print(edge_index_tuple[i].size(), end=', ')
-        if unique_weights.size() == edge_index_tuple[i].size():
-            print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
-
-    return unique_edges, unique_weights
+# def union_edges0(edge_index_tuple):
+#     # device = edge_index_tuple.device
+#     edge_set = set()
+#     i = 0
+#
+#     # Assuming edge_index_tuple is a list of tensors or torch.sparse_coo_tensor
+#     for edge_indices in edge_index_tuple:
+#
+#         if edge_indices.is_sparse:
+#             edge_indices = edge_indices.to_dense()
+#         edge_list = list(zip(edge_indices[0].tolist(), edge_indices[1].tolist()))
+#
+#         # Check if specific edge (2994, 2994) exists in edge_list
+#         if (0, 0) in edge_list:
+#             print('Found edge (0, 0) in edge_indices', i)
+#         if ((0, 1636)) in edge_list:
+#             print('Found edge (0, 1636) in edge_indices', i)
+#         # Iterate over each edge in edge_indices.T (transpose of edge_indices)
+#         for edge in edge_indices.T:
+#             edge_tuple = tuple(edge.tolist())  # Convert edge tensor to tuple for set operations
+#             if edge_tuple not in edge_set:
+#                 edge_set.add(edge_tuple)
+#             else:
+#                 i += 1
+#                 print('Duplicate edge:',i,  edge_tuple)
+#
+#
+#     # Extract unique edges and their weights
+#     unique_edges = torch.tensor(list(edge_set)).T
+#     unique_weights = normalize_edges_all1(unique_edges)
+#
+#     print('result:', unique_weights.size())
+#     for i in range(len(edge_index_tuple)):
+#         print(edge_index_tuple[i].size(), end=', ')
+#         if unique_weights.size() == edge_index_tuple[i].size():
+#             print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
+#
+#     return unique_edges, unique_weights
 
 
 class InceptionBlock_Si(torch.nn.Module):

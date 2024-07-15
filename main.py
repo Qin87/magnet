@@ -263,7 +263,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
         del edge_index_tuple, edge_weights_tuple
         if args.net.startswith('Si'):
             # SparseEdges, edge_weight = union_edges(SparseEdges)
-            SparseEdges, edge_weight = last_edges(SparseEdges)
+            SparseEdges, edge_weight = last_edges(data_x.size()[0], SparseEdges)
             SparseEdges = SparseEdges.to(device)
             edge_weight = edge_weight.to(device)
     else:
