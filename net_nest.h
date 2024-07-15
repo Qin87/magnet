@@ -19,7 +19,7 @@ for Didataset in "${Direct_dataset[@]}"; do
         exec > "$logfile" 2>&1  # Redirect stdout and stderr to log file
         for net in $net_values; do
             # Run the Python script with parameters and log output
-            python3 main.py --net="$net"  --W_degree=5  --layer="$layer" --q="$q_value" --Dataset="$Didataset" > "NormNoQym_SelfLoop_${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
+            python3 main.py --net="$net"  --W_degree=5  --layer="$layer" --q="$q_value" --Dataset="$Didataset" > "NormQym_SelfLoop_${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             wait $pid
           done
