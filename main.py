@@ -82,7 +82,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ci')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
@@ -101,7 +101,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
+        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ci')):
             if args.net[3:].startswith(('Sym', 'Qym')):
                 out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
@@ -126,7 +126,7 @@ def test():
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Si')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ci')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
@@ -227,10 +227,10 @@ data_test_maskOrigin = data_test_maskOrigin.to(device)
 
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
-if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
+if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ci')):
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
-    elif args.net.startswith(('Qi', 'pan', 'Si')):
+    elif args.net.startswith(('Qi', 'pan', 'Ci')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -261,7 +261,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
         SparseEdges = (edge_index1,) + edge_index_tuple
         edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
-        if args.net.startswith('Si'):
+        if args.net.startswith('Ci'):
             # SparseEdges, edge_weight = union_edges(SparseEdges)
             SparseEdges, edge_weight = last_edges(data_x.size()[0], SparseEdges)
             SparseEdges = SparseEdges.to(device)

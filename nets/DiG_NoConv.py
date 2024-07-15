@@ -87,13 +87,13 @@ class InceptionBlock_Di(torch.nn.Module):
 #
 #     return union_tensor, unique_weights
 
-def last_edges(edge_index_tuple):
+def last_edges(num_node, edge_index_tuple):
     # concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
     # edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
     # union_tensor = torch.tensor(edges_tuples).T
     # unique_weights = normalize_edges_all1(union_tensor)
     edges= edge_index_tuple[-1]
-    weights = normalize_edges_all1(edges)
+    weights = normalize_edges_all1(num_node, edges)
 
     # print('result:', unique_weights.size())
     # for i in range(len(edge_index_tuple)):
