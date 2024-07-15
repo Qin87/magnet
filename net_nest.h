@@ -1,6 +1,6 @@
 #!/bin/bash
 
-net_values="  QiG GCN QiGi2 QiGu2"
+net_values="  DiG DiGi2 DiGu2"
 q_value=0
 layer_values=" 2 3    "    #
 
@@ -21,7 +21,7 @@ for Didataset in "${Direct_dataset[@]}"; do
           for net in $net_values; do
             nohup python3  main.py   --net=$net   --W_degree=5       \
             --layer=$layer  --q=$q_value  --Direct_dataset="$Didataset"  --undirect_dataset="$unDirect_data" \
-              >NoSelfLoop${Direct_dataset_filename}_${timestamp}_${net}_layer${layer}q${q_value}.log &
+              >SelfLoop${Direct_dataset_filename}_${timestamp}_${net}_layer${layer}q${q_value}.log &
             pid=$!
 
             wait $pid

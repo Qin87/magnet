@@ -18,7 +18,7 @@ from args import parse_args
 from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
 from edge_nets.Edge_DiG_ import edge_prediction
 from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, get_third_directed_adj_union, get_4th_directed_adj, \
-    get_4th_directed_adj_union, WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2
+    get_4th_directed_adj_union, WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0
 from data_model import CreatModel, load_dataset, log_file, get_name
 from nets.DiG_NoConv import union_edges, last_edges
 from nets.src2 import laplacian
@@ -239,15 +239,20 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Si')):
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
         k = int(args.net[-1])
         if args.net[-2] == 'i':
-            if args.net.startswith('Di') and k == 2:
+            # if k == 2:
+            if k == 2 and args.net.startswith('Di'):
                 edge_list = []
-                edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                if args.net.startswith('Di'):
+                    edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                else:   # just for debug
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
                 edge_list.append(edge_index_tuple)
                 edge_index_tuple = tuple(edge_list)
                 edge_weights_tuple = tuple(edge_weights_tuple)
                 del edge_list
+
             else:
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype, k)   # wrong in intersection results
         elif args.net[-2] == 'u':
             edge_index_tuple, edge_weights_tuple = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype, k)
         else:
