@@ -314,8 +314,8 @@ try:
                     print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size(), file=log_file)
                     print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size())
                 elif args.net[1:].startswith('i') and isinstance(edge_weight, tuple):
-                    print('edge size:', end=' ', file=log_file)
-                    print('edge size:', end=' ')
+                    print(args.net, 'edge size:', end=' ', file=log_file)
+                    print(args.net, 'edge size:', end=' ')
                     for i in edge_weight:
                         print(i.size()[0], end=' ', file=log_file)
                         print(i.size()[0], end=' ')
@@ -367,24 +367,22 @@ try:
 
             class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                 keep_all_data(edges, data_y, n_data, n_cls,  data_train_mask)
-            print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
-                data_train_mask).item()), file=log_file)
-            print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
-                torch.sum(train_edge_mask).item()), file = log_file)
+            print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNode_' + str(node_train), file=log_file)
+            print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdge_' + str(train_edge_mask.size()[0]), file = log_file)
             print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
                 data_train_mask).item()))
             print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
                 torch.sum(train_edge_mask).item()))
             sorted_list = sorted(class_num_list, reverse=True)
             sorted_list_original = sorted(n_data, reverse=True)
+            print('class_num_list is ', n_data)
+            print('sorted class_num_list is ', sorted_list_original)
 
-            print('original class_num_list is ', sorted_list_original)
-            print('New      class_num_list is ', sorted_list)
             if sorted_list[-1]:
                 imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
                 print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
-                imbalance_ratio = sorted_list[0] / sorted_list[-1]
-                print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
+                # imbalance_ratio = sorted_list[0] / sorted_list[-1]
+                # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
             else:
                 print('the minor class has no training sample')
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data

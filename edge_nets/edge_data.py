@@ -534,7 +534,7 @@ def union_edge_index(edge_index):
 def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
     fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_weight = torch.ones(edge_index.size(1)).to(device)
@@ -1154,8 +1154,8 @@ def normalize_edges_all1(num_nodes, edge_index, dtype=torch.float):
 def Qin_get_second_directed_adj(edge_index, num_nodes, dtype, k):     #
     device = edge_index.device
     fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
-    edge_index, _ = remove_self_loops(edge_index)
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
+    # edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
@@ -1480,7 +1480,7 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     '''
     device = edge_index.device
     fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO add back after no-selfloop test
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)     # TODO add back after no-selfloop test
 
     A = torch.sparse_coo_tensor(edge_index, torch.ones(edge_index.size(1), dtype=torch.bool).to(device), size=(num_nodes, num_nodes))
     L_tuple = sparse_boolean_multi_hop(A, k-1, mode='union')

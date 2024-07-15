@@ -2,12 +2,11 @@
 
 net_values="QiG QiGi2 QiGu2 QiGi3 QiGu3 QiGi4 QiGu4"
 q_value=0
-layer_values="1 2 3 4"
+layer_values="1 2 3  4  "    #
 
-# Datasets to iterate over
-Direct_dataset=( 'citeseer_npz/' 'cora_ml/' 'telegram/telegram' )
-
-# Generate a timestamp for log file naming
+# 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'
+Direct_dataset=( 'dgl/pubmed' 'dgl/cora' 'WikiCS/'  )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }
@@ -22,11 +21,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             # Run the Python script with parameters and log output
             python3 main.py --net="$net" --W_degree=5 --layer="$layer" --q="$q_value" --Dataset="$Didataset" > "NoSelfLoop_${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
-
-//            nohup python3 main.py --net="$net" --W_degree=5 --layer="$layer" --q="$q_value" --Dataset="$Didataset" \
-//                > "NoSelfLoop_${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log" &
-//            pid=$!
-//            wait $pid
+            wait $pid
+          done
         done
-    done
 done

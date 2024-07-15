@@ -13,7 +13,7 @@ def parse_args():
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
-    parser.add_argument('--Dataset', type=str, default='film/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='dgl/cora', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
