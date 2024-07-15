@@ -6,13 +6,11 @@ import torch
 import numpy as np
 import networkx as nx
 from scipy import sparse
-
+import pickle as pk
+from torch_geometric.data import Data
 
 def to_dataset(A, label, save_path, train_ratio=0.6, test_ratio=0.2):
-    import pickle as pk
-    from numpy import linalg as LA
-    from Citation import train_test_split
-    from torch_geometric.data import Data
+
 
     labels = label
     N = A.shape[0]

@@ -4,21 +4,21 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
+    parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirected')  # TODO change before git
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='CiGu2', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
+    parser.add_argument('--net', type=str, default='QiGu2', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
-    parser.add_argument('--Direct_dataset', type=str, default='citeseer_npz/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='film/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
-                                                                                'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp ...,  '
+                                                                                'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
@@ -28,10 +28,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
     parser.add_argument('--coeflr', type=float, default=2.0, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
-    # parser.add_argument('--lr', type=float, default=5e-3, help='learning rate')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')
-    # parser.add_argument('--max', action="store_true", help='synthesizing to max or mean num of training set. default is mean')
-    parser.add_argument('--no_mask', action="store_true", help='whether to mask the self class in sampling neighbor classes. default is mask')
     parser.add_argument('-hds', '--heads', default=8, type=int)
 
     #  from Magnet
@@ -40,7 +37,6 @@ def parse_args():
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
     parser.add_argument('-norm', '-n', action='store_true', help='if use activation function')
     parser.add_argument('-activation', '-a', action='store_true', help='if use activation function')
-    # parser.add_argument('-activation', '-a', action='store_false', help='if use activation function')
 
     # for SigManet
     parser.add_argument('--netflow', '-N', action='store_false', help='if use net flow')
@@ -50,7 +46,7 @@ def parse_args():
 
     # for edge prediction
     parser.add_argument('--task', type=str, default='three_class_digraph', help='Task: three_class_digraph,  direction, existence, ...')
-    parser.add_argument('--method_name', type=str, default='DiG', help='method name')
+    # parser.add_argument('--method_name', type=str, default='DiG', help='method name')
     parser.add_argument('--num_class_link', type=int, default=3,
                         help='number of classes for link direction prediction(2 or 3).')
 
@@ -59,7 +55,7 @@ def parse_args():
     parser.add_argument('--qua_bias', '-B', action='store_true', help='quaternion bias options')
 
     parser.add_argument('--epochs', type=int, default=1500, help='training epochs')
-    parser.add_argument('--num_filter', type=int, default=64, help='num of filters')
+    # parser.add_argument('--num_filter', type=int, default=64, help='num of filters')
 
     parser.add_argument('--log_root', type=str, default='../logs/', help='the path saving model.t7 and the training process')
     parser.add_argument('--log_path', type=str, default='test', help='the path saving model.t7 and the training process, the name of folder will be log/(current time)')
@@ -67,14 +63,13 @@ def parse_args():
 
     # for GPRGN
     parser.add_argument('--ppnp', default='GPR_prop',choices=['PPNP', 'GPR_prop'])
-    parser.add_argument('--Init', type=str,
-                        choices=['SGC', 'PPR', 'NPPR', 'Random', 'WS', 'Null'],default='PPR')
-    parser.add_argument('--Gamma', default=None)
-    parser.add_argument('--dprate', type=float, default=0.5)
+    parser.add_argument('--Init', type=str,choices=['SGC', 'PPR', 'NPPR', 'Random', 'WS', 'Null'],default='PPR')
+
+    # parser.add_argument('--Gamma', default=None)
+    # parser.add_argument('--dprate', type=float, default=0.5)
 
     # for pGCN
-    parser.add_argument('--p',type=float,  default=2,
-                        help='p.')
+    parser.add_argument('--p',type=float,  default=2,help='p.')
     parser.add_argument('--mu',   type=float,default=0.1,help='mu.')
 
     parser.add_argument('--gcnconv_norm', '-gcnnorm', action='store_false', help='GCNConv forward, normalize edge_index during training')

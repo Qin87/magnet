@@ -8,28 +8,25 @@ import sys
 import time
 
 import random
-from collections import Counter
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 from args import parse_args
-from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
-from edge_nets.Edge_DiG_ import edge_prediction
-from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, \
+from data.data_utils import keep_all_data
+from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
      WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0
-from data_model import CreatModel, load_dataset, log_file, get_name
+from data_model import CreatModel, log_file, get_name, load_dataset
 from nets.DiG_NoConv import last_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
-from preprocess import  F_in_out,  F_in_out_Qin,  F_in_out0
+from preprocess import  F_in_out, F_in_out0
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
 
 import warnings
 
-from torch_geometric.data import Data
 warnings.filterwarnings("ignore")
 
 
@@ -439,7 +436,7 @@ try:
                 if CountNotImproved > args.NotImproved:
                     # print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                     break
-            dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)
+            dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)
             print(net_to_print+'layer'+str(args.layer), dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             print(net_to_print, args.layer, dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)

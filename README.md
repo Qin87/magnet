@@ -11,20 +11,69 @@ Implementation of paper [Graph Transformation via Scale Invariance of Node class
 
 This repository has been tested with the following packages:
 
-- Python >= 3.9
-- PyTorch == 2.3.0
-- PyTorch Geometric == 2.5.3
+- Python == 3.9 or 3.10
+- PyTorch == 2.1.2
+- PyTorch Geometric == 2.4.0
+- torch-scatter==2.1.2
+- torch-sparse==0.6.18
 
-Please follow official instructions to install [Pytorch](https://pytorch.org/get-started/previous-versions/) and [Pytorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html).
-For pytorch-scatter,pytorch-sparse, download packages from https://pytorch-geometric.com/whl/torch-2.3.0%2Bcu121.html according to your PyTorch, Python and OS version. 
-Then pip install them. By doing this, you can solve the compatibility issues, Segmentation fault.
+## Installation Instructions
+
+1. Follow the official instructions to install [PyTorch](https://pytorch.org/get-started/previous-versions/).
+2. Install [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html).
+3. For `pytorch-scatter` and `pytorch-sparse`, download the packages from [this link](https://pytorch-geometric.com/whl/torch-2.3.0%2Bcu121.html) according to your PyTorch, Python, and OS version. Then, use `pip` to install them.
+
+By following these steps, you can resolve compatibility issues and avoid segmentation faults.
+
 
 ## Important Hyper-parameters
+### Dataset
+Specify the name of the dataset you want to use. The available datasets are categorized as follows:
 
-- `--undirect_dataset`: name of the undirected dataset. Could be one of `['Cora', 'CiteSeer', 'PubMed', 'Coauthor-CS', 'Coauthor-physics']`. 
-- `--Direct_dataset`: name of the directed dataset. Could be one of `['citeseer_npz/' , 'cora_ml/',  'WikiCS/', 'telegram/telegram']`. 
-- `--net`: GNN backbone. Could be one of `['GCN, GAT, SAGE']`.
-- 
+- **Directed Datasets**:
+  - **Assortative Graph**:
+    - `citeseer_npz/`
+    - `cora_ml/`
+    - `WikiCS/`
+    - `telegram/telegram`
+    - `dgl/cora`
+    - `dgl/pubmed`
+  
+  - **Disassortative Graph**:
+    - `WebKB/texas`
+    - `WebKB/Cornell`
+    - `WebKB/wisconsin`
+    - `film/`
+    - `WikipediaNetwork/squirrel`
+    - `WikipediaNetwork/chameleon`
+
+- **Undirected Datasets**:
+  - **CoPurchase**:
+    - `dgl/computer`
+    - `dgl/photo`
+  
+  - **Coauthor**:
+    - `dgl/coauthor-cs`
+    - `dgl/coauthor-ph`
+  
+  - **Fraud Review**:
+    - `dgl/Fyelp`
+    - `dgl/Famazon`
+  
+  - **Others**:
+    - `dgl/yelp`
+    - `dgl/reddit`
+    - `WikiCS_U`
+  
+
+### GNN Backbone
+Choose the GNN backbone to use. The available options are:
+- `GCN`
+- `GAT`
+- `SAGE`
+- `Cheb`
+- `Mag`
+- `Sig`
 
 Please refer to [args.py](args.py) for the full hyper-parameters.
 
@@ -33,7 +82,7 @@ Please refer to [args.py](args.py) for the full hyper-parameters.
 Pass the above hyper-parameters to `main.py`. For example:
 
 ```
-python main.py --dataset Cora  --net GCN  --layer=3 --IsDirectedData --Direct_dataset='cora_ml/'  --undirect_dataset="Cora"
+python main.py --dataset cora_ml/  --net GCN  --layer=3 --Dataset='cora_ml/'
 ```
 
 ## License
