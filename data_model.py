@@ -77,7 +77,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'GIN':
         model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
     elif args.net == 'Cheb':
-        model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.num_filter, dropout=args.dropout,layer=args.layer).to(device)
+        model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
         # model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
     elif args.net == 'JKNet':
         model = GCN_JKNet(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, layer=args.layer)
@@ -113,7 +113,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)
     elif args.net.startswith(('Sym', 'Qym')):
         # model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
-        model = SymModel(num_features, n_cls, filter_num=args.num_filter,dropout=args.dropout, layer=args.layer).to(device)
+        model = SymModel(num_features, n_cls, filter_num=args.feat_dim,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith(('addSym', 'addQym')):
         if not args.net.endswith('para'):
             model = create_SymReg_add(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
@@ -130,7 +130,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = SigMaNet_node_prediction_one_laplacian_Qin(num_features, K=args.K, hidden=args.feat_dim, label_dim=n_cls,i_complex=args.i_complex, layer=args.layer,
                                                            activation=args.activation,follow_math=args.follow_math, gcn=args.gcn, net_flow=args.netflow, unwind=True).to(device)
     elif args.net.startswith('Qua'):
-        model = QuaNet_node_prediction_one_laplacian_Qin(device, num_features, K=args.K, hidden=args.num_filter, label_dim=n_cls,
+        model = QuaNet_node_prediction_one_laplacian_Qin(device, num_features, K=args.K, hidden=args.feat_dim, label_dim=n_cls,
                                                      layer=args.layer, unwind=True,
                                                      quaternion_weights=args.qua_weights, quaternion_bias=args.qua_bias).to(device)
 
@@ -172,7 +172,7 @@ def get_name(args):
 
 
 def log_file(net_to_print, dataset_to_print, args):
-    log_file_name = 'SelfLoop' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
+    log_file_name = 'QymNot_Norm_SelfLoop' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 
