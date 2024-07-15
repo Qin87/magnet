@@ -6,9 +6,6 @@ def parse_args():
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
 
-    # parser.add_argument('--IsDirectedData', action='store_true', help='The dataset is a directed graph')  # TODO change before git
-    parser.add_argument('--IsDirectedData', type=bool, default=True, help='the dataset is directed graph')
-
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
     parser.add_argument('--net', type=str, default='QiGi2', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
@@ -16,9 +13,7 @@ def parse_args():
                                                                  'replace DiG')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
-    parser.add_argument('--undirect_dataset', type=str, choices=['Cora', 'CiteSeer', 'PubMed'],
-                        default='PubMed', help='dataset name')
-    parser.add_argument('--Direct_dataset', type=str, default='dgl/yelp', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram, dgl/yelp'
+    parser.add_argument('--Direct_dataset', type=str, default='dgl/cora', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram, dgl/yelp'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  ...,   WikiCS/ '
                                                                               ' WikipediaNetwork/squirrel, WikipediaNetwork/chameleon '
                                                                               'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/')

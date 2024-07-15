@@ -1,5 +1,5 @@
 ################################
-# compared to All2Main.py, this version to ensure that when I stop the process half way, it still could print the result.
+# this version to ensure that when I stop the process half way, it still could print the result.
 ################################
 import os
 import signal
@@ -17,8 +17,8 @@ import torch.nn.functional as F
 from args import parse_args
 from data_utils import get_idx_info, make_longtailed_data_remove, keep_all_data
 from edge_nets.Edge_DiG_ import edge_prediction
-from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, get_third_directed_adj_union, get_4th_directed_adj, \
-    get_4th_directed_adj_union, WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0
+from edge_nets.edge_data import get_appr_directed_adj, get_second_directed_adj, get_second_directed_adj_union, \
+     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0
 from data_model import CreatModel, load_dataset, log_file, get_name
 from nets.DiG_NoConv import union_edges, last_edges
 from nets.src2 import laplacian
@@ -306,12 +306,22 @@ try:
     # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ',device, file=log_file)
-        for split in range(splits - 1, -1, -1):
-        # for split in range(splits):
+        # for split in range(splits - 1, -1, -1):
+        for split in range(splits):
             model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
             if split==0:
                 print(model, file=log_file)
                 print(model)
+                if args.net.startswith('ym'):
+                    print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size(), file=log_file)
+                    print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size())
+                elif args.net[1:].startswith('i'):
+                    print('edge size:', end=' ', file=log_file)
+                    print('edge size:', end=' ')
+                    for i in edge_weight:
+                        print(i.size()[0], end=' ', file=log_file)
+                        print(i.size()[0], end=' ')
+
             # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
             if hasattr(model, 'coefs'):     # parameter without weight_decay will typically change faster
                 optimizer = torch.optim.Adam(
@@ -428,10 +438,7 @@ try:
                 if CountNotImproved > args.NotImproved:
                     # print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
                     break
-            if args.IsDirectedData:
-                dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)
-            else:
-                dataset_to_print = args.undirect_dataset
+            dataset_to_print = args.Direct_dataset.replace('/', '_') + str(args.to_undirected)
             print(net_to_print+'layer'+str(args.layer), dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             print(net_to_print, args.layer, dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)

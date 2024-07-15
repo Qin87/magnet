@@ -293,14 +293,14 @@ def CreatModel(args, num_features, n_cls, data_x,device):
 #     return data, data_x, data_y, edges, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin
 
 def get_name(args):
-    if args.IsDirectedData:
-        dataset_to_print = args.Direct_dataset.replace('/', '_')
-        if args.to_undirected:
-            dataset_to_print = dataset_to_print + 'Undire'
-        else:
-            dataset_to_print = dataset_to_print + 'Direct'
+    # if args.IsDirectedData:
+    dataset_to_print = args.Direct_dataset.replace('/', '_')
+    if args.to_undirected:
+        dataset_to_print = dataset_to_print + 'Undire'
     else:
-        dataset_to_print = args.undirect_dataset
+        dataset_to_print = dataset_to_print + 'Direct'
+    # else:
+    #     dataset_to_print = args.undirect_dataset
     if args.net.startswith('Wi'):
         net_to_print = args.net + str(args.W_degree) + '_'
     elif args.net.startswith('Mag'):
@@ -320,7 +320,7 @@ def get_name(args):
 
 
 def log_file(net_to_print, dataset_to_print, args):
-    log_file_name = 'S' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
+    log_file_name = 'NoSelfLoop' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 
@@ -330,12 +330,12 @@ def log_file(net_to_print, dataset_to_print, args):
     return log_directory, log_file_name_with_timestamp
 
 def load_dataset(args):
-    if args.IsDirectedData:
-        dataset = load_directedData(args)
-    else:
-        path = args.data_path
-        path = osp.join(path, args.undirect_dataset)
-        dataset = get_dataset(args.undirect_dataset, path, split_type='full')
+    # if args.IsDirectedData:
+    dataset = load_directedData(args)
+    # else:
+    #     path = args.data_path
+    #     path = osp.join(path, args.undirect_dataset)
+    #     dataset = get_dataset(args.undirect_dataset, path, split_type='full')
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     data = dataset[0]
@@ -347,7 +347,7 @@ def load_dataset(args):
         edges_weight = None
 
     # copy GraphSHA
-    if args.IsDirectedData and args.Direct_dataset.split('/')[0].startswith('dgl'):
+    if args.Direct_dataset.split('/')[0].startswith('dgl'):
         edge_types = data.etypes
         print("Available edge types:", edge_types)
         num_edge_types = len(data.etypes)

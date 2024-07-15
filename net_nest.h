@@ -1,11 +1,11 @@
 #!/bin/bash
 
-net_values="  DiG DiGi2 DiGu2"
+net_values="  QiGi2 "
 q_value=0
 layer_values=" 2 3    "    #
 
 
-Direct_dataset=( 'cora_ml/' 'citeseer_npz/'  'dgl/cora' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+Direct_dataset=( 'citeseer_npz/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 unDirect_data='PubMed'
 generate_timestamp() {
