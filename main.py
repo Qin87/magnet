@@ -21,7 +21,7 @@ from data_model import CreatModel, log_file, get_name, load_dataset
 from nets.DiG_NoConv import last_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
-from preprocess import  F_in_out, F_in_out0
+from data.preprocess import  F_in_out, F_in_out0
 from utils import CrossEntropy
 from sklearn.metrics import balanced_accuracy_score, f1_score
 
