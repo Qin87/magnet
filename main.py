@@ -18,7 +18,7 @@ from data.data_utils import keep_all_data
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj
 from data_model import CreatModel, log_file, get_name, load_dataset
-from nets.DiG_NoConv import last_edges
+from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from data.preprocess import  F_in_out, F_in_out0
@@ -79,7 +79,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ci')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
@@ -98,7 +98,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ci')):
+        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):
             if args.net[3:].startswith(('Sym', 'Qym')):
                 out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
@@ -123,7 +123,7 @@ def test():
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ci')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
@@ -225,10 +225,12 @@ data_test_maskOrigin = data_test_maskOrigin.to(device)
 
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
-if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ci')):
+
+
+if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li')):
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
-    elif args.net.startswith(('Qi', 'pan', 'Ci')):
+    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -266,11 +268,10 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ci')):
         SparseEdges = (edge_index1,) + edge_index_tuple
         edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
-        if args.net.startswith('Ci'):
-            # SparseEdges, edge_weight = union_edges(SparseEdges)
-            SparseEdges, edge_weight = last_edges(data_x.size()[0], SparseEdges)
-            SparseEdges = SparseEdges.to(device)
-            edge_weight = edge_weight.to(device)
+        if args.net.startswith('Ui'):
+            SparseEdges, edge_weight = union_edges(data_x.size()[0], SparseEdges, device, mode='union')
+        elif args.net.startswith('Li'):
+            SparseEdges, edge_weight = union_edges(data_x.size()[0], SparseEdges, device, mode='last')
     else:
         SparseEdges = edge_index1
         edge_weight = edge_weights1
@@ -321,12 +322,17 @@ try:
                 if args.net.startswith('ym'):
                     print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size(), file=log_file)
                     print('Sym edge size(biedge, edge_in, edge_out):', biedges.size(),  in_weight.size(),  out_weight.size())
-                elif args.net[1:].startswith('i') and isinstance(edge_weight, tuple):
+                elif args.net[1:].startswith('i'):
                     print(args.net, 'edge size:', end=' ', file=log_file)
                     print(args.net, 'edge size:', end=' ')
-                    for i in edge_weight:
-                        print(i.size()[0], end=' ', file=log_file)
-                        print(i.size()[0], end=' ')
+                    if isinstance(edge_weight, tuple):
+                        for i in edge_weight:
+                            print(i.size()[0], end=' ', file=log_file)
+                            print(i.size()[0], end=' ')
+                    else:
+                        print(edge_weight.size()[0], end=' ', file=log_file)
+                        print(edge_weight.size()[0], end=' ')
+
 
             # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
             if hasattr(model, 'coefs'):     # parameter without weight_decay will typically change faster
