@@ -38,7 +38,10 @@ def keep_all_data(edge_index, label, n_data, n_cls, train_mask):
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Dataset.split('/')[0], args.Dataset.split('/')[1]
-    if load_func == 'WebKB':
+    if load_func == "Cora" or load_func == "CiteSeer" or load_func == "PubMed":
+        from torch_geometric.datasets import Planetoid
+        dataset = Planetoid(args.data_path, load_func, transform=T.NormalizeFeatures(), split='full')
+    elif load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)
     elif load_func == 'WikipediaNetwork':
