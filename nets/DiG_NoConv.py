@@ -73,74 +73,17 @@ class InceptionBlock_Di(torch.nn.Module):
         return x0
 
 
-# def union_edges(edge_index_tuple):
-#     concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
-#     edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
-#     union_tensor = torch.tensor(edges_tuples).T
-#     unique_weights = normalize_edges_all1(union_tensor)
-#
-#     print('result:', unique_weights.size())
-#     for i in range(len(edge_index_tuple)):
-#         print(edge_index_tuple[i].size()[1], end=', ')
-#         if unique_weights.size() == edge_index_tuple[i].size()[1]:
-#             print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
-#
-#     return union_tensor, unique_weights
-
-def last_edges(num_node, edge_index_tuple):
-    # concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
-    # edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
-    # union_tensor = torch.tensor(edges_tuples).T
-    # unique_weights = normalize_edges_all1(union_tensor)
-    edges= edge_index_tuple[-1]
+def union_edges(num_node, edge_index_tuple, device, mode):
+    if mode == 'union':
+        concatenated_tensor = torch.cat(edge_index_tuple, dim=1)
+        edges_tuples = list(set(zip(concatenated_tensor[0].tolist(), concatenated_tensor[1].tolist())))
+        edges = torch.tensor(edges_tuples).T
+    else:
+        edges = edge_index_tuple[-1]
     weights = normalize_edges_all1(num_node, edges)
 
-    # print('result:', unique_weights.size())
-    # for i in range(len(edge_index_tuple)):
-    #     print(edge_index_tuple[i].size()[1], end=', ')
-    #     if unique_weights.size() == edge_index_tuple[i].size()[1]:
-    #         print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
+    return edges.to(device), weights.to(device)
 
-    return edges, weights
-
-# def union_edges0(edge_index_tuple):
-#     # device = edge_index_tuple.device
-#     edge_set = set()
-#     i = 0
-#
-#     # Assuming edge_index_tuple is a list of tensors or torch.sparse_coo_tensor
-#     for edge_indices in edge_index_tuple:
-#
-#         if edge_indices.is_sparse:
-#             edge_indices = edge_indices.to_dense()
-#         edge_list = list(zip(edge_indices[0].tolist(), edge_indices[1].tolist()))
-#
-#         # Check if specific edge (2994, 2994) exists in edge_list
-#         if (0, 0) in edge_list:
-#             print('Found edge (0, 0) in edge_indices', i)
-#         if ((0, 1636)) in edge_list:
-#             print('Found edge (0, 1636) in edge_indices', i)
-#         # Iterate over each edge in edge_indices.T (transpose of edge_indices)
-#         for edge in edge_indices.T:
-#             edge_tuple = tuple(edge.tolist())  # Convert edge tensor to tuple for set operations
-#             if edge_tuple not in edge_set:
-#                 edge_set.add(edge_tuple)
-#             else:
-#                 i += 1
-#                 print('Duplicate edge:',i,  edge_tuple)
-#
-#
-#     # Extract unique edges and their weights
-#     unique_edges = torch.tensor(list(edge_set)).T
-#     unique_weights = normalize_edges_all1(unique_edges)
-#
-#     print('result:', unique_weights.size())
-#     for i in range(len(edge_index_tuple)):
-#         print(edge_index_tuple[i].size(), end=', ')
-#         if unique_weights.size() == edge_index_tuple[i].size():
-#             print("####### Only the ", i+1, "th element in edge_weight_tuple is used.")
-#
-#     return unique_edges, unique_weights
 
 
 class InceptionBlock_Si(torch.nn.Module):

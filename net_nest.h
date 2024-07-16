@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # CiG  CiGi2 CiGi3  CiGu2 CiGu3 CiGi4 CiGu4
-net_values="Qym addQym QymN1 addQymN1"
+net_values="UiGi2 UiGi3 UiGi4 UiGu2 UiGu3 UiGu4 UiG"
 q_value=0
-layer_values="1 2 3  4  "    #
+layer_values="1 2 3 4 "    #
 
 # 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
-Direct_dataset=( 'dgl/Fyelp' 'dgl/Famazon' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+Direct_dataset=( 'dgl/pubmed'  )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
