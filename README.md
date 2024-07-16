@@ -48,6 +48,10 @@ Specify the name of the dataset you want to use. The available datasets are cate
     - `WikipediaNetwork/chameleon`
 
 - **Undirected Datasets**:
+  - **Citation**:
+    - `Cora/`
+    - `CiteSeer/`
+    - `PubMed/`
   - **CoPurchase**:
     - `dgl/computer`
     - `dgl/photo`

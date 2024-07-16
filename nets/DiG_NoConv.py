@@ -2504,7 +2504,7 @@ class DiGCN_IB_2BN_Sym(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 class DiGIB_2BN_Sym_nhid_para(torch.nn.Module):
-    def __init__(self, input_dim,  out_dim, args):
+    def __init__(self, m, input_dim,  out_dim, args):
         super(DiGIB_2BN_Sym_nhid_para, self).__init__()
         nhid = args.feat_dim
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
@@ -2768,7 +2768,7 @@ class DiGIB_XBN_Sym_nhid_para(torch.nn.Module):
     '''
     revised for edge_index confusion
     '''
-    def __init__(self, input_dim,  out_dim, args):
+    def __init__(self, m, input_dim,  out_dim, args):
         super(DiGIB_XBN_Sym_nhid_para, self).__init__()
         nhid = args.feat_dim
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
@@ -5936,9 +5936,9 @@ class Di_IB_XBN_nhid(torch.nn.Module):
 
         self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
 
-        self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nhid)
-        self.batch_norm3 = nn.BatchNorm1d(nhid)
+        # self.batch_norm1 = nn.BatchNorm1d(nhid)
+        # self.batch_norm2 = nn.BatchNorm1d(nhid)
+        # self.batch_norm3 = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()
@@ -5995,20 +5995,20 @@ class Si_IB_XBN_nhid(torch.nn.Module):
         return x
 
 class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
-    def __init__(self, num_features, hidden,  out_dim, dropout=0.5, layer=2):
+    def __init__(self, m, num_features, out_dim, args):
         super(DiGCN_IB_XBN_nhid_para, self).__init__()
-        self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
-        self.ib2 = InceptionBlock_Qinlist(hidden, hidden)
+        hidden = args.feat_dim
+        if args.layer==1:
+            self.ib1 = InceptionBlock_Qinlist(num_features, out_dim)
+        else:
+            self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
+        self.ib2 = InceptionBlock_Qinlist(hidden, out_dim)
         self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib1
         self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib2
-        self._dropout = dropout
-        self.Conv = nn.Conv1d(hidden,  out_dim, kernel_size=1)
+        self._dropout = args.dropout
 
-        self.batch_norm1 = nn.BatchNorm1d(hidden)
-        self.batch_norm2 = nn.BatchNorm1d(hidden)
-        self.batch_norm3 = nn.BatchNorm1d(hidden)
-
-        self.layer = layer
+        self.layer = args.layer
+        layer = args.layer
         self.ibx=nn.ModuleList([InceptionBlock_Qinlist(hidden,hidden) for _ in range(layer-2)])
         self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)]) for _ in range(layer - 2)])
 
@@ -6023,26 +6023,26 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
         x = x_list[0]
         for i in range(1, len(x_list)):
             x += self.coef1[i] * x_list[i]
-        x = self.batch_norm1(x)
+        # x = self.batch_norm1(x)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = F.relu(x)
+        if self.layer == 1:
+            return x
 
-        for iter_layer, iter_coef in zip(self.ibx, self.coefx):
-            x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
-            x = x_list[0]
-            for i in range(1, len(x_list)):
-                x += iter_coef[i] * x_list[i]
-            x = self.batch_norm3(x)
+        if self.layer > 2:
+            for iter_layer, iter_coef in zip(self.ibx, self.coefx):
+                x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+                x = x_list[0]
+                for i in range(1, len(x_list)):
+                    x += iter_coef[i] * x_list[i]
+                # x = self.batch_norm3(x)
+                # x = F.relu(x)
+                x = F.dropout(x, p=self._dropout, training=self.training)
 
         x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
         x = x_list[0]
         for i in range(1, len(x_list)):
             x += self.coef2[i] * x_list[i]
-
-        x = self.batch_norm2(x)
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1))
-        x = x.squeeze(0)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
@@ -6295,7 +6295,6 @@ def create_Di_IB_nhid0(m, nfeat, nclass, args):
     return model
 
 def create_Di_IB_nhid(m, nfeat, nclass, args):
-    nlayer = args.layer
     if args.layer == 1:
         model = Di_IB_1BN_nhid(m, nfeat,  nclass, args)
     elif args.layer == 2:
@@ -6346,15 +6345,6 @@ def create_DiG_IB_batch_nhid(m, nfeat, nclass, args, batchSize):
 def create_DiG_IB_Sym_nhid(m, nfeat,  nclass, args):
     '''
     revised for edge_index confusion
-    Args:
-        nfeat:
-        nhid:
-        nclass:
-        dropout:
-        nlayer:
-
-    Returns:
-
     '''
     nlayer = args.layer
     if args.layer == 1:
@@ -6367,15 +6357,6 @@ def create_DiG_IB_Sym_nhid(m, nfeat,  nclass, args):
 def create_DiG_IB_Sym_nhid_para(m, nfeat, nclass, args):
     '''
     revised for edge_index confusion
-    Args:
-        nfeat:
-        nhid:
-        nclass:
-        dropout:
-        nlayer:
-
-    Returns:
-
     '''
     if args.layer == 1:
         model = DiGIB_1BN_Sym_nhid_para(m, nfeat, nclass, args)

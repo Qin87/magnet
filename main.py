@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from args import parse_args
 from data.data_utils import keep_all_data
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
-     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0
+    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj
 from data_model import CreatModel, log_file, get_name, load_dataset
 from nets.DiG_NoConv import last_edges
 from nets.src2 import laplacian
@@ -155,7 +155,8 @@ args = parse_args()
 seed = args.seed
 cuda_device = args.GPUdevice
 
-net_to_print, dataset_to_print = get_name(args)
+data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
+net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
 
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
 if not os.path.exists(log_directory):
@@ -201,7 +202,7 @@ acc_list = []
 bacc_list = []
 
 
-data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = load_dataset(args)
+
 load_time = time.time()
 print('time after loading data: ', load_time - start_time)
 if torch.cuda.is_available():
@@ -233,9 +234,10 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ci')):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
 
     else:
-        raise NotImplementedError("Not Implemented"+ args.net)
+        raise NotImplementedError("Not Implemented" + args.net)
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
         k = int(args.net[-1])
+
         if args.net[-2] == 'i':
             # if k == 2:
             if k == 2 and args.net.startswith('Di'):
@@ -250,9 +252,15 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ci')):
                 del edge_list
 
             else:
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype, k)   # wrong in intersection results
+                if IsDirectedGraph:
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
+                else:
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
         elif args.net[-2] == 'u':
-            edge_index_tuple, edge_weights_tuple = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype, k)
+            if IsDirectedGraph:
+                edge_index_tuple, edge_weights_tuple = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype, k)
+            else:
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
         else:
             raise NotImplementedError("Not Implemented"+ args.net)
         SparseEdges = (edge_index1,) + edge_index_tuple
