@@ -1,7 +1,5 @@
-import json
 import os
 
-from networkx.readwrite import json_graph
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
 try:
@@ -11,12 +9,10 @@ try:
 except:
     print("dgl not imported, install chardet!")
 import torch
-import numpy as np
-from torch_scatter import scatter_add
 from torch_geometric.datasets import WebKB, WikipediaNetwork, WikiCS
 
 from data.Citation import citation_datasets
-from preprocess import load_syn
+from data.preprocess import load_syn
 
 def keep_all_data(edge_index, label, n_data, n_cls, train_mask):
     device = edge_index.device
@@ -85,9 +81,9 @@ def load_dgl_graph(subset):
         dataset = AmazonCoBuyPhotoDataset()
     elif subset == 'reddit':
         dataset = RedditDataset()
-    elif subset == 'Fyelp':
+    elif subset == 'fyelp':
         dataset = FraudDataset('yelp')
-    elif subset == 'Famazon':
+    elif subset == 'famazon':
         dataset = FraudDataset('amazon')
     elif subset == 'flickr':
         dataset = FlickrDataset()
