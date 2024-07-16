@@ -84,9 +84,9 @@ def load_dgl_graph(subset):
         dataset = AmazonCoBuyPhotoDataset()
     elif subset == 'reddit':
         dataset = RedditDataset()
-    elif subset == 'Fyelp':
+    elif subset == 'fyelp':
         dataset = FraudDataset('yelp')
-    elif subset == 'Famazon':
+    elif subset == 'famazon':
         dataset = FraudDataset('amazon')
     elif subset == 'flickr':
         dataset = FlickrDataset()

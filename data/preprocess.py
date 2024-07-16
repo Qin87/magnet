@@ -416,16 +416,37 @@ def F_in_out(edge_index, size, edge_weight=None):
     a_tensor = torch.sparse.FloatTensor(indices, values, torch.Size(a.shape)).to(device)
 
     # Convert the sparse tensor to a dense tensor for multiplication
-    a_dense = a_tensor.to_dense()
-    num_nodes = a_dense.size(0)
+    try:
+        a_dense = a_tensor.to_dense()
+        num_nodes = a_dense.size(0)
 
-    A_in = torch.mm(a_dense.T, a_dense)
-    A_out = torch.mm(a_dense, a_dense.T)
+        A_in = torch.mm(a_dense.T, a_dense)
+        A_out = torch.mm(a_dense, a_dense.T)
 
-    A_in = sp.coo_matrix(A_in.cpu().numpy())
-    A_out = sp.coo_matrix(A_out.cpu().numpy())
+        A_in = sp.coo_matrix(A_in.cpu().numpy())
+        A_out = sp.coo_matrix(A_out.cpu().numpy())
 
-    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)       #  contains the row and column indices of these non-zero elements
+
+    except torch.cuda.OutOfMemoryError:
+        a_tensor = a_tensor.coalesce()  # Make sure the tensor is in COO format
+        device = a_tensor.device
+
+        # Get the number of nodes
+        num_nodes = a_tensor.size(0)
+
+        # Convert the sparse tensor to a scipy sparse matrix
+        i = a_tensor.indices().cpu().numpy()
+        v = a_tensor.values().cpu().numpy()
+        a_sparse = sp.coo_matrix((v, (i[0], i[1])), shape=(num_nodes, num_nodes))
+
+        # Perform sparse matrix multiplications
+        A_in = a_sparse.T @ a_sparse
+        A_out = a_sparse @ a_sparse.T
+
+        # Convert the resulting sparse matrices back to tensors
+        A_in = sp.coo_matrix(A_in)
+        A_out = sp.coo_matrix(A_out)
+    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)  # contains the row and column indices of these non-zero elements
     edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
 
     # in_weight = torch.from_numpy(A_in.data).float().to(device)     # change at July 8 17:50
