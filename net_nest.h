@@ -5,6 +5,7 @@ net_values="LiGi2 LiGi3 LiGi4 LiGu2 LiGu3 LiGu4 LiG"
 q_value=0
 layer_values="1 2 3 4 "    #
 
+# 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
 Direct_dataset=( 'dgl/pubmed' 'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/cora' 'WikiCS/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
