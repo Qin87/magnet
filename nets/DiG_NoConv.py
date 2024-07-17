@@ -26,7 +26,7 @@ class InceptionBlock_Qinlist(torch.nn.Module):
         self.ln = Linear(in_dim, out_dim)
         # self.conv1 = DIGCNConv(in_dim, out_dim)
         # self.conv2 = DIGCNConv(in_dim, out_dim)
-        self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(10)])
+        self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
 
     def reset_parameters(self):
         self.ln.reset_parameters()
@@ -48,15 +48,15 @@ class InceptionBlock_Di(torch.nn.Module):
 
         self.ln = Linear(in_dim, out_dim)
         if m == 'S':
-            self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(10)])
+            self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(20)])
         elif m == 'G':
-            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(10)])
+            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
         elif m == 'C':
-            self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(10)])
+            self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(20)])
         elif m == 'A':
             num_head = 1
             head_dim = out_dim // num_head
-            self.convx = nn.ModuleList([GATConv_Qin(in_dim, head_dim,  heads=head) for _ in range(10)])
+            self.convx = nn.ModuleList([GATConv_Qin(in_dim, head_dim,  heads=head) for _ in range(20)])
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
@@ -126,15 +126,15 @@ class InceptionBlock_Di0(torch.nn.Module):
 
         self.ln = Linear(in_dim, out_dim)
         if m == 'S':
-            self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(10)])
+            self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(20)])
         elif m == 'G':
-            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(10)])
+            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
         # elif m == 'C':
-        #     self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(10)])
+        #     self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(20)])
         elif m == 'A':
             num_head = 1
             head_dim = out_dim // num_head
-            self.convx = nn.ModuleList([GATConv_Qin(in_dim, head_dim, heads=head) for _ in range(10)])
+            self.convx = nn.ModuleList([GATConv_Qin(in_dim, head_dim, heads=head) for _ in range(20)])
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
@@ -1443,7 +1443,7 @@ class DiGCN_IB_1BN_nhid_para(torch.nn.Module):
     def __init__(self, input_dim, nhid, n_cls, dropout=0.5, layer=1):
         super(DiGCN_IB_1BN_nhid_para, self).__init__()
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(10)])  # coef for ib1
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
         self._dropout = dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.Conv = nn.Conv1d(nhid, n_cls, kernel_size=1)
@@ -1674,8 +1674,8 @@ class DiGCN_IB_2BN_nhid_para(torch.nn.Module):
         super(DiGCN_IB_2BN_nhid_para, self).__init__()
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
         self.ib2 = InceptionBlock_Qinlist(nhid, nhid)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(10)])  # coef for ib1
-        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(10)])  # coef for ib2
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
         self._dropout = args.dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nhid)
@@ -2038,7 +2038,7 @@ class DiGIB_1BN_Sym_nhid_para(torch.nn.Module):
         self._dropout = args.dropout
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
         self.ib2 = InceptionBlock_Qinlist(nhid, nhid)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(10)])        # coef for ib1
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(20)])        # coef for ib1
         self.batch_norm1 = nn.BatchNorm1d(nhid)
 
         self.gconv = DGCNConv()
@@ -2452,8 +2452,8 @@ class DiGIB_2BN_Sym_nhid_para(torch.nn.Module):
         nhid = args.feat_dim
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
         self.ib2 = InceptionBlock_Qinlist(nhid, nhid)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(10)])        # coef for ib1
-        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(10)])        # coef for ib1
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(20)])        # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(20)])        # coef for ib1
 
         self._dropout = args.dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
@@ -2717,9 +2717,9 @@ class DiGIB_XBN_Sym_nhid_para(torch.nn.Module):
         self.ib1 = InceptionBlock_Qinlist(input_dim, nhid)
         self.ib2 = InceptionBlock_Qinlist(nhid, nhid)
         self.ibx = InceptionBlock_Qinlist(nhid, nhid)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(10)])  # coef for ib1
-        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(10)])  # coef for ib1
-        self.coef3 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(10)])  # coef for ib1
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(20)])  # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(20)])  # coef for ib1
+        self.coef3 = nn.ParameterList([nn.Parameter(torch.tensor(1.0, requires_grad=True)) for _ in range(20)])  # coef for ib1
 
         self._dropout = args.dropout
         self.batch_norm1 = nn.BatchNorm1d(nhid)
@@ -5946,14 +5946,14 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
         else:
             self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
         self.ib2 = InceptionBlock_Qinlist(hidden, out_dim)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(10)])  # coef for ib1
-        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(10)])  # coef for ib2
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
         self._dropout = args.dropout
 
         self.layer = args.layer
         layer = args.layer
         self.ibx=nn.ModuleList([InceptionBlock_Qinlist(hidden,hidden) for _ in range(layer-2)])
-        self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(10)]) for _ in range(layer - 2)])
+        self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)]) for _ in range(layer - 2)])
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()

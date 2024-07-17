@@ -302,9 +302,9 @@ def generate_dataset_3class(edge_index, size, save_path, splits=10, probs=[0.15,
 
     # use larger n_jobs if the number of cpus is enough
     try:
-        p_data = Parallel(n_jobs=4)(delayed(iteration)(ind) for ind in range(10))
+        p_data = Parallel(n_jobs=4)(delayed(iteration)(ind) for ind in range(20))
     except:
-        p_data = Parallel(n_jobs=1)(delayed(iteration)(ind) for ind in range(10))
+        p_data = Parallel(n_jobs=1)(delayed(iteration)(ind) for ind in range(20))
 
     d_results = {}
     for ind in p_data:
