@@ -52,21 +52,19 @@ def log_results():
                 std_dev_acc = statistics.stdev(acc_list)
                 average_bacc = statistics.mean(bacc_list)
                 std_dev_bacc = statistics.stdev(bacc_list)
-                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
-                print(net_to_print + str(args.layer) + '_'+dataset_to_print + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
+                print(net_to_print +'_'+ str(args.layer) + '_'+dataset_to_print + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits")
+                print(net_to_print +'_'+ str(args.layer) + '_'+dataset_to_print + "_acc" + f"{average_acc:.1f}±{std_dev_acc:.1f}" + "_bacc" + f"{average_bacc:.1f}±{std_dev_bacc:.1f}" + '_MacroF1:' + f"{average:.1f}±{std_dev:.1f},{len(macro_F1):2d}splits", file=log_file)
             elif len(macro_F1) == 1:
-                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split", file=log_file)
-                print(net_to_print+str(args.layer)+'_'+dataset_to_print +"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split")
+                print(net_to_print+'_'+str(args.layer)+'_'+dataset_to_print +"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split", file=log_file)
+                print(net_to_print+'_'+str(args.layer)+'_'+dataset_to_print +"_acc"+f"{acc_list[0]:.1f}"+"_bacc" + f"{bacc_list[0]:.1f}"+'_MacroF1_'+f"{macro_F1[0]:.1f}, 1split")
             else:
                 print("not a single split is finished")
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
+def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
           X_img_i, X_img_j, X_img_k,norm_img_i,norm_img_j, norm_img_k, Quaedge_index):
-    # print("come to train")
-
     global class_num_list, idx_info, prev_out, biedges
     global data_train_mask, data_val_mask, data_test_mask
     new_edge_index=None
@@ -79,7 +77,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
@@ -98,7 +96,7 @@ def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):
+        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
             if args.net[3:].startswith(('Sym', 'Qym')):
                 out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
@@ -123,7 +121,7 @@ def test():
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
@@ -157,6 +155,7 @@ cuda_device = args.GPUdevice
 
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
+load_time = time.time()
 
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
 if not os.path.exists(log_directory):
@@ -196,15 +195,12 @@ X_img_j = None
 X_img_k = None
 
 gcn = True
+IsExhaustive = False
 
 macro_F1 = []
 acc_list = []
 bacc_list = []
 
-
-
-load_time = time.time()
-print('time after loading data: ', load_time - start_time)
 if torch.cuda.is_available():
     print("cuda Device Index:", cuda_device)
     device = torch.device("cuda:%d" % cuda_device)
@@ -226,11 +222,10 @@ data_test_maskOrigin = data_test_maskOrigin.to(device)
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
 
-
-if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li')):
+if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
-    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li')):
+    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -239,32 +234,35 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li')):
         raise NotImplementedError("Not Implemented" + args.net)
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
         k = int(args.net[-1])
-
-        if args.net[-2] == 'i':
-            # if k == 2:
-            if k == 2 and args.net.startswith('Di'):
-                edge_list = []
-                if args.net.startswith('Di'):
-                    edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
-                else:   # just for debug
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
-                edge_list.append(edge_index_tuple)
-                edge_index_tuple = tuple(edge_list)
-                edge_weights_tuple = tuple(edge_weights_tuple)
-                del edge_list
-
-            else:
-                if IsDirectedGraph:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
+        if IsDirectedGraph:
+            if args.net.startswith('Ii'):
+                IsExhaustive = True
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+            elif args.net.startswith('ii'):
+                IsExhaustive = False
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+            elif args.net[-2] == 'i':
+                # if k == 2:
+                if k == 2 and args.net.startswith('Di'):
+                    edge_list = []
+                    if args.net.startswith('Di'):
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:   # just for debug
+                        edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
+                    edge_list.append(edge_index_tuple)
+                    edge_index_tuple = tuple(edge_list)
+                    edge_weights_tuple = tuple(edge_weights_tuple)
+                    del edge_list
                 else:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
-        elif args.net[-2] == 'u':
-            if IsDirectedGraph:
-                edge_index_tuple, edge_weights_tuple = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype, k)
+                    if args.net.startswith('Ti'):
+                        IsExhaustive = True
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
+            elif args.net[-2] == 'u':
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
             else:
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
-        else:
-            raise NotImplementedError("Not Implemented"+ args.net)
+                raise NotImplementedError("Not Implemented"+ args.net)
+        else:    # undirected graph
+            edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
         SparseEdges = (edge_index1,) + edge_index_tuple
         edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
@@ -309,6 +307,7 @@ try:
 except:
     splits = 1
 Set_exit = False
+preprocess_time = time.time()
 try:
     # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
@@ -392,13 +391,13 @@ try:
             print('class_num_list is ', n_data)
             print('sorted class_num_list is ', sorted_list_original)
 
-            if sorted_list[-1]:
-                imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
-                print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
-                # imbalance_ratio = sorted_list[0] / sorted_list[-1]
-                # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
-            else:
-                print('the minor class has no training sample')
+            # if sorted_list[-1]:
+            #     imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
+            #     print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
+            #     # imbalance_ratio = sorted_list[0] / sorted_list[-1]
+            #     # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
+            # else:
+            #     print('the minor class has no training sample')
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
             test_idx = data_test_mask.nonzero().squeeze()  # get the index of training data
@@ -418,9 +417,8 @@ try:
             test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
             CountNotImproved = 0
             end_epoch = 0
-            # for epoch in tqdm.tqdm(range(args.epoch)):
             for epoch in range(args.epoch):
-                val_loss, new_edge_index, new_x, new_y, new_y_train = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
+                val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s = test()
                 train_acc, val_acc, tmp_test_acc = accs
@@ -439,9 +437,9 @@ try:
                     print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
                 else:
                     CountNotImproved += 1
-                end_time = time.time()
+                # end_time = time.time()
                 # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
-                print(end_time - start_time, file=log_file)
+                # print(end_time - start_time, file=log_file)
                 # print(end_time - start_time)
                 print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
                 end_epoch = epoch
@@ -461,8 +459,10 @@ try:
 
         last_time = time.time()
         elapsed_time0 = last_time-start_time
-        print("Total time: {} seconds".format(int(elapsed_time0)), file=log_file)
-        print("Total time: {} seconds".format(int(elapsed_time0)))
+        print("Time(s): Total_{}= Load_{} + Preprocess_{} + Train_{}".format(int(last_time-start_time), int(load_time-start_time), int(preprocess_time-load_time), int(last_time-preprocess_time)),
+              file=log_file)
+        print(
+            "Time(s): Total_{}= Load_{} + Preprocess_{} + Train_{}".format(int(last_time - start_time), int(load_time - start_time), int(preprocess_time - load_time), int(last_time - preprocess_time)))
         if len(macro_F1) > 1:
             average = statistics.mean(macro_F1)
             std_dev = statistics.stdev(macro_F1)
@@ -470,8 +470,9 @@ try:
             std_dev_acc = statistics.stdev(acc_list)
             average_bacc = statistics.mean(bacc_list)
             std_dev_bacc = statistics.stdev(bacc_list)
-            print(net_to_print+str(args.layer)+'_'+dataset_to_print+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}")
-            print(net_to_print+str(args.layer)+'_'+dataset_to_print+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}", file=log_file)
+            print(net_to_print+'_'+str(args.layer)+'_'+dataset_to_print+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}")
+            print(net_to_print+'_'+str(args.layer)+'_'+dataset_to_print+"_acc"+f"{average_acc:.1f}±{std_dev_acc:.1f}"+"_bacc"+f"{average_bacc:.1f}±{std_dev_bacc:.1f}"+'_Macro F1:'+f"{average:.1f}±{std_dev:.1f}", file=log_file)
+
 
 
 except KeyboardInterrupt:
