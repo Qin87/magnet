@@ -85,7 +85,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
         model = APPNP_Model(num_features, n_cls,args.feat_dim, alpha=args.alpha,dropout=args.dropout, layer=args.layer).to(device)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li')):        # GCN  -->  SAGE
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti')):        # GCN  -->  SAGE
         if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
             model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
         else:
