@@ -1089,6 +1089,24 @@ def generate_possible_B_products(A, m):
 
     return [results1, results2]
 
+
+def sparese_remove_self_loops(sparse_matrix):
+    # Ensure the sparse matrix is in coalesced format (no duplicate entries)
+    sparse_matrix = sparse_matrix.coalesce()
+
+    # Create a mask to filter out diagonal elements (self-loops)
+    mask = sparse_matrix.indices()[0] != sparse_matrix.indices()[1]
+
+    # Apply the mask and create a new sparse tensor without self-loops
+    return torch.sparse.FloatTensor(
+        sparse_matrix.indices()[:, mask],
+        sparse_matrix.values()[mask],
+        sparse_matrix.size()
+    )
+
+
+# Removing self-loops from A_in and A_out
+
 def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
@@ -1096,9 +1114,9 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
     A_in = sparse_mm_safe(A, A.t())
     A_out = sparse_mm_safe(A.t(), A)
-    num_nonzero_in = A_in._nnz()
-    num_nonzero_out = A_out._nnz()
-    print('number of edges:', num_nonzero_in, num_nonzero_out)
+    # num_nonzero_in = A_in._nnz()
+    # num_nonzero_out = A_out._nnz()
+    # print('number of edges:', num_nonzero_in, num_nonzero_out)
 
     if mode == 'union':
         A_result = A_in + A_out
@@ -1107,7 +1125,7 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
     else :
         A_result = intersect_sparse_tensors(A_in, A_out)
 
-    all_hops = [A_result]
+    all_hops = [sparese_remove_self_loops(A_result)]
 
     # Compute k-hop neighbors using sparse matrix multiplication and intersections
     for hop in range(1, k):
@@ -1120,9 +1138,9 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
             else:
                 A_result = intersect_sparse_tensors(A_in, A_out)
 
-            num_nonzero_result = A_result._nnz()
-            print('num of edges:', num_nonzero_result)
-            all_hops.append(A_result)
+            # num_nonzero_result = A_result._nnz()
+            # print('num of edges:', num_nonzero_result)
+            all_hops.append(sparese_remove_self_loops(A_result))
 
     return tuple(all_hops)
 
@@ -1154,7 +1172,7 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
     else :
         A_result = intersect_sparse_tensors(A_in, A_out)
 
-    all_hops = [A_result]       # AA.t(), A.t()A
+    all_hops = [sparese_remove_self_loops(A_result)]       # AA.t(), A.t()A
 
     # Compute k-hop neighbors using sparse matrix multiplication and intersections
     for hop in range(1, k):
@@ -1174,9 +1192,9 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         else:
             A_result = intersect_sparse_tensors(A_in, A_out)
 
-        num_nonzero_result = A_result._nnz()
-        print('num of edges:', num_nonzero_result)
-        all_hops.append(A_result)
+        # num_nonzero_result = A_result._nnz()
+        # print('num of edges:', num_nonzero_result)
+        all_hops.append(sparese_remove_self_loops(A_result))
 
     return tuple(all_hops)
 

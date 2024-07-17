@@ -63,7 +63,7 @@ def log_results():
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-def train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
+def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
           X_img_i, X_img_j, X_img_k,norm_img_i,norm_img_j, norm_img_k, Quaedge_index):
     global class_num_list, idx_info, prev_out, biedges
     global data_train_mask, data_val_mask, data_test_mask
@@ -415,9 +415,8 @@ try:
             test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
             CountNotImproved = 0
             end_epoch = 0
-            # for epoch in tqdm.tqdm(range(args.epoch)):
             for epoch in range(args.epoch):
-                val_loss, new_edge_index, new_x, new_y, new_y_train = train(train_idx, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
+                val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s = test()
                 train_acc, val_acc, tmp_test_acc = accs

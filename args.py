@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument('--paraD', action='store_false', help='ib is weighted sum')     # TODO false
     parser.add_argument('--net', type=str, default='TiGi3', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
-                                                                 'replace DiG. Ui is union of scaled edges, Li is last scale edges(Ui,Li to replace Ci), Ti')
+                                                                 'replace DiG. Ui is union of scaled edges, Li is last scale edges(Ui,Li to replace Ci), Ti(exhaustive k_order),  ')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--Dataset', type=str, default='citeseer_npz/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/, dgl/cora ,'

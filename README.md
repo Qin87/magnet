@@ -47,37 +47,73 @@ Specify the name of the dataset you want to use. The available datasets are cate
     - `WikipediaNetwork/squirrel`
     - `WikipediaNetwork/chameleon`
 
-- **Undirected Datasets**:
-  - **Citation**:
-    - `Cora/`
-    - `CiteSeer/`
-    - `PubMed/`
-  - **CoPurchase**:
-    - `dgl/computer`
-    - `dgl/photo`
-  
-  - **Coauthor**:
-    - `dgl/coauthor-cs`
-    - `dgl/coauthor-ph`
-  
-  - **Fraud Review**:
-    - `dgl/Fyelp`
-    - `dgl/Famazon`
-  
-  - **Others**:
-    - `dgl/yelp`
-    - `dgl/reddit`
-    - `WikiCS_U`
+[//]: # (- **Undirected Datasets**:)
+
+[//]: # (  - **Citation**:)
+
+[//]: # (    - `Cora/`)
+
+[//]: # (    - `CiteSeer/`)
+
+[//]: # (    - `PubMed/`)
+
+[//]: # (  - **CoPurchase**:)
+
+[//]: # (    - `dgl/computer`)
+
+[//]: # (    - `dgl/photo`)
+
+[//]: # (  )
+[//]: # (  - **Coauthor**:)
+
+[//]: # (    - `dgl/coauthor-cs`)
+
+[//]: # (    - `dgl/coauthor-ph`)
+
+[//]: # (  )
+[//]: # (  - **Fraud Review**:)
+
+[//]: # (    - `dgl/Fyelp`)
+
+[//]: # (    - `dgl/Famazon`)
+
+[//]: # (  )
+[//]: # (  - **Others**:)
+
+[//]: # (    - `dgl/yelp`)
+
+[//]: # (    - `dgl/reddit`)
+
+[//]: # (    - `WikiCS_U`)
   
 
 ### GNN Backbone
 Choose the GNN backbone to use. The available options are:
-- `GCN`
-- `GAT`
-- `SAGE`
-- `Cheb`
-- `Mag`
-- `Sig`
+- **Models invented in this paper is composed of three parts**:
+  - **(1) Graph Transformation Part**:
+    - `Ti` for Tranformation Inception: each type of edges belong to one group
+    - `Ui` for Union of all edges
+    - `Li` for Last Edges
+    
+  - **(2) Backbone GNN part**:
+    - `G` for GCN
+    - `A` for GAT
+    - `S` for SAGE
+    - `C` for Cheb
+  - **(3) Inception part**:
+    - `i2` interception of 2-order edges
+    - `u3` union of 3-order edges
+    
+  Number 2, 3 can be replaced with any number k>1.
+  
+- **GNN baselines**:
+  - `GCN`
+  - `GAT`
+  - `SAGE`
+  - `Cheb`
+  - `Mag`
+  - `Sig`
+  - `DiG`, `DiGi2`
 
 Please refer to [args.py](args.py) for the full hyper-parameters.
 
@@ -86,7 +122,18 @@ Please refer to [args.py](args.py) for the full hyper-parameters.
 Pass the above hyper-parameters to `main.py`. For example:
 
 ```
-python main.py --dataset cora_ml/  --net GCN  --layer=3 --Dataset='cora_ml/'
+python main.py  --net GCN  --layer=3 --Dataset='cora_ml/'
+```
+
+```
+python main.py --net TiGi3  --layer=2 --Dataset='citeseer_npz/'
+```
+
+To run in batches, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
+all the datasets in Direct_dataset. Then in terminal, run: 
+
+```
+./net_nest.h
 ```
 
 ## License
@@ -102,9 +149,4 @@ The code is implemented based on [GraphSHA](https://github.com/wenzhilics/GraphS
 ## Citation
 
 If you find this work is helpful to your research, please consider citing our paper:???
-
-```
-
-```
-
 
