@@ -8,9 +8,10 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_false', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='TiGi3', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
+    parser.add_argument('--net', type=str, default='iiGu3', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
-                                                                 'replace DiG. Ui is union of scaled edges, Li is last scale edges(Ui,Li to replace Ci), Ti(exhaustive k_order),  ')
+                                                                 'replace DiG. Ui is union of scaled edges, Li is last scale edges(Ui,Li to replace Ci), Ti(exhaustive k_order), '
+                                                                 'Ii(independent exhaustive, ii independent) ')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--Dataset', type=str, default='citeseer_npz/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/telegram,  WikiCS/, dgl/cora ,'
@@ -18,7 +19,7 @@ def parse_args():
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP

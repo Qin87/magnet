@@ -77,7 +77,7 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
         else:
@@ -96,7 +96,7 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
         model.eval()
         if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti')):
+        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
             if args.net[3:].startswith(('Sym', 'Qym')):
                 out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
@@ -121,7 +121,7 @@ def test():
     model.eval()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
@@ -195,6 +195,7 @@ X_img_j = None
 X_img_k = None
 
 gcn = True
+IsExhaustive = False
 
 macro_F1 = []
 acc_list = []
@@ -221,10 +222,10 @@ data_test_maskOrigin = data_test_maskOrigin.to(device)
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
 
-if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti')):
+if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
-    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti')):
+    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -233,34 +234,35 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti')):
         raise NotImplementedError("Not Implemented" + args.net)
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
         k = int(args.net[-1])
-
-        if args.net[-2] == 'i':
-            # if k == 2:
-            if k == 2 and args.net.startswith('Di'):
-                edge_list = []
-                if args.net.startswith('Di'):
-                    edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
-                else:   # just for debug
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
-                edge_list.append(edge_index_tuple)
-                edge_index_tuple = tuple(edge_list)
-                edge_weights_tuple = tuple(edge_weights_tuple)
-                del edge_list
-            else:
+        if IsDirectedGraph:
+            if args.net.startswith('Ii'):
+                IsExhaustive = True
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+            elif args.net.startswith('ii'):
                 IsExhaustive = False
-                if args.net.startswith('Ti'):
-                    IsExhaustive = True
-                if IsDirectedGraph:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+            elif args.net[-2] == 'i':
+                # if k == 2:
+                if k == 2 and args.net.startswith('Di'):
+                    edge_list = []
+                    if args.net.startswith('Di'):
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                    else:   # just for debug
+                        edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
+                    edge_list.append(edge_index_tuple)
+                    edge_index_tuple = tuple(edge_list)
+                    edge_weights_tuple = tuple(edge_weights_tuple)
+                    del edge_list
                 else:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
-        elif args.net[-2] == 'u':
-            if IsDirectedGraph:
-                edge_index_tuple, edge_weights_tuple = get_second_directed_adj_union(edges.long(), data_y.size(-1), data_x.dtype, k)
+                    if args.net.startswith('Ti'):
+                        IsExhaustive = True
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
+            elif args.net[-2] == 'u':
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
             else:
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), data_x.dtype, k)
-        else:
-            raise NotImplementedError("Not Implemented"+ args.net)
+                raise NotImplementedError("Not Implemented"+ args.net)
+        else:    # undirected graph
+            edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
         SparseEdges = (edge_index1,) + edge_index_tuple
         edge_weight = (edge_weights1,) + edge_weights_tuple
         del edge_index_tuple, edge_weights_tuple
