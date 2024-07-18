@@ -4,7 +4,7 @@
 # LiGi2 LiGi3 LiGi4 LiGu2 LiGu3 LiGu4 LiG
 net_values="QiGi2 QiGi3 QiGu2 QiGu3 QiGu4 QiGi4"
 q_value=0
-layer_values="1 2 3 4 "    #
+layer_values=" 2 3 4 "    #
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
