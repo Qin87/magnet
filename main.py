@@ -234,6 +234,8 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         raise NotImplementedError("Not Implemented" + args.net)
     if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
         k = int(args.net[-1])
+        if args.net.startswith('Ti'):
+            IsExhaustive = True
         if IsDirectedGraph:
             if args.net.startswith('Ii'):
                 IsExhaustive = True
@@ -254,8 +256,6 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
                     edge_weights_tuple = tuple(edge_weights_tuple)
                     del edge_list
                 else:
-                    if args.net.startswith('Ti'):
-                        IsExhaustive = True
                     edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
             elif args.net[-2] == 'u':
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
