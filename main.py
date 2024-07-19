@@ -279,16 +279,22 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
     if args.feat_proximity:
-        proximity_edges = []
-        proximity_weights = []
-        for edge_index1 in SparseEdges:
-            filtered_edges = delete_edges(edge_index1, data_x, threshold_value)
-            filtered_edge_weights = normalize_edges_all1(data_x.size()[0], filtered_edges).to(device)
-            proximity_edges.append(filtered_edges)
-            proximity_weights.append(filtered_edge_weights)
-        SparseEdges = tuple(proximity_edges)
-        edge_weight = tuple(proximity_weights)
-        del proximity_edges, proximity_weights
+        if not isinstance(SparseEdges, tuple):
+            SparseEdges = delete_edges(SparseEdges, data_x, threshold_value).to(device)
+            edge_weight = normalize_edges_all1(data_x.size()[0], SparseEdges).to(device)
+            # SparseEdges = (SparseEdges,)
+        else:
+            proximity_edges = []
+            proximity_weights = []
+            for edge_index1 in SparseEdges:
+                filtered_edges = delete_edges(edge_index1, data_x, threshold_value).to(device)
+                filtered_edge_weights = normalize_edges_all1(data_x.size()[0], filtered_edges).to(device)
+                print("num_edge change from {} to {}".format(edge_index1.shape[1], filtered_edge_weights.shape[0]))
+                proximity_edges.append(filtered_edges)
+                proximity_weights.append(filtered_edge_weights)
+            SparseEdges = tuple(proximity_edges)
+            edge_weight = tuple(proximity_weights)
+            del proximity_edges, proximity_weights
 
     if args.net[3:].startswith('Qym'):
         biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), edges_weight)
