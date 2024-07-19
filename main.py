@@ -16,8 +16,8 @@ import torch.nn.functional as F
 from args import parse_args
 from data.data_utils import keep_all_data
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
-    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj
-from data_model import CreatModel, log_file, get_name, load_dataset
+    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, normalize_edges_all1
+from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges
 from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
@@ -196,6 +196,7 @@ X_img_k = None
 
 gcn = True
 IsExhaustive = False
+proximity_threshold = 0.0
 
 macro_F1 = []
 acc_list = []
@@ -223,6 +224,9 @@ criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
 
 if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
+    if args.feat_proximity:
+        average_distance, threshold_value = feat_proximity(edges, data_x)
+        proximity_threshold = threshold_value
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
     elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
@@ -274,6 +278,18 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
         SparseEdges = edge_index1
         edge_weight = edge_weights1
     del edge_index1, edge_weights1
+    if args.feat_proximity:
+        proximity_edges = []
+        proximity_weights = []
+        for edge_index1 in SparseEdges:
+            filtered_edges = delete_edges(edge_index1, data_x, threshold_value)
+            filtered_edge_weights = normalize_edges_all1(data_x.size()[0], filtered_edges).to(device)
+            proximity_edges.append(filtered_edges)
+            proximity_weights.append(filtered_edge_weights)
+        SparseEdges = tuple(proximity_edges)
+        edge_weight = tuple(proximity_weights)
+        del proximity_edges, proximity_weights
+
     if args.net[3:].startswith('Qym'):
         biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), edges_weight)
     elif args.net[3:].startswith('Sym'):

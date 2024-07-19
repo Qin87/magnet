@@ -152,24 +152,48 @@ def cheb_poly_sparse(A, K):
 
     return multi_order_laplacian
 
+def hermitian_decomp_sparse_05(row, col, size, q=0.25, norm=True, laplacian=True, max_eigen=2,
+                            gcn_appr=False, edge_weight=None):
+    '''
+    '''
+    row = row.detach().cpu().numpy()        # use this, or row = row.detach().numpy() won't work in GPU
+    col = col.detach().cpu().numpy()
+
+    if edge_weight is None:
+        A = coo_matrix((np.ones(len(row)), (row, col)), shape=(size, size), dtype=np.float32)
+    else:
+        A = coo_matrix((edge_weight.detach().numpy(), (row, col)), shape=(size, size), dtype=np.float32)
+
+    diag = coo_matrix((np.ones(size), (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
+    if gcn_appr:
+        A += diag
+
+    A_sym = 0.5 * (A + A.T)  # symmetrized adjacency(A_sym has 0.5)
+
+    if norm:
+        d = np.array(A_sym.sum(axis=0))[0]
+        d[d == 0] = 1
+        d = np.power(d, -0.5)
+        D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
+        A_sym = D.dot(A_sym).dot(D)
+
+    if laplacian:
+        if norm:
+            D = diag
+        else:
+            d = np.sum(A_sym, axis=0)  # diag of degree array
+            d_1d = np.array(d).flatten()
+            D = coo_matrix((d_1d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
+        L = D - A_sym # element-wise  # L= D − H= D− A.P,
+
+    # if norm:      # Qin delete this block,no use(experiments show keeping is better, in deeper layers)
+    #     L = (2.0 / max_eigen) * L - diag
+
+    return L
 
 def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, max_eigen=2,
                             gcn_appr=False, edge_weight=None):
     '''
-
-    Args:
-        row: src node
-        col: tgt node
-        size: num of all nodes
-        q:
-        norm: normalization
-        laplacian:
-        max_eigen:
-        gcn_appr: add self-loop
-        edge_weight:
-
-    Returns:signed directed magnetic Laplacian with the Hermitian adjacency matrix
-
     '''
     row = row.detach().cpu().numpy()        # use this, or row = row.detach().numpy() won't work in GPU
     col = col.detach().cpu().numpy()
@@ -189,10 +213,6 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
 
     if norm:
         d = np.array(A_sym.sum(axis=0))[0]
-        # max_eigen = d.max()
-        # print("max_eigen set by Qin")
-        # d has 0.5,2.5,(so it's not out-degree, it's bi_edge+*0.5*uni_edge)
-        # out degree  # d will be a 1D NumPy array containing the out-degree of each node in the graph represented by the matrix A_sym
         d[d == 0] = 1
         d = np.power(d, -0.5)
         D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
