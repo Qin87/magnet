@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('-hds', '--heads', default=8, type=int)
 
     #  from Magnet
-    parser.add_argument('--q', type=float, default=0.5, help='q value for the phase matrix')
+    parser.add_argument('--q', type=float, default=0, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
     parser.add_argument('-norm', '-n', action='store_true', help='if use activation function')
