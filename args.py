@@ -5,7 +5,7 @@ def parse_args():
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirected')  # TODO change before git
-    parser.add_argument('--feat_proximity', action='store_false', help='filter out non similar nodes in scaled graph')  # TODO change before git
+    parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')  # TODO change before git
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
@@ -57,7 +57,6 @@ def parse_args():
     parser.add_argument('--qua_bias', '-B', action='store_true', help='quaternion bias options')
 
     parser.add_argument('--epochs', type=int, default=1500, help='training epochs')
-    # parser.add_argument('--num_filter', type=int, default=64, help='num of filters')
 
     parser.add_argument('--log_root', type=str, default='../logs/', help='the path saving model.t7 and the training process')
     parser.add_argument('--log_path', type=str, default='test', help='the path saving model.t7 and the training process, the name of folder will be log/(current time)')
