@@ -976,45 +976,6 @@ def intersect_sparse_tensors(A_in, A_out):
     return torch.sparse_coo_tensor(indices, values, size=intersection.size(), dtype=torch.float32)
 
 
-
-
-# def sparse_boolean_multi_hop(A, k, mode='union'):    # for dense matrix, time consuming for large graph
-#     # Ensure A is in canonical form and convert to dense
-#     A = A.coalesce().to_dense().to(torch.float32)
-#
-#     # Initialize all_hops list with the intersection of A*A.T and A.T*A
-#     A_in = torch.mm(A, A.t())
-#     A_out = torch.mm(A.t(), A)
-#     num_nonzero_in = torch.nonzero(A_in).size(0)
-#     num_nonzero_out = torch.nonzero(A_out).size(0)
-#     print('number of edges:', num_nonzero_in, num_nonzero_out)
-#     A_result = A_in
-#     if mode == 'union':
-#         A_result[A_out != 0] = 1  # union
-#     else:
-#         A_result[A_out == 0] = 0  # intersection
-#     all_hops = [A_result.to_sparse()]
-#
-#     # Compute k-hop neighbors using matrix multiplication and intersections
-#     for hop in range(1, k):
-#         A_in = torch.mm(A, A_in)
-#         A_in = torch.mm(A_in, A.t())
-#         A_out = torch.mm(A.t(), A_out)
-#         A_out = torch.mm(A_out, A)
-#         num_nonzero_in = torch.nonzero(A_in).size(0)
-#         num_nonzero_out = torch.nonzero(A_out).size(0)
-#         print(hop+2, 'order num of edges: ', num_nonzero_in, num_nonzero_out)
-#         A_result = A_in
-#         if mode == 'union':
-#             A_result[A_out != 0] = 1  # union
-#         else:
-#             A_result[A_out == 0] = 0  # intersection
-#         num_nonzero_result = torch.nonzero(A_result).size(0)
-#         print('num of edges:', num_nonzero_result)
-#         all_hops.append(A_result.to_sparse())
-#
-#     return tuple(all_hops)
-
 def sparse_mm_chunked(A, B, chunk_size):
     """
     Perform sparse matrix multiplication in chunks to manage memory usage.

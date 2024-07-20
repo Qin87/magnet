@@ -457,4 +457,5 @@ def F_in_out(edge_index, size, edge_weight=None):
     out_weight = normalize_edges_all1(num_nodes, edge_out)
 
     edge_index = edge_index.to(device)  # Ben GPU
+    torch.cuda.empty_cache()
     return to_undirected(edge_index), edge_in, in_weight, edge_out, out_weight
