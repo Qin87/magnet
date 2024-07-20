@@ -24,7 +24,7 @@ from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
 # from nets.UGCL import UGCL_Model_Qin
-from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin
+from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin, ChebNet_Ben_05
 import torch.nn.init as init
 
 def init_model(model):
@@ -122,6 +122,9 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net.startswith('Mag'):
         if args.net[3:].startswith('Qin'):
             model = ChebNet_BenQin(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
+                                activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
+        if args.net[3:].startswith('0_5'):
+            model = ChebNet_Ben_05(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                                 activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
         else:
             model = ChebNet_Ben(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
@@ -266,3 +269,41 @@ def load_dataset(args):
         print("Converted to undirected data")
 
     return data_x, data_y, edges, edges_weight, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph
+
+def feat_proximity(edge_index1, data_x):
+    distances = []
+    for i in range(edge_index1.size(1)):
+        a = edge_index1[0, i]
+        b = edge_index1[1, i]
+    # for edge in edges:
+    #     a, b = edge
+        node_a_features = data_x[a]
+        node_b_features = data_x[b]
+        distance = torch.sum(torch.abs(node_a_features - node_b_features)).item()
+        distances.append(distance)
+
+    # Calculate the average distance
+    average_distance = sum(distances) / len(distances)
+
+    sorted_distances = sorted(distances)
+
+    # Calculate the threshold for the first 80%
+    threshold_index = int(len(sorted_distances) * 0.8) - 1
+    threshold_value = sorted_distances[threshold_index]
+    return average_distance, threshold_value
+
+
+def delete_edges(edge_index1, data_x, threshold_value):
+    filtered_edges = []
+    for i in range(edge_index1.size(1)):
+        a = edge_index1[0, i]
+        b = edge_index1[1, i]
+        node_a_features = data_x[a]
+        node_b_features = data_x[b]
+        distance = torch.sum(torch.abs(node_a_features - node_b_features)).item()
+        if distance < threshold_value:
+            filtered_edges.append([a, b])
+
+    # Convert filtered edges back to a tensor
+    filtered_edge_index1 = torch.tensor(filtered_edges).t()
+    return filtered_edge_index1
