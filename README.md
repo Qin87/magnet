@@ -94,6 +94,8 @@ Choose the GNN backbone to use. The available options are:
     - `Ti` for Tranformation Inception: each type of edges belong to one group
     - `Ui` for Union of all edges
     - `Li` for Last Edges
+    - `Ii` for exhaustive independent
+    - `ii` for independent
     
   - **(2) Backbone GNN part**:
     - `G` for GCN

@@ -17,7 +17,7 @@ from args import parse_args
 from data.data_utils import keep_all_data
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, normalize_edges_all1
-from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges
+from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced
 from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
@@ -220,6 +220,8 @@ data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)
 
 
+
+
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
 
@@ -400,26 +402,43 @@ try:
             # idx_info = get_idx_info(data_y, n_cls, data_train_mask, device)  # torch: all train nodes for each class
             node_train = torch.sum(data_train_mask).item()
 
-            class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
-                keep_all_data(edges, data_y, n_data, n_cls,  data_train_mask)
-            print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNode_' + str(node_train), file=log_file)
-            print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdge_' + str(train_edge_mask.size()[0]), file = log_file)
-            print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
-                data_train_mask).item()))
-            print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
-                torch.sum(train_edge_mask).item()))
+            if args.MakeImbalance:
+                print("make imbalanced")
+                print("make imbalanced", file=log_file)
+                class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+                    make_imbalanced(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                    data_train_mask).item()), file=log_file)
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                    train_edge_mask).item()), file=log_file)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                    data_train_mask).item()))
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                    train_edge_mask).item()))
+            else:
+                class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
+                    keep_all_data(edges, data_y, n_data, n_cls, data_train_mask)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNode_' + str(node_train), file=log_file)
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdge_' + str(train_edge_mask.size()[0]), file=log_file)
+                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                    data_train_mask).item()))
+                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                    torch.sum(train_edge_mask).item()))
+                sorted_list = sorted(class_num_list, reverse=True)
+                sorted_list_original = sorted(n_data, reverse=True)
+                print('class_num_list is ', n_data)
+                print('sorted class_num_list is ', sorted_list_original)
+
             sorted_list = sorted(class_num_list, reverse=True)
             sorted_list_original = sorted(n_data, reverse=True)
-            print('class_num_list is ', n_data)
-            print('sorted class_num_list is ', sorted_list_original)
+            if sorted_list[-1]:
+                imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
+                print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
+                # imbalance_ratio = sorted_list[0] / sorted_list[-1]
+                # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
+            else:
+                print('the minor class has no training sample')
 
-            # if sorted_list[-1]:
-            #     imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
-            #     print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
-            #     # imbalance_ratio = sorted_list[0] / sorted_list[-1]
-            #     # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
-            # else:
-            #     print('the minor class has no training sample')
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
             test_idx = data_test_mask.nonzero().squeeze()  # get the index of training data
