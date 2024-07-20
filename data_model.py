@@ -165,9 +165,11 @@ def get_name(args, IsDirectedGraph):
     if args.net[1:3] == 'iA' or args.net == 'GAT':
         net_to_print = net_to_print + '_Head' + str(args.heads)
 
-    if args.net[1:].startswith('iG'):
+    if args.net[1:].startswith('i'):
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
+        if args.feat_proximity:
+            net_to_print = net_to_print + '_feaProx'
     if args.feat_dim != 64:
         net_to_print = net_to_print + str(args.feat_dim) + 'hid_'
 
@@ -175,7 +177,7 @@ def get_name(args, IsDirectedGraph):
 
 
 def log_file(net_to_print, dataset_to_print, args):
-    log_file_name = 'RemoveGenSelfloop_QymNorm_NoSelfLoop' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
+    log_file_name = 'RmGenSelfloop_QymNorm_NoSelfLoop' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 

@@ -66,9 +66,6 @@ def parse_args():
     parser.add_argument('--ppnp', default='GPR_prop',choices=['PPNP', 'GPR_prop'])
     parser.add_argument('--Init', type=str,choices=['SGC', 'PPR', 'NPPR', 'Random', 'WS', 'Null'],default='PPR')
 
-    # parser.add_argument('--Gamma', default=None)
-    # parser.add_argument('--dprate', type=float, default=0.5)
-
     # for pGCN
     parser.add_argument('--p',type=float,  default=2,help='p.')
     parser.add_argument('--mu',   type=float,default=0.1,help='mu.')
