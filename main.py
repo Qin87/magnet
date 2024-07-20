@@ -257,7 +257,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
                         edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
                     edge_list.append(edge_index_tuple)
                     edge_index_tuple = tuple(edge_list)
-                    edge_weights_tuple = tuple(edge_weights_tuple)
+                    edge_weights_tuple = (edge_weights_tuple, )
                     del edge_list
                 else:
                     edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
