@@ -2513,7 +2513,7 @@ class DiGIB_2BN_Sym_nhid_para(torch.nn.Module):
 class DiGCN_IB_2BN_Sym_nhid(torch.nn.Module):
     def __init__(self,m, input_dim, out_dim,args):
         super(DiGCN_IB_2BN_Sym_nhid, self).__init__()
-        dropout = args.dropout
+        self._dropout = args.dropout
         nhid = args.feat_dim
         
         
@@ -2544,8 +2544,8 @@ class DiGCN_IB_2BN_Sym_nhid(torch.nn.Module):
         x = x + symx
         # x = self.batch_norm1(x)
         x = F.relu(x)
-        if self._dropout > 0:
-            x = F.dropout(x, self._dropout, training=self.training)
+        # if self._dropout > 0:
+        x = F.dropout(x, self._dropout, training=self.training)
 
         symx = self.lin2(x)
         symx1 = self.gconv(symx, edge_index)
