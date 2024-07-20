@@ -2,7 +2,7 @@
 
 # CiG  CiGi2 CiGi3  CiGu2 CiGu3 CiGi4 CiGu4
 # LiGi2 LiGi3 LiGi4 LiGu2 LiGu3 LiGu4 LiG  # iiGi2 iiGi3 iiGi4 iiGu2 iiGu3 iiGu4 iiG
-net_values=" iiGi3  "
+net_values=" QiGu2 "
 q_value=0
 layer_values="2 3 4 1"    #
 

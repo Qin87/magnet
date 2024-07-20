@@ -2513,7 +2513,7 @@ class DiGIB_2BN_Sym_nhid_para(torch.nn.Module):
 class DiGCN_IB_2BN_Sym_nhid(torch.nn.Module):
     def __init__(self,m, input_dim, out_dim,args):
         super(DiGCN_IB_2BN_Sym_nhid, self).__init__()
-        dropout = args.dropout
+        self._dropout = args.dropout
         nhid = args.feat_dim
         
         
