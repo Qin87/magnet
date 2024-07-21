@@ -47,44 +47,44 @@ Specify the name of the dataset you want to use. The available datasets are cate
     - `WikipediaNetwork/squirrel`
     - `WikipediaNetwork/chameleon`
 
-[//]: # (- **Undirected Datasets**:)
+- **Undirected Datasets**:
 
-[//]: # (  - **Citation**:)
+  - **Citation**:
 
-[//]: # (    - `Cora/`)
+    - `Cora/`
 
-[//]: # (    - `CiteSeer/`)
+    - `CiteSeer/`
 
-[//]: # (    - `PubMed/`)
+    - `PubMed/`
 
-[//]: # (  - **CoPurchase**:)
+  - **CoPurchase**:
 
-[//]: # (    - `dgl/computer`)
+    - `dgl/computer`
 
-[//]: # (    - `dgl/photo`)
+    - `dgl/photo`
 
-[//]: # (  )
-[//]: # (  - **Coauthor**:)
+  
+  - **Coauthor**:
 
-[//]: # (    - `dgl/coauthor-cs`)
+    - `dgl/coauthor-cs`
 
-[//]: # (    - `dgl/coauthor-ph`)
+    - `dgl/coauthor-ph`
 
-[//]: # (  )
-[//]: # (  - **Fraud Review**:)
+  
+  - **Fraud Review**:
 
-[//]: # (    - `dgl/Fyelp`)
+    - `dgl/Fyelp`
 
-[//]: # (    - `dgl/Famazon`)
+    - `dgl/Famazon`
 
-[//]: # (  )
-[//]: # (  - **Others**:)
+  
+  - **Others**:
 
-[//]: # (    - `dgl/yelp`)
+    - `dgl/yelp`
 
-[//]: # (    - `dgl/reddit`)
+    - `dgl/reddit`
 
-[//]: # (    - `WikiCS_U`)
+    - `WikiCS_U`
   
 
 ### GNN Backbone
@@ -111,11 +111,14 @@ Choose the GNN backbone to use. The available options are:
 - **GNN baselines**:
   - `GCN`
   - `GAT`
-  - `SAGE`
+  - `SAGE` for GraphSAGE
   - `Cheb`
-  - `Mag`
-  - `Sig`
+  - `Mag` for MagNet
+  - `Sig`  for SigMaNet
   - `DiG`, `DiGi2`
+  - `APPNP`
+  - `Sym` for DGCN
+  - 
 
 Please refer to [args.py](args.py) for the full hyper-parameters.
 
