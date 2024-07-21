@@ -172,14 +172,15 @@ def get_name(args, IsDirectedGraph):
     if args.net[1:].startswith('i'):
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
-        if args.MakeImbalance:
-            net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
-        else:
-            net_to_print = net_to_print + '_Bal'
+
         if args.feat_proximity:
             net_to_print = net_to_print + '_feaProx'
     if args.feat_dim != 64:
         net_to_print = net_to_print + str(args.feat_dim) + 'hid_'
+    if args.MakeImbalance:
+        net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
+    else:
+        net_to_print = net_to_print + '_Bal'
 
     return net_to_print, dataset_to_print
 
