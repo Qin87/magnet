@@ -198,15 +198,12 @@ bacc_list = []
 
 device = set_device(args)
 
-
 data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)
-
-
 
 
 criterion = CrossEntropy().to(device)
