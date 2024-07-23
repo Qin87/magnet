@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
 try:
@@ -136,3 +137,30 @@ def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=
         index = index[torch.randperm(index.size(0))]
 
     return data
+
+def seed_everything(seed):
+    import random
+    torch.cuda.empty_cache()
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.qinchmark = False
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # torch.backends.cudnn.benchmark = False      # slower
+    # torch.backends.cudnn.enabled = False        # slower
+
+def set_device(args):
+    cuda_device = args.GPUdevice
+    if torch.cuda.is_available():
+        print("cuda Device Index:", cuda_device)
+        device = torch.device("cuda:%d" % cuda_device)
+    else:
+        print("cuda is not available, using CPU.")
+        device = torch.device("cpu")
+    if args.CPU:
+        device = torch.device("cpu")
+        print("args.CPU true, using CPU.")
+
+    return device

@@ -7,14 +7,12 @@ import statistics
 import sys
 import time
 
-import random
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 
 from args import parse_args
-from data.data_utils import keep_all_data
+from data.data_utils import keep_all_data, seed_everything, set_device
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, normalize_edges_all1
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced
@@ -151,7 +149,7 @@ def test():
 start_time = time.time()
 args = parse_args()
 seed = args.seed
-cuda_device = args.GPUdevice
+
 
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
@@ -164,13 +162,9 @@ print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
 
-torch.cuda.empty_cache()
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.qinchmark = False
-random.seed(seed)
-np.random.seed(seed)
+
+seed_everything(seed)
+
 
 biedges = None
 edge_in = None
@@ -202,15 +196,8 @@ macro_F1 = []
 acc_list = []
 bacc_list = []
 
-if torch.cuda.is_available():
-    print("cuda Device Index:", cuda_device)
-    device = torch.device("cuda:%d" % cuda_device)
-else:
-    print("cuda is not available, using CPU.")
-    device = torch.device("cpu")
-if args.CPU:
-    device = torch.device("cpu")
-    print("args.CPU true, using CPU.")
+device = set_device(args)
+
 
 data_x = data_x.to(device)
 data_y = data_y.to(device)
@@ -266,7 +253,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ii', 'ii')):
             elif args.net[-2] == 'u':
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
             else:
-                raise NotImplementedError("Not Implemented"+ args.net)
+                raise NotImplementedError("Not Implemented" + args.net)
         else:    # undirected graph
             edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
         SparseEdges = (edge_index1,) + edge_index_tuple
@@ -335,7 +322,7 @@ preprocess_time = time.time()
 try:
     # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
-        print('Using Device: ',device, file=log_file)
+        print('Using Device: ', device, file=log_file)
         # for split in range(splits - 1, -1, -1):
         for split in range(splits):
             model = CreatModel(args, num_features, n_cls, data_x, device).to(device)

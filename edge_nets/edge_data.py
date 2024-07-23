@@ -539,6 +539,7 @@ def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     fill_value = 1
     # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
     edge_index, _ = remove_self_loops(edge_index)
+    edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_weight = torch.ones(edge_index.size(1)).to(device)
