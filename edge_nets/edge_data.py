@@ -1106,6 +1106,47 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
 
     return tuple(all_hops)
 
+def sparse_boolean_multi_hop_DirGNN(A, k):
+    # Ensure A is in canonical form
+    A = A.coalesce().to(torch.float32)
+
+    # Initialize all_hops list with the intersection of A*A.T and A.T*A
+    A_in = sparse_mm_safe(A, A)
+    # A_out = sparse_mm_safe(A.t(), A.t())
+    A_out = A_in.t()
+
+    B_in = sparse_mm_safe(A.t(), A)
+    B_out = sparse_mm_safe(A, A.t())
+    # num_nonzero_in = A_in._nnz()
+    # num_nonzero_out = A_out._nnz()
+    # print('number of edges:', num_nonzero_in, num_nonzero_out)
+
+    # if mode == 'union':
+    #     A_result = A_in + A_out
+    #     A_result = A_result.coalesce()
+    #     A_result._values().clamp_(0, 1)  # Ensuring binary values
+    # else:
+    #     A_result = intersect_sparse_tensors(A_in, A_out)
+
+    all_hops = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_in), sparse_remove_self_loops(B_out)]
+
+    # Compute k-hop neighbors using sparse matrix multiplication and intersections
+    for hop in range(1, k):     # TODO get all possible combination of
+        [in_list, out_list] = generate_possible_B_products(A, hop)
+        for A_in, A_out in zip(in_list, out_list):
+            # if mode == 'union':
+            #     A_result = A_in + A_out
+            #     A_result = A_result.coalesce()
+            #     A_result._values().clamp_(0, 1)  # Ensuring binary values
+            # else:
+            #     A_result = intersect_sparse_tensors(A_in, A_out)
+
+            # num_nonzero_result = A_result._nnz()
+            # print('num of edges:', num_nonzero_result)
+            all_hops.append(sparese_remove_self_loops(A_result))
+
+    return tuple(all_hops)
+
 def sparse_remove_self_loops(matrix):
     # Function to remove self-loops by setting diagonal elements to zero.
     # Extract the indices and values of the sparse matrix
@@ -1338,6 +1379,38 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):  
         for U, I in zip(L_tupleU, L_tupleI):
             all_hops.append(sparse_difference(U, I))
         L_tuple = tuple(all_hops)
+
+    all_hop_edge_index = []
+    all_hops_weight = []
+    for L in L_tuple:  # Skip L1 if not needed
+        edge_indexL = L._indices()
+        all_hop_edge_index.append(edge_indexL)
+        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL).to(device)
+        all_hops_weight.append(edge_weightL)
+
+    return tuple(all_hop_edge_index), tuple(all_hops_weight)
+
+def Qin_get_all_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):     #
+    device = edge_index.device
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # TODO add back after no-selfloop test
+    edge_index, _ = remove_self_loops(edge_index)
+    edge_index = edge_index.to(device)
+
+    edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
+    A = torch.sparse_coo_tensor(edge_index, edge_weight, size=(num_nodes, num_nodes)).to(device)
+    L_tuple = sparse_boolean_multi_hop_DirGNN(A, k - 1)  # much slower
+
+    # else:       # independent
+    #     if IsExhaustive:
+    #         L_tupleU = sparse_boolean_multi_hopExhaust(A, k - 1, 'union')  # much slower
+    #         L_tupleI = sparse_boolean_multi_hopExhaust(A, k - 1, 'intersection')  # much slower
+    #     else:
+    #         L_tupleU = sparse_boolean_multi_hop(A, k-1, 'union')   # much slower
+    #         L_tupleI = sparse_boolean_multi_hop(A, k-1, 'intersection')   # much slower
+    #     all_hops = list(L_tupleI)
+    #     for U, I in zip(L_tupleU, L_tupleI):
+    #         all_hops.append(sparse_difference(U, I))
+    #     L_tuple = tuple(all_hops)
 
     all_hop_edge_index = []
     all_hops_weight = []
