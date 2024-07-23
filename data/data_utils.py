@@ -1,4 +1,6 @@
 import os
+import random
+
 import torch_geometric.transforms as transforms
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
@@ -218,3 +220,26 @@ class DirectedHeterophilousGraphDataset(InMemoryDataset):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name})"
+
+def set_device(args):
+    cuda_device = args.GPUdevice
+    if torch.cuda.is_available():
+        print("cuda Device Index:", cuda_device)
+        device = torch.device("cuda:%d" % cuda_device)
+    else:
+        print("cuda is not available, using CPU.")
+        device = torch.device("cpu")
+    if args.CPU:
+        device = torch.device("cpu")
+        print("args.CPU true, using CPU.")
+
+    return device
+
+def seed_everything(seed):
+    torch.cuda.empty_cache()
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.qinchmark = False
+    random.seed(seed)
+    np.random.seed(seed)
