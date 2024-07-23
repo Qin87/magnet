@@ -1106,6 +1106,23 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
 
     return tuple(all_hops)
 
+def sparse_remove_self_loops(matrix):
+    # Function to remove self-loops by setting diagonal elements to zero.
+    # Extract the indices and values of the sparse matrix
+    indices = matrix._indices()
+    values = matrix._values()
+
+    # Filter out diagonal elements (self-loops)
+    mask = indices[0] != indices[1]
+    new_indices = indices[:, mask]
+    new_values = values[mask]
+
+    # Create a new sparse matrix without self-loops
+    new_matrix = torch.sparse_coo_tensor(new_indices, new_values, matrix.size(), dtype=matrix.dtype)
+    new_matrix = new_matrix.coalesce()
+
+    return new_matrix
+
 def sparse_boolean_multi_hop(A, k, mode='union'):
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
@@ -1123,9 +1140,11 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
     A_in = sparse_mm_safe(A, A.t())
     A_out = sparse_mm_safe(A.t(), A)
+    A_in = sparse_remove_self_loops(A_in)
+    A_out = sparse_remove_self_loops(A_out)
     num_nonzero_in = A_in._nnz()
     num_nonzero_out = A_out._nnz()
-    print('number of edges:', num_nonzero_in, num_nonzero_out)
+    print('2-order number of edges:', num_nonzero_in, num_nonzero_out)
 
     if mode == 'union':
         A_result = A_in + A_out
@@ -1143,6 +1162,9 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         A_out = torch.sparse.mm(A.t(), A_out)
         A_out = torch.sparse.mm(A_out, A)
 
+        A_in = sparse_remove_self_loops(A_in)
+        A_out = sparse_remove_self_loops(A_out)
+
         num_nonzero_in = A_in._nnz()
         num_nonzero_out = A_out._nnz()
         print(hop + 2, 'order num of edges: ', num_nonzero_in, num_nonzero_out)
@@ -1151,8 +1173,14 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
             A_result = A_in + A_out
             A_result = A_result.coalesce()
             A_result._values().clamp_(0, 1)  # Ensuring binary values
+            num_nonzero = A_result._nnz()
+            print(hop + 2, 'order num of edges (union): ', num_nonzero)
         else:
             A_result = intersect_sparse_tensors(A_in, A_out)
+            num_nonzero = A_result._nnz()
+            print(hop + 2, 'order num of edges (intersection): ', num_nonzero)
+
+
 
         # num_nonzero_result = A_result._nnz()
         # print('num of edges:', num_nonzero_result)
