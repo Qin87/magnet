@@ -1150,10 +1150,14 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         A_result = A_in + A_out
         A_result = A_result.coalesce()
         A_result._values().clamp_(0, 1)  # Ensuring binary values
-    else :
+        all_hops = [sparese_remove_self_loops(A_result)]
+    elif mode == 'intersection':
         A_result = intersect_sparse_tensors(A_in, A_out)
-
-    all_hops = [sparese_remove_self_loops(A_result)]       # AA.t(), A.t()A
+        all_hops = [sparese_remove_self_loops(A_result)]
+    elif mode == 'separate':
+        all_hops = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out)]
+    else:
+        raise NotImplementedError("Not Implemented mode: ", mode)
 
     # Compute k-hop neighbors using sparse matrix multiplication and intersections
     for hop in range(1, k):
@@ -1175,16 +1179,23 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
             A_result._values().clamp_(0, 1)  # Ensuring binary values
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (union): ', num_nonzero)
-        else:
+            all_hops.append(sparese_remove_self_loops(A_result))
+        elif mode == 'intersection':
             A_result = intersect_sparse_tensors(A_in, A_out)
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (intersection): ', num_nonzero)
+            all_hops.append(sparese_remove_self_loops(A_result))
+        elif mode == 'separate':
+            # all_hops.append(sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out))
+            all_hops.extend([sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out)])
+        else:
+            raise NotImplementedError("Not Implemented mode: ", mode)
 
 
 
         # num_nonzero_result = A_result._nnz()
         # print('num of edges:', num_nonzero_result)
-        all_hops.append(sparese_remove_self_loops(A_result))
+
 
     return tuple(all_hops)
 
@@ -1305,8 +1316,7 @@ def sparse_intersection(U, I):
 
 def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
-    fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO add back after no-selfloop test
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # TODO add back after no-selfloop test
     edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
@@ -1325,15 +1335,9 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):  
             L_tupleU = sparse_boolean_multi_hop(A, k-1, 'union')   # much slower
             L_tupleI = sparse_boolean_multi_hop(A, k-1, 'intersection')   # much slower
         all_hops = list(L_tupleI)
-        # intersect = []
         for U, I in zip(L_tupleU, L_tupleI):
             all_hops.append(sparse_difference(U, I))
-            # intersect.append(sparse_intersection(U, I))
         L_tuple = tuple(all_hops)
-
-    # for L in intersect:  # Skip L1 if not needed
-    #     edge_indexL = L._indices()
-    #     print(edge_indexL.shape)
 
     all_hop_edge_index = []
     all_hops_weight = []

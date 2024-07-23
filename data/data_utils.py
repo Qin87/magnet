@@ -142,7 +142,10 @@ def random_planetoid_splits(data, y, train_ratio=0.7, val_ratio=0.1, percls_trn=
 
 import os.path as osp
 from typing import Callable, Optional
-import gdown
+try:
+    import gdown
+except:
+    pass
 import numpy as np
 
 import torch

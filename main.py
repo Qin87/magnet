@@ -252,6 +252,8 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Hi','Ii', 'i
                     edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
             elif args.net[-2] == 'u':
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
+            elif args.net[-2] == 's':  # separate tuple for A_in, and A_out
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate')
             else:
                 raise NotImplementedError("Not Implemented" + args.net)
         else:    # undirected graph
@@ -377,7 +379,6 @@ try:
                         data_test_mask = data_test_maskOrigin[:, 1].clone()
                     except:
                         data_test_mask = data_test_maskOrigin.clone()
-
 
             n_data0 = []  # num of train in each class
             for i in range(n_cls):
