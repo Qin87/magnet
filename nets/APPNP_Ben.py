@@ -348,7 +348,8 @@ class SymModel(torch.nn.Module):
         x = self.Conv(x)
         x = x.permute((0, 2, 1)).squeeze()
 
-        return F.log_softmax(x, dim=1)
+        # return F.log_softmax(x, dim=1)    # change july 24
+        return x
 
 class ChebModel(torch.nn.Module):
     def __init__(self, input_dim, out_dim, filter_num, K, dropout = False, layer=2):

@@ -5,7 +5,7 @@ import numpy as np
 import pickle as pk
 import networkx as nx
 import scipy.sparse as sp
-from torch_geometric.utils import to_undirected, add_self_loops
+from torch_geometric.utils import to_undirected, add_self_loops, remove_self_loops
 from torch_geometric.datasets import WebKB, WikipediaNetwork
 
 from edge_nets.edge_data import normalize_edges, normalize_edges_all1
@@ -383,8 +383,8 @@ def F_in_out(edge_index, size, edge_weight=None):
     """
     device = edge_index.device
 
-    # fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=size)        # TODO added July10-16:40
+    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=size)        # not much difference. originally without
+    # edge_index, _ = remove_self_loops(edge_index.long())
 
     edge_index = edge_index.long().cpu()
     if edge_weight is not None:
@@ -397,64 +397,33 @@ def F_in_out(edge_index, size, edge_weight=None):
 
     in_degree = np.array(a.sum(axis=1))[:, 0]
     in_degree[in_degree == 0] = 1
-    '''
-    # can be more efficient
-    a = np.zeros((size, size), dtype=np.uint8)
-    a[edge_index[0], edge_index[1]] = 1
-
-    out_degree = np.sum(a, axis = 1)
-    out_degree[out_degree == 0] = 1
-
-    in_degree = np.sum(a, axis = 0)
-    in_degree[in_degree == 0] = 1
-    '''
-
 
     a = a.tocoo()
     indices = torch.tensor([a.row, a.col], dtype=torch.long)
     values = torch.tensor(a.data, dtype=torch.float)
     a_tensor = torch.sparse.FloatTensor(indices, values, torch.Size(a.shape)).to(device)
+    num_nodes = a_tensor.size(0)
 
     # Convert the sparse tensor to a dense tensor for multiplication
-    try:
-        a_dense = a_tensor.to_dense()
-        num_nodes = a_dense.size(0)
+    A_in = torch.sparse.mm(a_tensor.T, a_tensor)
+    A_out = torch.sparse.mm(a_tensor, a_tensor.T)
 
-        A_in = torch.mm(a_dense.T, a_dense)
-        A_out = torch.mm(a_dense, a_dense.T)
+    edge_in = A_in._indices()
+    edge_out = A_out._indices()
 
-        A_in = sp.coo_matrix(A_in.cpu().numpy())
-        A_out = sp.coo_matrix(A_out.cpu().numpy())
+    # type 1
+    # in_weight = A_in._values().float().to(device)
+    # out_weight = A_out._values().float().to(device)
+    # in_weight = normalize_edges(edge_in, in_weight, num_nodes)
+    # out_weight = normalize_edges(edge_out, out_weight, num_nodes)
 
+    # type 2
+    in_weight = torch.ones(edge_in.size(1)).to(device)      #  1 weight without normalization
+    out_weight = torch.ones(edge_out.size(1)).to(device)
 
-    except torch.cuda.OutOfMemoryError:
-        a_tensor = a_tensor.coalesce()  # Make sure the tensor is in COO format
-        device = a_tensor.device
-
-        # Get the number of nodes
-        num_nodes = a_tensor.size(0)
-
-        # Convert the sparse tensor to a scipy sparse matrix
-        i = a_tensor.indices().cpu().numpy()
-        v = a_tensor.values().cpu().numpy()
-        a_sparse = sp.coo_matrix((v, (i[0], i[1])), shape=(num_nodes, num_nodes))
-
-        # Perform sparse matrix multiplications
-        A_in = a_sparse.T @ a_sparse
-        A_out = a_sparse @ a_sparse.T
-
-        # Convert the resulting sparse matrices back to tensors
-        A_in = sp.coo_matrix(A_in)
-        A_out = sp.coo_matrix(A_out)
-    edge_in = torch.from_numpy(np.vstack((A_in.row, A_in.col))).long().to(device)  # contains the row and column indices of these non-zero elements
-    edge_out = torch.from_numpy(np.vstack((A_out.row, A_out.col))).long().to(device)
-
-    # in_weight = torch.from_numpy(A_in.data).float().to(device)     # change at July 8 17:50
-    # out_weight = torch.from_numpy(A_out.data).float().to(device)
-    # in_weight = torch.ones(edge_in.size(1)).to(device)      # TODO weight without normalization
-    # out_weight = torch.ones(edge_out.size(1)).to(device)
-    in_weight = normalize_edges_all1(num_nodes, edge_in)
-    out_weight = normalize_edges_all1(num_nodes, edge_out)
+    # type 3
+    # in_weight = normalize_edges_all1(num_nodes, edge_in)      #  1 weight normalization
+    # out_weight = normalize_edges_all1(num_nodes, edge_out)
 
     edge_index = edge_index.to(device)  # Ben GPU
     torch.cuda.empty_cache()

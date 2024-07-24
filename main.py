@@ -77,7 +77,7 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
+            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             out = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -222,19 +222,20 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
 
     else:
         raise NotImplementedError("Not Implemented" + args.net)
-    if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
+    # if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u' or args.net[-2] == 's'):
+    if args.net[-1].isdigit():
         k = int(args.net[-1])
         if args.net.startswith(('Ti', 'Ai', 'Hi')):       # Hi is heterogeneous
             IsExhaustive = True
         if IsDirectedGraph:
             if args.net.startswith('Ai'):
-                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
             elif args.net.startswith('Ii'):
                 IsExhaustive = True
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
             elif args.net.startswith('ii'):
                 IsExhaustive = False
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
             elif args.net[-2] == 'i':
                 if k == 2 and args.net.startswith('Di'):
                     edge_list = []
@@ -247,16 +248,17 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                     edge_weights_tuple = (edge_weights_tuple, )
                     del edge_list
                 else:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
             elif args.net[-2] == 'u':
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
             elif args.net[-2] == 's':  # separate tuple for A_in, and A_out
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate')
             else:
                 raise NotImplementedError("Not Implemented" + args.net)
         else:    # undirected graph
             edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
         if args.net.startswith(('Hi', 'Ai')):
+        # if args.net.startswith('Hi'):
             SparseEdges = edge_index_tuple
             edge_weight = edge_weights_tuple
         else:
@@ -360,7 +362,7 @@ try:
             else:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=False)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
 
             if splits == 1:
                 data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
@@ -455,12 +457,12 @@ try:
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 val_acc_f1 = (val_acc + val_f1) / 2.
-                # if tmp_test_f1 > best_test_f1:
-                #     best_test_f1 = tmp_test_f1
+                if tmp_test_f1 > best_test_f1:
+                    best_test_f1 = tmp_test_f1
                 # best_val_acc_f1 = val_acc_f1
                 # best_val_f1 = val_f1
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
+                # if val_loss < best_val_loss:
+                #     best_val_loss = val_loss
                     test_acc = accs[2]
                     test_bacc = baccs[2]
                     test_f1 = f1s[2]
@@ -469,7 +471,7 @@ try:
                 else:
                     CountNotImproved += 1
                 # end_time = time.time()
-                # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+                print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
                 # print(end_time - start_time, file=log_file)
                 # print(end_time - start_time)
                 print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)

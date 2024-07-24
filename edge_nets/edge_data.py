@@ -536,9 +536,8 @@ def union_edge_index(edge_index):
     return union
 def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
-    fill_value = 1
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=fill_value, num_nodes=num_nodes)       # TODO test no selfloop, add it back after test
-    edge_index, _ = remove_self_loops(edge_index)
+    edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # with selfloop, QiG get better
+    # edge_index, _ = remove_self_loops(edge_index)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
@@ -1107,45 +1106,41 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
     return tuple(all_hops)
 
 def sparse_boolean_multi_hop_DirGNN(A, k):
+    order_tuple_list = []
+
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
 
+    order_tuple_0 = [sparse_remove_self_loops(A), sparse_remove_self_loops(A.t())]
+    if k<1:
+        return tuple(order_tuple_0)
+
+    order_tuple_list.append(order_tuple_0)
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
     A_in = sparse_mm_safe(A, A)
     # A_out = sparse_mm_safe(A.t(), A.t())
     A_out = A_in.t()
 
-    B_in = sparse_mm_safe(A.t(), A)
-    B_out = sparse_mm_safe(A, A.t())
-    # num_nonzero_in = A_in._nnz()
-    # num_nonzero_out = A_out._nnz()
-    # print('number of edges:', num_nonzero_in, num_nonzero_out)
+    B_in = sparse_mm_safe(A, A.t())
+    # B_out = sparse_mm_safe(A, A.t())
+    B_out = B_in.t()
+    num_nonzero_in = A_in._nnz()
+    num_nonzero_out = B_in._nnz()
+    print('number of edges:', num_nonzero_in, num_nonzero_out)
 
-    # if mode == 'union':
-    #     A_result = A_in + A_out
-    #     A_result = A_result.coalesce()
-    #     A_result._values().clamp_(0, 1)  # Ensuring binary values
-    # else:
-    #     A_result = intersect_sparse_tensors(A_in, A_out)
 
-    all_hops = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_in), sparse_remove_self_loops(B_out)]
+    order_tuple_1 = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(B_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_out)]
+    order_tuple_list.append(order_tuple_1)
 
-    # Compute k-hop neighbors using sparse matrix multiplication and intersections
-    for hop in range(1, k):     # TODO get all possible combination of
-        [in_list, out_list] = generate_possible_B_products(A, hop)
-        for A_in, A_out in zip(in_list, out_list):
-            # if mode == 'union':
-            #     A_result = A_in + A_out
-            #     A_result = A_result.coalesce()
-            #     A_result._values().clamp_(0, 1)  # Ensuring binary values
-            # else:
-            #     A_result = intersect_sparse_tensors(A_in, A_out)
+    for hop in range(1, k):
+        order_tuple_temp = []
+        for edge_matrix in order_tuple_list[-1]:        # TODO : might improve efficiency for symmetry
+            N_in = sparse_mm_safe(edge_matrix, A)
+            N_out = sparse_mm_safe(edge_matrix, A.t())
+            order_tuple_temp.extend([sparse_remove_self_loops(N_in), sparse_remove_self_loops(N_out)])
+        order_tuple_list.append(order_tuple_temp)
 
-            # num_nonzero_result = A_result._nnz()
-            # print('num of edges:', num_nonzero_result)
-            all_hops.append(sparese_remove_self_loops(A_result))
-
-    return tuple(all_hops)
+    return tuple(tensor for sub_list in order_tuple_list for tensor in sub_list)
 
 def sparse_remove_self_loops(matrix):
     # Function to remove self-loops by setting diagonal elements to zero.
@@ -1261,13 +1256,6 @@ def OneDirect_sparse_boolean_multi_hop(A, k):
     # num_nonzero_out = A_out._nnz()
     print('number of edges:', num_nonzero_in)
 
-    # if mode == 'union':
-    #     A_result = A_in + A_out
-    #     A_result = A_result.coalesce()
-    #     A_result._values().clamp_(0, 1)  # Ensuring binary values
-    # else :
-    #     A_result = intersect_sparse_tensors(A_in, A_out)
-
     all_hops = [A_in]
 
     # Compute k-hop neighbors using sparse matrix multiplication and intersections
@@ -1355,10 +1343,12 @@ def sparse_intersection(U, I):
 
     return intersection
 
-def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):     #
+def Qin_get_second_directed_adj(self_loop, edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # TODO add back after no-selfloop test
-    edge_index, _ = remove_self_loops(edge_index)
+    if self_loop:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
+    else:
+        edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
@@ -1390,27 +1380,17 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):  
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
-def Qin_get_all_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):     #
+def Qin_get_all_directed_adj(selfloop, edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # TODO add back after no-selfloop test
-    edge_index, _ = remove_self_loops(edge_index)
+    if selfloop:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
+    else:
+        edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
     A = torch.sparse_coo_tensor(edge_index, edge_weight, size=(num_nodes, num_nodes)).to(device)
     L_tuple = sparse_boolean_multi_hop_DirGNN(A, k - 1)  # much slower
-
-    # else:       # independent
-    #     if IsExhaustive:
-    #         L_tupleU = sparse_boolean_multi_hopExhaust(A, k - 1, 'union')  # much slower
-    #         L_tupleI = sparse_boolean_multi_hopExhaust(A, k - 1, 'intersection')  # much slower
-    #     else:
-    #         L_tupleU = sparse_boolean_multi_hop(A, k-1, 'union')   # much slower
-    #         L_tupleI = sparse_boolean_multi_hop(A, k-1, 'intersection')   # much slower
-    #     all_hops = list(L_tupleI)
-    #     for U, I in zip(L_tupleU, L_tupleI):
-    #         all_hops.append(sparse_difference(U, I))
-    #     L_tuple = tuple(all_hops)
 
     all_hop_edge_index = []
     all_hops_weight = []
