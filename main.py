@@ -229,7 +229,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
             IsExhaustive = True
         if IsDirectedGraph:
             if args.net.startswith('Ai'):
-                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.has_1_order, args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
             elif args.net.startswith('Ii'):
                 IsExhaustive = True
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')

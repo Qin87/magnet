@@ -6,6 +6,7 @@ def parse_args():
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument('--BN_model', action='store_false', help='use layer normalization in model')
     parser.add_argument("--self_loop", action="store_true", help="Whether to add self-loops to the graph")
+    parser.add_argument("--has_1_order", action="store_true", help="Whether Ai* has 1-order edges")
 
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git

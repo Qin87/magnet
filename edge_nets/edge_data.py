@@ -1105,7 +1105,7 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
 
     return tuple(all_hops)
 
-def sparse_boolean_multi_hop_DirGNN(A, k):
+def sparse_boolean_multi_hop_DirGNN(has_1_order, A, k):
     order_tuple_list = []
 
     # Ensure A is in canonical form
@@ -1115,7 +1115,9 @@ def sparse_boolean_multi_hop_DirGNN(A, k):
     if k<1:
         return tuple(order_tuple_0)
 
-    order_tuple_list.append(order_tuple_0)
+    if has_1_order:
+        order_tuple_list.append(order_tuple_0)
+
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
     A_in = sparse_mm_safe(A, A)
     # A_out = sparse_mm_safe(A.t(), A.t())
@@ -1380,7 +1382,7 @@ def Qin_get_second_directed_adj(self_loop, edge_index, num_nodes, k, IsExhaustiv
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
-def Qin_get_all_directed_adj(selfloop, edge_index, num_nodes, k, IsExhaustive, mode):     #
+def Qin_get_all_directed_adj(has_1_order, selfloop, edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
     if selfloop:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
@@ -1390,7 +1392,7 @@ def Qin_get_all_directed_adj(selfloop, edge_index, num_nodes, k, IsExhaustive, m
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
     A = torch.sparse_coo_tensor(edge_index, edge_weight, size=(num_nodes, num_nodes)).to(device)
-    L_tuple = sparse_boolean_multi_hop_DirGNN(A, k - 1)  # much slower
+    L_tuple = sparse_boolean_multi_hop_DirGNN(has_1_order, A, k - 1)  # much slower
 
     all_hop_edge_index = []
     all_hops_weight = []
