@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
 
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
-    parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
+    parser.add_argument('--epoch', type=int, default=15000, help='epoch1500,')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
     parser.add_argument('--coeflr', type=float, default=2.0, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
