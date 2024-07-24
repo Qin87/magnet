@@ -23,7 +23,8 @@ from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_nhid, create_DiG_IB_SymCat_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_nhid_para,
-                             create_DiG_IB_nhid_para, create_DiSAGESimple_nhid, create_Di_IB_nhid, Si_IB_XBN_nhid, DiGCN_IB_XBN_nhid_para)
+                             create_DiG_IB_nhid_para, create_DiSAGESimple_nhid, create_Di_IB_nhid, Si_IB_X_nhid, DiGCN_IB_XBN_nhid_para, Di_IB_XBN_nhid_ConV, DiSAGE_xBN_nhid_BN, create_DiSAGESimple_nhid0, DiSAGE_x_nhid, DiSAGE_xBN_nhid, DiGCN_IB_X_nhid_para, Si_IB_X_nhid, DiSAGE_1BN_nhid,
+                             DiSAGE_2BN_nhid)
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
@@ -91,8 +92,15 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = APPNP_Model(num_features, n_cls,args.feat_dim, alpha=args.alpha,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ai', 'Ti', 'Hi','Ii', 'ii')):        # GCN  -->  SAGE
         # if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
-        if len(args.net) < 4 :
-            model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
+        if len(args.net) < 4 or args.net.startswith(('Ui', 'Li')):
+            if args.BN_model:
+                # model = DiSAGE_xBN_nhid_BN(args.net[2], num_features, n_cls, args).to(device)
+                model = create_DiSAGESimple_nhid0(args.net[2], num_features, n_cls, args).to(device)
+                # model = DiSAGE_xBN_nhid(args.net[2], num_features, n_cls, args).to(device)      # July 24
+                # model = DiSAGE_2BN_nhid(args.net[2], num_features, n_cls, args).to(device)      # July 24
+            else:
+                # model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
+                model = DiSAGE_x_nhid(args.net[2], num_features, n_cls, args).to(device)     # July 24
         else:
             if args.net[3:].startswith(('Sym', 'Qym')):
                 if args.net[6:].startswith('Cat'):
@@ -110,10 +118,13 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         model = create_DiG_IB_Sym_nhid(args.net[2], num_features,  n_cls, args).to(device)
             else:
                 if args.paraD:
-                    model = DiGCN_IB_XBN_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)
+                    if args.BN_model:
+                        model = create_DiG_IB_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 24: 1 BN
+                    else:
+                        model = DiGCN_IB_X_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)
                 else:
-                    if args.net.startswith(('Ui', 'Li')):
-                        model = Si_IB_XBN_nhid(args.net[2], num_features, n_cls, args=args).to(device)
+                    if args.BN_model:
+                        model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
                     else:
                         model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)
     elif args.net.startswith(('Sym', 'Qym')):
@@ -128,7 +139,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         if args.net[3:].startswith('Qin'):
             model = ChebNet_BenQin(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                                 activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
-        if args.net[3:].startswith('0_5'):
+        if args.net[3:].startswith('0_5'):      # 0.5
             model = ChebNet_Ben_05(num_features, K=args.K, label_dim=n_cls, layer=args.layer,
                                 activation=args.activation, num_filter=args.feat_dim, dropout=args.dropout).to(device)
         else:
@@ -169,6 +180,10 @@ def get_name(args, IsDirectedGraph):
         net_to_print = args.net
     if args.net[1:3] == 'iA' or args.net == 'GAT':
         net_to_print = net_to_print + '_Head' + str(args.heads)
+    if args.BN_model:
+        net_to_print = 'LNorm_' + net_to_print
+    else:
+        net_to_print = 'NoLNorm_' + net_to_print
 
     if args.net[1:].startswith('i'):
         if args.paraD:
@@ -187,7 +202,7 @@ def get_name(args, IsDirectedGraph):
 
 
 def log_file(net_to_print, dataset_to_print, args):
-    log_file_name = 'RmGenSelfloop_QymNorm_NoSelfLoop' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
+    log_file_name = 'RmGenSelfloop_QymNorm' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 

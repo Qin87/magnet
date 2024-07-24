@@ -832,9 +832,17 @@ class DiG_Simple1BN_nhid(nn.Module):
 
         return x
 
-class DiSAGE_1BN_nhid(nn.Module):
+def Conv_Out(x, Conv):
+    x = x.unsqueeze(0)
+    x = x.permute((0, 2, 1))
+    x = Conv(x)
+    x = x.permute((0, 2, 1)).squeeze()
+
+    return x
+
+class DiSAGE_1_nhid(nn.Module):
     def __init__(self, m, in_dim, out_dim,  args):
-        super(DiSAGE_1BN_nhid, self).__init__()
+        super(DiSAGE_1_nhid, self).__init__()
         self.dropout = args.dropout
         nhid = args.feat_dim
         layer = args.layer
@@ -871,9 +879,9 @@ class DiSAGE_1BN_nhid(nn.Module):
         return x
 
 class DiSAGE_1BN_nhid0(nn.Module):
-    def __init__(self, m, in_dim, nhid, out_dim,  dropout, layer=1,  head=8):
+    def __init__(self, m, in_dim, nhid, out_dim,  args, layer=1,  head=8):
         super(DiSAGE_1BN_nhid0, self).__init__()
-        self.dropout = dropout
+        self.dropout = args.dropout
         if m == 'S':
             self.conv1 = DiSAGEConv(in_dim, nhid)
         elif m == 'G':
@@ -938,10 +946,65 @@ class DiG_Simple2BN_nhid(nn.Module):
 
         return x
 
-class DiSAGE_2BN_nhid0(nn.Module):
-    def __init__(self, m, input_dim, nhid, ncls, dropout, layer=2, head=8):
-        super(DiSAGE_2BN_nhid0, self).__init__()
-        self.dropout = dropout
+# class DiSAGE_2BN_nhid0(nn.Module):
+#     def __init__(self, m, input_dim, nhid, ncls, dropout, layer=2, head=8):
+#         super(DiSAGE_2BN_nhid0, self).__init__()
+#         self.dropout = dropout
+#
+#         self.Conv = nn.Conv1d(nhid, ncls, kernel_size=1)
+#
+#         self.batch_norm1 = nn.BatchNorm1d(nhid)
+#         self.batch_norm2 = nn.BatchNorm1d(nhid)
+#
+#         if m == 'S':
+#             self.conv1 = DiSAGEConv(input_dim, nhid)
+#             self.conv2 = DiSAGEConv(nhid, nhid)
+#             self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
+#         elif m == 'G':
+#             self.conv1 = DIGCNConv(input_dim, nhid)
+#             self.conv2 = DIGCNConv(nhid, nhid)
+#             self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
+#         elif m == 'A':
+#             num_head = 1
+#             head_dim = nhid // num_head
+#
+#             self.conv1 = GATConv_Qin(input_dim, head_dim, heads=head)
+#             self.conv2 = GATConv_Qin(nhid, head_dim, heads=head)
+#             self.batch_norm1 = nn.BatchNorm1d(head_dim)
+#             self.batch_norm2 = nn.BatchNorm1d(head_dim)
+#         elif m == 'C':
+#             self.conv1 = DIChebConv(input_dim, nhid)
+#             self.conv2 = DIChebConv(nhid, nhid)
+#             self.convx = nn.ModuleList([DIChebConv(nhid, nhid) for _ in range(layer - 2)])
+#         else:
+#             raise ValueError(f"Model '{m}' not implemented")
+#
+#         self.reg_params = list(self.conv1.parameters())
+#         self.non_reg_params = self.conv2.parameters()
+#
+#     def forward(self, x, edge_index, edge_weight):
+#         # x = F.dropout(x, self.dropout, training=self.training)
+#         x = F.relu(self.conv1(x, edge_index, edge_weight))  # no BN here is better
+#         # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
+#         # x = F.dropout(x, self.dropout, training=self.training)
+#         x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
+#
+#         x = F.dropout(x, self.dropout, training=self.training)
+#         x = x.unsqueeze(0)
+#         x = x.permute((0, 2, 1))
+#         x = self.Conv(x)
+#         x = x.permute((0, 2, 1)).squeeze()
+#
+#         return x
+
+class DiSAGE_2BN_nhid(nn.Module):
+    def __init__(self, m, input_dim,  ncls, args):
+        super(DiSAGE_2BN_nhid, self).__init__()
+        self.dropout = args.dropout
+        nhid = args.feat_dim
+        layer = args.layer
+        head = args.heads
+        K = args.K
 
         self.Conv = nn.Conv1d(nhid, ncls, kernel_size=1)
 
@@ -965,9 +1028,9 @@ class DiSAGE_2BN_nhid0(nn.Module):
             self.batch_norm1 = nn.BatchNorm1d(head_dim)
             self.batch_norm2 = nn.BatchNorm1d(head_dim)
         elif m == 'C':
-            self.conv1 = DIChebConv(input_dim, nhid)
-            self.conv2 = DIChebConv(nhid, nhid)
-            self.convx = nn.ModuleList([DIChebConv(nhid, nhid) for _ in range(layer - 2)])
+            self.conv1 = DIChebConv(input_dim, nhid, K)
+            self.conv2 = DIChebConv(nhid, nhid, K)
+            self.convx = nn.ModuleList([DIChebConv(nhid, nhid, K) for _ in range(layer - 2)])
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
@@ -989,9 +1052,9 @@ class DiSAGE_2BN_nhid0(nn.Module):
 
         return x
 
-class DiSAGE_2BN_nhid(nn.Module):
+class DiSAGE_2_nhid(nn.Module):
     def __init__(self, m, input_dim,  ncls, args):
-        super(DiSAGE_2BN_nhid, self).__init__()
+        super(DiSAGE_2_nhid, self).__init__()
         self.dropout = args.dropout
         nhid = args.feat_dim
         layer = args.layer
@@ -1037,9 +1100,13 @@ class DiSAGE_2BN_nhid(nn.Module):
         return x
 
 class DiSAGE_xBN_nhid0(torch.nn.Module):
-    def __init__(self, m, input_dim,  nhid, out_dim, dropout, layer=3, head=8):
+    def __init__(self, m, input_dim,  out_dim, args, layer=3, head=8):
         super(DiSAGE_xBN_nhid0, self).__init__()
-        self.dropout = dropout
+        self.dropout = args.dropout
+        nhid = args.feat_dim
+        layer = args.layer
+        head = args.heads
+        K = args.K
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, nhid)
@@ -1090,10 +1157,196 @@ class DiSAGE_xBN_nhid0(torch.nn.Module):
 
         return x
 
-
 class DiSAGE_xBN_nhid(torch.nn.Module):
     def __init__(self, m, input_dim,  out_dim, args):
         super(DiSAGE_xBN_nhid, self).__init__()
+        self.dropout = args.dropout
+        nhid = args.feat_dim
+        layer = args.layer
+        self.layer = args.layer
+        head = args.heads
+        K = args.K
+
+        if m == 'S':
+            self.conv1 = DiSAGEConv(input_dim, nhid)
+            self.conv2 = DiSAGEConv(nhid, nhid)
+            self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
+        elif m == 'G':
+            self.conv1 = DIGCNConv(input_dim, nhid)
+            self.conv2 = DIGCNConv(nhid, nhid)
+            self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
+        elif m == 'C':
+            self.conv1 = DIChebConv(input_dim, nhid, K)
+            self.conv2 = DIChebConv(nhid, nhid, K)
+            self.convx = nn.ModuleList([DIChebConv(nhid, nhid, K) for _ in range(layer - 2)])
+        elif m == 'A':
+            num_head = 1
+            head_dim = nhid // num_head
+
+            self.conv1 = GATConv_Qin(input_dim, head_dim,  heads=head)
+            self.conv2 = GATConv_Qin(nhid, head_dim,  heads=head)
+            self.convx = nn.ModuleList([GATConv_Qin(nhid, head_dim,  heads=head) for _ in range(layer - 2)])
+        else:
+            raise ValueError(f"Model '{m}' not implemented")
+
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        if self.layer == 1:
+            self.reg_params = []
+            self.non_reg_params = self.conv1.parameters()
+        elif self.layer == 2:
+            self.reg_params = list(self.conv1.parameters())
+            self.non_reg_params = self.conv2.parameters()
+        else:
+            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+            self.non_reg_params = self.conv2.parameters()
+
+    def forward(self, x, edge_index, edge_weight):
+        x = self.conv1(x, edge_index, edge_weight)
+        x = F.dropout(x, self.dropout, training=self.training)
+        # x = F.relu(self.conv1(x, edge_index, edge_weight))
+        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
+        if self.layer == 1:
+            # x = self.batch_norm1(x)
+            x = Conv_Out(x, self.Conv)
+            return x
+
+        x = F.relu(x)
+
+        if self.layer > 2:
+            for iter_layer in self.convx:
+                x = F.dropout(x, self.dropout, training=self.training)
+                # x = F.relu(self.batch_norm3(iter_layer(x, edge_index, edge_weight)))
+                x = F.relu(iter_layer(x, edge_index, edge_weight))
+
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
+
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+
+        x = F.dropout(x, self.dropout, training=self.training)
+
+        return x
+
+class DiSAGE_1BN_nhid(nn.Module):
+    def __init__(self, m, in_dim, out_dim,  args):
+        super(DiSAGE_1BN_nhid, self).__init__()
+        self.dropout = args.dropout
+        nhid = args.feat_dim
+        layer = args.layer
+        head = args.heads
+
+        if m == 'S':
+            self.conv1 = DiSAGEConv(in_dim, nhid)
+        elif m == 'G':
+            self.conv1 = DIGCNConv(in_dim, nhid)
+        elif m == 'A':
+            num_head = 1
+            head_dim = nhid // num_head
+
+            self.conv1 = GATConv_Qin(in_dim, head_dim, heads=head)
+            # self.conv1 = DiGATConv(in_dim, nhid, nhid)     # little difference from GATConv_Qin
+        elif m == 'C':
+            self.conv1 = DIChebConv(in_dim, nhid, args.K)
+        else:
+            raise ValueError(f"Model '{m}' not implemented")
+
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+
+        # type1
+        self.reg_params = []
+        self.non_reg_params = self.conv1.parameters()
+
+    def forward(self, x, edge_index, edge_weight):
+        # x = F.dropout(x, self.dropout, training=self.training)
+        # x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
+        x = self.conv1(x, edge_index, edge_weight)
+
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1)).squeeze()
+
+        return x
+
+
+class DiSAGE_x_nhid(torch.nn.Module):
+    def __init__(self, m, input_dim,  out_dim, args):
+        super(DiSAGE_x_nhid, self).__init__()
+        self.dropout = args.dropout
+        nhid = args.feat_dim
+        layer = args.layer
+        self.layer = args.layer
+        head = args.heads
+        K = args.K
+        if self.layer >1 :
+            n_change = nhid
+        else:
+            n_change = out_dim
+
+        if m == 'S':
+            self.conv1 = DiSAGEConv(input_dim, n_change)
+            self.conv2 = DiSAGEConv(nhid, out_dim)
+            self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
+        elif m == 'G':
+            self.conv1 = DIGCNConv(input_dim, n_change)
+            self.conv2 = DIGCNConv(nhid, out_dim)
+            self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
+        elif m == 'C':
+            self.conv1 = DIChebConv(input_dim, n_change, K)
+            self.conv2 = DIChebConv(nhid, out_dim, K)
+            self.convx = nn.ModuleList([DIChebConv(nhid, nhid, K) for _ in range(layer - 2)])
+        elif m == 'A':
+            num_head = 1
+            head_dim = nhid // num_head
+
+            self.conv1 = GATConv_Qin(input_dim, n_change // num_head,  heads=head)
+            self.conv2 = GATConv_Qin(nhid, out_dim//num_head,  heads=head)
+            self.convx = nn.ModuleList([GATConv_Qin(nhid, head_dim,  heads=head) for _ in range(layer - 2)])
+        else:
+            raise ValueError(f"Model '{m}' not implemented")
+
+        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(out_dim)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+        self.non_reg_params = self.conv2.parameters()
+
+    def forward(self, x, edge_index, edge_weight):
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.conv1(x, edge_index, edge_weight)
+        if self.layer == 1:
+            x = F.dropout(x, self.dropout, training=self.training)
+            return x
+
+        x = F.relu(x)
+
+        if self.layer > 2:
+            for iter_layer in self.convx:
+                x = F.dropout(x, self.dropout, training=self.training)
+                x = F.relu(iter_layer(x, edge_index, edge_weight))
+
+        x = F.dropout(x, self.dropout, training=self.training)
+        # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))      # good for telegram
+        x = self.conv2(x, edge_index, edge_weight)
+        return x   # log softmax operation, has the same dimension
+
+
+class DiSAGE_xBN_nhid_BN(torch.nn.Module):
+    def __init__(self, m, input_dim,  out_dim, args):
+        super(DiSAGE_xBN_nhid_BN, self).__init__()
         self.dropout = args.dropout
         nhid = args.feat_dim
         layer = args.layer
@@ -1134,14 +1387,16 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
     def forward(self, x, edge_index, edge_weight):
         x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(self.conv1(x, edge_index, edge_weight))
+        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
 
         for iter_layer in self.convx:
             x = F.dropout(x, self.dropout, training=self.training)
-            x = F.relu(iter_layer(x, edge_index, edge_weight))
+            # x = F.relu(iter_layer(x, edge_index, edge_weight))
+            x = F.relu(self.batch_norm3(iter_layer(x, edge_index, edge_weight)))
 
         x = F.dropout(x, self.dropout, training=self.training)
-        # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))      # good for telegram
-        x = self.conv2(x, edge_index, edge_weight)
+        x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))      # good for telegram
+        # x = self.conv2(x, edge_index, edge_weight)
         return x   # log softmax operation, has the same dimension
 
 class DiG_SimpleXBN_nhid(torch.nn.Module):
@@ -1338,20 +1593,20 @@ def create_DiGSimple_nhid(m, nfeat, nclass, args):
 
 def create_DiSAGESimple_nhid0(m, nfeat, nclass, args):
     if args.layer == 1:
-        model = DiSAGE_1BN_nhid0(m, nfeat, nclass, args)
+        model = DiSAGE_1BN_nhid(m, nfeat, nclass, args)
     elif args.layer == 2:
-        model = DiSAGE_2BN_nhid0(m, nfeat, nclass, args)
+        model = DiSAGE_2BN_nhid(m, nfeat, nclass, args)
     else:
-        model = DiSAGE_xBN_nhid0(m, nfeat, nclass, args)
+        model = DiSAGE_xBN_nhid(m, nfeat, nclass, args)
     return model
 
 def create_DiSAGESimple_nhid(m, nfeat, n_cls, args):
-    if args.layer == 1:
-        model = DiSAGE_1BN_nhid(m, nfeat,  n_cls, args)
-    elif args.layer == 2:
-        model = DiSAGE_2BN_nhid(m, nfeat,  n_cls, args)
-    else:
-        model = DiSAGE_xBN_nhid(m, nfeat,  n_cls, args)
+    # if args.layer == 1:
+    #     model = DiSAGE_1_nhid(m, nfeat,  n_cls, args)
+    # elif args.layer == 2:
+    #     model = DiSAGE_2_nhid(m, nfeat,  n_cls, args)
+    # else:
+    model = DiSAGE_x_nhid(m, nfeat,  n_cls, args)
     return model
 
 def create_DiGSimple_batch_nhid(m, nfeat, nclass, args):
@@ -1364,9 +1619,9 @@ def create_DiGSimple_batch_nhid(m, nfeat, nclass, args):
         model = DiG_SimpleXBN_batch_nhid(m, nfeat, nclass, args)
     return model
 
-class Di_IB_1BN_nhid(torch.nn.Module):
+class Di_IB_1_nhid(torch.nn.Module):
     def __init__(self, m, input_dim, n_cls, args):
-        super(Di_IB_1BN_nhid, self).__init__()
+        super(Di_IB_1_nhid, self).__init__()
         self._dropout = args.dropout
         nhid = args.feat_dim
         self.ib1 = InceptionBlock_Di(m, input_dim, n_cls, args)
@@ -1607,9 +1862,9 @@ class DiGCN_IB_2BN_nhid(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-class Di_IB_2BN_nhid(torch.nn.Module):
+class Di_IB_2_nhid(torch.nn.Module):
     def __init__(self, m, input_dim,  out_dim, args):
-        super(Di_IB_2BN_nhid, self).__init__()
+        super(Di_IB_2_nhid, self).__init__()
         self._dropout = args.dropout
         nhid = args.feat_dim
 
@@ -5864,10 +6119,101 @@ class DiGCN_IB_XBN_nhid(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-
-class Di_IB_XBN_nhid(torch.nn.Module):
+class Di_IB_XBN_nhid_ConV(torch.nn.Module):
     def __init__(self, m, input_dim,   out_dim, args):
-        super(Di_IB_XBN_nhid, self).__init__()
+        super(Di_IB_XBN_nhid_ConV, self).__init__()
+        self._dropout = args.dropout
+        nhid = args.feat_dim
+        layer = args.layer
+
+        self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
+        self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
+        self.layer = args.layer
+        self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
+
+        self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+        # layer Normalization best only one at last layer, good for telegram
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = self.batch_norm1(x)
+
+        if self.layer == 1:
+            x = self.batch_norm1(x)
+            x = Conv_Out(x, self.Conv)
+            return x
+
+        # x = F.relu(x)
+        if self.layer > 2:
+            for iter_layer in self.ibx:
+                x = F.dropout(x, p=self._dropout, training=self.training)
+                x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+                # x = self.batch_norm3(x)
+                # x = F.relu(x)
+
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        x = self.batch_norm2(x)
+        x = Conv_Out(x, self.Conv)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+
+
+        return x
+
+# class Di_IB_XBN_nhid_ConV(torch.nn.Module):
+#     def __init__(self, m, input_dim,   out_dim, args):
+#         super(Di_IB_XBN_nhid_ConV, self).__init__()
+#         self._dropout = args.dropout
+#         nhid = args.feat_dim
+#         layer = args.layer
+#
+#         self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
+#         self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
+#         self.layer = args.layer
+#         self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
+#
+#         self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
+#
+#         self.batch_norm1 = nn.BatchNorm1d(nhid)
+#         self.batch_norm2 = nn.BatchNorm1d(nhid)
+#         self.batch_norm3 = nn.BatchNorm1d(nhid)
+#
+#         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+#         self.non_reg_params = self.ib2.parameters()
+#
+#     def forward(self, features, edge_index_tuple, edge_weight_tuple):
+#         x = features
+#         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+#         x = F.dropout(x, p=self._dropout, training=self.training)
+#         x = self.batch_norm1(x)
+#
+#         for iter_layer in self.ibx:
+#             x = F.dropout(x, p=self._dropout, training=self.training)
+#             x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+#             x = self.batch_norm3(x)
+#
+#         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+#         x = self.batch_norm2(x)
+#         x = x.unsqueeze(0)
+#         x = x.permute((0, 2, 1))
+#         x = self.Conv(x)
+#         x = x.permute((0, 2, 1))
+#         x = x.squeeze(0)
+#
+#         x = F.dropout(x, p=self._dropout, training=self.training)
+#         return x
+
+
+class Di_IB_X_nhid(torch.nn.Module):
+    def __init__(self, m, input_dim,   out_dim, args):
+        super(Di_IB_X_nhid, self).__init__()
         self._dropout = args.dropout
         nhid = args.feat_dim
         layer = args.layer
@@ -5902,9 +6248,9 @@ class Di_IB_XBN_nhid(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-class Si_IB_XBN_nhid(torch.nn.Module):
+class Si_IB_X_nhid(torch.nn.Module):
     def __init__(self, m, input_dim, out_dim, args):
-        super(Si_IB_XBN_nhid, self).__init__()
+        super(Si_IB_X_nhid, self).__init__()
         self._dropout = args.dropout
         nhid = args.feat_dim
         self.layer = args.layer
@@ -5914,15 +6260,15 @@ class Si_IB_XBN_nhid(torch.nn.Module):
         else:
             self.ib1 = InceptionBlock_Si(m, input_dim, nhid, args)
         self.ib2 = InceptionBlock_Si(m, nhid, out_dim, args)
-        if self.layer >2:
+        if self.layer > 2:
             self.ibx = nn.ModuleList([InceptionBlock_Si(m, nhid, nhid, args) for _ in range(self.layer - 2)])
 
         # self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         # self.non_reg_params = self.ib2.parameters()
 
-    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+    def forward(self, features, edge_index, edge_weight):
         x = features
-        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = self.ib1(x, edge_index, edge_weight)
         x = F.dropout(x, p=self._dropout, training=self.training)
         if self.layer == 1:
             return x
@@ -5930,16 +6276,16 @@ class Si_IB_XBN_nhid(torch.nn.Module):
         if self.layer > 2:
             for iter_layer in self.ibx:
                 x = F.dropout(x, p=self._dropout, training=self.training)
-                x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+                x = iter_layer(x, edge_index, edge_weight)
 
-        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        x = self.ib2(x, edge_index, edge_weight)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
+class DiGCN_IB_X_nhid_para(torch.nn.Module):
     def __init__(self, m, num_features, out_dim, args):
-        super(DiGCN_IB_XBN_nhid_para, self).__init__()
+        super(DiGCN_IB_X_nhid_para, self).__init__()
         hidden = args.feat_dim
         if args.layer==1:
             self.ib1 = InceptionBlock_Qinlist(num_features, out_dim)
@@ -5986,6 +6332,59 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
         x = x_list[0]
         for i in range(1, len(x_list)):
             x += self.coef2[i] * x_list[i]
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
+    def __init__(self, num_features, hidden,  out_dim, dropout=0.5, layer=2):
+        super(DiGCN_IB_XBN_nhid_para, self).__init__()
+        self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
+        self.ib2 = InceptionBlock_Qinlist(hidden, hidden)
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib2
+        self._dropout = dropout
+        self.Conv = nn.Conv1d(hidden,  out_dim, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(hidden)
+        self.batch_norm2 = nn.BatchNorm1d(hidden)
+        self.batch_norm3 = nn.BatchNorm1d(hidden)
+
+        self.layer = layer
+        self.ibx=nn.ModuleList([InceptionBlock_Qinlist(hidden,hidden) for _ in range(layer-2)])
+        self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)]) for _ in range(layer - 2)])
+
+        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        self.non_reg_params = self.ib2.parameters()
+        self.coefs = list(self.coef1)+list(self.coef2)+list(self.coefx.parameters())
+        # self.coefs = [self.coef1, self.coef2, self.coefx]     # wrong
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        x_list = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = x_list[0]
+        for i in range(1, len(x_list)):
+            x += self.coef1[i] * x_list[i]
+        # x = self.batch_norm1(x)
+
+        for iter_layer, iter_coef in zip(self.ibx, self.coefx):
+            x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+            x = x_list[0]
+            for i in range(1, len(x_list)):
+                x += iter_coef[i] * x_list[i]
+            # x = self.batch_norm3(x)
+
+        x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
+        x = x_list[0]
+        for i in range(1, len(x_list)):
+            x += self.coef2[i] * x_list[i]
+
+        x = self.batch_norm2(x)
+        x = x.unsqueeze(0)
+        x = x.permute((0, 2, 1))
+        x = self.Conv(x)
+        x = x.permute((0, 2, 1))
+        x = x.squeeze(0)
 
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
@@ -6239,11 +6638,11 @@ def create_Di_IB_nhid0(m, nfeat, nclass, args):
 
 def create_Di_IB_nhid(m, nfeat, nclass, args):
     if args.layer == 1:
-        model = Di_IB_1BN_nhid(m, nfeat,  nclass, args)
+        model = Di_IB_1_nhid(m, nfeat,  nclass, args)
     elif args.layer == 2:
-        model = Di_IB_2BN_nhid(m, nfeat,  nclass, args)
+        model = Di_IB_2_nhid(m, nfeat,  nclass, args)
     else:
-        model = Di_IB_XBN_nhid(m, nfeat,  nclass, args)
+        model = Di_IB_X_nhid(m, nfeat,  nclass, args)
     return model
 
 def create_Si_IB_nhid(m, nfeat, nclass, args):

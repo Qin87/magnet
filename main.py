@@ -222,7 +222,8 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
 
     else:
         raise NotImplementedError("Not Implemented" + args.net)
-    if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u' or args.net[-2] == 's'):
+    # if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u' or args.net[-2] == 's'):
+    if args.net[-1].isdigit():
         k = int(args.net[-1])
         if args.net.startswith(('Ti', 'Ai', 'Hi')):       # Hi is heterogeneous
             IsExhaustive = True
@@ -257,6 +258,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
         else:    # undirected graph
             edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
         if args.net.startswith(('Hi', 'Ai')):
+        # if args.net.startswith('Hi'):
             SparseEdges = edge_index_tuple
             edge_weight = edge_weights_tuple
         else:
@@ -455,12 +457,12 @@ try:
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 val_acc_f1 = (val_acc + val_f1) / 2.
-                # if tmp_test_f1 > best_test_f1:
-                #     best_test_f1 = tmp_test_f1
+                if tmp_test_f1 > best_test_f1:
+                    best_test_f1 = tmp_test_f1
                 # best_val_acc_f1 = val_acc_f1
                 # best_val_f1 = val_f1
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
+                # if val_loss < best_val_loss:
+                #     best_val_loss = val_loss
                     test_acc = accs[2]
                     test_bacc = baccs[2]
                     test_f1 = f1s[2]
