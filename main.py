@@ -77,7 +77,7 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
-            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight,SparseEdges, edge_weight)
+            out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             out = model(data_x, SparseEdges, edge_weight)
     elif args.net.startswith('Mag'):
@@ -222,7 +222,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
 
     else:
         raise NotImplementedError("Not Implemented" + args.net)
-    if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u'):
+    if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u' or args.net[-2] == 's'):
         k = int(args.net[-1])
         if args.net.startswith(('Ti', 'Ai', 'Hi')):       # Hi is heterogeneous
             IsExhaustive = True

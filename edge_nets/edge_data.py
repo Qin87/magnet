@@ -1107,6 +1107,8 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
     return tuple(all_hops)
 
 def sparse_boolean_multi_hop_DirGNN(A, k):
+    order_tuple_list = []
+
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
 
@@ -1115,37 +1117,26 @@ def sparse_boolean_multi_hop_DirGNN(A, k):
     # A_out = sparse_mm_safe(A.t(), A.t())
     A_out = A_in.t()
 
-    B_in = sparse_mm_safe(A.t(), A)
-    B_out = sparse_mm_safe(A, A.t())
-    # num_nonzero_in = A_in._nnz()
-    # num_nonzero_out = A_out._nnz()
-    # print('number of edges:', num_nonzero_in, num_nonzero_out)
+    B_in = sparse_mm_safe(A, A.t())
+    # B_out = sparse_mm_safe(A, A.t())
+    B_out = B_in.t()
+    num_nonzero_in = A_in._nnz()
+    num_nonzero_out = B_in._nnz()
+    print('number of edges:', num_nonzero_in, num_nonzero_out)
 
-    # if mode == 'union':
-    #     A_result = A_in + A_out
-    #     A_result = A_result.coalesce()
-    #     A_result._values().clamp_(0, 1)  # Ensuring binary values
-    # else:
-    #     A_result = intersect_sparse_tensors(A_in, A_out)
 
-    all_hops = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_in), sparse_remove_self_loops(B_out)]
+    order_tuple_1 = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(B_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_out)]
+    order_tuple_list.append(order_tuple_1)
 
-    # Compute k-hop neighbors using sparse matrix multiplication and intersections
-    for hop in range(1, k):     # TODO get all possible combination of
-        [in_list, out_list] = generate_possible_B_products(A, hop)
-        for A_in, A_out in zip(in_list, out_list):
-            # if mode == 'union':
-            #     A_result = A_in + A_out
-            #     A_result = A_result.coalesce()
-            #     A_result._values().clamp_(0, 1)  # Ensuring binary values
-            # else:
-            #     A_result = intersect_sparse_tensors(A_in, A_out)
+    for hop in range(1, k):
+        order_tuple_temp = []
+        for edge_matrix in order_tuple_list[-1]:        # TODO : might improve efficiency for symmetry
+            N_in = sparse_mm_safe(edge_matrix, A)
+            N_out = sparse_mm_safe(edge_matrix, A.t())
+            order_tuple_temp.extend([sparse_remove_self_loops(N_in), sparse_remove_self_loops(N_out)])
+        order_tuple_list.append(order_tuple_temp)
 
-            # num_nonzero_result = A_result._nnz()
-            # print('num of edges:', num_nonzero_result)
-            all_hops.append(sparese_remove_self_loops(A_result))
-
-    return tuple(all_hops)
+    return tuple(tensor for sub_list in order_tuple_list for tensor in sub_list)
 
 def sparse_remove_self_loops(matrix):
     # Function to remove self-loops by setting diagonal elements to zero.
