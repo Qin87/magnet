@@ -109,7 +109,8 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
             out = model(data_x, edges)
         val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
     optimizer.step()
-    scheduler.step(val_loss, epoch)
+    if args.has_scheduler:
+        scheduler.step(val_loss, epoch)
 
     return val_loss, new_edge_index, new_x, new_y, new_y_train
 

@@ -31,7 +31,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py   --feat_dim=128  --dropout=0.0  --lr=0.005 --l2=0.0 --net="$net"  --layer="$layer"   --epoch=15000  --NotImproved=400 --Dataset="$Didataset" > "$log_output" 2>&1
+            python3 main.py   --has_scheduler --feat_dim=128  --dropout=0.0  --lr=0.005 --l2=0.0 --net="$net"  --layer="$layer"   --epoch=15000  --NotImproved=400 --Dataset="$Didataset" > "$log_output" 2>&1
             wait $pid
           done
         done
