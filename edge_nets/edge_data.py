@@ -1343,10 +1343,12 @@ def sparse_intersection(U, I):
 
     return intersection
 
-def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):     #
+def Qin_get_second_directed_adj(self_loop, edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # TODO add back after no-selfloop test
-    edge_index, _ = remove_self_loops(edge_index)
+    if self_loop:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
+    else:
+        edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
@@ -1378,10 +1380,12 @@ def Qin_get_second_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):  
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
-def Qin_get_all_directed_adj(edge_index, num_nodes, k, IsExhaustive, mode):     #
+def Qin_get_all_directed_adj(selfloop, edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
-    # edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # TODO add back after no-selfloop test
-    edge_index, _ = remove_self_loops(edge_index)
+    if selfloop:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
+    else:
+        edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
