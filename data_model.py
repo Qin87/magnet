@@ -93,13 +93,11 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'APPNP':
         model = APPNP_Model(num_features, n_cls,args.feat_dim, alpha=args.alpha,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ai', 'Ti', 'Hi','Ii', 'ii')):        # GCN  -->  SAGE
-        # if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
         if len(args.net) < 4 or args.net.startswith(('Ui', 'Li')):
             if args.BN_model:
-                model = create_DiSAGESimple_nhid0(args.net[2], num_features, n_cls, args).to(device)
+                model = DiSAGE_xBN_nhid(args.net[2], num_features, n_cls, args).to(device)
             else:
-                # model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
-                model = DiSAGE_x_nhid(args.net[2], num_features, n_cls, args).to(device)     # July 24
+                model = DiSAGE_x_nhid(args.net[2], num_features, n_cls, args).to(device)     # July 24  keep it: the original DiG paper
         else:
             if args.net[3:].startswith(('Sym', 'Qym')):
                 if args.net[6:].startswith('Cat'):
@@ -123,18 +121,13 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         model = Di_IB_XBN_nhid_ConV_JK(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)
                 else:
                     if args.paraD:
-                        if args.BN_model:
-                            # model = create_DiG_IB_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 24: 1 BN
-                            model = DiGCN_IB_XBN_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 25
-                        else:
-                            model = DiGCN_IB_X_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)
+                        model = DiGCN_IB_XBN_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 25
                     else:
-                        if args.BN_model:
-                            model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
+                        if args.net.startswith('Di') and not args.BN_model:
+                            model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)    # keep this: original DiGib paper
                         else:
-                            model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)
+                            model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
     elif args.net.startswith(('Sym', 'Qym')):
-        # model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         model = SymModel(num_features, n_cls, filter_num=args.feat_dim,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith(('addSym', 'addQym')):
         if not args.net.endswith('para'):

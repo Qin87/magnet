@@ -224,8 +224,11 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
     else:
         raise NotImplementedError("Not Implemented" + args.net)
     # if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u' or args.net[-2] == 's'):
-    if args.net[-1].isdigit():
-        k = int(args.net[-1])
+    if args.net[-1].isdigit() or args.net[-2:] == 'ib':
+        if args.net[-1] == 'b':
+            k = 2
+        else:
+            k = int(args.net[-1])
         if args.net.startswith(('Ti', 'Ai', 'Hi')):       # Hi is heterogeneous
             IsExhaustive = True
         if IsDirectedGraph:
@@ -445,6 +448,7 @@ try:
 
             best_val_loss = 100
             best_val_acc_f1 = 0
+            best_val_acc = 0
             best_val_f1 = 0
             best_test_f1 = 0
             saliency, prev_out = None, None
@@ -458,12 +462,9 @@ try:
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 val_acc_f1 = (val_acc + val_f1) / 2.
-                if tmp_test_f1 > best_test_f1:
-                    best_test_f1 = tmp_test_f1
-                # best_val_acc_f1 = val_acc_f1
-                # best_val_f1 = val_f1
-                # if val_loss < best_val_loss:
-                #     best_val_loss = val_loss
+                if val_acc > best_val_acc:
+                    best_val_acc = val_acc
+
                     test_acc = accs[2]
                     test_bacc = baccs[2]
                     test_f1 = f1s[2]

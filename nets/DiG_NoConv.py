@@ -1198,6 +1198,7 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         self.layer = args.layer
         head = args.heads
         K = args.K
+        # out1 = out_dim  if layer == 1 else nhid
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, nhid)
@@ -1240,10 +1241,7 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
     def forward(self, x, edge_index, edge_weight):
         x = self.conv1(x, edge_index, edge_weight)
         x = F.dropout(x, self.dropout, training=self.training)
-        # x = F.relu(self.conv1(x, edge_index, edge_weight))
-        # x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
         if self.layer == 1:
-            # x = self.batch_norm1(x)
             x = Conv_Out(x, self.Conv)
             return x
 
@@ -1252,7 +1250,6 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         if self.layer > 2:
             for iter_layer in self.convx:
                 x = F.dropout(x, self.dropout, training=self.training)
-                # x = F.relu(self.batch_norm3(iter_layer(x, edge_index, edge_weight)))
                 x = F.relu(iter_layer(x, edge_index, edge_weight))
 
         x = F.dropout(x, self.dropout, training=self.training)
@@ -1349,9 +1346,9 @@ class DiSAGE_x_nhid(torch.nn.Module):
 
         self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
 
-        self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(out_dim)
-        self.batch_norm3 = nn.BatchNorm1d(nhid)
+        # self.batch_norm1 = nn.BatchNorm1d(nhid)
+        # self.batch_norm2 = nn.BatchNorm1d(out_dim)
+        # self.batch_norm3 = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
         self.non_reg_params = self.conv2.parameters()
@@ -1667,12 +1664,6 @@ class Di_IB_1_nhid(torch.nn.Module):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
 
-        # x = x.unsqueeze(0)
-        # x = x.permute((0, 2, 1))
-        # x = self.Conv(x)
-        # x = x.permute((0, 2, 1))
-        # x = x.squeeze(0)
-        # x = self.batch_norm1(x)
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
@@ -1913,17 +1904,7 @@ class Di_IB_2_nhid(torch.nn.Module):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = F.dropout(x, p=self._dropout, training=self.training)
-        # x = self.batch_norm1(x)
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        # x = self.batch_norm2(x)
-
-        # x = x.unsqueeze(0)
-        # x = x.permute((0, 2, 1))
-        # x = self.Conv(x)
-        # x = x.permute((0, 2, 1))
-        # x = x.squeeze(0)
-
-        # x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
 class Di_IB_2BN_nhid0(torch.nn.Module):
@@ -6157,10 +6138,11 @@ class Di_IB_XBN_nhid_ConV(torch.nn.Module):
         self._dropout = args.dropout
         nhid = args.feat_dim
         layer = args.layer
+        self.layer = args.layer
+        self.BN_model = args.BN_model
 
         self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
         self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
-        self.layer = args.layer
         self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
 
         self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
@@ -6178,7 +6160,8 @@ class Di_IB_XBN_nhid_ConV(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
 
         if self.layer == 1:
-            x = self.batch_norm1(x)
+            if self.BN_model:
+                x = self.batch_norm1(x)
             x = Conv_Out(x, self.Conv)
             return x
 
@@ -6187,14 +6170,12 @@ class Di_IB_XBN_nhid_ConV(torch.nn.Module):
             for iter_layer in self.ibx:
                 x = F.dropout(x, p=self._dropout, training=self.training)
                 x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
-                # x = self.batch_norm3(x)
-                # x = F.relu(x)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm2(x)
+        if self.BN_model:
+            x = self.batch_norm2(x)
         x = Conv_Out(x, self.Conv)
         x = F.dropout(x, p=self._dropout, training=self.training)
-
 
         return x
 
@@ -6237,11 +6218,12 @@ class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
             x = Conv_Out(x, self.Conv)
             return x
 
-        # x = F.relu(x)
+        x = F.relu(x)
         if self.layer > 2:
             for iter_layer in self.ibx:
                 x = F.dropout(x, p=self._dropout, training=self.training)
                 x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+                x = F.relu(x)
                 xs += [x]
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
@@ -6250,6 +6232,7 @@ class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
         if self.jk is not None:
             x = self.jump(xs)
             x = self.lin(x)
+        x = F.relu(x)
         x = Conv_Out(x, self.Conv)
         x = F.dropout(x, p=self._dropout, training=self.training)
 
@@ -6278,12 +6261,10 @@ class Di_IB_X_nhid(torch.nn.Module):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = F.dropout(x, p=self._dropout, training=self.training)
-        # x = self.batch_norm1(x)
 
         for iter_layer in self.ibx:
             x = F.dropout(x, p=self._dropout, training=self.training)
             x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
-            # x = self.batch_norm3(x)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
 
@@ -6337,6 +6318,7 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
         self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
         self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
         self._dropout = args.dropout
+        self.BN_model = args.BN_model
 
         self.layer = args.layer
         layer = args.layer
@@ -6360,7 +6342,8 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
             x += self.coef1[i] * x_list[i]
         x = F.dropout(x, p=self._dropout, training=self.training)
         if self.layer == 1:
-            x = self.batch_norm1(x)
+            if self.BN_model:
+                x = self.batch_norm1(x)
             return x
 
         if self.layer > 2:
@@ -6372,7 +6355,8 @@ class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
                 x = F.dropout(x, p=self._dropout, training=self.training)
 
         x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm2(x)
+        if self.BN_model:
+            x = self.batch_norm2(x)
         x = x_list[0]
         for i in range(1, len(x_list)):
             x += self.coef2[i] * x_list[i]
