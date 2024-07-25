@@ -109,7 +109,8 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
             out = model(data_x, edges)
         val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
     optimizer.step()
-    scheduler.step(val_loss, epoch)
+    if args.has_scheduler:
+        scheduler.step(val_loss, epoch)
 
     return val_loss, new_edge_index, new_x, new_y, new_y_train
 
@@ -229,7 +230,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
             IsExhaustive = True
         if IsDirectedGraph:
             if args.net.startswith('Ai'):
-                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.has_1_order, args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
             elif args.net.startswith('Ii'):
                 IsExhaustive = True
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
@@ -349,7 +350,6 @@ try:
                         print(edge_weight.size()[0], end=' ', file=log_file)
                         print(edge_weight.size()[0], end=' ')
 
-
             # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
             if hasattr(model, 'coefs'):     # parameter without weight_decay will typically change faster
                 optimizer = torch.optim.Adam(
@@ -362,7 +362,8 @@ try:
             else:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=80, verbose=True)
+            if args.has_scheduler:
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=True)
 
             if splits == 1:
                 data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())

@@ -6,6 +6,8 @@ def parse_args():
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument('--BN_model', action='store_false', help='use layer normalization in model')
     parser.add_argument("--self_loop", action="store_true", help="Whether to add self-loops to the graph")
+    parser.add_argument("--has_1_order", action="store_true", help="Whether Ai* has 1-order edges")
+    parser.add_argument("--has_scheduler", action="store_false", help="Whether Optimizer has a scheduler")
 
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
@@ -34,7 +36,7 @@ def parse_args():
 
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
-    # parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
+    parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
     parser.add_argument('--lr', type=float, default=0.005, help='learning rate')
     parser.add_argument('--coeflr', type=float, default=2.0, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
