@@ -9,7 +9,7 @@
 # iiSu2 iiSu3 iiSu4 iiS   TiSi2 TiSi3 TiSi4 TiSu2 TiSu3 TiSu4 TiS
 net_values=" AiGs2 AiGs3  "
 q_value=0
-layer_values="4 5 6"
+layer_values=" 5 6 4"
 imbal="2  "
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
