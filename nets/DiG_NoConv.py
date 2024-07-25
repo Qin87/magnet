@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 from torch.nn import Parameter, Linear
 from torch_scatter import scatter_add
-from torch_geometric.nn import MessagePassing
+from torch_geometric.nn import MessagePassing, JumpingKnowledge
 from torch_geometric.utils import to_undirected, is_undirected
 from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
@@ -31,6 +31,38 @@ class InceptionBlock_Qinlist(torch.nn.Module):
     def reset_parameters(self):
         self.ln.reset_parameters()
         self.conv1.reset_parameters()
+        self.convx.reset_parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+        x0 = self.ln(x)
+        x_list = [x0]
+        for i in range(len(edge_index_tuple)):
+            x_list.append(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]))
+        return x_list
+
+class InceptionBlock_Di_list(torch.nn.Module):
+    def __init__(self, m, in_dim, out_dim,args):
+        super(InceptionBlock_Di_list, self).__init__()
+        self.ln = Linear(in_dim, out_dim)
+        head = args.heads
+        K = args.K
+
+        if m == 'S':
+            self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(20)])
+        elif m == 'G':
+            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
+        elif m == 'C':
+            self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(20)])
+        elif m == 'A':
+            num_head = 1
+            head_dim = out_dim // num_head
+            self.convx = nn.ModuleList([GATConv_Qin(in_dim, head_dim, heads=head) for _ in range(20)])
+        else:
+            raise ValueError(f"Model '{m}' not implemented")
+        self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
+
+    def reset_parameters(self):
+        self.ln.reset_parameters()
         self.convx.reset_parameters()
 
     def forward(self, x, edge_index_tuple, edge_weight_tuple):
@@ -6144,7 +6176,6 @@ class Di_IB_XBN_nhid_ConV(torch.nn.Module):
         # layer Normalization best only one at last layer, good for telegram
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = F.dropout(x, p=self._dropout, training=self.training)
-        # x = self.batch_norm1(x)
 
         if self.layer == 1:
             x = self.batch_norm1(x)
@@ -6167,48 +6198,63 @@ class Di_IB_XBN_nhid_ConV(torch.nn.Module):
 
         return x
 
-# class Di_IB_XBN_nhid_ConV(torch.nn.Module):
-#     def __init__(self, m, input_dim,   out_dim, args):
-#         super(Di_IB_XBN_nhid_ConV, self).__init__()
-#         self._dropout = args.dropout
-#         nhid = args.feat_dim
-#         layer = args.layer
-#
-#         self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
-#         self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
-#         self.layer = args.layer
-#         self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
-#
-#         self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
-#
-#         self.batch_norm1 = nn.BatchNorm1d(nhid)
-#         self.batch_norm2 = nn.BatchNorm1d(nhid)
-#         self.batch_norm3 = nn.BatchNorm1d(nhid)
-#
-#         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
-#         self.non_reg_params = self.ib2.parameters()
-#
-#     def forward(self, features, edge_index_tuple, edge_weight_tuple):
-#         x = features
-#         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
-#         x = F.dropout(x, p=self._dropout, training=self.training)
-#         x = self.batch_norm1(x)
-#
-#         for iter_layer in self.ibx:
-#             x = F.dropout(x, p=self._dropout, training=self.training)
-#             x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
-#             x = self.batch_norm3(x)
-#
-#         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-#         x = self.batch_norm2(x)
-#         x = x.unsqueeze(0)
-#         x = x.permute((0, 2, 1))
-#         x = self.Conv(x)
-#         x = x.permute((0, 2, 1))
-#         x = x.squeeze(0)
-#
-#         x = F.dropout(x, p=self._dropout, training=self.training)
-#         return x
+class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
+    def __init__(self, m, input_dim,   out_dim, args):
+        super(Di_IB_XBN_nhid_ConV_JK, self).__init__()
+        self._dropout = args.dropout
+        nhid = args.feat_dim
+        self.jk= args.jk
+
+        self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
+        self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
+        self.layer = args.layer
+        self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(self.layer - 2)])
+
+        self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        if self.jk is not None:
+            input_dim = nhid * self.layer if self.jk == "cat" else nhid
+            # self.lin = Linear(input_dim, out_dim)
+            self.lin = Linear(input_dim, nhid)
+            self.jump = JumpingKnowledge(mode=self.jk, channels=nhid, num_layers=out_dim)
+
+        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        self.non_reg_params = self.ib2.parameters()
+
+    def forward(self, x, edge_index_tuple, edge_weight_tuple):
+        xs = []
+        # layer Normalization best only one at last layer, good for telegram
+        x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        xs += [x]
+
+        if self.layer == 1:
+            x = self.batch_norm1(x)
+            x = Conv_Out(x, self.Conv)
+            return x
+
+        # x = F.relu(x)
+        if self.layer > 2:
+            for iter_layer in self.ibx:
+                x = F.dropout(x, p=self._dropout, training=self.training)
+                x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+                xs += [x]
+
+        x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        x = self.batch_norm2(x)
+        xs += [x]
+        if self.jk is not None:
+            x = self.jump(xs)
+            x = self.lin(x)
+        x = Conv_Out(x, self.Conv)
+        x = F.dropout(x, p=self._dropout, training=self.training)
+
+
+        return x
 
 
 class Di_IB_X_nhid(torch.nn.Module):
@@ -6224,10 +6270,6 @@ class Di_IB_X_nhid(torch.nn.Module):
         self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
 
         self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
-
-        # self.batch_norm1 = nn.BatchNorm1d(nhid)
-        # self.batch_norm2 = nn.BatchNorm1d(nhid)
-        # self.batch_norm3 = nn.BatchNorm1d(nhid)
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()
@@ -6283,22 +6325,145 @@ class Si_IB_X_nhid(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-class DiGCN_IB_X_nhid_para(torch.nn.Module):
+class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
     def __init__(self, m, num_features, out_dim, args):
-        super(DiGCN_IB_X_nhid_para, self).__init__()
-        hidden = args.feat_dim
+        super(DiGCN_IB_XBN_nhid_para, self).__init__()
+        nhid = args.feat_dim
         if args.layer==1:
-            self.ib1 = InceptionBlock_Qinlist(num_features, out_dim)
+            self.ib1 = InceptionBlock_Di_list(m, num_features, out_dim, args)
         else:
-            self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
-        self.ib2 = InceptionBlock_Qinlist(hidden, out_dim)
+            self.ib1 = InceptionBlock_Di_list(m, num_features, nhid, args)
+        self.ib2 = InceptionBlock_Di_list(m, nhid, out_dim, args)
         self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
         self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
         self._dropout = args.dropout
 
         self.layer = args.layer
         layer = args.layer
-        self.ibx=nn.ModuleList([InceptionBlock_Qinlist(hidden,hidden) for _ in range(layer-2)])
+        self.ibx=nn.ModuleList([InceptionBlock_Di_list(m, nhid,nhid, args) for _ in range(layer-2)])
+        self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)]) for _ in range(layer - 2)])
+
+        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        self.non_reg_params = self.ib2.parameters()
+        self.coefs = list(self.coef1)+list(self.coef2)+list(self.coefx.parameters())
+        # self.coefs = [self.coef1, self.coef2, self.coefx]     # wrong
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        x = features
+        x_list = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = x_list[0]
+        for i in range(1, len(x_list)):
+            x += self.coef1[i] * x_list[i]
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        if self.layer == 1:
+            x = self.batch_norm1(x)
+            return x
+
+        if self.layer > 2:
+            for iter_layer, iter_coef in zip(self.ibx, self.coefx):
+                x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+                x = x_list[0]
+                for i in range(1, len(x_list)):
+                    x += iter_coef[i] * x_list[i]
+                x = F.dropout(x, p=self._dropout, training=self.training)
+
+        x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
+        x = self.batch_norm2(x)
+        x = x_list[0]
+        for i in range(1, len(x_list)):
+            x += self.coef2[i] * x_list[i]
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class DiGCN_IB_X_nhid_para_Jk(torch.nn.Module):
+    def __init__(self, m, input_dim, out_dim, args):
+        super(DiGCN_IB_X_nhid_para_Jk, self).__init__()
+        self._dropout = args.dropout
+        nhid = args.feat_dim
+        self.jumping_knowledge = args.jk
+        num_layers = args.layer
+        output_dim = nhid if self.jumping_knowledge else out_dim
+        if args.layer==1:
+            self.ib1 = InceptionBlock_Di_list(m, input_dim, output_dim, args)
+        else:
+            self.ib1 = InceptionBlock_Di_list(m, input_dim, nhid, args)
+
+        self.ib2 = InceptionBlock_Di_list(m, nhid, output_dim, args)
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
+        self._dropout = args.dropout
+
+        if self.jumping_knowledge is not None:
+            input_dim = nhid * num_layers if self.jumping_knowledge == "cat" else nhid
+            self.lin = Linear(input_dim, out_dim)
+            self.jump = JumpingKnowledge(mode=self.jumping_knowledge, channels=nhid, num_layers=num_layers)
+
+        self.layer = args.layer
+        layer = args.layer
+        self.ibx=nn.ModuleList([InceptionBlock_Di_list(m, nhid, nhid, args) for _ in range(layer-2)])
+        self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)]) for _ in range(layer - 2)])
+
+        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        self.non_reg_params = self.ib2.parameters()
+        self.coefs = list(self.coef1)+list(self.coef2)+list(self.coefx.parameters())
+
+    def forward(self, features, edge_index_tuple, edge_weight_tuple):
+        xs = []
+        x = features
+        x_list = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+        x = x_list[0]
+        for i in range(1, len(x_list)):
+            x += self.coef1[i] * x_list[i]
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        xs += [x]
+        if self.layer == 1:
+            return x
+
+        if self.layer > 2:
+            for iter_layer, iter_coef in zip(self.ibx, self.coefx):
+                x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+                x = x_list[0]
+                for i in range(1, len(x_list)):
+                    x += iter_coef[i] * x_list[i]
+                x = F.dropout(x, p=self._dropout, training=self.training)
+                xs += [x]
+
+        x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
+        x = x_list[0]
+        for i in range(1, len(x_list)):
+            x += self.coef2[i] * x_list[i]
+        xs += [x]
+
+        if self.jumping_knowledge is not None:
+            x = self.jump(xs)
+            x = self.lin(x)
+
+        x = F.dropout(x, p=self._dropout, training=self.training)
+        return x
+
+class DiGCN_IB_X_nhid_para(torch.nn.Module):
+    def __init__(self, m, input_dim, out_dim, args):
+        super(DiGCN_IB_X_nhid_para, self).__init__()
+        self._dropout = args.dropout
+        nhid = args.feat_dim
+        if args.layer==1:
+            self.ib1 = InceptionBlock_Di_list(m, input_dim, out_dim, args)
+        else:
+            self.ib1 = InceptionBlock_Di_list(m, input_dim, nhid, args)
+
+        self.ib2 = InceptionBlock_Di_list(m, nhid, out_dim, args)
+        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
+        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
+        self._dropout = args.dropout
+
+        self.layer = args.layer
+        layer = args.layer
+        self.ibx=nn.ModuleList([InceptionBlock_Di_list(m, nhid, nhid, args) for _ in range(layer-2)])
         self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)]) for _ in range(layer - 2)])
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
@@ -6324,8 +6489,6 @@ class DiGCN_IB_X_nhid_para(torch.nn.Module):
                 x = x_list[0]
                 for i in range(1, len(x_list)):
                     x += iter_coef[i] * x_list[i]
-                # x = self.batch_norm3(x)
-                # x = F.relu(x)
                 x = F.dropout(x, p=self._dropout, training=self.training)
 
         x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
@@ -6336,58 +6499,58 @@ class DiGCN_IB_X_nhid_para(torch.nn.Module):
         x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
-class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
-    def __init__(self, num_features, hidden,  out_dim, dropout=0.5, layer=2):
-        super(DiGCN_IB_XBN_nhid_para, self).__init__()
+# class DiGCN_IB_XBN_nhid_para(torch.nn.Module):
+#     def __init__(self, num_features, hidden,  out_dim, dropout=0.5, layer=2):
+#         super(DiGCN_IB_XBN_nhid_para, self).__init__()
         self.ib1 = InceptionBlock_Qinlist(num_features, hidden)
-        self.ib2 = InceptionBlock_Qinlist(hidden, hidden)
-        self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib1
-        self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib2
-        self._dropout = dropout
-        self.Conv = nn.Conv1d(hidden,  out_dim, kernel_size=1)
-
-        self.batch_norm1 = nn.BatchNorm1d(hidden)
-        self.batch_norm2 = nn.BatchNorm1d(hidden)
-        self.batch_norm3 = nn.BatchNorm1d(hidden)
-
-        self.layer = layer
-        self.ibx=nn.ModuleList([InceptionBlock_Qinlist(hidden,hidden) for _ in range(layer-2)])
-        self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)]) for _ in range(layer - 2)])
-
-        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
-        self.non_reg_params = self.ib2.parameters()
-        self.coefs = list(self.coef1)+list(self.coef2)+list(self.coefx.parameters())
-        # self.coefs = [self.coef1, self.coef2, self.coefx]     # wrong
-
-    def forward(self, features, edge_index_tuple, edge_weight_tuple):
-        x = features
-        x_list = self.ib1(x, edge_index_tuple, edge_weight_tuple)
-        x = x_list[0]
-        for i in range(1, len(x_list)):
-            x += self.coef1[i] * x_list[i]
-        # x = self.batch_norm1(x)
-
-        for iter_layer, iter_coef in zip(self.ibx, self.coefx):
-            x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
-            x = x_list[0]
-            for i in range(1, len(x_list)):
-                x += iter_coef[i] * x_list[i]
-            # x = self.batch_norm3(x)
-
-        x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
-        x = x_list[0]
-        for i in range(1, len(x_list)):
-            x += self.coef2[i] * x_list[i]
-
-        x = self.batch_norm2(x)
-        x = x.unsqueeze(0)
-        x = x.permute((0, 2, 1))
-        x = self.Conv(x)
-        x = x.permute((0, 2, 1))
-        x = x.squeeze(0)
-
-        x = F.dropout(x, p=self._dropout, training=self.training)
-        return x
+#         self.ib2 = InceptionBlock_Qinlist(hidden, hidden)
+#         self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib1
+#         self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)])  # coef for ib2
+#         self._dropout = dropout
+#         self.Conv = nn.Conv1d(hidden,  out_dim, kernel_size=1)
+#
+#         self.batch_norm1 = nn.BatchNorm1d(hidden)
+#         self.batch_norm2 = nn.BatchNorm1d(hidden)
+#         self.batch_norm3 = nn.BatchNorm1d(hidden)
+#
+#         self.layer = layer
+#         self.ibx=nn.ModuleList([InceptionBlock_Qinlist(hidden,hidden) for _ in range(layer-2)])
+#         self.coefx = nn.ModuleList([nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(5)]) for _ in range(layer - 2)])
+#
+#         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+#         self.non_reg_params = self.ib2.parameters()
+#         self.coefs = list(self.coef1)+list(self.coef2)+list(self.coefx.parameters())
+#         # self.coefs = [self.coef1, self.coef2, self.coefx]     # wrong
+#
+#     def forward(self, features, edge_index_tuple, edge_weight_tuple):
+#         x = features
+#         x_list = self.ib1(x, edge_index_tuple, edge_weight_tuple)
+#         x = x_list[0]
+#         for i in range(1, len(x_list)):
+#             x += self.coef1[i] * x_list[i]
+#         # x = self.batch_norm1(x)
+#
+#         for iter_layer, iter_coef in zip(self.ibx, self.coefx):
+#             x_list = iter_layer(x,  edge_index_tuple, edge_weight_tuple)
+#             x = x_list[0]
+#             for i in range(1, len(x_list)):
+#                 x += iter_coef[i] * x_list[i]
+#             # x = self.batch_norm3(x)
+#
+#         x_list = self.ib2(x,  edge_index_tuple, edge_weight_tuple)
+#         x = x_list[0]
+#         for i in range(1, len(x_list)):
+#             x += self.coef2[i] * x_list[i]
+#
+#         x = self.batch_norm2(x)
+#         x = x.unsqueeze(0)
+#         x = x.permute((0, 2, 1))
+#         x = self.Conv(x)
+#         x = x.permute((0, 2, 1))
+#         x = x.squeeze(0)
+#
+#         x = F.dropout(x, p=self._dropout, training=self.training)
+#         return x
 
 
 class DiGCN_IB_XBN_batch_nhid(torch.nn.Module):

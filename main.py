@@ -75,7 +75,7 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
     optimizer.zero_grad()
     if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
+    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ai', 'Ti',  'Hi', 'Ii', 'ii')):
         if args.net[3:].startswith(('Sym', 'Qym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:

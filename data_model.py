@@ -23,8 +23,9 @@ from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_nhid, create_DiG_IB_SymCat_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_nhid_para,
-                             create_DiG_IB_nhid_para, create_DiSAGESimple_nhid, create_Di_IB_nhid, Si_IB_X_nhid, DiGCN_IB_XBN_nhid_para, Di_IB_XBN_nhid_ConV, DiSAGE_xBN_nhid_BN, create_DiSAGESimple_nhid0, DiSAGE_x_nhid, DiSAGE_xBN_nhid, DiGCN_IB_X_nhid_para, Si_IB_X_nhid, DiSAGE_1BN_nhid,
-                             DiSAGE_2BN_nhid)
+                             create_DiG_IB_nhid_para, create_DiSAGESimple_nhid, create_Di_IB_nhid, Si_IB_X_nhid, DiGCN_IB_XBN_nhid_para, Di_IB_XBN_nhid_ConV, DiSAGE_xBN_nhid_BN,
+                             create_DiSAGESimple_nhid0, DiSAGE_x_nhid, DiSAGE_xBN_nhid, DiGCN_IB_X_nhid_para, Si_IB_X_nhid, DiSAGE_1BN_nhid,
+                             DiSAGE_2BN_nhid, DiGCN_IB_X_nhid_para_Jk, Di_IB_XBN_nhid_ConV_JK)
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
@@ -60,15 +61,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = create_SGC(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer,K=args.K)
     elif args.net == 'RossiGNN':
         model = get_model(num_features,  n_cls, args)
-        # lit_model = LightingFullBatchModelWrapper(
-        #     model=model,
-        #     lr=args.lr,
-        #     weight_decay=args.weight_decay,
-        #     evaluator=evaluator,
-        #     train_mask=train_mask,
-        #     val_mask=val_mask,
-        #     test_mask=test_mask,
-        # )
     elif args.net == 'jk':
         model = JKNet(in_channels=num_features,
                         out_channels=n_cls,
@@ -104,10 +96,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         # if args.net[-2:] not in ['i2', 'u2', 'i3', 'u3', 'i4', 'u4']:
         if len(args.net) < 4 or args.net.startswith(('Ui', 'Li')):
             if args.BN_model:
-                # model = DiSAGE_xBN_nhid_BN(args.net[2], num_features, n_cls, args).to(device)
                 model = create_DiSAGESimple_nhid0(args.net[2], num_features, n_cls, args).to(device)
-                # model = DiSAGE_xBN_nhid(args.net[2], num_features, n_cls, args).to(device)      # July 24
-                # model = DiSAGE_2BN_nhid(args.net[2], num_features, n_cls, args).to(device)      # July 24
             else:
                 # model = create_DiSAGESimple_nhid(args.net[2], num_features, n_cls, args).to(device)     # Jun22
                 model = DiSAGE_x_nhid(args.net[2], num_features, n_cls, args).to(device)     # July 24
@@ -127,16 +116,23 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     else:
                         model = create_DiG_IB_Sym_nhid(args.net[2], num_features,  n_cls, args).to(device)
             else:
-                if args.paraD:
-                    if args.BN_model:
-                        model = create_DiG_IB_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 24: 1 BN
+                if args.net.startswith(('Ai', 'Ti')):
+                    if args.paraD:
+                        model = DiGCN_IB_X_nhid_para_Jk(args.net[2], num_features,  n_cls,  args).to(device)
                     else:
-                        model = DiGCN_IB_X_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)
+                        model = Di_IB_XBN_nhid_ConV_JK(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)
                 else:
-                    if args.BN_model:
-                        model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
+                    if args.paraD:
+                        if args.BN_model:
+                            # model = create_DiG_IB_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 24: 1 BN
+                            model = DiGCN_IB_XBN_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 25
+                        else:
+                            model = DiGCN_IB_X_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)
                     else:
-                        model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)
+                        if args.BN_model:
+                            model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
+                        else:
+                            model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)
     elif args.net.startswith(('Sym', 'Qym')):
         # model = create_SymReg(num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
         model = SymModel(num_features, n_cls, filter_num=args.feat_dim,dropout=args.dropout, layer=args.layer).to(device)
