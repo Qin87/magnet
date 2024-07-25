@@ -9,6 +9,13 @@ def parse_args():
     parser.add_argument("--has_1_order", action="store_true", help="Whether Ai* has 1-order edges")
     parser.add_argument("--has_scheduler", action="store_false", help="Whether Optimizer has a scheduler")
 
+    # for DirGNN
+    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
+    parser.add_argument("--normalize", action="store_true")
+    parser.add_argument("--jk", type=str, choices=["max", "cat", None], default="max")
+    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
+    parser.add_argument("--learn_alpha", action="store_true")
+
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
@@ -18,10 +25,11 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='AiGs2', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
+    parser.add_argument('--net', type=str, default='RossiGNN', help='addSym, UGCL,DiGSymib, DiGSymCatib, DiGSymCatMixib, DiGSymCatMixSymib, MagQin, DiGib,QuaNet, addQymN1(*Ym without 1st)'
                                                                'addSympara, GPRGNN, pgnn, mlp, sgc, JKNet,DiGub,DiGi3, DiGi4, QiG replace DiG, Sym replaced by Qym_QiGQymCatMixQymib, WiG, WoG, W2G '
                                                                  'replace DiG. Ui is union of scaled edges, Li is last scale edges(Ui,Li to replace Ci), Ti(exhaustive k_order), '
-                                                                 'Ii(independent exhaustive, ii independent) *i*s2(s means separate in and out), Ai*(AA, AtAt, AtA, AAt:AiGs2)')
+                                                                 'Ii(independent exhaustive, ii independent) *i*s2(s means separate in and out), Ai*(AA, AtAt, AtA, AAt:AiGs2), DirGNN(Rossi, '
+                                                                    'RossiGNN, LoG)')
     parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
     parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'

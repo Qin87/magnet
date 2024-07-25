@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch_scatter import scatter_add
 
-from nets.geometric_baselines import GCN_JKNet, GPRGNN
+from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1
 # sys.path.append('./Signum_quaternion/QuaNet_node_prediction_one_laplacian_Qin')
 # sys.path.append('./Signum_quaternion/')
@@ -58,7 +58,17 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = create_MLP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
     elif args.net == 'sgc':
         model = create_SGC(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer,K=args.K)
-
+    elif args.net == 'RossiGNN':
+        model = get_model(num_features,  n_cls, args)
+        # lit_model = LightingFullBatchModelWrapper(
+        #     model=model,
+        #     lr=args.lr,
+        #     weight_decay=args.weight_decay,
+        #     evaluator=evaluator,
+        #     train_mask=train_mask,
+        #     val_mask=val_mask,
+        #     test_mask=test_mask,
+        # )
     elif args.net == 'jk':
         model = JKNet(in_channels=num_features,
                         out_channels=n_cls,
