@@ -24,6 +24,8 @@ from joblib import Parallel, delayed
 from torch_geometric.utils import add_remaining_self_loops, add_self_loops, remove_self_loops
 from torch_scatter import scatter_add
 
+from nets.geometric_baselines import get_norm_adj
+
 
 def fast_sparse_boolean_multi_hop(A, k):
     row, col = A._indices()     # the non-zero elements in the sparse tensor
@@ -457,12 +459,15 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 
     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-def get_second_directed_adj(edge_index, num_nodes, dtype):
+def get_second_directed_adj(selfloop, edge_index, num_nodes, dtype):
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                              device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight = add_self_loops(
-        edge_index, edge_weight, fill_value, num_nodes)
+    if selfloop:
+        fill_value = 1
+        edge_index, edge_weight = add_self_loops(
+            edge_index, edge_weight, fill_value, num_nodes)
+    else:
+        edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv = deg.pow(-1)
@@ -534,15 +539,17 @@ def union_edge_index(edge_index):
     union = torch.unique(union, dim=1)
 
     return union
-def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
+
+def Qin_get_directed_adj(selfloop, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
-    edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # with selfloop, QiG get better
-    # edge_index, _ = remove_self_loops(edge_index)
+    if selfloop:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # with selfloop, QiG get better
+    else:
+        edge_index, _ = remove_self_loops(edge_index)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
-    edge_weight = torch.ones(edge_index.size(1)).to(device)
-    edge_weight = normalize_edges(edge_index, edge_weight,  num_nodes).to(device)
+    edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
 
     return edge_index,  edge_weight
 
@@ -593,14 +600,17 @@ def Qin_get_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None):
 #     edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col].to(device)
 #
 #     return edge_index, edge_weight
-def WCJ_get_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
+def WCJ_get_directed_adj(self_loop, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
     # random value to edge weights
     device = edge_index.device
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
     fill_value = 1
-    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    if self_loop:
+        edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    else:
+        edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
     row, col = edge_index
     deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)  # row degree
     deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)  # col degree
@@ -724,14 +734,17 @@ def WCJ_get_directed_adj(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_w
 #     return edge_index,  edge_weight
 
 
-def get_appr_directed_adj2(alpha, edge_index, num_nodes, dtype, edge_weight=None):       # TODO get back, new DiG, name remove 2
+def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_weight=None):
     device = edge_index.device
 
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
-    fill_value = 1
-    edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    if selfloop:    # original DiG paper adds selfloop
+        fill_value = 1
+        edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
+    else:
+        edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
     edge_index = edge_index.to(device)
     edge_weight = edge_weight.to(device)
     row, col = edge_index
@@ -1068,7 +1081,7 @@ def sparese_remove_self_loops(sparse_matrix):
 
 # Removing self-loops from A_in and A_out
 
-def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
+def sparse_boolean_multi_hopExhaust(selfloop, A, k, mode='union'):
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
 
@@ -1083,10 +1096,12 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
         A_result = A_in + A_out
         A_result = A_result.coalesce()
         A_result._values().clamp_(0, 1)  # Ensuring binary values
-    else:
+    else:   # intersection
         A_result = intersect_sparse_tensors(A_in, A_out)
 
-    all_hops = [sparese_remove_self_loops(A_result)]
+    if not selfloop:
+        A_result = sparese_remove_self_loops(A_result)
+    all_hops = [A_result]
 
     # Compute k-hop neighbors using sparse matrix multiplication and intersections
     for hop in range(1, k):
@@ -1101,7 +1116,9 @@ def sparse_boolean_multi_hopExhaust(A, k, mode='union'):
 
             # num_nonzero_result = A_result._nnz()
             # print('num of edges:', num_nonzero_result)
-            all_hops.append(sparese_remove_self_loops(A_result))
+            if not selfloop:
+                A_result = sparese_remove_self_loops(A_result)
+            all_hops.append(A_result)
 
     return tuple(all_hops)
 
@@ -1161,7 +1178,7 @@ def sparse_remove_self_loops(matrix):
 
     return new_matrix
 
-def sparse_boolean_multi_hop(A, k, mode='union'):
+def sparse_boolean_multi_hop(selfloop, A, k, mode='union'):
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
 
@@ -1178,8 +1195,9 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
     A_in = sparse_mm_safe(A, A.t())
     A_out = sparse_mm_safe(A.t(), A)
-    A_in = sparse_remove_self_loops(A_in)
-    A_out = sparse_remove_self_loops(A_out)
+    if not selfloop:
+        A_in = sparse_remove_self_loops(A_in)
+        A_out = sparse_remove_self_loops(A_out)
     num_nonzero_in = A_in._nnz()
     num_nonzero_out = A_out._nnz()
     print('2-order number of edges:', num_nonzero_in, num_nonzero_out)
@@ -1188,12 +1206,19 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         A_result = A_in + A_out
         A_result = A_result.coalesce()
         A_result._values().clamp_(0, 1)  # Ensuring binary values
-        all_hops = [sparese_remove_self_loops(A_result)]
+        if not selfloop:
+            A_result = sparse_remove_self_loops(A_result)
+        all_hops = [A_result]
     elif mode == 'intersection':
         A_result = intersect_sparse_tensors(A_in, A_out)
-        all_hops = [sparese_remove_self_loops(A_result)]
+        if not selfloop:
+            A_result = sparse_remove_self_loops(A_result)
+        all_hops = [A_result]
     elif mode == 'separate':
-        all_hops = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out)]
+        if not selfloop:
+            A_in = sparse_remove_self_loops(A_in)
+            A_out = sparse_remove_self_loops(A_out)
+        all_hops = [A_in, A_out]
     else:
         raise NotImplementedError("Not Implemented mode: ", mode)
 
@@ -1204,8 +1229,9 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
         A_out = torch.sparse.mm(A.t(), A_out)
         A_out = torch.sparse.mm(A_out, A)
 
-        A_in = sparse_remove_self_loops(A_in)
-        A_out = sparse_remove_self_loops(A_out)
+        if not selfloop:
+            A_in = sparse_remove_self_loops(A_in)
+            A_out = sparse_remove_self_loops(A_out)
 
         num_nonzero_in = A_in._nnz()
         num_nonzero_out = A_out._nnz()
@@ -1217,19 +1243,23 @@ def sparse_boolean_multi_hop(A, k, mode='union'):
             A_result._values().clamp_(0, 1)  # Ensuring binary values
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (union): ', num_nonzero)
-            all_hops.append(sparese_remove_self_loops(A_result))
+            if not selfloop:
+                A_result = sparse_remove_self_loops(A_result)
+            all_hops.append(A_result)
         elif mode == 'intersection':
             A_result = intersect_sparse_tensors(A_in, A_out)
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (intersection): ', num_nonzero)
-            all_hops.append(sparese_remove_self_loops(A_result))
+            if not selfloop:
+                A_result = sparse_remove_self_loops(A_result)
+            all_hops.append(A_result)
         elif mode == 'separate':
-            # all_hops.append(sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out))
-            all_hops.extend([sparse_remove_self_loops(A_in), sparse_remove_self_loops(A_out)])
+            if not selfloop:
+                A_in = sparse_remove_self_loops(A_in)
+                A_out = sparse_remove_self_loops(A_out)
+            all_hops.extend([A_in, A_out])
         else:
             raise NotImplementedError("Not Implemented mode: ", mode)
-
-
 
         # num_nonzero_result = A_result._nnz()
         # print('num of edges:', num_nonzero_result)
@@ -1302,10 +1332,10 @@ def dense_boolean_multi_hop_union(A, k):
     return tuple(all_hops)
 
 
-def normalize_edges(edge_index, edge_weight, num_nodes, dtype=torch.float):
+def normalize_row_edges(edge_index, num_nodes, edge_weight=None):
     device = edge_index.device
-    # edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=device)
-
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1),), dtype=torch.float, device=device)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv_sqrt = deg.pow(-0.5)
@@ -1313,18 +1343,18 @@ def normalize_edges(edge_index, edge_weight, num_nodes, dtype=torch.float):
 
     return deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-def normalize_edges_all1(num_nodes, edge_index, dtype=torch.float):
-    device = edge_index.device
-    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=device)
-
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-
-    torch.cuda.empty_cache()
-
-    return deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+# def normalize_edges_all1(num_nodes, edge_index, dtype=torch.float):
+#     device = edge_index.device
+#     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=device)
+# 
+#     row, col = edge_index
+#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+#     deg_inv_sqrt = deg.pow(-0.5)
+#     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+# 
+#     torch.cuda.empty_cache()
+# 
+#     return deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
 def sparse_difference(U, I, epsilon=1e-8):
     diff = (U - I).coalesce()
@@ -1357,16 +1387,16 @@ def Qin_get_second_directed_adj(self_loop, edge_index, num_nodes, k, IsExhaustiv
     A = torch.sparse_coo_tensor(edge_index, edge_weight, size=(num_nodes, num_nodes)).to(device)
     if mode != 'independent':
         if IsExhaustive:
-            L_tuple = sparse_boolean_multi_hopExhaust(A, k - 1, mode)  # much slower
+            L_tuple = sparse_boolean_multi_hopExhaust(self_loop, A, k - 1, mode)  # much slower
         else:
-            L_tuple = sparse_boolean_multi_hop(A, k-1, mode)   # much slower
+            L_tuple = sparse_boolean_multi_hop(self_loop, A, k-1, mode)   # much slower
     else:       # independent
         if IsExhaustive:
-            L_tupleU = sparse_boolean_multi_hopExhaust(A, k - 1, 'union')  # much slower
-            L_tupleI = sparse_boolean_multi_hopExhaust(A, k - 1, 'intersection')  # much slower
+            L_tupleU = sparse_boolean_multi_hopExhaust(self_loop, A, k - 1, 'union')  # much slower
+            L_tupleI = sparse_boolean_multi_hopExhaust(self_loop, A, k - 1, 'intersection')  # much slower
         else:
-            L_tupleU = sparse_boolean_multi_hop(A, k-1, 'union')   # much slower
-            L_tupleI = sparse_boolean_multi_hop(A, k-1, 'intersection')   # much slower
+            L_tupleU = sparse_boolean_multi_hop(self_loop, A, k-1, 'union')   # much slower
+            L_tupleI = sparse_boolean_multi_hop(self_loop, A, k-1, 'intersection')   # much slower
         all_hops = list(L_tupleI)
         for U, I in zip(L_tupleU, L_tupleI):
             all_hops.append(sparse_difference(U, I))
@@ -1377,10 +1407,47 @@ def Qin_get_second_directed_adj(self_loop, edge_index, num_nodes, k, IsExhaustiv
     for L in L_tuple:  # Skip L1 if not needed
         edge_indexL = L._indices()
         all_hop_edge_index.append(edge_indexL)
-        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL).to(device)
+        edge_weightL = normalize_row_edges(num_nodes, edge_indexL).to(device)
         all_hops_weight.append(edge_weightL)
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
+
+
+def normalize_edge_index_and_weights(edge_index, edge_weights, num_nodes):
+    """
+    Normalizes the edge indices and weights for a directed graph.
+
+    Args:
+        edge_index (torch.LongTensor): Edge indices of the graph.
+        edge_weights (torch.FloatTensor): Weights corresponding to the edges.
+        num_nodes (int): Number of nodes in the graph.
+
+    Returns:
+        normalized_edge_weights (torch.FloatTensor): Normalized edge weights.
+    """
+    # Compute out-degrees and in-degrees
+    edge_index = edge_index.long()
+    edge_weights = edge_weights.float()
+
+    device = edge_index.device
+    row, col = edge_index
+    out_deg = torch.zeros(num_nodes, dtype=torch.float).to(device)
+    in_deg = torch.zeros(num_nodes, dtype=torch.float).to(device)
+
+    out_deg.scatter_add_(0, row, edge_weights)
+    in_deg.scatter_add_(0, col, edge_weights)
+
+    # Compute the inverse square root of the degrees
+    out_deg_inv_sqrt = torch.pow(out_deg, -0.5)
+    out_deg_inv_sqrt[out_deg_inv_sqrt == float('inf')] = 0
+
+    in_deg_inv_sqrt = torch.pow(in_deg, -0.5)
+    in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
+
+    # Normalize the edge weights
+    normalized_edge_weights = edge_weights * out_deg_inv_sqrt[row] * in_deg_inv_sqrt[col]
+
+    return edge_index, normalized_edge_weights
 
 def Qin_get_all_directed_adj(has_1_order, selfloop, edge_index, num_nodes, k, IsExhaustive, mode):     #
     device = edge_index.device
@@ -1397,9 +1464,18 @@ def Qin_get_all_directed_adj(has_1_order, selfloop, edge_index, num_nodes, k, Is
     all_hop_edge_index = []
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
+        # type 1
         edge_indexL = L._indices()
+        edge_weightL = torch.ones(edge_indexL.size(1), dtype=torch.bool).to(device)
+        edge_indexL, edge_weightL = normalize_edge_index_and_weights(edge_indexL, edge_weightL, num_nodes)
+        # L = dense_to_sparse_cuda(L)
+        # NormL= get_norm_adj(edge_indexL, norm="dir")
+
+        # # type 2
+        # edge_indexL = L._indices()
+        # edge_weightL = normalize_edges_all1(num_nodes, edge_indexL).to(device)
+
         all_hop_edge_index.append(edge_indexL)
-        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL).to(device)
         all_hops_weight.append(edge_weightL)
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
@@ -1420,7 +1496,7 @@ def Qin_get_second_adj(edge_index, num_nodes, dtype, k):     #
     for L in L_tuple:  # Skip L1 if not needed
         edge_indexL = L._indices()
         all_hop_edge_index.append(edge_indexL)
-        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL).to(device)
+        edge_weightL = normalize_row_edges(num_nodes, edge_indexL).to(device)
         all_hops_weight.append(edge_weightL)
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
@@ -1441,7 +1517,7 @@ def get_second_directed_adj_union(edge_index, num_nodes, dtype, k):
     all_hops_weight = []
     for L in L_tuple:  # Skip L1 if not needed
         edge_indexL = L._indices()
-        edge_weightL = normalize_edges_all1(num_nodes, edge_indexL)
+        edge_weightL = normalize_row_edges(num_nodes, edge_indexL)
         all_edge_index.append(edge_indexL)
         all_hops_weight.append(edge_weightL)
 

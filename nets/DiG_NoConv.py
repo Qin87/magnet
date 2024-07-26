@@ -13,7 +13,7 @@ from torch_geometric.utils import to_undirected, is_undirected
 from torch_geometric.nn.inits import glorot, zeros
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
-from edge_nets.edge_data import normalize_edges_all1
+from edge_nets.edge_data import normalize_row_edges
 from nets.Sym_Reg import DGCNConv
 from typing import Union, Tuple, Optional
 from torch_geometric.typing import (OptPairTensor, Adj, Size, NoneType,
@@ -112,7 +112,7 @@ def union_edges(num_node, edge_index_tuple, device, mode):
         edges = torch.tensor(edges_tuples).T
     else:
         edges = edge_index_tuple[-1]
-    weights = normalize_edges_all1(num_node, edges)
+    weights = normalize_row_edges(num_node, edges)
 
     return edges.to(device), weights.to(device)
 
@@ -1198,7 +1198,14 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         self.layer = args.layer
         head = args.heads
         K = args.K
+        self.jk = args.jk
         # out1 = out_dim  if layer == 1 else nhid
+
+        if self.jk is not None:
+            in_dim_jk = nhid * self.layer if self.jk == "cat" else nhid
+            # self.lin = Linear(input_dim, out_dim)
+            self.lin = Linear(in_dim_jk, nhid)
+            self.jump = JumpingKnowledge(mode=self.jk, channels=nhid, num_layers=out_dim)
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, nhid)
@@ -1239,8 +1246,10 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
             self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, edge_index, edge_weight):
+        xs = []
         x = self.conv1(x, edge_index, edge_weight)
         x = F.dropout(x, self.dropout, training=self.training)
+        xs += [x]
         if self.layer == 1:
             x = Conv_Out(x, self.Conv)
             return x
@@ -1251,9 +1260,15 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
             for iter_layer in self.convx:
                 x = F.dropout(x, self.dropout, training=self.training)
                 x = F.relu(iter_layer(x, edge_index, edge_weight))
+                xs += [x]
 
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
+        xs += [x]
+
+        if self.jk is not None:
+            x = self.jump(xs)
+            x = self.lin(x)
 
         x = x.unsqueeze(0)
         x = x.permute((0, 2, 1))
@@ -1321,41 +1336,54 @@ class DiSAGE_x_nhid(torch.nn.Module):
             n_change = nhid
         else:
             n_change = out_dim
+        self.jk = args.jk
+        out1 = out_dim  if layer == 1 else nhid
+
+        if self.jk is not None:
+            in_dim_jk = nhid * self.layer if self.jk == "cat" else nhid
+            # self.lin = Linear(input_dim, out_dim)
+            self.lin = Linear(in_dim_jk, nhid)
+            self.jump = JumpingKnowledge(mode=self.jk, channels=nhid, num_layers=out_dim)
 
         if m == 'S':
             self.conv1 = DiSAGEConv(input_dim, n_change)
-            self.conv2 = DiSAGEConv(nhid, out_dim)
+            self.conv2 = DiSAGEConv(nhid, out1)
             self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'G':
             self.conv1 = DIGCNConv(input_dim, n_change)
-            self.conv2 = DIGCNConv(nhid, out_dim)
+            self.conv2 = DIGCNConv(nhid, out1)
             self.convx = nn.ModuleList([DIGCNConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'C':
             self.conv1 = DIChebConv(input_dim, n_change, K)
-            self.conv2 = DIChebConv(nhid, out_dim, K)
+            self.conv2 = DIChebConv(nhid, out1, K)
             self.convx = nn.ModuleList([DIChebConv(nhid, nhid, K) for _ in range(layer - 2)])
         elif m == 'A':
             num_head = 1
             head_dim = nhid // num_head
 
             self.conv1 = GATConv_Qin(input_dim, n_change // num_head,  heads=head)
-            self.conv2 = GATConv_Qin(nhid, out_dim//num_head,  heads=head)
+            self.conv2 = GATConv_Qin(nhid, out1//num_head,  heads=head)
             self.convx = nn.ModuleList([GATConv_Qin(nhid, head_dim,  heads=head) for _ in range(layer - 2)])
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
-        self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+        if self.jk is not None:
+            in_dim_jk = nhid * self.layer if self.jk == "cat" else nhid
+            self.lin = Linear(in_dim_jk, out_dim)
+            # self.lin = Linear(in_dim_jk, nhid)
+            self.jump = JumpingKnowledge(mode=self.jk, channels=nhid, num_layers=out_dim)
 
-        # self.batch_norm1 = nn.BatchNorm1d(nhid)
-        # self.batch_norm2 = nn.BatchNorm1d(out_dim)
-        # self.batch_norm3 = nn.BatchNorm1d(nhid)
+        # self.Conv = nn.Conv1d(nhid, out_dim, kernel_size=1)
+
 
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
         self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, edge_index, edge_weight):
+        xs = []
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
+        xs += [x]
         if self.layer == 1:
             x = F.dropout(x, self.dropout, training=self.training)
             return x
@@ -1366,10 +1394,16 @@ class DiSAGE_x_nhid(torch.nn.Module):
             for iter_layer in self.convx:
                 x = F.dropout(x, self.dropout, training=self.training)
                 x = F.relu(iter_layer(x, edge_index, edge_weight))
+                xs += [x]
 
         x = F.dropout(x, self.dropout, training=self.training)
-        # x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))      # good for telegram
         x = self.conv2(x, edge_index, edge_weight)
+        xs += [x]
+
+        if self.jk is not None:
+            x = self.jump(xs)
+            x = self.lin(x)
+
         return x   # log softmax operation, has the same dimension
 
 
@@ -6185,6 +6219,7 @@ class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
         self._dropout = args.dropout
         nhid = args.feat_dim
         self.jk= args.jk
+        self.BNorm = args.BN_model
 
         self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
         self.ib2 = InceptionBlock_Di(m, nhid, nhid, args)
@@ -6227,7 +6262,8 @@ class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
                 xs += [x]
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-        x = self.batch_norm2(x)
+        if self.BNorm:
+            x = self.batch_norm2(x)
         xs += [x]
         if self.jk is not None:
             x = self.jump(xs)
@@ -6372,6 +6408,7 @@ class DiGCN_IB_X_nhid_para_Jk(torch.nn.Module):
         self.jumping_knowledge = args.jk
         num_layers = args.layer
         output_dim = nhid if self.jumping_knowledge else out_dim
+        self.BNorm = args.BN_model
         if args.layer==1:
             self.ib1 = InceptionBlock_Di_list(m, input_dim, output_dim, args)
         else:
@@ -6381,6 +6418,8 @@ class DiGCN_IB_X_nhid_para_Jk(torch.nn.Module):
         self.coef1 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib1
         self.coef2 = nn.ParameterList([nn.Parameter(torch.tensor(1.0)) for _ in range(20)])  # coef for ib2
         self._dropout = args.dropout
+
+        self.batch_norm2 = nn.BatchNorm1d(nhid)
 
         if self.jumping_knowledge is not None:
             input_dim = nhid * num_layers if self.jumping_knowledge == "cat" else nhid
@@ -6421,6 +6460,8 @@ class DiGCN_IB_X_nhid_para_Jk(torch.nn.Module):
         x = x_list[0]
         for i in range(1, len(x_list)):
             x += self.coef2[i] * x_list[i]
+        if self.BNorm:
+            x = self.batch_norm2(x)
         xs += [x]
 
         if self.jumping_knowledge is not None:

@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
-    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, normalize_edges_all1, Qin_get_all_directed_adj
+    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, normalize_row_edges, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced
 from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
@@ -215,15 +215,14 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
         average_distance, threshold_value = feat_proximity(edges, data_x)
         proximity_threshold = threshold_value
     if args.net.startswith('Wi'):
-        edge_index1, edge_weights1 = WCJ_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
-    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','Ii', 'ii')):
-        edge_index1, edge_weights1 = Qin_get_directed_adj(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)
+        edge_index1, edge_weights1 = WCJ_get_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
+    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
+        edge_index1, edge_weights1 = Qin_get_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
-        edge_index1, edge_weights1 = get_appr_directed_adj2(args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
+        edge_index1, edge_weights1 = get_appr_directed_adj2(args.self_loop, args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
 
     else:
         raise NotImplementedError("Not Implemented" + args.net)
-    # if args.net[-1].isdigit() and (args.net[-2] == 'i' or args.net[-2] == 'u' or args.net[-2] == 's'):
     if args.net[-1].isdigit() or args.net[-2:] == 'ib':
         if args.net[-1] == 'b':
             k = 2
@@ -244,7 +243,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                 if k == 2 and args.net.startswith('Di'):
                     edge_list = []
                     if args.net.startswith('Di'):
-                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj(edges.long(), data_y.size(-1), data_x.dtype)
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype)
                     else:   # just for debug
                         edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
                     edge_list.append(edge_index_tuple)
@@ -280,14 +279,14 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
     if args.feat_proximity:
         if not isinstance(SparseEdges, tuple):
             SparseEdges = delete_edges(SparseEdges, data_x, threshold_value).to(device)
-            edge_weight = normalize_edges_all1(data_x.size()[0], SparseEdges).to(device)
-            # SparseEdges = (SparseEdges,)
+            edge_weight = normalize_row_edges(data_x.size()[0], SparseEdges).to(device)
+            # SparseEdges = (SparseEdges,)  normalize_row_edges(edge_index, num_nodes, edge_weight)
         else:
             proximity_edges = []
             proximity_weights = []
             for edge_index1 in SparseEdges:
                 filtered_edges = delete_edges(edge_index1, data_x, threshold_value).to(device)
-                filtered_edge_weights = normalize_edges_all1(data_x.size()[0], filtered_edges).to(device)
+                filtered_edge_weights = normalize_row_edges(data_x.size()[0], filtered_edges).to(device)
                 print("num_edge change from {} to {}".format(edge_index1.shape[1], filtered_edge_weights.shape[0]))
                 proximity_edges.append(filtered_edges)
                 proximity_weights.append(filtered_edge_weights)

@@ -903,10 +903,10 @@ class DirGCNConv(torch.nn.Module):
             num_nodes = x.shape[0]
 
             adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-            self.adj_norm = get_norm_adj(adj, norm="dir")
+            self.adj_norm = get_norm_adj(adj, norm="dir")     # this is key: improve from 57 to 72
 
             adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
-            self.adj_t_norm = get_norm_adj(adj_t, norm="dir")
+            self.adj_t_norm = get_norm_adj(adj_t, norm="dir")  #
 
         return self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(
             self.adj_t_norm @ x
@@ -937,6 +937,7 @@ def directed_norm(adj):
     Applies the normalization for directed graphs:
         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
     """
+    print(type(adj))
     in_deg = sparsesum(adj, dim=0)
     in_deg_inv_sqrt = in_deg.pow_(-0.5)
     in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)

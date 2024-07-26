@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 
-from edge_nets.edge_data import normalize_edges_all1
 from nets.Sym_Reg import DGCNConv
 
 

@@ -8,7 +8,6 @@ import scipy.sparse as sp
 from torch_geometric.utils import to_undirected, add_self_loops, remove_self_loops
 from torch_geometric.datasets import WebKB, WikipediaNetwork
 
-from edge_nets.edge_data import normalize_edges, normalize_edges_all1
 from nets.hermitian import hermitian_decomp_sparse, cheb_poly_sparse, hermitian_decomp, cheb_poly
 
 # internel

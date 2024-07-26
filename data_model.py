@@ -7,9 +7,6 @@ from torch_scatter import scatter_add
 
 from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1
-# sys.path.append('./Signum_quaternion/QuaNet_node_prediction_one_laplacian_Qin')
-# sys.path.append('./Signum_quaternion/')
-# print('sys path is',sys.path)
 
 from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from nets.Signum import SigMaNet_node_prediction_one_laplacian_Qin
@@ -67,7 +64,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                         num_hid=args.feat_dim,
                         K=args.K,
                         alpha=args.alpha,
-                        dropout=args.dropout,layer=args.layer)
+                        dropout=args.dropout, layer=args.layer)
     elif args.net == 'gprgnn':
         # model = GPRGNNNet1_Qin(in_channels=num_features,      # a bit worse
         model = GPRGNNNet1(in_channels=num_features,
@@ -183,8 +180,11 @@ def get_name(args, IsDirectedGraph):
         net_to_print = 'LNorm_' + net_to_print
     else:
         net_to_print = 'NoLNorm_' + net_to_print
-
-    if args.net[1:].startswith('i'):
+    if args.net[1] == 'i':
+        if args.self_loop:
+            net_to_print = net_to_print + '_AddSloop'
+        else:
+            net_to_print = net_to_print + '_NoSloop'
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
 
@@ -201,7 +201,7 @@ def get_name(args, IsDirectedGraph):
 
 
 def log_file(net_to_print, dataset_to_print, args):
-    log_file_name = 'RmGenSelfloop_QymNorm' + dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
+    log_file_name = dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 

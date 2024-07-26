@@ -13,8 +13,6 @@ from torch_geometric.utils import add_remaining_self_loops
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_sparse import SparseTensor, fill_diag
 
-from edge_nets.edge_data import normalize_edges, normalize_edges_all1
-
 
 def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
              add_self_loops=True, dtype=None):
