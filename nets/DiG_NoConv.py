@@ -112,7 +112,7 @@ def union_edges(num_node, edge_index_tuple, device, mode):
         edges = torch.tensor(edges_tuples).T
     else:
         edges = edge_index_tuple[-1]
-    weights = normalize_row_edges(num_node, edges)
+    weights = normalize_row_edges( edge_index=edges, num_nodes= num_node)
 
     return edges.to(device), weights.to(device)
 

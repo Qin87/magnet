@@ -14,13 +14,13 @@ import torch.nn.functional as F
 from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
-    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, normalize_row_edges, Qin_get_all_directed_adj, normalize_row_edges
+    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced
 from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from data.preprocess import  F_in_out, F_in_out0
-from utils import CrossEntropy
+from utils import CrossEntropy, use_best_hyperparams
 from sklearn.metrics import balanced_accuracy_score, f1_score
 
 import warnings
@@ -149,8 +149,7 @@ def test():
 
 start_time = time.time()
 args = parse_args()
-seed = args.seed
-
+args = use_best_hyperparams(args, args.Dataset) if args.use_best_hyperparams else args
 
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
@@ -163,8 +162,7 @@ print(args)
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
 
-
-seed_everything(seed)
+seed_everything(args.seed)
 
 
 biedges = None
@@ -232,13 +230,13 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
             IsExhaustive = True
         if IsDirectedGraph:
             if args.net.startswith('Ai'):
-                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.has_1_order, args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.has_1_order, args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net.startswith('Ii'):
                 IsExhaustive = True
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net.startswith('ii'):
                 IsExhaustive = False
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net[-2] == 'i':
                 if k == 2 and args.net.startswith('Di'):
                     edge_list = []
@@ -251,11 +249,11 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                     edge_weights_tuple = (edge_weights_tuple, )
                     del edge_list
                 else:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection')
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection', norm=args.inci_norm)
             elif args.net[-2] == 'u':
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union', norm=args.inci_norm)
             elif args.net[-2] == 's':  # separate tuple for A_in, and A_out
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate')
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate', norm=args.inci_norm)
             else:
                 raise NotImplementedError("Not Implemented" + args.net)
         else:    # undirected graph
@@ -279,14 +277,14 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
     if args.feat_proximity:
         if not isinstance(SparseEdges, tuple):
             SparseEdges = delete_edges(SparseEdges, data_x, threshold_value).to(device)
-            edge_weight = normalize_row_edges(data_x.size()[0], SparseEdges).to(device)
+            edge_weight = normalize_row_edges(SparseEdges, data_x.size()[0]).to(device)
             # SparseEdges = (SparseEdges,)  normalize_row_edges(edge_index, num_nodes, edge_weight)
         else:
             proximity_edges = []
             proximity_weights = []
             for edge_index1 in SparseEdges:
                 filtered_edges = delete_edges(edge_index1, data_x, threshold_value).to(device)
-                filtered_edge_weights = normalize_row_edges(data_x.size()[0], filtered_edges).to(device)
+                filtered_edge_weights = normalize_row_edges(filtered_edges, data_x.size()[0]).to(device)
                 print("num_edge change from {} to {}".format(edge_index1.shape[1], filtered_edge_weights.shape[0]))
                 proximity_edges.append(filtered_edges)
                 proximity_weights.append(filtered_edge_weights)
@@ -327,6 +325,7 @@ try:
 except:
     splits = 1
 Set_exit = False
+
 preprocess_time = time.time()
 try:
     # start_time = time.time()
@@ -349,8 +348,9 @@ try:
                             print(i.size()[0], end=' ', file=log_file)
                             print(i.size()[0], end=' ')
                     else:
-                        print(edge_weight.size()[0], end=' ', file=log_file)
-                        print(edge_weight.size()[0], end=' ')
+                        if edge_weight is not None:
+                            print(edge_weight.size()[0], end=' ', file=log_file)
+                            print(edge_weight.size()[0], end=' ')
 
             # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
             if hasattr(model, 'coefs'):     # parameter without weight_decay will typically change faster

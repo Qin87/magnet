@@ -938,13 +938,22 @@ def directed_norm(adj):
         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
     """
     print(type(adj))
+    if not adj.is_cuda:
+        adj = adj.cuda()
+        print("Moved adj to CUDA")
     in_deg = sparsesum(adj, dim=0)
+    print(f"in_deg device: {in_deg.device}")
+
     in_deg_inv_sqrt = in_deg.pow_(-0.5)
     in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)
+    print(f"in_deg_inv_sqrt device: {in_deg_inv_sqrt.device}")
 
     out_deg = sparsesum(adj, dim=1)
+    print(f"out_deg device: {out_deg.device}")
+
     out_deg_inv_sqrt = out_deg.pow_(-0.5)
     out_deg_inv_sqrt.masked_fill_(out_deg_inv_sqrt == float("inf"), 0.0)
+    print(f"out_deg_inv_sqrt device: {out_deg_inv_sqrt.device}")
 
     adj = mul(adj, out_deg_inv_sqrt.view(-1, 1))
     adj = mul(adj, in_deg_inv_sqrt.view(1, -1))

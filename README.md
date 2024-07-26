@@ -149,7 +149,8 @@ Feel free to email (qj2004 [AT] hw.ac.uk) for any questions about this work.
 
 ## Acknowledgements
 
-The code is implemented based on [GraphSHA](https://github.com/wenzhilics/GraphSHA), [DiGCN](https://github.com/flyingtango/DiGCN) and [MagNet](https://github.com/matthew-hirn/magnet).
+The code is implemented based on [GraphSHA](https://github.com/wenzhilics/GraphSHA), [DiGCN](https://github.com/flyingtango/DiGCN),  [DirGNN](https://github.com/emalgorithm/directed-graph-neural-network)and 
+[MagNet](https://github.com/matthew-hirn/magnet).
 
 ## Citation
 

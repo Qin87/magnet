@@ -1,0 +1,23 @@
+# 96
+telegram:
+  net: QiGi3
+  layer: 3
+  lr: 0.01
+  BN_model: True
+  self_loop: True
+  jk: None
+
+
+
+
+
+
+
+#
+cora_ml:
+  net: QiGi3
+  layer: 3
+  lr: 0.01
+  BN_model: False
+  self_loop : True
+  jk: None
