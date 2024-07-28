@@ -84,7 +84,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
         # model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
     elif args.net == 'JKNet':
-        model = GCN_JKNet(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, layer=args.layer)
+        model = GCN_JKNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'GPRGNN':
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
@@ -181,12 +181,13 @@ def get_name(args, IsDirectedGraph):
     else:
         net_to_print = 'NoLNorm_' + net_to_print
     if args.net[1] == 'i':
-        if args.self_loop:
+        if args.paraD:
+            net_to_print = net_to_print + 'paraD' + str(args.coeflr)
+
+        if args.First_self_loop:
             net_to_print = net_to_print + '_AddSloop'
         else:
             net_to_print = net_to_print + '_NoSloop'
-        if args.paraD:
-            net_to_print = net_to_print + 'paraD' + str(args.coeflr)
 
         if args.feat_proximity:
             net_to_print = net_to_print + '_feaProx'

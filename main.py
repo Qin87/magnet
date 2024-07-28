@@ -215,7 +215,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
     if args.net.startswith('Wi'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
     elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
-        edge_index1, edge_weights1 = Qin_get_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype)
+        edge_index1, edge_weights1 = Qin_get_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.self_loop, args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
 
@@ -230,7 +230,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
             IsExhaustive = True
         if IsDirectedGraph:
             if args.net.startswith('Ai'):
-                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args.has_1_order, args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net.startswith('Ii'):
                 IsExhaustive = True
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)

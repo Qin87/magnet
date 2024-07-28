@@ -20,6 +20,9 @@ from torch_geometric.typing import (OptPairTensor, Adj, Size, NoneType,
                                     OptTensor)
 from torch import Tensor
 
+from nets.geometric_baselines import DirGCNConv, DirGCNConv_Qin
+
+
 class InceptionBlock_Qinlist(torch.nn.Module):
     def __init__(self, in_dim, out_dim):
         super(InceptionBlock_Qinlist, self).__init__()
@@ -77,12 +80,18 @@ class InceptionBlock_Di(torch.nn.Module):
         super(InceptionBlock_Di, self).__init__()
         head = args.heads
         K = args.K
+        self.dropout = args.dropout
+        self.fusion_mode = args.fs
+        alpha_dir = args.alphaDir
 
-        self.ln = Linear(in_dim, out_dim)
+        # self.ln = Linear(in_dim, out_dim)
         if m == 'S':
             self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(20)])
         elif m == 'G':
-            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
+            # self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])     # TODO test below
+            # self.convx = nn.ModuleList([DirGCNConv(in_dim, out_dim, alpha_dir) for _ in range(20)])
+            self.convx = nn.ModuleList([DirGCNConv(in_dim, out_dim) for _ in range(20)])
+            # self.convx = DirGCNConv(in_dim, out_dim)
         elif m == 'C':
             self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(20)])
         elif m == 'A':
@@ -92,16 +101,24 @@ class InceptionBlock_Di(torch.nn.Module):
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
+        # self.lin_src_to_dst = nn.ModuleList([Linear(input_dim, output_dim) for _ in range(20)])
+
     def reset_parameters(self):
-        self.ln.reset_parameters()
+        # self.ln.reset_parameters()
         self.convx.reset_parameters()
 
     def forward(self, x, edge_index_tuple, edge_weight_tuple):
 
-        x0 = self.ln(x)
-        for i in range(len(edge_index_tuple)):
-            x0 += F.dropout(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]), p=0.6, training=self.training)
-            torch.cuda.empty_cache()
+        # x = self.ln(x)     # TODO
+        # x0 = self.convx(x, edge_index_tuple[0])
+        # # for i in range(len(edge_index_tuple)):        # TODO
+        for i in range(len(edge_index_tuple)-1):
+        # for i in range(1, len(edge_index_tuple)):         # AiGi1 use this for chameleon
+        #     x0 += F.dropout(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]), p=0.6, training=self.training)     # TODO
+        #     x0 += self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
+        #     x0 = self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
+            x0 = self.convx[i](x, edge_index_tuple[i])
+        #     torch.cuda.empty_cache()
         return x0
 
 
@@ -112,7 +129,7 @@ def union_edges(num_node, edge_index_tuple, device, mode):
         edges = torch.tensor(edges_tuples).T
     else:
         edges = edge_index_tuple[-1]
-    weights = normalize_row_edges( edge_index=edges, num_nodes= num_node)
+    weights = normalize_row_edges(edge_index=edges, num_nodes= num_node)
 
     return edges.to(device), weights.to(device)
 
@@ -6234,47 +6251,52 @@ class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
 
         if self.jk is not None:
             input_dim = nhid * self.layer if self.jk == "cat" else nhid
-            # self.lin = Linear(input_dim, out_dim)
-            self.lin = Linear(input_dim, nhid)
+            self.lin = Linear(input_dim, out_dim)
+            # self.lin = Linear(input_dim, nhid)
             self.jump = JumpingKnowledge(mode=self.jk, channels=nhid, num_layers=out_dim)
 
         self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
         self.non_reg_params = self.ib2.parameters()
 
+
+
     def forward(self, x, edge_index_tuple, edge_weight_tuple):
         xs = []
         # layer Normalization best only one at last layer, good for telegram
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
-        x = F.dropout(x, p=self._dropout, training=self.training)
-        xs += [x]
+        # x = F.dropout(x, p=self._dropout, training=self.training)
 
         if self.layer == 1:
-            x = self.batch_norm1(x)
+            if self.BNorm:
+                x = self.batch_norm1(x)
             x = Conv_Out(x, self.Conv)
             return x
 
         x = F.relu(x)
+        xs += [x]
         if self.layer > 2:
             for iter_layer in self.ibx:
-                x = F.dropout(x, p=self._dropout, training=self.training)
+                # x = F.dropout(x, p=self._dropout, training=self.training)
                 x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
                 x = F.relu(x)
                 xs += [x]
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
+        x = F.relu(x)
         if self.BNorm:
             x = self.batch_norm2(x)
         xs += [x]
+
+
         if self.jk is not None:
             x = self.jump(xs)
             x = self.lin(x)
-        x = F.relu(x)
-        x = Conv_Out(x, self.Conv)
-        x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = Conv_Out(x, self.Conv)
+        # x = F.dropout(x, p=self._dropout, training=self.training)
 
 
-        return x
-
+        return x        #
+        # return torch.nn.functional.log_softmax(x, dim=1)
 
 class Di_IB_X_nhid(torch.nn.Module):
     def __init__(self, m, input_dim,   out_dim, args):
