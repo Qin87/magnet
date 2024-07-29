@@ -4,6 +4,7 @@ import random
 import torch_geometric.transforms as transforms
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
+from ogb.nodeproppred import PygNodePropPredDataset
 try:
     import dgl
     from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset, FraudDataset, \
@@ -32,6 +33,15 @@ def keep_all_data(edge_index, label, n_data, n_cls, train_mask):
     edge_mask = torch.ones(edge_index.size(1), dtype=torch.bool)   # Qin revise May16
     return class_num_list, data_train_mask, idx_info, train_node_mask, edge_mask
 
+def get_mask(idx, num_nodes):
+    """
+    Given a tensor of ids and a number of nodes, return a boolean mask of size num_nodes which is set to True at indices
+    in `idx`, and to False for other indices.
+    """
+    mask = torch.zeros(num_nodes, dtype=torch.bool)
+    mask[idx] = 1
+    return mask
+
 
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -39,6 +49,17 @@ def load_directedData(args):
     if load_func == "Cora" or load_func == "CiteSeer" or load_func == "PubMed":
         from torch_geometric.datasets import Planetoid
         dataset = Planetoid(args.data_path, load_func, transform=T.NormalizeFeatures(), split='full')
+    elif load_func in ["ogbn-arxiv"]:
+        dataset = PygNodePropPredDataset(name=load_func, transform=transforms.ToSparseTensor(), root=args.data_path)
+        # evaluator = Evaluator(name=name)
+        split_idx = dataset.get_idx_split()
+        dataset.data.train_mask = get_mask(split_idx["train"], dataset.data.num_nodes)
+        dataset.data.val_mask = get_mask(split_idx["valid"], dataset.data.num_nodes)
+        dataset.data.test_mask = get_mask(split_idx["test"], dataset.data.num_nodes)
+        num_train_nodes = dataset._data.train_mask.sum().item()
+        num_train_nodes0 = dataset._data.val_mask.sum().item()
+        num_train_nodes1 = dataset._data.test_mask.sum().item()
+        print(num_train_nodes, num_train_nodes0, num_train_nodes1)
     elif load_func in ["directed-roman-empire"]:
         # path = f"{root_dir}/"
         dataset = DirectedHeterophilousGraphDataset(name=load_func, transform=transforms.NormalizeFeatures(), root=args.data_path)

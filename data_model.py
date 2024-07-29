@@ -215,6 +215,8 @@ def load_dataset(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     data = dataset[0]
+    if args.Dataset in ['ogbn-arxiv/']:
+        data = dataset._data
     global class_num_list, idx_info, prev_out, sample_times
     global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
     try:
@@ -272,11 +274,12 @@ def load_dataset(args):
     else:
         edges = data.edge_index  # for torch_geometric librar
         data_y = data.y
-        if len(data.train_mask.shape) > 1 and data.train_mask.size(-1) == 10:
-            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
-        else:
-            data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
-            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+        data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+        # if len(data.train_mask.shape) > 1 and data.train_mask.size(-1) == 10:     # TODO
+        #     data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+        # else:
+        #     data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)
+        #     data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
 
         data_x = data.x
         try:

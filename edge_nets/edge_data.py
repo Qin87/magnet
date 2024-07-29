@@ -1338,6 +1338,7 @@ def normalize_row_edges(edge_index, num_nodes, edge_weight=None):
         edge_weight = torch.ones((edge_index.size(1),), dtype=torch.float, device=device)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+    # deg = torch.where(deg == 0, torch.tensor(float('inf'), device=deg.device), deg)
     deg_inv_sqrt = deg.pow(-0.5)
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
