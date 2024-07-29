@@ -49,9 +49,9 @@ def load_directedData(args):
     if load_func == "Cora" or load_func == "CiteSeer" or load_func == "PubMed":
         from torch_geometric.datasets import Planetoid
         dataset = Planetoid(args.data_path, load_func, transform=T.NormalizeFeatures(), split='full')
+
     elif load_func in ["ogbn-arxiv"]:
         dataset = PygNodePropPredDataset(name=load_func, transform=transforms.ToSparseTensor(), root=args.data_path)
-        # evaluator = Evaluator(name=name)
         split_idx = dataset.get_idx_split()
         dataset.data.train_mask = get_mask(split_idx["train"], dataset.data.num_nodes)
         dataset.data.val_mask = get_mask(split_idx["valid"], dataset.data.num_nodes)
