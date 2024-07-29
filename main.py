@@ -213,12 +213,11 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
         average_distance, threshold_value = feat_proximity(edges, data_x)
         proximity_threshold = threshold_value
     if args.net.startswith('Wi'):
-        edge_index1, edge_weights1 = WCJ_get_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype, args.W_degree)
+        edge_index1, edge_weights1 = WCJ_get_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.self_loop, args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
-
     else:
         raise NotImplementedError("Not Implemented" + args.net)
     if args.net[-1].isdigit() or args.net[-2:] == 'ib':
@@ -236,12 +235,12 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net.startswith('ii'):
                 IsExhaustive = False
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net[-2] == 'i':
                 if k == 2 and args.net.startswith('Di'):
                     edge_list = []
                     if args.net.startswith('Di'):
-                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), data_x.dtype)
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
                     else:   # just for debug
                         edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
                     edge_list.append(edge_index_tuple)
@@ -249,11 +248,11 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                     edge_weights_tuple = (edge_weights_tuple, )
                     del edge_list
                 else:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.First_self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection', norm=args.inci_norm)
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection', norm=args.inci_norm)
             elif args.net[-2] == 'u':
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.First_self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union', norm=args.inci_norm)
             elif args.net[-2] == 's':  # separate tuple for A_in, and A_out
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.First_self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate', norm=args.inci_norm)
             else:
                 raise NotImplementedError("Not Implemented" + args.net)
         else:    # undirected graph

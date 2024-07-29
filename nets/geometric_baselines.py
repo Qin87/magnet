@@ -899,10 +899,10 @@ class DirGCNConv(torch.nn.Module):
         self.alpha = alpha
         self.adj_norm, self.adj_t_norm = None, None
 
-    def initialize_parameters(self):
-        init.kaiming_uniform_(self.lin_src_to_dst.weight, a=init.calculate_gain('relu'))
-        if self.lin_src_to_dst.bias is not None:
-            init.zeros_(self.lin_src_to_dst.bias)
+    # def initialize_parameters(self):
+    #     init.kaiming_uniform_(self.lin_src_to_dst.weight, a=init.calculate_gain('relu'))
+    #     if self.lin_src_to_dst.bias is not None:
+    #         init.zeros_(self.lin_src_to_dst.bias)
 
     def forward(self, x, edge_index):
         if self.adj_norm is None:
@@ -1148,7 +1148,7 @@ class GNN(torch.nn.Module):     # from Rossi(LoG paper)
         conv_type="dir-gcn",
         jumping_knowledge=False,
         normalize=False,
-        alpha=1 / 2,
+        alpha=1/2,
         learn_alpha=False,
     ):
         super(GNN, self).__init__()
