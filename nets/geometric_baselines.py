@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import Linear, ModuleList
+from torch.nn import Linear, ModuleList, init
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP, JumpingKnowledge
 from torch.nn import Parameter
 from torch_sparse import SparseTensor
@@ -878,6 +878,7 @@ def get_conv(conv_type, input_dim, output_dim, alpha):      # from Rossi(LoG)
         return GATConv(input_dim, output_dim, heads=1)
     elif conv_type == "dir-gcn":
         return DirGCNConv(input_dim, output_dim, alpha)
+        # return DirGCNConv(input_dim, output_dim)
     elif conv_type == "dir-sage":
         return DirSageConv(input_dim, output_dim, alpha)
     elif conv_type == "dir-gat":
@@ -886,6 +887,7 @@ def get_conv(conv_type, input_dim, output_dim, alpha):      # from Rossi(LoG)
         raise ValueError(f"Convolution type {conv_type} not supported")
 
 class DirGCNConv(torch.nn.Module):
+    # def __init__(self, input_dim, output_dim, alpha):
     def __init__(self, input_dim, output_dim, alpha):
         super(DirGCNConv, self).__init__()
 
@@ -896,6 +898,11 @@ class DirGCNConv(torch.nn.Module):
         self.lin_dst_to_src = Linear(input_dim, output_dim)
         self.alpha = alpha
         self.adj_norm, self.adj_t_norm = None, None
+
+    def initialize_parameters(self):
+        init.kaiming_uniform_(self.lin_src_to_dst.weight, a=init.calculate_gain('relu'))
+        if self.lin_src_to_dst.bias is not None:
+            init.zeros_(self.lin_src_to_dst.bias)
 
     def forward(self, x, edge_index):
         if self.adj_norm is None:
@@ -911,6 +918,108 @@ class DirGCNConv(torch.nn.Module):
         return self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(
             self.adj_t_norm @ x
         )
+
+def count_upper_triangle_edges(self):
+    row, col, _ = self.coo()
+    upper_triangle_mask = row < col
+    upper_triangle_count = upper_triangle_mask.sum().item()
+    return upper_triangle_count
+
+class DirGCNConv_2(torch.nn.Module):
+    def __init__(self, input_dim, output_dim, args):
+        super(DirGCNConv_2, self).__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.lin_src_to_dst = Linear(input_dim, output_dim)
+        self.lin_dst_to_src = Linear(input_dim, output_dim)
+
+        self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
+        # nn.ModuleList([DirGCNConv(in_dim, out_dim) for _ in range(20)])
+        self.alpha = nn.Parameter(torch.ones(1) * args.alphaDir, requires_grad=False)
+        self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
+        self.gama = nn.Parameter(torch.ones(1) * args.gamaDir, requires_grad=False)
+        # self.alpha = args.alphaDir
+        # self.beta = args.betaDir
+        # self.gama = args.gamaDir
+
+        self.norm_list = []
+
+
+        self.adj_norm, self.adj_t_norm = None, None
+
+        # self
+        self.adj_norm_in2, self.adj_norm_out2, self.adj_norm_in2_in, self.adj_norm_out2_out = None, None, None, None
+
+        jumping_knowledge = args.jk_inner
+        self.jumping_knowledge = jumping_knowledge
+        if jumping_knowledge is not None:
+            input_dim_jk = output_dim * 3 if jumping_knowledge == "cat" else output_dim
+            self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=input_dim, num_layers=3)
+            self.lin = Linear(input_dim_jk, output_dim)
+
+
+    def forward(self, x, edge_index):
+        if self.adj_norm is None:
+            row, col = edge_index
+            num_nodes = x.shape[0]
+
+            adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+            self.adj_norm = get_norm_adj(adj, norm="dir")     # this is key: improve from 57 to 72
+
+            adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
+            self.adj_t_norm = get_norm_adj(adj_t, norm="dir")  #
+
+        if self.adj_norm_in2 is None:
+            self.adj_norm_in2 = directed_norm(self.adj_norm @ self.adj_t_norm, rm_gen_sLoop=True)
+            self.adj_norm_out2 = directed_norm(self.adj_t_norm @ self.adj_norm, rm_gen_sLoop=True)
+
+            self.adj_norm_in2_in = get_norm_adj(self.adj_norm @ self.adj_norm, norm="dir")
+            self.adj_norm_out2_out = get_norm_adj(self.adj_t_norm @ self.adj_t_norm, norm="dir")
+            self.norm_list = [self.adj_norm_in2, self.adj_norm_out2, self.adj_norm_in2_in, self.adj_norm_out2_out]
+            # self.norm_list = [self.adj_norm_in2_in, self.adj_norm_out2_out]
+
+        # # xs = []
+        # # x_lin = self.lin_src_to_dst(x)
+        out1 = self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x)
+        out2 = self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x)
+        out3 = self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x)
+
+        xs = [out1, out2*0, out3*0]
+
+        if self.jumping_knowledge is not None:
+            x = self.jump(xs)
+            x = self.lin(x)
+        else:
+            x = out1 + out2*0 + out3*0
+
+
+        return x
+
+
+class DirGCNConv_Qin(torch.nn.Module):
+    def __init__(self, input_dim, output_dim, alpha):
+        super(DirGCNConv_Qin, self).__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.lin_src_to_dst = Linear(input_dim, output_dim)
+        self.lin_dst_to_src = Linear(input_dim, output_dim)
+        self.alpha = alpha
+        self.adj_norm, self.adj_t_norm = None, None
+
+    def forward(self, x, edge_index, edge_weight):
+        device = edge_index.device
+        num_nodes = edge_index.max().item() + 1
+
+        adj_matrix = torch.sparse_coo_tensor(edge_index, edge_weight, (num_nodes, num_nodes)).to(device)
+
+        # Perform sparse matrix multiplication
+        out = torch.sparse.mm(adj_matrix, x)
+
+        return self.lin_src_to_dst(out)
 
 def get_norm_adj(adj, norm):
     if norm == "sym":
@@ -931,29 +1040,46 @@ def row_norm(adj):
 
     return mul(adj, 1 / row_sum.view(-1, 1))
 
+# def remove_self_loops(adj):
+#     """Remove self-loops from the adjacency matrix."""
+#     mask = adj.row() != adj.col()
+#     adj = adj.index_select(mask)
+#     return adj
 
-def directed_norm(adj):
+def remove_self_loops(adj):
+    """Remove self-loops from the adjacency matrix."""
+    row, col, value = adj.coo()
+    mask = row != col
+    row = row[mask]
+    col = col[mask]
+    value = value[mask] if value is not None else None
+    adj = SparseTensor(row=row, col=col, value=value, sparse_sizes=adj.sparse_sizes())
+    return adj
+
+def directed_norm(adj, rm_gen_sLoop=False):
     """
     Applies the normalization for directed graphs:
         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
     """
-    print(type(adj))
+    # print(type(adj))
+    if rm_gen_sLoop:
+        adj = remove_self_loops(adj)
     if not adj.is_cuda:
         adj = adj.cuda()
-        print("Moved adj to CUDA")
+        # print("Moved adj to CUDA")
     in_deg = sparsesum(adj, dim=0)
-    print(f"in_deg device: {in_deg.device}")
+    # print(f"in_deg device: {in_deg.device}")
 
     in_deg_inv_sqrt = in_deg.pow_(-0.5)
     in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)
-    print(f"in_deg_inv_sqrt device: {in_deg_inv_sqrt.device}")
+    # print(f"in_deg_inv_sqrt device: {in_deg_inv_sqrt.device}")
 
     out_deg = sparsesum(adj, dim=1)
-    print(f"out_deg device: {out_deg.device}")
+    # print(f"out_deg device: {out_deg.device}")
 
     out_deg_inv_sqrt = out_deg.pow_(-0.5)
     out_deg_inv_sqrt.masked_fill_(out_deg_inv_sqrt == float("inf"), 0.0)
-    print(f"out_deg_inv_sqrt device: {out_deg_inv_sqrt.device}")
+    # print(f"out_deg_inv_sqrt device: {out_deg_inv_sqrt.device}")
 
     adj = mul(adj, out_deg_inv_sqrt.view(-1, 1))
     adj = mul(adj, in_deg_inv_sqrt.view(1, -1))
@@ -1066,30 +1192,52 @@ class GNN(torch.nn.Module):     # from Rossi(LoG paper)
 
 
 class GCN_JKNet(torch.nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout, layer):
+    def __init__(self, nfeat, nclass, args):
 
         super(GCN_JKNet, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid)
-        self.conv2 = GCNConv(nhid, nhid)
-        self.lin1 = torch.nn.Linear(nhid, nclass)
-        self.one_step = APPNP(K=1, alpha=0)
-        self.JK = JumpingKnowledge(mode='lstm',
-                                   channels=nhid,
-                                   num_layers=2
-                                   )
+        jumping_knowledge = args.jk
+        layer = args.layer
+        nhid = args.feat_dim
+        hidden_dim = nhid
+        normalize = args.BN_model
+        dropout = args.dropout
+
+        output_dim = nhid if jumping_knowledge else nclass
+        if layer == 1:
+            self.convs = ModuleList([DirGCNConv_2(nfeat, output_dim, args)])
+        else:
+            self.convs = ModuleList([DirGCNConv_2(nfeat, nhid, args)])
+            for _ in range(layer - 2):
+                self.convs.append(DirGCNConv_2(nhid, nhid, args))
+            self.convs.append(DirGCNConv_2(nhid, output_dim, args))
+
+        if jumping_knowledge is not None:
+            input_dim = hidden_dim * layer if jumping_knowledge == "cat" else hidden_dim
+            self.lin = Linear(input_dim, nclass)
+            self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=hidden_dim, num_layers=layer)
+
+        self.num_layers = layer
+        self.dropout = dropout
+        self.jumping_knowledge = jumping_knowledge
+        self.normalize = normalize
 
     def forward(self, x, edge_index):
-        x1 = F.relu(self.conv1(x, edge_index))
-        x1 = F.dropout(x1, p=0.5, training=self.training)
+        xs = []
+        for i, conv in enumerate(self.convs):
+            x = conv(x, edge_index)
+            if i != len(self.convs) - 1 or self.jumping_knowledge:
+                x = F.relu(x)
+                x = F.dropout(x, p=self.dropout, training=self.training)
+                if self.normalize:
+                    x = F.normalize(x, p=2, dim=1)
+            xs += [x]
 
-        x2 = F.relu(self.conv2(x1, edge_index))
-        x2 = F.dropout(x2, p=0.5, training=self.training)
+        if self.jumping_knowledge is not None:
+            x = self.jump(xs)
+            x = self.lin(x)
 
-        x = self.JK([x1, x2])
-        x = self.one_step(x, edge_index)
-        x = self.lin1(x)
-        # x = F.dropout(x, p=0.5, training=self.training)   # without is better
-        return F.log_softmax(x, dim=1)
+        return x
+
 
 class GCN_JKNet2(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):

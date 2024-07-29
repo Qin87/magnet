@@ -540,7 +540,8 @@ def union_edge_index(edge_index):
 
     return union
 
-def Qin_get_directed_adj(selfloop, edge_index, num_nodes, dtype, edge_weight=None):
+def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
+    selfloop = args.First_self_loop
     device = edge_index.device
     if selfloop:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # with selfloop, QiG get better
@@ -1122,13 +1123,14 @@ def sparse_boolean_multi_hopExhaust(selfloop, A, k, mode='union'):
 
     return tuple(all_hops)
 
-def sparse_boolean_multi_hop_DirGNN(has_1_order, A, k):
+def sparse_boolean_multi_hop_DirGNN(has_1_order, rm_gen_self_loop, A, k):
     order_tuple_list = []
 
     # Ensure A is in canonical form
     A = A.coalesce().to(torch.float32)
 
-    order_tuple_0 = [sparse_remove_self_loops(A), sparse_remove_self_loops(A.t())]
+    order_tuple_0 = [A, A.t()]
+
     if k<1:
         return tuple(order_tuple_0)
 
@@ -1147,8 +1149,10 @@ def sparse_boolean_multi_hop_DirGNN(has_1_order, A, k):
     num_nonzero_out = B_in._nnz()
     print('number of edges:', num_nonzero_in, num_nonzero_out)
 
-
-    order_tuple_1 = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(B_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_out)]
+    if rm_gen_self_loop == 'remove':
+        order_tuple_1 = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(B_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_out)]
+    else:
+        order_tuple_1 = [A_in, B_in, A_out, B_out]
     order_tuple_list.append(order_tuple_1)
 
     for hop in range(1, k):
@@ -1156,7 +1160,10 @@ def sparse_boolean_multi_hop_DirGNN(has_1_order, A, k):
         for edge_matrix in order_tuple_list[-1]:        # TODO : might improve efficiency for symmetry
             N_in = sparse_mm_safe(edge_matrix, A)
             N_out = sparse_mm_safe(edge_matrix, A.t())
-            order_tuple_temp.extend([sparse_remove_self_loops(N_in), sparse_remove_self_loops(N_out)])
+            if rm_gen_self_loop == 'remove':
+                order_tuple_temp.extend([sparse_remove_self_loops(N_in), sparse_remove_self_loops(N_out)])
+            else:
+                order_tuple_temp.extend([N_in, N_out])
         order_tuple_list.append(order_tuple_temp)
 
     return tuple(tensor for sub_list in order_tuple_list for tensor in sub_list)
@@ -1427,17 +1434,23 @@ def dir_normalize_edge_weights(edge_index, edge_weights, num_nodes):
 
     return edge_index, normalized_edge_weights
 
-def Qin_get_all_directed_adj(has_1_order, selfloop, edge_index, num_nodes, k, IsExhaustive, mode, norm='dir'):     #
+def Qin_get_all_directed_adj(args,  edge_index, num_nodes, k, IsExhaustive, mode, norm='dir'):
+    has_1_order = args.has_1_order
+    selfloop = args.First_self_loop
+    rm_gen_sloop = args.rm_gen_sloop
+
     device = edge_index.device
-    if selfloop:
+    if selfloop == 'add':
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
-    else:
+    elif selfloop == 'remove':
         edge_index, _ = remove_self_loops(edge_index)
+    else:
+        pass
     edge_index = edge_index.to(device)
 
     edge_weight = torch.ones(edge_index.size(1), dtype=torch.bool).to(device)
     A = torch.sparse_coo_tensor(edge_index, edge_weight, size=(num_nodes, num_nodes)).to(device)
-    L_tuple = sparse_boolean_multi_hop_DirGNN(has_1_order, A, k - 1)  # much slower
+    L_tuple = sparse_boolean_multi_hop_DirGNN(has_1_order, rm_gen_sloop, A, k - 1)  # much slower
 
     all_hop_edge_index = []
     all_hops_weight = []
