@@ -60,6 +60,7 @@ def load_directedData(args):
         num_train_nodes0 = dataset._data.val_mask.sum().item()
         num_train_nodes1 = dataset._data.test_mask.sum().item()
         print(num_train_nodes, num_train_nodes0, num_train_nodes1)
+
     elif load_func in ["directed-roman-empire"]:
         # path = f"{root_dir}/"
         dataset = DirectedHeterophilousGraphDataset(name=load_func, transform=transforms.NormalizeFeatures(), root=args.data_path)
