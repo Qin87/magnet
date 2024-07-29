@@ -84,13 +84,13 @@ class InceptionBlock_Di(torch.nn.Module):
         self.fusion_mode = args.fs
         alpha_dir = args.alphaDir
 
-        # self.ln = Linear(in_dim, out_dim)
+        self.ln = Linear(in_dim, out_dim)
         if m == 'S':
             self.convx = nn.ModuleList([DiSAGEConv(in_dim, out_dim) for _ in range(20)])
         elif m == 'G':
-            # self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])     # TODO test below
+            self.convx = nn.ModuleList([DIGCNConv(in_dim, out_dim) for _ in range(20)])
             # self.convx = nn.ModuleList([DirGCNConv(in_dim, out_dim, alpha_dir) for _ in range(20)])
-            self.convx = nn.ModuleList([DirGCNConv(in_dim, out_dim) for _ in range(20)])
+            # self.convx = nn.ModuleList([DirGCNConv(in_dim, out_dim) for _ in range(20)])
             # self.convx = DirGCNConv(in_dim, out_dim)
         elif m == 'C':
             self.convx = nn.ModuleList([DIChebConv(in_dim, out_dim, K) for _ in range(20)])
@@ -104,21 +104,15 @@ class InceptionBlock_Di(torch.nn.Module):
         # self.lin_src_to_dst = nn.ModuleList([Linear(input_dim, output_dim) for _ in range(20)])
 
     def reset_parameters(self):
-        # self.ln.reset_parameters()
+        self.ln.reset_parameters()
         self.convx.reset_parameters()
 
     def forward(self, x, edge_index_tuple, edge_weight_tuple):
 
-        # x = self.ln(x)     # TODO
-        # x0 = self.convx(x, edge_index_tuple[0])
-        # # for i in range(len(edge_index_tuple)):        # TODO
-        for i in range(len(edge_index_tuple)-1):
-        # for i in range(1, len(edge_index_tuple)):         # AiGi1 use this for chameleon
-        #     x0 += F.dropout(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]), p=0.6, training=self.training)     # TODO
-        #     x0 += self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
-        #     x0 = self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i])
-            x0 = self.convx[i](x, edge_index_tuple[i])
-        #     torch.cuda.empty_cache()
+        x0 = self.ln(x)
+        for i in range(len(edge_index_tuple)):
+            x0 += F.dropout(self.convx[i](x, edge_index_tuple[i], edge_weight_tuple[i]), p=0.6, training=self.training)
+            torch.cuda.empty_cache()
         return x0
 
 

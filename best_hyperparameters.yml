@@ -1,9 +1,9 @@
 # 96
 telegram:
   net: QiGi3
-  layer: 3
+  layer: 4
   lr: 0.01
-  BN_model: True
+  BN_model: True    # sure
   self_loop: True
   jk: None
 

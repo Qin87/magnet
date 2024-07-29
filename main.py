@@ -233,7 +233,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                 edge_index_tuple, edge_weights_tuple = Qin_get_all_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net.startswith('Ii'):
                 IsExhaustive = True
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net.startswith('ii'):
                 IsExhaustive = False
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
@@ -249,11 +249,11 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                     edge_weights_tuple = (edge_weights_tuple, )
                     del edge_list
                 else:
-                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection', norm=args.inci_norm)
+                    edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.First_self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='intersection', norm=args.inci_norm)
             elif args.net[-2] == 'u':
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.First_self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='union', norm=args.inci_norm)
             elif args.net[-2] == 's':  # separate tuple for A_in, and A_out
-                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate', norm=args.inci_norm)
+                edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args.First_self_loop, edges.long(), data_y.size(-1), k, IsExhaustive, mode='separate', norm=args.inci_norm)
             else:
                 raise NotImplementedError("Not Implemented" + args.net)
         else:    # undirected graph

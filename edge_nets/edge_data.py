@@ -462,12 +462,10 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 def get_second_directed_adj(selfloop, edge_index, num_nodes, dtype):
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                              device=edge_index.device)
-    if selfloop:
-        fill_value = 1
-        edge_index, edge_weight = add_self_loops(
-            edge_index, edge_weight, fill_value, num_nodes)
-    else:
-        edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
+    if selfloop == 'add':
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+    elif selfloop == 'remove':
+        edge_index, _ = remove_self_loops(edge_index)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv = deg.pow(-1)
@@ -543,9 +541,9 @@ def union_edge_index(edge_index):
 def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     selfloop = args.First_self_loop
     device = edge_index.device
-    if selfloop:
+    if selfloop == 'add':
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # with selfloop, QiG get better
-    else:
+    elif selfloop == 'remove':
         edge_index, _ = remove_self_loops(edge_index)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
@@ -554,64 +552,16 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
 
     return edge_index,  edge_weight
 
-# def Qin_get_directed_adj0(alpha, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
-#     device = edge_index.device
-#
-#     if edge_weight is None:
-#         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
-#                                      device=edge_index.device)
-#     fill_value = 1
-#     edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-#     edge_index = edge_index.to(device)
-#     edge_weight = edge_weight.to(device)
-#     row, col = edge_index
-#     deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)      # row degree
-#     deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)      # col degree
-#     deg2 = deg0 + deg1
-#     deg_inv = deg0.pow(-1).to(device)
-#     deg_inv[deg_inv == float('inf')] = 0
-#     p = deg_inv[row] * edge_weight
-#
-#     # personalized pagerank p
-#     p_dense = torch.sparse.FloatTensor(edge_index, p, torch.Size([num_nodes,num_nodes])).to_dense().to(device)
-#     #
-#     # p_v = torch.zeros(torch.Size([num_nodes + 1, num_nodes + 1])).to(device)  # dummy node
-#     # p_v[0:num_nodes, 0:num_nodes] = (1 - alpha) * p_dense  # original P
-#     # p_v[num_nodes, 0:num_nodes] = 1.0 / num_nodes
-#     # p_v[0:num_nodes, num_nodes] = alpha
-#     # p_v[num_nodes, num_nodes] = 0.0
-#     # p_ppr = p_v.cpu()
-#     p_ppr = p_dense.to(device)
-#     L = (p_ppr + p_ppr.t()) / 2.0  # a bit time consuming
-#
-#     # L = p_dense       # Qin revise
-#     # # make nan to 0
-#     # L[torch.isnan(L)] = 0
-#     #
-#     # # transfer dense L to sparse
-#     L_indices = torch.nonzero(L,as_tuple=False).t()     # the indices of all nonzero elements in the input tensor L, arranged as a tensor where each column represents the indices of a nonzero element
-#     edge_index = L_indices.to(device)
-#
-#     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype, device=edge_index.device)
-#     row, col = edge_index
-#     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-#     deg_inv_sqrt = deg.pow(-0.5)
-#     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-#
-#     edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col].to(device)
-#
-#     return edge_index, edge_weight
 def WCJ_get_directed_adj(self_loop, edge_index, num_nodes, dtype, W_degree=0, edge_weight=None):
     # random value to edge weights
     device = edge_index.device
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
-    fill_value = 1
-    if self_loop:
-        edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-    else:
-        edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
+    if self_loop == 'add':
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+    elif self_loop == 'remove':
+        edge_index, _ = remove_self_loops(edge_index)
     row, col = edge_index
     deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)  # row degree
     deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)  # col degree
@@ -741,11 +691,10 @@ def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_w
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
-    if selfloop:    # original DiG paper adds selfloop
-        fill_value = 1
-        edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value, num_nodes)
-    else:
-        edge_index, edge_weight = remove_self_loops(edge_index, edge_weight)
+    if selfloop == 'add':
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+    elif selfloop == 'remove':
+        edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
     edge_weight = edge_weight.to(device)
     row, col = edge_index
@@ -1372,9 +1321,9 @@ def sparse_intersection(U, I):
 
 def Qin_get_second_directed_adj(self_loop, edge_index, num_nodes, k, IsExhaustive, mode, norm='dir'):     #
     device = edge_index.device
-    if self_loop:
-        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
-    else:
+    if self_loop == 'add':
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+    elif self_loop == 'remove':
         edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 

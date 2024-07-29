@@ -52,6 +52,7 @@ def load_directedData(args):
 
     elif load_func in ["ogbn-arxiv"]:
         dataset = PygNodePropPredDataset(name=load_func, transform=transforms.ToSparseTensor(), root=args.data_path)
+        # evaluator = Evaluator(name=name)
         split_idx = dataset.get_idx_split()
         dataset.data.train_mask = get_mask(split_idx["train"], dataset.data.num_nodes)
         dataset.data.val_mask = get_mask(split_idx["valid"], dataset.data.num_nodes)
