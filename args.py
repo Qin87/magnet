@@ -46,7 +46,7 @@ def parse_args():
                                                                     'RossiGNN, LoG)')
     parser.add_argument('--seed', type=int, default=0, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='WikiCS/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='dgl/cora', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )

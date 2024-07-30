@@ -217,7 +217,7 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
     elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
-        edge_index1, edge_weights1 = get_appr_directed_adj2(args.self_loop, args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
+        edge_index1, edge_weights1 = get_appr_directed_adj2(args.First_self_loop, args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
     else:
         raise NotImplementedError("Not Implemented" + args.net)
     if args.net[-1].isdigit() or args.net[-2:] == 'ib':
