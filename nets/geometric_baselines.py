@@ -2,12 +2,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import triu
 from torch.nn import Linear, ModuleList, init
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP, JumpingKnowledge
 from torch.nn import Parameter
+from torch_geometric.utils import remove_self_loops
 from torch_sparse import SparseTensor
 from torch_sparse import sum as sparsesum
 from torch_sparse import mul
+
+
+# from dgl.python.dgl import add_self_loop
 from nets.gcn import gcn_norm
 
 ####################################################################
@@ -953,7 +958,7 @@ class DirGCNConv_2(torch.nn.Module):
         self.adj_norm_in2, self.adj_norm_out2, self.adj_norm_in2_in, self.adj_norm_out2_out = None, None, None, None
 
         jumping_knowledge = args.jk_inner
-        self.jumping_knowledge = jumping_knowledge
+        self.jumping_knowledge_inner = jumping_knowledge
         if jumping_knowledge is not None:
             input_dim_jk = output_dim * 3 if jumping_knowledge == "cat" else output_dim
             self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=input_dim, num_layers=3)
@@ -962,6 +967,9 @@ class DirGCNConv_2(torch.nn.Module):
 
     def forward(self, x, edge_index):
         if self.adj_norm is None:
+            from torch_geometric.utils import add_self_loops
+            # edge_index, _ = add_self_loops(edge_index, fill_value=1)      # TODO
+            # edge_index, _ = remove_self_loops(edge_index)      # TODO
             row, col = edge_index
             num_nodes = x.shape[0]
 
@@ -971,31 +979,99 @@ class DirGCNConv_2(torch.nn.Module):
             adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
             self.adj_t_norm = get_norm_adj(adj_t, norm="dir")  #
 
+            print('edge number(A, At):', sparse_triu(self.adj_norm), sparse_triu(self.adj_t_norm))
+
         if self.adj_norm_in2 is None:
-            self.adj_norm_in2 = directed_norm(self.adj_norm @ self.adj_t_norm, rm_gen_sLoop=True)
-            self.adj_norm_out2 = directed_norm(self.adj_t_norm @ self.adj_norm, rm_gen_sLoop=True)
+            self.adj_norm_in2 = directed_norm(self.adj_norm @ self.adj_t_norm, rm_gen_sLoop=False)
+            self.adj_norm_out2 = directed_norm(self.adj_t_norm @ self.adj_norm, rm_gen_sLoop=False)
 
             self.adj_norm_in2_in = get_norm_adj(self.adj_norm @ self.adj_norm, norm="dir")
             self.adj_norm_out2_out = get_norm_adj(self.adj_t_norm @ self.adj_t_norm, norm="dir")
             self.norm_list = [self.adj_norm_in2, self.adj_norm_out2, self.adj_norm_in2_in, self.adj_norm_out2_out]
-            # self.norm_list = [self.adj_norm_in2_in, self.adj_norm_out2_out]
+            print('AAt, AtA, AA, AtAt: ',
+                  sparse_triu(self.adj_norm_in2, k=1),
+                  sparse_triu(self.adj_norm_out2, k=1),
+                  sparse_triu(self.adj_norm_in2_in, k=1),
+                  sparse_triu(self.adj_norm_out2_out, k=1))
+            Union_A_AA, Intersect_A_AA = share_edge(self.adj_norm_in2_in, self.adj_norm)
+            print('Union: Insetction(A and AA):', len(Union_A_AA), len(Intersect_A_AA))
+            Union_A_AAt,  Intersect_A_AAt= share_edge(self.adj_norm_in2, self.adj_norm)
+            print('Union: Insetction (A and AAt):', len(Union_A_AAt), len(Intersect_A_AAt))
+
+            # intersect_A_AA = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
+            # self.adj_t_norm = get_norm_adj(adj_t, norm="dir")
 
         # # xs = []
         # # x_lin = self.lin_src_to_dst(x)
-        out1 = self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x)
-        out2 = self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x)
-        out3 = self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x)
 
-        xs = [out1, out2*0, out3*0]
+        out1 = 1*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
+        out2 = 1*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
+        out3 = 1*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
 
-        if self.jumping_knowledge is not None:
+        xs = [out1, out2, out3]
+
+        if self.jumping_knowledge_inner is not None:
             x = self.jump(xs)
             x = self.lin(x)
         else:
-            x = out1 + out2*0 + out3*0
+            x = out1 + out2 + out3
 
 
         return x
+
+def filter_upper_triangle(edges):
+    """Filter edges to include only those in the upper triangle."""
+    return {edge for edge in edges if edge[0] < edge[1]}
+    # return torch.tensor(edge for edge in edges if edge[0] < edge[1])
+def tensor_to_tuple(tensor):
+    return tuple(map(int, tensor.cpu().numpy()))
+def share_edge(m1, m2):
+    import torch
+    row1 = m1.storage.row()
+    row2 = m2.storage.row()
+    # new_row = torch.cat(row1, row2)
+    new_row = torch.cat((row1, row2), dim=0)
+    col1 = torch.tensor(m1.storage.col())
+    col2 = torch.tensor(m2.storage.col())
+    new_col = torch.cat((col1, col2), dim=0)
+
+    union_edges = torch.stack([new_row, new_col], dim=1)
+    unique_edges = torch.unique(union_edges, dim=0)
+
+        # Convert tensors to sets of tuples for intersection
+    edges1 = torch.stack([row1, col1], dim=1)
+    edges2 = torch.stack([row2, col2], dim=1)
+    set1 = set(map(tuple, edges1.tolist()))
+    set2 = set(map(tuple, edges2.tolist()))
+
+    # Find the intersection
+    intersection = set1.intersection(set2)
+
+    # Convert the result back to a tensor
+    intersection_tensor = torch.tensor(list(intersection))
+    intersection_tensor = filter_upper_triangle(intersection_tensor)
+    # intersection_tensor = torch.tensor(list(intersection_tensor), dtype=torch.int64)
+    unique_edges = filter_upper_triangle(unique_edges)
+    # unique_edges = torch.tensor(list(unique_edges), dtype=torch.int64)
+
+    return unique_edges, intersection_tensor
+
+
+
+def sparse_triu(sparse_matrix, k=0):
+    # count the non-zero edges in upper triangle, that what GCN takes in.
+    row = sparse_matrix.storage.row()
+    col = sparse_matrix.storage.col()
+    values = sparse_matrix.storage.value()
+
+    # Create mask for upper triangular elements
+    mask = col - row >= k
+
+    # Apply mask
+    new_values = values[mask]
+
+    return (new_values != 0).sum().item()
+
 
 
 class DirGCNConv_Qin(torch.nn.Module):
@@ -1046,15 +1122,15 @@ def row_norm(adj):
 #     adj = adj.index_select(mask)
 #     return adj
 
-def remove_self_loops(adj):
-    """Remove self-loops from the adjacency matrix."""
-    row, col, value = adj.coo()
-    mask = row != col
-    row = row[mask]
-    col = col[mask]
-    value = value[mask] if value is not None else None
-    adj = SparseTensor(row=row, col=col, value=value, sparse_sizes=adj.sparse_sizes())
-    return adj
+# def remove_self_loops(adj):
+#     """Remove self-loops from the adjacency matrix."""
+#     row, col, value = adj.coo()
+#     mask = row != col
+#     row = row[mask]
+#     col = col[mask]
+#     value = value[mask] if value is not None else None
+#     adj = SparseTensor(row=row, col=col, value=value, sparse_sizes=adj.sparse_sizes())
+#     return adj
 
 def directed_norm(adj, rm_gen_sLoop=False):
     """
