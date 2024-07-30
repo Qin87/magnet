@@ -1175,8 +1175,11 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
                 raise e
 
     # Initialize all_hops list with the intersection of A*A.T and A.T*A
-    A_in = sparse_mm_safe(A, A.t())
-    A_out = sparse_mm_safe(A.t(), A)
+    # A_in = sparse_mm_safe(A, A.t())     # TODO
+    # A_out = sparse_mm_safe(A.t(), A)
+
+    A_in = sparse_mm_safe(A, A)
+    A_out = sparse_mm_safe(A.t(), A.t())
     if selfloop == 'remove':
         A_in = sparse_remove_self_loops(A_in)
         A_out = sparse_remove_self_loops(A_out)
