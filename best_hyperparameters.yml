@@ -21,3 +21,13 @@ cora_ml:
   BN_model: False
   self_loop : True
   jk: None
+
+
+#
+dgl/pubmed:
+  net:
+  layer: 4
+  lr:
+  BN_model: False
+  self_loop : True
+  jk: 'max'
