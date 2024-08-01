@@ -1003,24 +1003,23 @@ class DirGCNConv_2(torch.nn.Module):
             Union_A_AtA, Intersect_A_AtA, diff_AtA_A_At = share_edge(self.adj_norm_out2, self.adj_norm, self.adj_t_norm)
             print('Union: Insetction (A and AtA), diff_A_At:', len(Union_A_AtA), len(Intersect_A_AtA), len(diff_AtA_A_At))
 
-            # indices = torch.stack([torch.tensor(pair) for pair in diff_AAt_A_At], dim=0).t()
-            # row = indices[0]
-            # col = indices[1]
-            # sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-            # self.adj_norm = get_norm_adj(sparse_tensor1, norm="dir").to(self.adj_t_norm.device())
-            #
-            # indices = torch.stack([torch.tensor(pair) for pair in diff_AtA_A_At], dim=0).t()
-            # row = indices[0]
-            # col = indices[1]
-            # sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-            # self.adj_t_norm = get_norm_adj(sparse_tensor2, norm="dir").to(self.adj_t_norm.device())
+            indices = torch.stack([torch.tensor(pair) for pair in diff_AAt_A_At], dim=0).t()
+            row = indices[0]
+            col = indices[1]
+            sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+            self.adj_norm = get_norm_adj(sparse_tensor1, norm="dir").to(self.adj_t_norm.device())
+
+            indices = torch.stack([torch.tensor(pair) for pair in diff_AtA_A_At], dim=0).t()
+            row = indices[0]
+            col = indices[1]
+            sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+            self.adj_t_norm = get_norm_adj(sparse_tensor2, norm="dir").to(self.adj_t_norm.device())
         #
         # # x_lin = self.lin_src_to_dst(x)
 
-
         out1 = 1*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
-        out2 = 1*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
-        out3 = 1*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
+        out2 = 0*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
+        out3 = 0*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
 
 
         xs = [out1, out2, out3]
