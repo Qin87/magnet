@@ -5,7 +5,7 @@ telegram:
   lr: 0.01
   BN_model: True    # sure
   self_loop: True
-  jk: None
+  jk: 'max'
 
 
 # 96
@@ -14,9 +14,9 @@ WikipediaNetwork/chameleon:
   net:
   layer:
   lr:
-  BN_model:
-  self_loop:
-  jk:
+  BN_model: 1 # without layerNorm, very bad
+  self_loop: "remove"
+  jk: 'max'
 
 
 
