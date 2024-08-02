@@ -24,6 +24,11 @@ def parse_args():
     parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=0.5)
     parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=0.5)
     parser.add_argument("--learn_alpha", action="store_true")
+    parser.add_argument("--A", type=int, help="whether use A At:0/1", default=1)
+    parser.add_argument("--AAt", type=int, help="whether use AAt AtA:0/1", default=1)
+    parser.add_argument("--AA", type=int, help="whether use AA AtAt:0/1", default=1)
+    parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
+    parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
 
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
@@ -51,7 +56,7 @@ def parse_args():
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
-    parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
+    parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
     parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb

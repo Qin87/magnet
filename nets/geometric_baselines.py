@@ -945,9 +945,15 @@ class DirGCNConv_2(torch.nn.Module):
         self.alpha = nn.Parameter(torch.ones(1) * args.alphaDir, requires_grad=False)
         self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
         self.gama = nn.Parameter(torch.ones(1) * args.gamaDir, requires_grad=False)
-        # self.alpha = args.alphaDir
-        # self.beta = args.betaDir
-        # self.gama = args.gamaDir
+
+        self.A = nn.Parameter(torch.ones(1) * args.A, requires_grad=False)
+        self.AAt = nn.Parameter(torch.ones(1) * args.AAt, requires_grad=False)
+        self.AA = nn.Parameter(torch.ones(1) * args.AA, requires_grad=False)
+
+        self.First_self_loop = args.First_self_loop
+        self.rm_gen_sloop = args.rm_gen_sloop
+        self.differ_AA = args.differ_AA
+        self.differ_AAt = args.differ_AAt
 
         self.norm_list = []
 
@@ -957,7 +963,7 @@ class DirGCNConv_2(torch.nn.Module):
         self.adj_norm, self.adj_t_norm = None, None
 
         # self
-        self.adj_norm_in2, self.adj_norm_out2, self.adj_norm_in2_in, self.adj_norm_out2_out = None, None, None, None
+        self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out = None, None, None, None
 
         jumping_knowledge = args.jk_inner
         self.jumping_knowledge_inner = jumping_knowledge
@@ -969,9 +975,11 @@ class DirGCNConv_2(torch.nn.Module):
 
     def forward(self, x, edge_index):
         if self.adj_norm is None:
-            from torch_geometric.utils import add_self_loops
-            edge_index, _ = add_self_loops(edge_index, fill_value=1)      # TODO
-            # edge_index, _ = remove_self_loops(edge_index)      # TODO
+            if self.First_self_loop == 'add':
+                from torch_geometric.utils import add_self_loops
+                edge_index, _ = add_self_loops(edge_index, fill_value=1)      # TODO
+            elif self.First_self_loop == 'remove':
+                edge_index, _ = remove_self_loops(edge_index)      # TODO
             row, col = edge_index
             num_nodes = x.shape[0]
 
@@ -983,44 +991,49 @@ class DirGCNConv_2(torch.nn.Module):
 
             print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
-        if self.adj_norm_in2 is None:
-            self.adj_norm_in2 = directed_norm(self.adj_norm @ self.adj_t_norm, rm_gen_sLoop=False)
-            self.adj_norm_out2 = directed_norm(self.adj_t_norm @ self.adj_norm, rm_gen_sLoop=False)
+        if self.adj_norm_in_out is None:
+            if self.rm_gen_sloop == 'remove':
+                rm_gen_sLoop = True
+            else:
+                rm_gen_sLoop = False
+            self.adj_norm_in_out = directed_norm(self.adj_norm @ self.adj_t_norm, rm_gen_sLoop=rm_gen_sLoop)
+            self.adj_norm_out_in = directed_norm(self.adj_t_norm @ self.adj_norm, rm_gen_sLoop=rm_gen_sLoop)
 
-            self.adj_norm_in2_in = get_norm_adj(self.adj_norm @ self.adj_norm, norm="dir")
-            self.adj_norm_out2_out = get_norm_adj(self.adj_t_norm @ self.adj_t_norm, norm="dir")
-            self.norm_list = [self.adj_norm_in2, self.adj_norm_out2, self.adj_norm_in2_in, self.adj_norm_out2_out]
+            self.adj_norm_in_in = get_norm_adj(self.adj_norm @ self.adj_norm, norm="dir")
+            self.adj_norm_out_out = get_norm_adj(self.adj_t_norm @ self.adj_t_norm, norm="dir")
+            self.norm_list = [self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out]
             print('edge_num of AAt, AtA, AA, AtAt: ',
-                  sparse_all(self.adj_norm_in2, k=1),
-                  sparse_all(self.adj_norm_out2, k=1),
-                  sparse_all(self.adj_norm_in2_in, k=1),
-                  sparse_all(self.adj_norm_out2_out, k=1))
-            Union_A_AA, Intersect_A_AA, diff_AA_A = share_edge(self.adj_norm_in2_in, self.adj_norm, self.adj_t_norm)
-            print('Union: Insetction(A and AA), diff_AA_A:', len(Union_A_AA), len(Intersect_A_AA), len(diff_AA_A))
-            Union_A_AAt,  Intersect_A_AAt, diff_AAt_A_At= share_edge(self.adj_norm_in2, self.adj_norm, self.adj_t_norm)
-            print('Union: Insetction (A and AAt), diff_A_At:', len(Union_A_AAt), len(Intersect_A_AAt), len(diff_AAt_A_At))
+                  sparse_all(self.adj_norm_in_out, k=1),
+                  sparse_all(self.adj_norm_out_in, k=1),
+                  sparse_all(self.adj_norm_in_in, k=1),
+                  sparse_all(self.adj_norm_out_out, k=1))
 
-            Union_A_AtA, Intersect_A_AtA, diff_AtA_A_At = share_edge(self.adj_norm_out2, self.adj_norm, self.adj_t_norm)
-            print('Union: Insetction (A and AtA), diff_A_At:', len(Union_A_AtA), len(Intersect_A_AtA), len(diff_AtA_A_At))
+            if self.differ_AA:
+                Union_A_AA, Intersect_A_AA, diff_0 = share_edge(self.adj_norm_in_in, self.adj_norm, self.adj_t_norm)
+                Union_A_AtAt, Intersect_A_AtAt, diff_t = share_edge(self.adj_norm_out_out, self.adj_norm, self.adj_t_norm)
+            elif self.differ_AAt:
+                Union_A_AAt,  Intersect_A_AAt, diff_0= share_edge(self.adj_norm_in_out, self.adj_norm, self.adj_t_norm)
+                Union_A_AtA, Intersect_A_AtA, diff_t = share_edge(self.adj_norm_out_in, self.adj_norm, self.adj_t_norm)
+            if self.differ_AA or self.differ_AAt:
+                self.A, self.AAt, self.AA= 1, 0, 0
 
-            indices = torch.stack([torch.tensor(pair) for pair in diff_AAt_A_At], dim=0).t()
-            row = indices[0]
-            col = indices[1]
-            sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-            self.adj_norm = get_norm_adj(sparse_tensor1, norm="dir").to(self.adj_t_norm.device())
+                indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
+                row = indices[0]
+                col = indices[1]
+                sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                self.adj_norm = get_norm_adj(sparse_tensor1, norm="dir").to(self.adj_t_norm.device())
 
-            indices = torch.stack([torch.tensor(pair) for pair in diff_AtA_A_At], dim=0).t()
-            row = indices[0]
-            col = indices[1]
-            sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-            self.adj_t_norm = get_norm_adj(sparse_tensor2, norm="dir").to(self.adj_t_norm.device())
-        #
+                indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
+                row = indices[0]
+                col = indices[1]
+                sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                self.adj_t_norm = get_norm_adj(sparse_tensor2, norm="dir").to(self.adj_t_norm.device())
+
         # # x_lin = self.lin_src_to_dst(x)
 
-        out1 = 1*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
-        out2 = 0*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
-        out3 = 0*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
-
+        out1 = self.A * (self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
+        out2 = self.AAt * (self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
+        out3 = self.AA * (self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
 
         xs = [out1, out2, out3]
 
@@ -1069,14 +1082,15 @@ def share_edge(m1, m2, m3=None):
     # intersection_tensor = torch.tensor(list(intersection_tensor), dtype=torch.int64)
     # unique_edges = filter_upper_triangle(unique_edges)
 
-    difference = set1.difference(set2)
+    difference0 = set1.difference(set2)
     if m3 is not None:
         row3 = m3.storage.row()
         col3 = torch.tensor(m3.storage.col())
         edges3 = torch.stack([row3, col3], dim=1)
         set3 = set(map(tuple, edges3.tolist()))
-        difference = difference.difference(set3)
+        difference = difference0.difference(set3)
 
+    print('union, intersction, diff-A, diff-A-At:', len(unique_edges), len(intersection_tensor), len(difference0), len(difference))
     return unique_edges, intersection_tensor, torch.tensor(list(difference))
 
 
