@@ -20,9 +20,9 @@ def parse_args():
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', None], default=None)
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="sym")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
-    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
-    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=0.5)
-    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=0.5)
+    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=1)
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
@@ -34,7 +34,6 @@ def parse_args():
 
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirected')  # TODO change before git
     parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')  # TODO change before git
-    # parser.add_argument("--split", type=int, help="Max number of runs", default=1)
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
@@ -50,12 +49,12 @@ def parse_args():
                                                                     'RossiGNN, LoG)')
     parser.add_argument('--seed', type=int, default=0, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='WikiCS/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
-    parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP

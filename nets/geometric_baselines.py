@@ -1031,13 +1031,9 @@ class DirGCNConv_2(torch.nn.Module):
 
         # # x_lin = self.lin_src_to_dst(x)
 
-        # out1 = self.A * (self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
-        # out2 = self.AAt * (self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
-        # out3 = self.AA * (self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
-
-        out1 = (1+self.alpha)*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
-        out2 = (1+self.beta)*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
-        out3 = (1+self.gama)*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
+        out1 = 5*(1+self.alpha)*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
+        out2 = 5*(1+self.beta)*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
+        out3 = 5*(1+self.gama)*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
 
         xs = [out1, out2, out3]
 

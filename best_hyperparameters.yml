@@ -8,6 +8,15 @@ telegram:
   jk: None
 
 
+# 96
+WikipediaNetwork/chameleon:
+  dropout: 0.0  # 0.5(acc65), 0.0(acc75)
+  net:
+  layer:
+  lr:
+  BN_model:
+  self_loop:
+  jk:
 
 
 
