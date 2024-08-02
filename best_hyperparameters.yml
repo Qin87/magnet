@@ -5,9 +5,18 @@ telegram:
   lr: 0.01
   BN_model: True    # sure
   self_loop: True
-  jk: None
+  jk: 'max'
 
 
+# 96
+WikipediaNetwork/chameleon:
+  dropout: 0.0  # 0.5(acc65), 0.0(acc75)
+  net:
+  layer:
+  lr:
+  BN_model: 1 # without layerNorm, very bad
+  self_loop: "remove"
+  jk: 'max'
 
 
 
@@ -31,3 +40,13 @@ dgl/pubmed:
   BN_model: False
   self_loop : True
   jk: 'max'
+
+#
+WikiCS/:
+  net:
+  layer:
+  lr:
+  BN_model: 1  # 0(23), 1(73.5)
+  self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
+  jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
+  dropout: 0.5  # 0.5(75.9), 0.0(73.9)

@@ -325,14 +325,15 @@ except:
     splits = 1
 Set_exit = False
 
+num_run = args.num_split
 preprocess_time = time.time()
 try:
     # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ', device, file=log_file)
         # for split in range(splits - 1, -1, -1):
-        for split in range(splits):
-        # for split in range(1):      # TODO
+        # for split in range(splits):
+        for split in range(num_run):
             model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
             if split==0:
                 print(model, file=log_file)
