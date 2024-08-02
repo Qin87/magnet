@@ -958,6 +958,7 @@ class DirGCNConv_2(torch.nn.Module):
         self.norm_list = []
 
         self.BN_model = args.BN_model
+        self.inci_norm = args.inci_norm
         self.batch_norm2 = nn.BatchNorm1d(output_dim)
 
         self.adj_norm, self.adj_t_norm = None, None
@@ -984,10 +985,10 @@ class DirGCNConv_2(torch.nn.Module):
             num_nodes = x.shape[0]
 
             adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-            self.adj_norm = get_norm_adj(adj, norm="dir")     # this is key: improve from 57 to 72
+            self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
 
             adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
-            self.adj_t_norm = get_norm_adj(adj_t, norm="dir")  #
+            self.adj_t_norm = get_norm_adj(adj_t, norm=self.inci_norm)  #
 
             print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
@@ -999,8 +1000,8 @@ class DirGCNConv_2(torch.nn.Module):
             self.adj_norm_in_out = directed_norm(self.adj_norm @ self.adj_t_norm, rm_gen_sLoop=rm_gen_sLoop)
             self.adj_norm_out_in = directed_norm(self.adj_t_norm @ self.adj_norm, rm_gen_sLoop=rm_gen_sLoop)
 
-            self.adj_norm_in_in = get_norm_adj(self.adj_norm @ self.adj_norm, norm="dir")
-            self.adj_norm_out_out = get_norm_adj(self.adj_t_norm @ self.adj_t_norm, norm="dir")
+            self.adj_norm_in_in = get_norm_adj(self.adj_norm @ self.adj_norm, norm=self.inci_norm)
+            self.adj_norm_out_out = get_norm_adj(self.adj_t_norm @ self.adj_t_norm, norm=self.inci_norm)
             self.norm_list = [self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out]
             print('edge_num of AAt, AtA, AA, AtAt: ',
                   sparse_all(self.adj_norm_in_out, k=1),
@@ -1021,13 +1022,13 @@ class DirGCNConv_2(torch.nn.Module):
                 row = indices[0]
                 col = indices[1]
                 sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-                self.adj_norm = get_norm_adj(sparse_tensor1, norm="dir").to(self.adj_t_norm.device())
+                self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
 
                 indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
                 row = indices[0]
                 col = indices[1]
                 sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
-                self.adj_t_norm = get_norm_adj(sparse_tensor2, norm="dir").to(self.adj_t_norm.device())
+                self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
 
         # # x_lin = self.lin_src_to_dst(x)
 
@@ -1339,7 +1340,7 @@ class GNN(torch.nn.Module):     # from Rossi(LoG paper)
                     x = F.normalize(x, p=2, dim=1)
             xs += [x]
 
-        if self.jumping_knowledge is not None:
+        if self.jumping_knowledge:
             x = self.jump(xs)
             x = self.lin(x)
 
@@ -1366,7 +1367,7 @@ class GCN_JKNet(torch.nn.Module):
                 self.convs.append(DirGCNConv_2(nhid, nhid, args))
             self.convs.append(DirGCNConv_2(nhid, output_dim, args))
 
-        if jumping_knowledge is not None:
+        if jumping_knowledge:
             input_dim = hidden_dim * layer if jumping_knowledge == "cat" else hidden_dim
             self.lin = Linear(input_dim, nclass)
             self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=hidden_dim, num_layers=layer)
@@ -1387,7 +1388,7 @@ class GCN_JKNet(torch.nn.Module):
                     x = F.normalize(x, p=2, dim=1)
             xs += [x]
 
-        if self.jumping_knowledge is not None:
+        if self.jumping_knowledge:
             x = self.jump(xs)
             x = self.lin(x)
 

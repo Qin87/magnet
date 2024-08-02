@@ -40,3 +40,13 @@ dgl/pubmed:
   BN_model: False
   self_loop : True
   jk: 'max'
+
+#
+WikiCS/:
+  net:
+  layer:
+  lr:
+  BN_model: 1  # 0(23), 1(73.5)
+  self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
+  jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
+  dropout: 0.5  # 0.5(75.9), 0.0(73.9)

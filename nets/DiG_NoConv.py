@@ -6437,7 +6437,7 @@ class DiGCN_IB_X_nhid_para_Jk(torch.nn.Module):
 
         self.batch_norm2 = nn.BatchNorm1d(nhid)
 
-        if self.jumping_knowledge is not None:
+        if self.jumping_knowledge:
             input_dim = nhid * num_layers if self.jumping_knowledge == "cat" else nhid
             self.lin = Linear(input_dim, out_dim)
             self.jump = JumpingKnowledge(mode=self.jumping_knowledge, channels=nhid, num_layers=num_layers)
@@ -6480,7 +6480,7 @@ class DiGCN_IB_X_nhid_para_Jk(torch.nn.Module):
             x = self.batch_norm2(x)
         xs += [x]
 
-        if self.jumping_knowledge is not None:
+        if self.jumping_knowledge:
             x = self.jump(xs)
             x = self.lin(x)
 
