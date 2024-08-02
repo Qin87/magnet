@@ -5,10 +5,10 @@ def parse_args():
     parser.add_argument("--use_best_hyperparams", action="store_true")
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument('--BN_model', action='store_true', help='use layer normalization in model')
+    parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=1)
     parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  None], default="remove", help="Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=str, choices=["remove", None], default="remove", help="Whether to remove generated self-loops to the graph")
-    parser.add_argument("--has_1_order", action="store_true", help="Whether Ai* has 1-order edges")
+    parser.add_argument("--has_1_order", type=int, help="Whether Ai* has 1-order edges:0/1", default=0)
 
     parser.add_argument("--has_scheduler", action="store_false", help="Whether Optimizer has a scheduler")
     parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
@@ -24,11 +24,12 @@ def parse_args():
     parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=0.5)
     parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=0.5)
     parser.add_argument("--learn_alpha", action="store_true")
-    parser.add_argument("--A", type=int, help="whether use A At:0/1", default=1)
-    parser.add_argument("--AAt", type=int, help="whether use AAt AtA:0/1", default=1)
-    parser.add_argument("--AA", type=int, help="whether use AA AtAt:0/1", default=1)
+    # parser.add_argument("--A", type=int, help="whether use A At:0/1", default=1)
+    # parser.add_argument("--AAt", type=int, help="whether use AAt AtA:0/1", default=1)
+    # parser.add_argument("--AA", type=int, help="whether use AA AtAt:0/1", default=1)
     parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
+    parser.add_argument('--num_split', type=int, default=1, help='num of run in spite of many splits')
 
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
@@ -36,11 +37,11 @@ def parse_args():
 
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirected')  # TODO change before git
     parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')  # TODO change before git
-    parser.add_argument("--split", type=int, help="Max number of runs", default=1)
+    # parser.add_argument("--split", type=int, help="Max number of runs", default=1)
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='JKNet', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
+    parser.add_argument('--net', type=str, default='ScaleNet', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
                      'Mag, Sig, QuaNet, '
                     'GPRGNN, pgnn, mlp, sgc, JKNet'
                     'DiGib, DiGub,DiGi3, DiGi4----QiG replace DiG-----WiG, WoG, W2G replace DiG'
@@ -84,12 +85,6 @@ def parse_args():
     parser.add_argument('--follow_math', '-F', action='store_false', help='if follow math')
     parser.add_argument('--gcn',  action='store_false', help='...')
     parser.add_argument('--i_complex',  action='store_false', help='...')
-
-    # for edge prediction
-    parser.add_argument('--task', type=str, default='three_class_digraph', help='Task: three_class_digraph,  direction, existence, ...')
-    # parser.add_argument('--method_name', type=str, default='DiG', help='method name')
-    parser.add_argument('--num_class_link', type=int, default=3,
-                        help='number of classes for link direction prediction(2 or 3).')
 
     # for quaNet
     parser.add_argument('--qua_weights', '-W', action='store_true', help='quaternion weights option')

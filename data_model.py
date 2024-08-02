@@ -83,7 +83,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     elif args.net == 'Cheb':
         model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
         # model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
-    elif args.net == 'JKNet':
+    elif args.net == 'ScaleNet':
         model = GCN_JKNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'GPRGNN':
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
@@ -197,6 +197,16 @@ def get_name(args, IsDirectedGraph):
         net_to_print = net_to_print + '_Imbal' + str(args.imb_ratio)
     else:
         net_to_print = net_to_print + '_Bal'
+    if args.net == 'ScaleNet':
+        if args.differ_AA or args.differ_AAt:
+            if args.differ_AA:
+                diff='AA'
+            else:
+                diff='AAt'
+            net_to_print = net_to_print + '_diff'+diff + '_part'+str(args.alphaDir)+'_jk'+args.jk+'_norm'+args.inci_norm
+        else:
+            net_to_print = net_to_print + '_has'+str(args.A)+str(args.AAt)+str(args.AA)+'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(
+                args.gamaDir)+'_sloop'+args.First_self_loop+args.rm_gen_sloop+'_jk'+args.jk+'_norm'+args.inci_norm
 
     return net_to_print, dataset_to_print
 
