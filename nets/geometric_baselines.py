@@ -946,9 +946,9 @@ class DirGCNConv_2(torch.nn.Module):
         self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
         self.gama = nn.Parameter(torch.ones(1) * args.gamaDir, requires_grad=False)
 
-        self.A = nn.Parameter(torch.ones(1) * args.A, requires_grad=False)
-        self.AAt = nn.Parameter(torch.ones(1) * args.AAt, requires_grad=False)
-        self.AA = nn.Parameter(torch.ones(1) * args.AA, requires_grad=False)
+        # self.A = nn.Parameter(torch.ones(1) * args.A, requires_grad=False)
+        # self.AAt = nn.Parameter(torch.ones(1) * args.AAt, requires_grad=False)
+        # self.AA = nn.Parameter(torch.ones(1) * args.AA, requires_grad=False)
 
         self.First_self_loop = args.First_self_loop
         self.rm_gen_sloop = args.rm_gen_sloop

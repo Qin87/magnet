@@ -205,7 +205,7 @@ def get_name(args, IsDirectedGraph):
                 diff='AAt'
             net_to_print = net_to_print + '_diff'+diff + '_part'+str(args.alphaDir)+'_jk'+args.jk+'_norm'+args.inci_norm
         else:
-            net_to_print = net_to_print + '_has'+str(args.A)+str(args.AAt)+str(args.AA)+'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(
+            net_to_print = net_to_print +'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(
                 args.gamaDir)+'_sloop'+args.First_self_loop+args.rm_gen_sloop+'_jk'+args.jk+'_norm'+args.inci_norm
 
     return net_to_print, dataset_to_print
