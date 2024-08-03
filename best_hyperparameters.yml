@@ -49,7 +49,7 @@ dgl/pubmed:
   layer: 4
   lr:
   BN_model: 1  # 0(33), 1(73)
-  self_loop : True
+  First_self_loop : True
   jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
 
