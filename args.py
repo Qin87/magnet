@@ -6,7 +6,7 @@ def parse_args():
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=1)
-    parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default="remove", help="Whether to add self-loops to the graph")
+    parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default=0, help="Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=str, choices=["remove", 0], default=0, help="Whether to remove generated self-loops to the graph")
     parser.add_argument("--has_1_order", type=int, help="Whether Ai* has 1-order edges:0/1", default=0)
 
@@ -53,7 +53,7 @@ def parse_args():
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
-    parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
+    parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
     parser.add_argument('--layer', type=int, default=4, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
