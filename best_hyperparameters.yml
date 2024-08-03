@@ -43,7 +43,7 @@ WikipediaNetwork/squirrel:
 
 #
 cora_ml/:
-  net: ScaleNet   #  net: QiGi3
+#  net: ScaleNet   #  net: QiGi3
 
   layer: 2   # 2(80), 3(75), 4(79.8), 5(79.6)
   lr: 0.01    # 0.1(79), 0.01(80.7)
@@ -57,7 +57,7 @@ cora_ml/:
 
 #
 citeseer_npz/:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2     # 1(65.3),2(64.8), 3(62.6), 4(64.0), 5(64.4)
   lr: 0.01
   BN_model: 1   # 0(62.63), 1(64.75)
@@ -65,14 +65,14 @@ citeseer_npz/:
   jk: 'cat'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
-  alphaDir: 0
+  alphaDir: -1
   betaDir: 0
-  gamaDir: 0.5
+  gamaDir: -1
 
 
 #
 dgl/pubmed:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4
   lr: 0.01
   BN_model: 1  # 0(33), 1(73)
@@ -85,13 +85,13 @@ dgl/pubmed:
 
 #
 WikiCS/:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2
   lr: 0.01
   BN_model: 1  # 0(23), 1(73.5)
-  self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
+  First_self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
   jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
   dropout: 0.5  # 0.5(75.9), 0.0(73.9)
   alphaDir: -1
   betaDir: 0.5
-  gamaDir: 0   # -1
+  gamaDir: -1   #0  -1

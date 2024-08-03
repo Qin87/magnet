@@ -49,7 +49,7 @@ def parse_args():
                                                                     'RossiGNN, LoG)')
     parser.add_argument('--seed', type=int, default=0, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='WikiCS/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
@@ -102,7 +102,8 @@ def parse_args():
 
     parser.add_argument('--gcnconv_norm', '-gcnnorm', action='store_false', help='GCNConv forward, normalize edge_index during training')
 
-    parser.add_argument('--W_degree', type=int, default=-2, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight, 3 is random[1,100], 4 is random[0.1,1], 5 is random[0.0001, 10000], 50 is abs(sin(random5))')
+    parser.add_argument('--W_degree', type=int, default=5, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight, 3 is random[1,100], 4 is random[0.1,1], 5 is random[0.0001, '
+                                                                '10000], 50 is abs(sin(random5))')
 
     # parser.add_argument('--DiGpara', type=int, default=1, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight')
 
