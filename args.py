@@ -49,12 +49,12 @@ def parse_args():
                                                                     'RossiGNN, LoG)')
     parser.add_argument('--seed', type=int, default=0, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='dgl/pubmed', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=4, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
 
-    parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
+    parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
     parser.add_argument('--coeflr', type=float, default=2, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')

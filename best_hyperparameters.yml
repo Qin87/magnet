@@ -1,6 +1,6 @@
 # 96
 telegram:
-  net: QiGi3
+#  net: QiGi3
   layer: 4
   lr: 0.01
   BN_model: True    # sure
@@ -25,12 +25,13 @@ WikipediaNetwork/chameleon:
 
 #
 cora_ml:
-  net: QiGi3
-  layer: 3
-  lr: 0.01
-  BN_model: False
-  self_loop : True
-  jk: None
+#  net: QiGi3
+  layer: 2   # 2(80), 3(75), 4(79.8), 5(79.6)
+  lr: 0.01    # 0.1(79), 0.01(80.7)
+  BN_model: True   # 0(29), 1(79)
+  First_self_loop : 'add'  # sure
+  jk: "max"     # max(80.7), cat(79.8), 0(76.9)
+#  dropout: 0.5   # 0.0(80.51), 0.5(80.76)
 
 
 #
