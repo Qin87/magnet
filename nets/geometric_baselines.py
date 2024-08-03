@@ -942,18 +942,21 @@ class DirGCNConv_2(torch.nn.Module):
 
         self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
         # nn.ModuleList([DirGCNConv(in_dim, out_dim) for _ in range(20)])
-        self.alpha = nn.Parameter(torch.ones(1) * args.alphaDir, requires_grad=False)
-        self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
-        self.gama = nn.Parameter(torch.ones(1) * args.gamaDir, requires_grad=False)
 
-        # self.A = nn.Parameter(torch.ones(1) * args.A, requires_grad=False)
-        # self.AAt = nn.Parameter(torch.ones(1) * args.AAt, requires_grad=False)
-        # self.AA = nn.Parameter(torch.ones(1) * args.AA, requires_grad=False)
+
 
         self.First_self_loop = args.First_self_loop
         self.rm_gen_sloop = args.rm_gen_sloop
         self.differ_AA = args.differ_AA
         self.differ_AAt = args.differ_AAt
+        if self.differ_AA:
+            args.alphaDir, args.betaDir = -1, -1
+        elif self.differ_AAt:
+            args.alphaDir, args.gamaDir = -1, -1
+
+        self.alpha = nn.Parameter(torch.ones(1) * args.alphaDir, requires_grad=False)
+        self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
+        self.gama = nn.Parameter(torch.ones(1) * args.gamaDir, requires_grad=False)
 
         self.norm_list = []
 
@@ -1016,8 +1019,6 @@ class DirGCNConv_2(torch.nn.Module):
                 Union_A_AAt,  Intersect_A_AAt, diff_0= share_edge(self.adj_norm_in_out, self.adj_norm, self.adj_t_norm)
                 Union_A_AtA, Intersect_A_AtA, diff_t = share_edge(self.adj_norm_out_in, self.adj_norm, self.adj_t_norm)
             if self.differ_AA or self.differ_AAt:
-                self.A, self.AAt, self.AA= 1, 0, 0
-
                 indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
                 row = indices[0]
                 col = indices[1]
@@ -1032,9 +1033,9 @@ class DirGCNConv_2(torch.nn.Module):
 
         # # x_lin = self.lin_src_to_dst(x)
 
-        out1 = 5*(1+self.alpha)*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
-        out2 = 5*(1+self.beta)*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
-        out3 = 5*(1+self.gama)*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
+        out1 = 1*(1+self.alpha)*(self.alpha * self.lin_src_to_dst(self.adj_norm @ x) + (1 - self.alpha) * self.lin_dst_to_src(self.adj_t_norm @ x))
+        out2 = 1*(1+self.beta)*(self.beta * self.linx[0](self.norm_list[0] @ x) + (1 - self.beta) * self.linx[1](self.norm_list[1] @ x))
+        out3 = 1*(1+self.gama)*(self.gama * self.linx[2](self.norm_list[2] @ x) + (1 - self.gama) * self.linx[3](self.norm_list[3] @ x))
 
         xs = [out1, out2, out3]
 
