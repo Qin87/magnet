@@ -25,17 +25,16 @@ for Didataset in "${Direct_dataset[@]}"; do
         for gamadir in $Dir; do
 # //        for imba_value  in $imbal; do
         for net in $net_values; do
-            log_output="${Didataset//\//_}_${timestamp}_A${a}_Dir${gamadir}__${net}_layer${layer}q${q_value}.log"
+            log_output="${Didataset//\//_}_${timestamp}_A${a}_Dir${betadir}__${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-python3 main.py   --jk='max'  --BN_model=1   --lr=0.01 --dropout=0.5 --alphaDir="$alphadir" --betaDir="$betadir"  --gamaDir="$gamadir"\
-  --net="$net"  --layer="$layer"   --Dataset="$Didataset" >\
-"$log_output"
+python3 main.py   --jk='cat'  --BN_model=1  --First_self_loop='add' --lr=0.01 --dropout=0.5 --alphaDir="$alphadir" --betaDir="$betadir" --gamaDir="$gamadir" \
+ --net="$net"  --layer="$layer"   --Dataset="$Didataset" > "$log_output" \
              2>&1
             wait $pid
-          done
+          #done
         done
-       #done
+       done
        done
        done
        done
