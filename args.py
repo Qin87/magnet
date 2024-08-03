@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
-    parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
+    parser.add_argument('--num_split', type=int, default=1, help='num of run in spite of many splits')
 
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git

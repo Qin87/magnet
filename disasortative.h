@@ -4,7 +4,7 @@ net_values=" ScaleNet  "
 q_value=0
 layer_values=" 2 "
 imbal="4  "
-Dir="0 0.5 1 -1"
+Dir="1"
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 Direct_dataset=( 'WikipediaNetwork/chameleon'  )  # 'cora_ml/'  'citeseer_npz/'   'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'

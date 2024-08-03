@@ -13,7 +13,7 @@ telegram/:
 
 
 
-# 96
+#
 WikipediaNetwork/chameleon:
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
   net: ScaleNet
@@ -26,6 +26,7 @@ WikipediaNetwork/chameleon:
   betaDir: 1
   gamaDir: 1
 
+# (1_1_-1) 74.7±2.4
 WikipediaNetwork/squirrel:
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
   net: ScaleNet
@@ -36,7 +37,7 @@ WikipediaNetwork/squirrel:
   jk: 'max'
   alphaDir: 1   # best is 1,1,-1
   betaDir: 1    #-1
-  gamaDir: 1    # -1
+  gamaDir: -1    # -1
 
 
 
@@ -83,7 +84,7 @@ dgl/pubmed:
   betaDir: 0.5
   gamaDir: 1
 
-#
+# 76.7±0.9
 WikiCS/:
   net: ScaleNet
   layer: 2
@@ -94,4 +95,4 @@ WikiCS/:
   dropout: 0.5  # 0.5(75.9), 0.0(73.9)
   alphaDir: -1
   betaDir: 0.5
-  gamaDir: 0   # -1
+  gamaDir: -1   # 0(76.5)
