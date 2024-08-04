@@ -46,26 +46,26 @@ def init_model(model):
             module.reset_parameters()  # Res
 
 def CreatModel(args, num_features, n_cls, data_x,device):
-    if args.net == 'pgnn':
+    if args.net.lower() == 'pgnn':
         model = create_pgnn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls,
                             mu=args.mu,
                             p=args.p,
                             K=args.K,
                             dropout=args.dropout, layer =args.layer)
-    elif args.net == 'mlp':
+    elif args.net.lower() == 'mlp':
         model = create_MLP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
-    elif args.net == 'sgc':
+    elif args.net.lower() == 'sgc':
         model = create_SGC(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer,K=args.K)
     elif args.net == 'RossiGNN':
         model = get_model(num_features,  n_cls, args)
-    elif args.net == 'jk':
+    elif args.net.lower() == 'jk':
         model = JKNet(in_channels=num_features,
                         out_channels=n_cls,
                         num_hid=args.feat_dim,
                         K=args.K,
                         alpha=args.alpha,
                         dropout=args.dropout, layer=args.layer)
-    elif args.net == 'gprgnn':
+    elif args.net.lower() == 'gprgnn':
         # model = GPRGNNNet1_Qin(in_channels=num_features,      # a bit worse
         model = GPRGNNNet1(in_channels=num_features,
                             out_channels=n_cls,
