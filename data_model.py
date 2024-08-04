@@ -120,7 +120,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                     if args.paraD:
                         model = DiGCN_IB_XBN_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 25
                     else:
-                        if args.net.startswith('Di') and not args.BN_model:
+                        if args.net.startswith('Di'):
                             model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)    # keep this: original DiGib paper
                         else:
                             model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN

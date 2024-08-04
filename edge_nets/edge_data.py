@@ -572,7 +572,7 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
     if self_loop == 'add':
-        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+        edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
     elif self_loop == 'remove':
         edge_index, _ = remove_self_loops(edge_index)
     row, col = edge_index
@@ -715,7 +715,7 @@ def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_w
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
     if selfloop == 'add':
-        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+        edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
     elif selfloop == 'remove':
         edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)

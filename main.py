@@ -150,6 +150,7 @@ def test():
 start_time = time.time()
 args = parse_args()
 args = use_best_hyperparams(args, args.Dataset) if args.use_best_hyperparams else args
+print(args)
 
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
