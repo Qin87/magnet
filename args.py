@@ -8,7 +8,7 @@ def parse_args():
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
     parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default="add", help="Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=str, choices=["remove", 0], default=0, help="Whether to remove generated self-loops to the graph")
-    parser.add_argument("--has_1_order", type=int, help="Whether Ai* has 1-order edges:0/1", default=0)
+
 
     parser.add_argument("--has_scheduler", action="store_false", help="Whether Optimizer has a scheduler")
     parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument('--W_degree', type=int, default=5, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight, 3 is random[1,100], 4 is random[0.1,1], 5 is random[0.0001, 10000], 50 is abs(sin(random5))')
 
     # parser.add_argument('--DiGpara', type=int, default=1, help='using in-degree_0, out-degree_1, full-degree_2 for DiG edge-weight')
-
+    parser.add_argument("--has_1_order", type=int, help="Whether Ai* has 1-order edges:0/1", default=0)
     args = parser.parse_args()
 
     return args
