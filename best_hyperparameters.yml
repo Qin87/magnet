@@ -44,7 +44,7 @@ WikipediaNetwork/squirrel:
 
 #
 cora_ml/:
-  net: ScaleNet   #  net: QiGi3
+#  net: ScaleNet   #  net: QiGi3
   feat_dim: 128   # better than 64
   layer: 3   # 2(80), 3(75), 4(79.8), 5(79.6)
   lr: 0.01    # 0.1(79), 0.01(80.7)
@@ -52,13 +52,13 @@ cora_ml/:
   First_self_loop : 'add'  # sure
   jk: "max"     # max(80.7), cat(79.8), 0(76.9)
   dropout: 0.5   # 0.0(80.51), 0.5(80.76)
-#  alphaDir: 0.5
-#  betaDir: 1  # 1
-#  gamaDir: -1  # -1 , 0.5
+  alphaDir: 0.5
+  betaDir: 1  # 1
+  gamaDir: -1  # -1 , 0.5
 
 #
 citeseer_npz/:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 3     # 1(65.3),2(64.8), 3(62.6), 4(64.0), 5(64.4)
   lr: 0.01
   BN_model: 1   # 0(62.63), 1(64.75)
@@ -66,9 +66,9 @@ citeseer_npz/:
   jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
-#  alphaDir: 0
-#  betaDir: 0
-#  gamaDir: 0.5
+  alphaDir: 0
+  betaDir: 0
+  gamaDir: 0.5
 
 
 #
