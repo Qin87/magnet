@@ -1255,39 +1255,6 @@ def add_self_loop_qin(adj):
     adj = SparseTensor(row=new_row, col=new_col, value=new_value, sparse_sizes=adj.sparse_sizes())
     return adj
 
-# def directed_norm(adj, rm_gen_sLoop=False):
-#     """
-#     Applies the normalization for directed graphs:
-#         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
-#     """
-#     # print(type(adj))
-#     # adj = add_self_loop_qin(adj)        # TODO
-#     if rm_gen_sLoop:
-#         adj = remove_self_loop_qin(adj)
-#     if not adj.is_cuda:
-#         adj = adj.cuda()
-#
-#     # in_deg = torch.bincount(row, minlength=adj.size(0)).to(row.device)  # Example computation of in_deg
-#     in_deg = sparsesum(adj, dim=0)
-#     # in_deg = in_deg.float()
-#     # print(f"in_deg device: {in_deg.device}")
-#
-#     in_deg_inv_sqrt = in_deg.pow(-0.5)
-#     in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)
-#     # print(f"in_deg_inv_sqrt device: {in_deg_inv_sqrt.device}")
-#
-#     out_deg = sparsesum(adj, dim=1)
-#     # out_deg = out_deg.float()
-#     # print(f"out_deg device: {out_deg.device}")
-#
-#     out_deg_inv_sqrt = out_deg.pow(-0.5)
-#     out_deg_inv_sqrt.masked_fill_(out_deg_inv_sqrt == float("inf"), 0.0)
-#     # print(f"out_deg_inv_sqrt device: {out_deg_inv_sqrt.device}")
-#
-#
-#     adj1 = mul(adj, out_deg_inv_sqrt.view(-1, 1))
-#     adj1 = mul(adj1, in_deg_inv_sqrt.view(1, -1))
-#     return adj1
 
 def directed_norm(adj, rm_gen_sLoop=False):
     """
@@ -1315,7 +1282,7 @@ def get_model(num_features,  n_cls, args):
         dropout=args.dropout,
         conv_type=args.conv_type,
         jumping_knowledge=args.jk,
-        normalize=args.normalize,
+        normalize=args.BN_model,
         alpha=args.alphaDir,
         learn_alpha=args.learn_alpha,
     )

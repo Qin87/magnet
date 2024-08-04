@@ -228,6 +228,7 @@ def load_dataset(args):
     data = dataset[0]
     if args.Dataset in ['ogbn-arxiv/']:
         data = dataset._data
+
     global class_num_list, idx_info, prev_out, sample_times
     global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
     try:
