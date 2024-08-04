@@ -1,43 +1,43 @@
 # 96
 telegram/:
-  net: ScaleNet         # QiGi3
+#  net: ScaleNet         # QiGi3
   layer: 4
   lr: 0.01
   BN_model: 1    # sure
   First_self_loop: 'add'
   jk: 'max'
   dropout: 0.0
-#  alphaDir: 0.5
-#  betaDir: -1
-#  gamaDir: -1
+  alphaDir: 2     # 0.5
+  betaDir: -1
+  gamaDir: -1
 
 
 
 #
 WikipediaNetwork/chameleon:
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2
   lr: 0.01
   BN_model: 1 # without layerNorm, very bad
   First_self_loop: "remove"
   jk: 'max'
-#  alphaDir: 1
-#  betaDir: 1
-#  gamaDir: 1
+  alphaDir: 1
+  betaDir: 1
+  gamaDir: 1
 
 # (1_1_-1) 74.7±2.4
 WikipediaNetwork/squirrel:
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4
   lr: 0.01
   BN_model: 1 # 0(48.9), 1(72)
   First_self_loop: "remove"     # Sure
   jk: 'max'
-#  alphaDir: 1   # best is 1,1,-1
-#  betaDir: 1    #-1
-#  gamaDir: -1    # -1
+  alphaDir: 1   # best is 1,1,-1
+  betaDir: 1    #-1
+  gamaDir: -1    # -1
 
 
 
@@ -52,7 +52,7 @@ cora_ml/:
   First_self_loop : 'add'  # sure
   jk: "max"     # max(80.7), cat(79.8), 0(76.9)
   dropout: 0.5   # 0.0(80.51), 0.5(80.76)
-  alphaDir: 0.5
+  alphaDir: 2
   betaDir: 1  # 1
   gamaDir: -1  # -1 , 0.5
 
@@ -68,31 +68,31 @@ citeseer_npz/:
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
   alphaDir: 0
   betaDir: 0
-  gamaDir: 0.5
+  gamaDir: 2
 
 
 #
 dgl/pubmed:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4
   lr: 0.01
   BN_model: 1  # 0(33), 1(73)
   First_self_loop : 'add'
   jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
-#  alphaDir: 0   # 0.5(72.2), 0(73.2)
-#  betaDir: 0.5
-#  gamaDir: 1
+  alphaDir: 0   # 0.5(72.2), 0(73.2)
+  betaDir: 2
+  gamaDir: 1
 
 # 76.7±0.9
 WikiCS/:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2
   lr: 0.01
   BN_model: 1  # 0(23), 1(73.5)
   First_self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
   jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
   dropout: 0.5  # 0.5(75.9), 0.0(73.9)
-#  alphaDir: -1
-#  betaDir: 0.5
-#  gamaDir: -1   # 0(76.5)
+  alphaDir: -1
+  betaDir: 2
+  gamaDir: -1   # 0(76.5)
