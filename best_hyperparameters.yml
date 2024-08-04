@@ -1,6 +1,6 @@
 # 96
 telegram/:
-  net: ScaleNet         # QiGi3
+#  net: ScaleNet         # QiGi3
   layer: 4
   lr: 0.01
   BN_model: 1    # sure
@@ -16,7 +16,7 @@ telegram/:
 #
 WikipediaNetwork/chameleon:
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2
   lr: 0.01
   BN_model: 1 # without layerNorm, very bad
@@ -29,7 +29,7 @@ WikipediaNetwork/chameleon:
 # (1_1_-1) 74.7±2.4
 WikipediaNetwork/squirrel:
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4
   lr: 0.01
   BN_model: 1 # 0(48.9), 1(72)
@@ -44,7 +44,7 @@ WikipediaNetwork/squirrel:
 
 #
 cora_ml/:
-  net: ScaleNet   #  net: QiGi3
+#  net: ScaleNet   #  net: QiGi3
 
   layer: 2   # 2(80), 3(75), 4(79.8), 5(79.6)
   lr: 0.01    # 0.1(79), 0.01(80.7)
@@ -58,7 +58,7 @@ cora_ml/:
 
 #
 citeseer_npz/:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2     # 1(65.3),2(64.8), 3(62.6), 4(64.0), 5(64.4)
   lr: 0.01
   BN_model: 1   # 0(62.63), 1(64.75)
@@ -73,7 +73,7 @@ citeseer_npz/:
 
 #
 dgl/pubmed:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4
   lr: 0.01
   BN_model: 1  # 0(33), 1(73)
@@ -86,7 +86,7 @@ dgl/pubmed:
 
 # 76.7±0.9
 WikiCS/:
-  net: ScaleNet
+#  net: ScaleNet
   layer: 2
   lr: 0.01
   BN_model: 1  # 0(23), 1(73.5)
