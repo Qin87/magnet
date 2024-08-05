@@ -69,8 +69,8 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
   jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
-  alphaDir: 0.5   # 0,0,0.5 before having 2
-  betaDir: 2
+  alphaDir: 3   # 0,0,0.5 before having 2
+  betaDir: 3
   gamaDir: 0
 
 
