@@ -1080,15 +1080,37 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
             value=value,
             # sparse_sizes=size
         )
-        # unique_edges = torch.sparse_coo_tensor(
-        #     indices=torch.stack([row, col]),
-        #     values=value,
-        #     size=(torch.max(unique_edges) + 1, torch.max(unique_edges) + 1)
-        # ).to(device)
-        # size = (torch.max(unique_edges) + 1, torch.max(unique_edges) + 1)
-        # unique_edges = torch.sparse_coo_tensor(indices=torch.stack([row, col]), values=value, size=size)
         new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
         out = lin0(new_adj_norm @ x)
+    elif alpha == 3:
+        row1 = adj0.storage.row()
+        row2 = adj1.storage.row()
+        col1 = torch.tensor(adj0.storage.col())
+        col2 = torch.tensor(adj1.storage.col())
+
+        # Convert tensors to sets of tuples for intersection
+        edges1 = torch.stack([row1, col1], dim=1)
+        edges2 = torch.stack([row2, col2], dim=1)
+        set1 = set(map(tuple, edges1.tolist()))
+        set2 = set(map(tuple, edges2.tolist()))
+
+        # Find the intersection
+        intersection = set1.intersection(set2)
+
+        # Convert the result back to a tensor
+        intersection_tensor = torch.tensor(list(intersection))
+
+        row = intersection_tensor[:, 0].to(device)
+        col = intersection_tensor[:, 1].to(device)
+        value = torch.ones(row.size(0), dtype=torch.float).to(device)
+        unique_edges = torch_sparse.SparseTensor(
+            row=row,
+            col=col,
+            value=value,
+        )
+        new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
+        out = lin0(new_adj_norm @ x)
+
     else:
         out = 1*(1+alpha)*(alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
     return out
@@ -1255,39 +1277,6 @@ def add_self_loop_qin(adj):
     adj = SparseTensor(row=new_row, col=new_col, value=new_value, sparse_sizes=adj.sparse_sizes())
     return adj
 
-# def directed_norm(adj, rm_gen_sLoop=False):
-#     """
-#     Applies the normalization for directed graphs:
-#         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
-#     """
-#     # print(type(adj))
-#     # adj = add_self_loop_qin(adj)        # TODO
-#     if rm_gen_sLoop:
-#         adj = remove_self_loop_qin(adj)
-#     if not adj.is_cuda:
-#         adj = adj.cuda()
-#
-#     # in_deg = torch.bincount(row, minlength=adj.size(0)).to(row.device)  # Example computation of in_deg
-#     in_deg = sparsesum(adj, dim=0)
-#     # in_deg = in_deg.float()
-#     # print(f"in_deg device: {in_deg.device}")
-#
-#     in_deg_inv_sqrt = in_deg.pow(-0.5)
-#     in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)
-#     # print(f"in_deg_inv_sqrt device: {in_deg_inv_sqrt.device}")
-#
-#     out_deg = sparsesum(adj, dim=1)
-#     # out_deg = out_deg.float()
-#     # print(f"out_deg device: {out_deg.device}")
-#
-#     out_deg_inv_sqrt = out_deg.pow(-0.5)
-#     out_deg_inv_sqrt.masked_fill_(out_deg_inv_sqrt == float("inf"), 0.0)
-#     # print(f"out_deg_inv_sqrt device: {out_deg_inv_sqrt.device}")
-#
-#
-#     adj1 = mul(adj, out_deg_inv_sqrt.view(-1, 1))
-#     adj1 = mul(adj1, in_deg_inv_sqrt.view(1, -1))
-#     return adj1
 
 def directed_norm(adj, rm_gen_sLoop=False):
     """
@@ -1315,7 +1304,7 @@ def get_model(num_features,  n_cls, args):
         dropout=args.dropout,
         conv_type=args.conv_type,
         jumping_knowledge=args.jk,
-        normalize=args.normalize,
+        normalize=args.BN_model,
         alpha=args.alphaDir,
         learn_alpha=args.learn_alpha,
     )
