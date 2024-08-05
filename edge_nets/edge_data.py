@@ -1386,8 +1386,7 @@ def Qin_get_second_directed_adj(args, edge_index, num_nodes, k, IsExhaustive, mo
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
-
-def dir_normalize_edge_weights(edge_index, edge_weights, num_nodes):
+def dir_normalize_edge_weights_origin(edge_index, num_nodes, edge_weights=None):
 # from DirGNN
     # Compute out-degrees and in-degrees
     edge_index = edge_index.long()
@@ -1412,6 +1411,40 @@ def dir_normalize_edge_weights(edge_index, edge_weights, num_nodes):
     normalized_edge_weights = edge_weights * out_deg_inv_sqrt[row] * in_deg_inv_sqrt[col]
 
     return edge_index, normalized_edge_weights
+
+
+# def dir_normalize_edge_weights(edge_index, num_nodes, edge_weights=None):
+def dir_normalize_edge_weights(row, col, value,  num_nodes, edge_weights=None):
+# from DirGNN
+    # Compute out-degrees and in-degrees
+    # device = edge_index.device()
+    # edge_index = edge_index.long()
+    # if edge_weights is None:
+    #     edge_weights = torch.ones((num_nodes, num_nodes), dtype=torch.float).to(device)
+    # else:
+    #     edge_weights = edge_weights.float()
+    edge_weights = value.to(torch.float32)
+
+    device = row.device
+    # # row, col = edge_index[:,0], edge_index[:,1]
+    # row, col = edge_index.row, edge_index.col
+    out_deg = torch.zeros(num_nodes, dtype=torch.float).to(device)
+    in_deg = torch.zeros(num_nodes, dtype=torch.float).to(device)
+
+    out_deg.scatter_add_(0, row, edge_weights)
+    in_deg.scatter_add_(0, col, edge_weights)
+
+    # Compute the inverse square root of the degrees
+    out_deg_inv_sqrt = torch.pow(out_deg, -0.5)
+    out_deg_inv_sqrt[out_deg_inv_sqrt == float('inf')] = 0
+
+    in_deg_inv_sqrt = torch.pow(in_deg, -0.5)
+    in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
+
+    # Normalize the edge weights
+    normalized_edge_weights = edge_weights * out_deg_inv_sqrt[row] * in_deg_inv_sqrt[col]
+
+    return normalized_edge_weights
 
 def Qin_get_all_directed_adj(args,  edge_index, num_nodes, k, IsExhaustive, mode, norm='dir'):
     has_1_order = args.has_1_order
