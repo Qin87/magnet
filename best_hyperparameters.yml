@@ -10,9 +10,9 @@ telegram/:
   First_self_loop: 'add'
   jk: 'max'
   dropout: 0.0
-#  alphaDir: 0.5     # 0.5, 0.2(94.8)
-#  betaDir: -1
-#  gamaDir: -1
+  alphaDir: 0.5     # 0.5, 0.2(94.8)
+  betaDir: -1
+  gamaDir: -1
 
 
 
@@ -28,9 +28,9 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   BN_model: 1 # without layerNorm, very bad(but Dir-GNN prefer no LN)
   First_self_loop: "remove"
   jk: 'max'
-#  alphaDir: 1
-#  betaDir: 1
-#  gamaDir: 1
+  alphaDir: 1
+  betaDir: 1
+  gamaDir: 1
 
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
 WikipediaNetwork/squirrel:
@@ -45,16 +45,16 @@ WikipediaNetwork/squirrel:
   BN_model: 1 # 0(48.9), 1(72)
   First_self_loop: "remove"     # Sure
   jk: 'max'
-#  alphaDir: 1   # best is 1,1,-1
-#  betaDir: -1    #-1
-#  gamaDir: -1    # -1
+  alphaDir: 1   # best is 1,1,-1
+  betaDir: -1    #-1
+  gamaDir: -1    # -1
 
 
 
 
 #
 cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
-  nonlinear: 1
+  nonlinear: 0
   net: ScaleNet   #  net: QiGi3
   feat_dim: 128   # better than 64
   layer: 3   # 2(80), 3(75), 4(79.8), 5(79.6)
@@ -64,9 +64,9 @@ cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
   First_self_loop : 'add'  # sure
   jk: "max"     # max(80.7), cat(79.8), 0(76.9)
   dropout: 0.5   # 0.0(80.51), 0.5(80.76)
-#  alphaDir: 2   # 0.5,1.-1 before having 2
-#  betaDir: -1  # 1
-#  gamaDir: -1  # -1 , 0.5
+  alphaDir: 2   # 0.5,1.-1 before having 2
+  betaDir: 2  # 1
+  gamaDir: -1  # -1 , 0.5
 
 #
 citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.0_0.0_0.5----2.0_0.0_0.0----2.0_2.0_0.5-----0.5_2.0_0.5---0.0_0.5_2.0--0.5_2.0_2.0
@@ -81,9 +81,9 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
 #  jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
-#  alphaDir: 3   # 0,0,0.5 before having 2
-#  betaDir: 3
-#  gamaDir: 0
+  alphaDir: 0.5   # 0,0,0.5 before having 2
+  betaDir: 2
+  gamaDir: -1
 
 
 #
@@ -97,9 +97,9 @@ dgl/pubmed:
   First_self_loop : 'add'
   jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
-#  alphaDir: 0   # 0.5(72.2), 0(73.2)
-#  betaDir: 2
-#  gamaDir: 1
+  alphaDir: 0   # 0.5(72.2), 0(73.2)
+  betaDir: 0.5
+  gamaDir: 1
 
 # 76.7±0.9
 WikiCS/:
@@ -111,9 +111,9 @@ WikiCS/:
   First_self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
   jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
   dropout: 0.5  # 0.5(75.9), 0.0(73.9)
-#  alphaDir: -1
-#  betaDir: 2
-#  gamaDir: -1   # 0(76.5)
+  alphaDir: -1
+  betaDir: 0.5
+  gamaDir: -1   # 0(76.5)
 
 
 ## 91.23 ± 0.32

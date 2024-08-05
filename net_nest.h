@@ -14,7 +14,7 @@ imbal="2  "
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'
-Direct_dataset=( 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/' 'WikipediaNetwork/squirrel' 'WikipediaNetwork/chameleon' )
+Direct_dataset=( 'WikiCS/' 'WikipediaNetwork/squirrel' 'WikipediaNetwork/chameleon'  'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'   )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
