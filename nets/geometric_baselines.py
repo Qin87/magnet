@@ -1084,24 +1084,30 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
     elif alpha == 3:
         row1 = adj0.storage.row()
         row2 = adj1.storage.row()
-        col1 = torch.tensor(adj0.storage.col())
-        col2 = torch.tensor(adj1.storage.col())
+        col1 = adj0.storage.col()
+        col2 = adj1.storage.col()
 
-        # Convert tensors to sets of tuples for intersection
+        # Stack the row and col tensors to get edge lists
         edges1 = torch.stack([row1, col1], dim=1)
         edges2 = torch.stack([row2, col2], dim=1)
-        set1 = set(map(tuple, edges1.tolist()))
-        set2 = set(map(tuple, edges2.tolist()))
 
-        # Find the intersection
-        intersection = set1.intersection(set2)
+        # Sort the edges to enable intersection using PyTorch operations
+        edges1 = edges1[edges1[:, 0].argsort()]
+        edges2 = edges2[edges2[:, 0].argsort()]
 
-        # Convert the result back to a tensor
-        intersection_tensor = torch.tensor(list(intersection))
+        # Use torch.unique and torch's intersection logic to find common edges
+        edges1_set = torch.unique(edges1, dim=0)
+        edges2_set = torch.unique(edges2, dim=0)
 
-        row = intersection_tensor[:, 0].to(device)
-        col = intersection_tensor[:, 1].to(device)
+        # Find common edges by using broadcasting and comparison
+        intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
+        intersection = edges1_set[intersection_mask]
+
+        # Extract row and col from the intersection tensor
+        row = intersection[:, 0].to(device)
+        col = intersection[:, 1].to(device)
         value = torch.ones(row.size(0), dtype=torch.float).to(device)
+
         unique_edges = torch_sparse.SparseTensor(
             row=row,
             col=col,
@@ -1109,6 +1115,34 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
         )
         new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
         out = lin0(new_adj_norm @ x)
+    # elif alpha == 3:
+    #     row1 = adj0.storage.row()
+    #     row2 = adj1.storage.row()
+    #     col1 = torch.tensor(adj0.storage.col())
+    #     col2 = torch.tensor(adj1.storage.col())
+    #
+    #     # Convert tensors to sets of tuples for intersection
+    #     edges1 = torch.stack([row1, col1], dim=1)
+    #     edges2 = torch.stack([row2, col2], dim=1)
+    #     set1 = set(map(tuple, edges1.tolist()))
+    #     set2 = set(map(tuple, edges2.tolist()))
+    #
+    #     # Find the intersection
+    #     intersection = set1.intersection(set2)
+    #
+    #     # Convert the result back to a tensor
+    #     intersection_tensor = torch.tensor(list(intersection))
+    #
+    #     row = intersection_tensor[:, 0].to(device)
+    #     col = intersection_tensor[:, 1].to(device)
+    #     value = torch.ones(row.size(0), dtype=torch.float).to(device)
+    #     unique_edges = torch_sparse.SparseTensor(
+    #         row=row,
+    #         col=col,
+    #         value=value,
+    #     )
+    #     new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
+    #     out = lin0(new_adj_norm @ x)
 
     else:
         out = 1*(1+alpha)*(alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
