@@ -4,6 +4,8 @@ telegram/:
   nonlinear: 1
   layer: 4
   lr: 0.01
+  normalize: 1
+#  BN_model: 0
   BN_model: 1    # sure
   First_self_loop: 'add'
   jk: 'max'
@@ -21,6 +23,8 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
 #  net: ScaleNet
   layer: 5      # 2(78.9), 5(78.8)
   lr: 0.005
+  normalize: 1
+#  BN_model: 0
   BN_model: 1 # without layerNorm, very bad(but Dir-GNN prefer no LN)
   First_self_loop: "remove"
   jk: 'max'
@@ -36,6 +40,8 @@ WikipediaNetwork/squirrel:
 #  net: ScaleNet
   layer: 4
   lr: 0.01
+  normalize: 1
+#  BN_model: 0
   BN_model: 1 # 0(48.9), 1(72)
   First_self_loop: "remove"     # Sure
   jk: 'max'
@@ -53,6 +59,7 @@ cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
   feat_dim: 128   # better than 64
   layer: 3   # 2(80), 3(75), 4(79.8), 5(79.6)
   lr: 0.01    # 0.1(79), 0.01(80.7)
+  normalize: 0
   BN_model: 0   # 0(29), 1(79)  # 1(79), 0(82.7)
   First_self_loop : 'add'  # sure
   jk: "max"     # max(80.7), cat(79.8), 0(76.9)
@@ -68,7 +75,8 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
   feat_dim: 128
   layer: 3     # 1(65.3),2(64.8), 3(62.6), 4(64.0), 5(64.4)
   lr: 0.01
-  BN_model: 1   # 0(62.63), 1(64.75)  # for high performance 0 is better.
+  normalize: 1
+  BN_model: 0   # 0(62.63), 1(64.75)  # for high performance 0 is better.
   First_self_loop : 'add'     # 'add'(64.75), 'remove'(58.2), 0(57.5)
 #  jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
