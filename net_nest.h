@@ -14,7 +14,7 @@ imbal="2  "
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'
-Direct_dataset=( 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  )
+Direct_dataset=( 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/' 'WikipediaNetwork/squirrel' 'WikipediaNetwork/chameleon' )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -31,7 +31,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py  --use_best_hyperparams  --net="$net" --layer=   --Dataset="$Didataset" > "$log_output"
+            python3 main.py  --use_best_hyperparams  --net="$net"   --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
           # done
