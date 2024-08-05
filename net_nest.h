@@ -7,14 +7,14 @@
 # TiGi2 TiGi3 TiGi4 TiGu2 TiGu3 TiGu4 TiG
 # iiAi2 iiAi3 iiAi4 iiAu2 iiAu3 iiAu4 iiA   TiAi2 TiAi3 TiAi4 TiAu2 TiAu3 TiAu4 TiA  iiCi2 iiCi3 iiCi4 iiCu2 iiCu3 iiCu4 iiC   TiCi2 TiCi3 TiCi4 TiCu2 TiCu3 TiCu4 TiC  iiSi2 iiSi3 iiSi4
 # iiSu2 iiSu3 iiSu4 iiS   TiSi2 TiSi3 TiSi4 TiSu2 TiSu3 TiSu4 TiS
-net_values=" RossiGNN   GCN Cheb SAGE APPNP   DiG DiGi2 QiGi2 QiG WiG WiGi2   QiGu2 QiGu3  Sym    Mag Sig Qua  MLP "
+net_values=" QiGu2  "
 q_value=0
 layer_values=" 5 "
 imbal="2  "
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
-Direct_dataset=( 'WikipediaNetwork/chameleon' 'cora_ml/'  'citeseer_npz/' 'WikipediaNetwork/squirrel'  'dgl/pubmed'  'WikiCS/' 'telegram/' )
+Direct_dataset=( 'dgl/pubmed' )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
