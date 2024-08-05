@@ -1107,7 +1107,6 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
             row=row,
             col=col,
             value=value,
-            # sparse_sizes=size
         )
         new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
         out = lin0(new_adj_norm @ x)
