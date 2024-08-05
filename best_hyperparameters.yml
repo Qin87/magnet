@@ -70,7 +70,7 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
   lr: 0.01
   BN_model: 1   # 0(62.63), 1(64.75)  # for high performance 0 is better.
   First_self_loop : 'add'     # 'add'(64.75), 'remove'(58.2), 0(57.5)
-  jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
+#  jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
 #  alphaDir: 3   # 0,0,0.5 before having 2

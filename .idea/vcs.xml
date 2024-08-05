@@ -15,5 +15,7 @@
     <mapping directory="$PROJECT_DIR$/dgl/third_party/nanoflann" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/dgl/third_party/pcg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/dgl/third_party/phmap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dgl/third_party/taskflow" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dgl/third_party/tsl_robin_map" vcs="Git" />
   </component>
 </project>
