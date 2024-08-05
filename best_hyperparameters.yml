@@ -1,6 +1,7 @@
 # 96
 telegram/:
 #  net: ScaleNet         # QiGi3
+  nonlinear: 1
   layer: 4
   lr: 0.01
   BN_model: 1    # sure
@@ -16,6 +17,7 @@ telegram/:
 # (1,-1,-1@79.6±1.7)--(1,1,1@79.1±1.5)
 WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,-1@79.6±1.7)--(1,1,1@79.1±1.5)
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
+  nonlinear: 1
 #  net: ScaleNet
   layer: 5      # 2(78.9), 5(78.8)
   lr: 0.005
@@ -28,6 +30,7 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
 
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
 WikipediaNetwork/squirrel:
+  nonlinear: 1
 #  normalize: True    # for DirGNN
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
 #  net: ScaleNet
@@ -45,7 +48,7 @@ WikipediaNetwork/squirrel:
 
 #
 cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
-
+  nonlinear: 1
   net: ScaleNet   #  net: QiGi3
   feat_dim: 128   # better than 64
   layer: 3   # 2(80), 3(75), 4(79.8), 5(79.6)
@@ -61,6 +64,7 @@ cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
 #
 citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.0_0.0_0.5----2.0_0.0_0.0----2.0_2.0_0.5-----0.5_2.0_0.5---0.0_0.5_2.0--0.5_2.0_2.0
   net: ScaleNet
+  nonlinear: 0
   feat_dim: 128
   layer: 3     # 1(65.3),2(64.8), 3(62.6), 4(64.0), 5(64.4)
   lr: 0.01
@@ -77,6 +81,7 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
 #
 dgl/pubmed:
 #  net: ScaleNet
+  nonlinear: 1
   layer: 4
   lr: 0.01
   BN_model: 1  # 0(33), 1(73)
@@ -90,6 +95,7 @@ dgl/pubmed:
 # 76.7±0.9
 WikiCS/:
 #  net: ScaleNet
+  nonlinear: 1
   layer: 2
   lr: 0.01
   BN_model: 1  # 0(23), 1(73.5)
@@ -101,12 +107,12 @@ WikiCS/:
   gamaDir: -1   # 0(76.5)
 
 
-# 91.23 ± 0.32
-directed-roman-empire:
-  lr: 0.01
-  feat_dim: 256
-  layer: 5
-  jk: "cat"
-  dropout: 0.2
-  patience: 200
-  conv_type: "dir-sage"
+## 91.23 ± 0.32
+#directed-roman-empire:
+#  lr: 0.01
+#  feat_dim: 256
+#  layer: 5
+#  jk: "cat"
+#  dropout: 0.2
+#  patience: 200
+#  conv_type: "dir-sage"

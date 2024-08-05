@@ -1078,7 +1078,6 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
             row=row,
             col=col,
             value=value,
-            # sparse_sizes=size
         )
         new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
         out = lin0(new_adj_norm @ x)
@@ -1411,6 +1410,7 @@ class GCN_JKNet(torch.nn.Module):
         hidden_dim = nhid
         normalize = args.BN_model
         dropout = args.dropout
+        nonlinear = args.nonlinear
 
         output_dim = nhid if jumping_knowledge else nclass
         if layer == 1:
@@ -1430,13 +1430,15 @@ class GCN_JKNet(torch.nn.Module):
         self.dropout = dropout
         self.jumping_knowledge = jumping_knowledge
         self.normalize = normalize
+        self.nonlinear = nonlinear
 
     def forward(self, x, edge_index):
         xs = []
         for i, conv in enumerate(self.convs):
             x = conv(x, edge_index)
             if i != len(self.convs) - 1 or self.jumping_knowledge:
-                x = F.relu(x)
+                if self.nonlinear:
+                    x = F.relu(x)
                 x = F.dropout(x, p=self.dropout, training=self.training)
                 if self.normalize:
                     x = F.normalize(x, p=2, dim=1)
