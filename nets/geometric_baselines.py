@@ -1042,12 +1042,12 @@ class DirGCNConv_2(torch.nn.Module):
                 col = indices[1]
                 sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
                 self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
-            if 3 in (self.alphaDir, self.betaDir, self.gamaDir) and self.adj_intersection is None:
+            if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
                 self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
                 self.adj_intersection_in_out = intersection_adj_norm(self.norm_list[0], self.norm_list[1], self.inci_norm, device)
                 self.adj_intersection_in_in = intersection_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
 
-            if 2 in (self.alphaDir, self.betaDir, self.gamaDir) and self.adj_union is None:
+            if 2 in (self.alpha, self.beta, self.gama) and self.adj_union is None:
                 self.adj_union = union_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
                 self.adj_union_in_out = union_adj_norm(self.norm_list[0], self.norm_list[1], self.inci_norm, device)
                 self.adj_union_in_in = union_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
