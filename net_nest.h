@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# CiG  CiGi2 CiGi3  CiGu2 CiGu3 CiGi4 CiGu4
-# UiGi2 UiGi3 UiGi4 UiGu2 UiGu3 UiGu4 UiG
+
 # IiGi2 IiGi3 IiGi4 IiGu2 IiGu3 IiGu4 IiG
 # iiGi2 iiGi3 iiGi4 iiGu2 iiGu3 iiGu4 iiG RossiGNN   GCN Cheb SAGE APPNP   DiG DiGi2 QiGi2 QiG WiG WiGi2   QiGu2 QiGu3  Sym    Mag Sig Qua  MLP
 # TiGi2 TiGi3 TiGi4 TiGu2 TiGu3 TiGu4 TiG
