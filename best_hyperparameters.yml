@@ -92,6 +92,7 @@ dgl/pubmed:
   nonlinear: 1
   layer: 4
   lr: 0.01
+  normalize: 1
   BN_model: 1  # 0(33), 1(73)
   First_self_loop : 'add'
   jk: 'max'
