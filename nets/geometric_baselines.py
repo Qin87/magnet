@@ -969,6 +969,9 @@ class DirGCNConv_2(torch.nn.Module):
 
         # self
         self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out = None, None, None, None
+        self.adj_intersection, self.adj_intersection_in_in, self.adj_intersection_in_out = None, None, None
+        self.adj_union, self.adj_union_in_in, self.adj_union_in_out = None, None, None
+
 
         jumping_knowledge = args.jk_inner
         self.jumping_knowledge_inner = jumping_knowledge
@@ -979,6 +982,8 @@ class DirGCNConv_2(torch.nn.Module):
 
 
     def forward(self, x, edge_index):
+        device = edge_index
+
         if self.adj_norm is None:
             if self.First_self_loop == 'add':
                 from torch_geometric.utils import add_self_loops
@@ -1037,12 +1042,22 @@ class DirGCNConv_2(torch.nn.Module):
                 col = indices[1]
                 sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
                 self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
+            if self.adj_intersection is None:
+                self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
+                self.adj_intersection_in_out = intersection_adj_norm(self.norm_list[0], self.norm_list[1], self.inci_norm, device)
+                self.adj_intersection_in_in = intersection_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
 
-        # # x_lin = self.lin_src_to_dst(x)
+            if self.adj_union is None:
+                self.adj_union = union_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
+                self.adj_union_in_out = union_adj_norm(self.norm_list[0], self.norm_list[1], self.inci_norm, device)
+                self.adj_union_in_in = union_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
 
-        out1 = aggregate(x, self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, inci_norm=self.inci_norm)
-        out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], inci_norm=self.inci_norm)
-        out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], inci_norm=self.inci_norm)
+
+                # # x_lin = self.lin_src_to_dst(x)
+
+        out1 = aggregate(x, self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, self.adj_intersection, self.adj_union,  inci_norm=self.inci_norm)
+        out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
+        out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
 
         xs = [out1, out2, out3]
 
@@ -1054,67 +1069,69 @@ class DirGCNConv_2(torch.nn.Module):
 
         if self.BN_model:
             x = self.batch_norm2(x)
+
+
         return x
 
 
-def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
+def aggregate(x, alpha, lin0, adj0, lin1, adj1,  intersection, union, inci_norm='dir'):
     device = adj0.device()
     if alpha == 2:
-        row1 = adj0.storage.row()
-        row2 = adj1.storage.row()
-        # new_row = torch.cat(row1, row2)
-        new_row = torch.cat((row1, row2), dim=0)
-        col1 = torch.tensor(adj0.storage.col())
-        col2 = torch.tensor(adj1.storage.col())
-        new_col = torch.cat((col1, col2), dim=0)
-
-        union_edges = torch.stack([new_row, new_col], dim=1)
-        unique_edges = torch.unique(union_edges, dim=0)
-
-        row = unique_edges[:, 0].to(device)
-        col = unique_edges[:, 1].to(device)
-        value = torch.ones(row.size(0), dtype=torch.float).to(device)
-        unique_edges = torch_sparse.SparseTensor(
-            row=row,
-            col=col,
-            value=value,
-        )
-        new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
-        out = lin0(new_adj_norm @ x)
+        # row1 = adj0.storage.row()
+        # row2 = adj1.storage.row()
+        # # new_row = torch.cat(row1, row2)
+        # new_row = torch.cat((row1, row2), dim=0)
+        # col1 = torch.tensor(adj0.storage.col())
+        # col2 = torch.tensor(adj1.storage.col())
+        # new_col = torch.cat((col1, col2), dim=0)
+        #
+        # union_edges = torch.stack([new_row, new_col], dim=1)
+        # unique_edges = torch.unique(union_edges, dim=0)
+        #
+        # row = unique_edges[:, 0].to(device)
+        # col = unique_edges[:, 1].to(device)
+        # value = torch.ones(row.size(0), dtype=torch.float).to(device)
+        # unique_edges = torch_sparse.SparseTensor(
+        #     row=row,
+        #     col=col,
+        #     value=value,
+        # )
+        # new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
+        out = lin0(union @ x)
     elif alpha == 3:
-        row1 = adj0.storage.row()
-        row2 = adj1.storage.row()
-        col1 = adj0.storage.col()
-        col2 = adj1.storage.col()
-
-        # Stack the row and col tensors to get edge lists
-        edges1 = torch.stack([row1, col1], dim=1)
-        edges2 = torch.stack([row2, col2], dim=1)
-
-        # Sort the edges to enable intersection using PyTorch operations
-        edges1 = edges1[edges1[:, 0].argsort()]
-        edges2 = edges2[edges2[:, 0].argsort()]
-
-        # Use torch.unique and torch's intersection logic to find common edges
-        edges1_set = torch.unique(edges1, dim=0)
-        edges2_set = torch.unique(edges2, dim=0)
-
-        # Find common edges by using broadcasting and comparison
-        intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
-        intersection = edges1_set[intersection_mask]
-
-        # Extract row and col from the intersection tensor
-        row = intersection[:, 0].to(device)
-        col = intersection[:, 1].to(device)
-        value = torch.ones(row.size(0), dtype=torch.float).to(device)
-
-        unique_edges = torch_sparse.SparseTensor(
-            row=row,
-            col=col,
-            value=value,
-        )
-        new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
-        out = lin0(new_adj_norm @ x)
+        # row1 = adj0.storage.row()
+        # row2 = adj1.storage.row()
+        # col1 = adj0.storage.col()
+        # col2 = adj1.storage.col()
+        #
+        # # Stack the row and col tensors to get edge lists
+        # edges1 = torch.stack([row1, col1], dim=1)
+        # edges2 = torch.stack([row2, col2], dim=1)
+        #
+        # # Sort the edges to enable intersection using PyTorch operations
+        # edges1 = edges1[edges1[:, 0].argsort()]
+        # edges2 = edges2[edges2[:, 0].argsort()]
+        #
+        # # Use torch.unique and torch's intersection logic to find common edges
+        # edges1_set = torch.unique(edges1, dim=0)
+        # edges2_set = torch.unique(edges2, dim=0)
+        #
+        # # Find common edges by using broadcasting and comparison
+        # intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
+        # intersection = edges1_set[intersection_mask]
+        #
+        # # Extract row and col from the intersection tensor
+        # row = intersection[:, 0].to(device)
+        # col = intersection[:, 1].to(device)
+        # value = torch.ones(row.size(0), dtype=torch.float).to(device)
+        #
+        # unique_edges = torch_sparse.SparseTensor(
+        #     row=row,
+        #     col=col,
+        #     value=value,
+        # )
+        # new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
+        out = lin0(intersection @ x)
     # elif alpha == 3:
     #     row1 = adj0.storage.row()
     #     row2 = adj1.storage.row()
@@ -1147,6 +1164,72 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1, inci_norm='dir'):
     else:
         out = 1*(1+alpha)*(alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
     return out
+
+def union_adj_norm(adj0, adj1, inci_norm, device):
+    # device = adj0.device
+
+    row1 = adj0.storage.row()
+    row2 = adj1.storage.row()
+    # new_row = torch.cat(row1, row2)
+    new_row = torch.cat((row1, row2), dim=0)
+    col1 = torch.tensor(adj0.storage.col())
+    col2 = torch.tensor(adj1.storage.col())
+    new_col = torch.cat((col1, col2), dim=0)
+
+    union_edges = torch.stack([new_row, new_col], dim=1)
+    unique_edges = torch.unique(union_edges, dim=0)
+
+    row = unique_edges[:, 0].to(device)
+    col = unique_edges[:, 1].to(device)
+    value = torch.ones(row.size(0), dtype=torch.float).to(device)
+    unique_edges = torch_sparse.SparseTensor(
+        row=row,
+        col=col,
+        value=value,
+    )
+    new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
+
+    return new_adj_norm
+
+
+def intersection_adj_norm(adj0, adj1, inci_norm, device):
+    # device = adj0.device
+
+    row1 = adj0.storage.row()
+    row2 = adj1.storage.row()
+    col1 = adj0.storage.col()
+    col2 = adj1.storage.col()
+
+    # Stack the row and col tensors to get edge lists
+    edges1 = torch.stack([row1, col1], dim=1)
+    edges2 = torch.stack([row2, col2], dim=1)
+
+    # Sort the edges to enable intersection using PyTorch operations
+    edges1 = edges1[edges1[:, 0].argsort()]
+    edges2 = edges2[edges2[:, 0].argsort()]
+
+    # Use torch.unique and torch's intersection logic to find common edges
+    edges1_set = torch.unique(edges1, dim=0)
+    edges2_set = torch.unique(edges2, dim=0)
+
+    # Find common edges by using broadcasting and comparison
+    intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
+    intersection = edges1_set[intersection_mask]
+
+    # Extract row and col from the intersection tensor
+    row = intersection[:, 0]
+    col = intersection[:, 1]
+    value = torch.ones(row.size(0), dtype=torch.float).to(device)
+
+    unique_edges = torch_sparse.SparseTensor(
+        row=row,
+        col=col,
+        value=value,
+    )
+    new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm)
+
+    return new_adj_norm
+
 def filter_upper_triangle(edges):
     """Filter edges to include only those in the upper triangle."""
     return {edge for edge in edges if edge[0] < edge[1]}
@@ -1316,11 +1399,13 @@ def directed_norm(adj, rm_gen_sLoop=False):
     Applies the normalization for directed graphs:
         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
     """
-    in_deg = sparsesum(adj, dim=0)
+    # in_deg = sparsesum(adj, dim=0)
+    in_deg = torch_sparse.sum(adj, dim=0).to(torch.float)
     in_deg_inv_sqrt = in_deg.pow_(-0.5)
     in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)
 
-    out_deg = sparsesum(adj, dim=1)
+    # out_deg = sparsesum(adj, dim=1)
+    out_deg = torch_sparse.sum(adj, dim=1).to(torch.float)
     out_deg_inv_sqrt = out_deg.pow_(-0.5)
     out_deg_inv_sqrt.masked_fill_(out_deg_inv_sqrt == float("inf"), 0.0)
 
@@ -1337,7 +1422,7 @@ def get_model(num_features,  n_cls, args):
         dropout=args.dropout,
         conv_type=args.conv_type,
         jumping_knowledge=args.jk,
-        normalize=args.BN_model,
+        normalize=args.normalize,
         alpha=args.alphaDir,
         learn_alpha=args.learn_alpha,
     )
@@ -1442,7 +1527,7 @@ class GCN_JKNet(torch.nn.Module):
         layer = args.layer
         nhid = args.feat_dim
         hidden_dim = nhid
-        normalize = args.BN_model
+        normalize = args.normalize
         dropout = args.dropout
         nonlinear = args.nonlinear
 
