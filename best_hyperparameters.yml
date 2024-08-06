@@ -86,7 +86,7 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
   gamaDir: -1
 
 
-#
+#  74.7±1.6(0.5,0.-1), 75.9±2.0(0.5_0.5_-1),
 dgl/pubmed:
 #  net: ScaleNet
   nonlinear: 1
@@ -97,9 +97,9 @@ dgl/pubmed:
   First_self_loop : 'add'
   jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
-  alphaDir: 0   # 0.5(72.2), 0(73.2)
-  betaDir: 2    #
-  gamaDir: 1
+  alphaDir: 0.5   # 0.5(72.2), 0(73.2)
+  betaDir: 0.5    #
+  gamaDir: 0
 
 # 76.7±0.9
 WikiCS/:
