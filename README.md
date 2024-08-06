@@ -144,8 +144,9 @@ all the datasets in Direct_dataset. Then in terminal, run:
 ## License
 MIT License
 
-## Contact 
-Feel free to email (qj2004 [AT] hw.ac.uk) for any questions about this work.
+[//]: # (## Contact )
+
+[//]: # (Feel free to email &#40;&#41; for any questions about this work.)
 
 ## Acknowledgements
 

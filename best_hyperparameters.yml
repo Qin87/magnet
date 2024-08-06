@@ -64,9 +64,9 @@ cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
   First_self_loop : 'add'  # sure
   jk: "max"     # max(80.7), cat(79.8), 0(76.9)
   dropout: 0.5   # 0.0(80.51), 0.5(80.76)
-#  alphaDir: 2   # 0.5,1.-1 before having 2
-#  betaDir: -1  # 1
-#  gamaDir: -1  # -1 , 0.5
+  alphaDir: 2   # 0.5,1.-1 before having 2
+  betaDir: -1  # 1
+  gamaDir: -1  # -1 , 0.5
 
 #
 citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.0_0.0_0.5----2.0_0.0_0.0----2.0_2.0_0.5-----0.5_2.0_0.5---0.0_0.5_2.0--0.5_2.0_2.0
@@ -81,9 +81,9 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
   jk: 'max'   # 'max'(64.75). 'cat'(65.6), 0(55.1)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
-#  alphaDir: 3   # 0,0,0.5 before having 2
-#  betaDir: 3
-#  gamaDir: 0
+  alphaDir: 0.5   # 0,0,0.5 before having 2
+  betaDir: 2
+  gamaDir: -1
 
 
 #
