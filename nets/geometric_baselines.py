@@ -942,9 +942,6 @@ class DirGCNConv_2(torch.nn.Module):
         self.lin_dst_to_src = Linear(input_dim, output_dim)
 
         self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
-        # nn.ModuleList([DirGCNConv(in_dim, out_dim) for _ in range(20)])
-
-
 
         self.First_self_loop = args.First_self_loop
         self.rm_gen_sloop = args.rm_gen_sloop
