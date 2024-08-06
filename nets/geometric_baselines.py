@@ -975,7 +975,7 @@ class DirGCNConv_2(torch.nn.Module):
 
         jumping_knowledge = args.jk_inner
         self.jumping_knowledge_inner = jumping_knowledge
-        if jumping_knowledge is not None:
+        if jumping_knowledge:
             input_dim_jk = output_dim * 3 if jumping_knowledge == "cat" else output_dim
             self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=input_dim, num_layers=3)
             self.lin = Linear(input_dim_jk, output_dim)
@@ -1061,7 +1061,7 @@ class DirGCNConv_2(torch.nn.Module):
 
         xs = [out1, out2, out3]
 
-        if self.jumping_knowledge_inner is not None:
+        if self.jumping_knowledge_inner:
             x = self.jump(xs)
             x = self.lin(x)
         else:
