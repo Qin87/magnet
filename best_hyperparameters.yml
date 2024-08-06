@@ -92,13 +92,13 @@ dgl/pubmed:
   nonlinear: 1
   layer: 4
   lr: 0.01
-  normalize: 1
-  BN_model: 1  # 0(33), 1(73)
+  normalize: 0
+  BN_model: 0  # 0(33), 1(73)
   First_self_loop : 'add'
   jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
   alphaDir: 0   # 0.5(72.2), 0(73.2)
-  betaDir: 2
+  betaDir: 2    #
   gamaDir: 1
 
 # 76.7±0.9
