@@ -91,6 +91,22 @@ citeseer_npz/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0--
   gamaDir: -1
 
 
+# 76.7±0.9
+WikiCS/:
+#  net: ScaleNet
+  nonlinear: 1
+  layer: 2
+  lr: 0.01
+  normalize: 1
+  BN_model: 0  # 0(23), 1(73.5)
+  First_self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
+  jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
+  jk_inner: 0
+  dropout: 0.5  # 0.5(75.9), 0.0(73.9)
+  alphaDir: 0.5
+  betaDir: 2
+  gamaDir: -1   # 0(76.5)
+
 #
 dgl/pubmed:
 #  net: ScaleNet
@@ -106,22 +122,6 @@ dgl/pubmed:
   alphaDir: 0.5   # 0.5(72.2), 0(73.2)
   betaDir: 0.5    #
   gamaDir: 0
-
-# 76.7±0.9
-WikiCS/:
-#  net: ScaleNet
-  nonlinear: 1
-  layer: 2
-  lr: 0.01
-  normalize: 1
-  BN_model: 0  # 0(23), 1(73.5)
-  First_self_loop : 'remove'  # remove(73.9), add(73.7), 0(73.85)
-  jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
-  jk_inner: 0
-  dropout: 0.5  # 0.5(75.9), 0.0(73.9)
-  alphaDir: -1
-  betaDir: 0.5
-  gamaDir: -1   # 0(76.5)
 
 
 ## 91.23 ± 0.32
