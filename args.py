@@ -31,19 +31,19 @@ def parse_args():
     parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
 
 
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
-    parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
+    parser.add_argument('--MakeImbalance', '-imbal', action='store_false', help='if convert graph to undirecteds')  # TODO change before git
+    parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirected')  # TODO change before git
     parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')  # TODO change before git
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='ScaleNet', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
+    parser.add_argument('--net', type=str, default='RossiGNN', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
                      'Mag, Sig, QuaNet, '
                     'GPRGNN, pgnn, mlp, sgc, JKNet'
                     'DiGib, DiGub,DiGi3, DiGi4----QiG replace DiG-----WiG, WoG, W2G replace DiG'
-                    'JKNet '
+                    'ScaleNet '
                                                                'GCN, GAT, SAGE, Cheb, APPNP, '
             'Ui is union of scaled edges, Li is last scale edges, '
     'Ti(exhaustive k_order), Ii(independent exhaustive, ii independent)'
@@ -51,7 +51,7 @@ def parse_args():
                                                                     'RossiGNN, LoG)')
     parser.add_argument('--seed', type=int, default=0, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='citeseer_npz/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
