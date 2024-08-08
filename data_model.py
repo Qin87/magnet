@@ -453,3 +453,41 @@ def make_imbalanced(edge_index, label, n_data, n_cls, ratio, train_mask):
         idx_info.append(cls_indices)
 
     return list(class_num_list), train_mask, idx_info, node_mask, edge_mask
+
+
+def count_homophilic_nodes(edge_index, y):
+    num_nodes = y.size(0)
+    in_homophilic_count = 0
+    out_homophilic_count = 0
+    no_in_neighbors = 0
+    no_out_neighbors = 0
+
+    for node in range(num_nodes):
+        # Find the in-neighbors (nodes that point to the current node)
+        in_neighbors = (edge_index[1] == node).nonzero(as_tuple=True)[0]
+        in_neighbors = edge_index[0, in_neighbors]
+
+        # Find the out-neighbors (nodes that the current node points to)
+        out_neighbors = (edge_index[0] == node).nonzero(as_tuple=True)[0]
+        out_neighbors = edge_index[1, out_neighbors]
+
+
+        # Check in-neighbor homophily
+        if len(in_neighbors) > 0:
+            in_neighbor_labels = y[in_neighbors]
+            in_most_common_label = torch.mode(in_neighbor_labels).values.item()
+            if in_most_common_label == y[node]:
+                in_homophilic_count += 1
+        else:
+            no_in_neighbors += 1
+
+            # Check out-neighbor homophily
+        if len(out_neighbors) > 0:
+            out_neighbor_labels = y[out_neighbors]
+            out_most_common_label = torch.mode(out_neighbor_labels).values.item()
+            if out_most_common_label == y[node]:
+                out_homophilic_count += 1
+        else:
+            no_out_neighbors += 1
+
+    return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count,

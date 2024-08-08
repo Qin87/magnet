@@ -28,7 +28,9 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_A${a}_Dir${betadir}__${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-python3 main.py   --num_split=1  --alphaDir="$alphadir"  --betaDir="$betadir"  --gamaDir="$gamadir"  --use_best_hyperparams    --net="$net"  --layer="$layer"   --Dataset="$Didataset" > "$log_output"
+python3 main.py   --num_split=10  --jk_inner='cat'  --alphaDir="$alphadir"  --betaDir="$betadir"  --gamaDir="$gamadir"  \
+--use_best_hyperparams    --net="$net"  --layer="$layer"  \
+--Dataset="$Didataset" > "$log_output" \
              2>&1
             wait $pid
           #done

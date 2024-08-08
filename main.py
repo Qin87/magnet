@@ -15,7 +15,7 @@ from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
-from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced
+from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes
 from nets.DiG_NoConv import union_edges
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
@@ -165,6 +165,9 @@ with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
 
 seed_everything(args.seed)
 
+no_in, homo_ratio_A, no_out,   homo_ratio_At = count_homophilic_nodes(edges, data_y)
+# print('homophic ratio is: ', homo_ratio, file=log_file)
+print('A, At homophic ratio is: ', homo_ratio_A, homo_ratio_At)
 
 biedges = None
 edge_in = None
