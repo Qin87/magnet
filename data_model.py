@@ -490,4 +490,12 @@ def count_homophilic_nodes(edge_index, y):
         else:
             no_out_neighbors += 1
 
+    percent_no_in = (no_in_neighbors / num_nodes) * 100
+    percent_in_homo = (in_homophilic_count / num_nodes) * 100
+    percent_no_out = (no_out_neighbors / num_nodes) * 100
+    percent_out_homo = (out_homophilic_count / num_nodes) * 100
+
+    print(f"{percent_no_in:.1f} & {percent_in_homo:.1f} & {percent_no_out:.1f} & {percent_out_homo:.1f}")
+    # print(f"{percent_no_in:.1f}% & {percent_in_homo:.1f}% & {percent_no_out:.1f}% & {percent_out_homo:.1f}%")
+
     return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count,
