@@ -1124,7 +1124,15 @@ def intersection_adj_norm(adj0, adj1, inci_norm, device):
 
     # Find common edges by using broadcasting and comparison
     with torch.no_grad():
-        intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
+        try:
+            # edges1_set = edges1_set.to_sparse()
+            # edges2_set = edges2_set.to_sparse()
+            intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
+        except:
+            edges1_set = edges1_set.cpu()
+            edges2_set = edges2_set.cpu()
+            intersection_mask = (edges1_set[:, None] == edges2_set).all(dim=2).any(dim=1)
+
     intersection = edges1_set[intersection_mask]
 
     # Extract row and col from the intersection tensor
