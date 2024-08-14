@@ -1,14 +1,14 @@
 #!/bin/bash
 
-net_values=" DiG DiGib QiG QiGi2 Mag "
+net_values="  WiG WiGi2 "
 q_value=0
-layer_values=" 4 "
+layer_values=" 2 "
 imbal="2  "
 Dir="0 0.5 1 2 3 -1 "
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
-Direct_dataset=(  'dgl/pubmed' 'WikipediaNetwork/squirrel' 'WikipediaNetwork/chameleon' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'
+Direct_dataset=(  'WikipediaNetwork/chameleon' 'WikiCS/' 'WikipediaNetwork/squirrel' )  # 'cora_ml/'  'citeseer_npz/'
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"

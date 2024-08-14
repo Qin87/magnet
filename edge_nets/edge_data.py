@@ -580,11 +580,11 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)  # col degree
     deg2 = deg0 + deg1
 
-    plt.hist(deg0.cpu(), bins=50, edgecolor='k')
-    plt.xlabel('degree')
-    plt.ylabel('Frequency')
-    plt.title('Original Distribution of  degree0:NPZ')  # Shuffled Absolute Value-Transformed Edge Weights
-    plt.show()
+    # plt.hist(deg0.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('degree')
+    # plt.ylabel('Frequency')
+    # plt.title('Original Distribution of  degree0:NPZ')  # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
 
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1)
@@ -645,11 +645,11 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     else:
         NotImplementedError('Not Implemented edge-weight type')
 
-    plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
-    plt.xlabel('Absolute Edge Weight')
-    plt.ylabel('Frequency')
-    plt.title('Original Distribution of  WiG-2 edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
-    plt.show()
+    # plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('Absolute Edge Weight')
+    # plt.ylabel('Frequency')
+    # plt.title('Original Distribution of  WiG-2 edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
 
     if norm == 'sym':
         # row normalization
@@ -674,12 +674,12 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
 
     print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
 
-    # plt.xlim(0, 2)
-    plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
-    plt.xlabel('Absolute Edge Weight')
-    plt.ylabel('Frequency')
-    plt.title('Normalized Distribution of  WiG-2 edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
-    plt.show()
+    # # plt.xlim(0, 2)
+    # plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
+    # plt.xlabel('Absolute Edge Weight')
+    # plt.ylabel('Frequency')
+    # plt.title('Normalized Distribution of  WiG-2 edge weights_F1=()')  # Shuffled Absolute Value-Transformed Edge Weights
+    # plt.show()
 
     return edge_index,  edge_weight
 

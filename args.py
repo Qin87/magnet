@@ -22,16 +22,15 @@ def parse_args():
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', None], default=0)
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
-    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0)
-    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=3)
-    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=-1)
+    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
     parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
 
-
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_false', help='if convert graph to undirecteds')  # TODO change before git
+    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
     parser.add_argument('--to_undirected', '-tud', action='store_true', help='if convert graph to undirected')  # TODO change before git
@@ -39,7 +38,7 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='RossiGNN', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
+    parser.add_argument('--net', type=str, default='ScaleNet', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
                      'Mag, Sig, QuaNet, '
                     'GPRGNN, pgnn, mlp, sgc, JKNet'
                     'DiGib, DiGub,DiGi3, DiGi4----QiG replace DiG-----WiG, WoG, W2G replace DiG'
@@ -49,9 +48,9 @@ def parse_args():
     'Ti(exhaustive k_order), Ii(independent exhaustive, ii independent)'
                                                                  ' *i*s2(s means separate in and out), Ai*(AA, AtAt, AtA, AAt:AiGs2), DirGNN(Rossi, '
                                                                     'RossiGNN, LoG)')
-    parser.add_argument('--seed', type=int, default=0, help='seed')
+    parser.add_argument('--seed', type=int, default=1999, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='citeseer_npz/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='telegram/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
