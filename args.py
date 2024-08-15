@@ -37,7 +37,7 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='RossiGNN', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
+    parser.add_argument('--net', type=str, default='ScaleNet', help='addSym, addSympara, addQymN1(*Ym without 1st), Sym replaced by Qym'
                      'Mag, Sig, QuaNet, '
                     'GPRGNN, pgnn, mlp, sgc, JKNet'
                     'DiGib, DiGub,DiGi3, DiGi4----QiG replace DiG-----WiG, WoG, W2G replace DiG'
@@ -47,9 +47,9 @@ def parse_args():
     'Ti(exhaustive k_order), Ii(independent exhaustive, ii independent)'
                                                                  ' *i*s2(s means separate in and out), Ai*(AA, AtAt, AtA, AAt:AiGs2), DirGNN(Rossi, '
                                                                     'RossiGNN, LoG)')
-    parser.add_argument('--seed', type=int, default=2024, help='seed')
+    parser.add_argument('--seed', type=int, default=1, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='telegram/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
