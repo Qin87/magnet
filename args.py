@@ -47,7 +47,7 @@ def parse_args():
     'Ti(exhaustive k_order), Ii(independent exhaustive, ii independent)'
                                                                  ' *i*s2(s means separate in and out), Ai*(AA, AtAt, AtA, AAt:AiGs2), DirGNN(Rossi, '
                                                                     'RossiGNN, LoG)')
-    parser.add_argument('--seed', type=int, default=1, help='seed')
+    parser.add_argument('--seed', type=int, default=1999, help='seed')
 
     parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'

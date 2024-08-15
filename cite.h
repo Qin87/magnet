@@ -8,7 +8,7 @@ Dir="0 0.5 1 2 3 -1 "
 
 # 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
 # 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
-Direct_dataset=(  'dgl/pubmed' 'WikiCS/'  )  # 'cora_ml/'  'citeseer_npz/'
+Direct_dataset=(  'WikipediaNetwork/squirrel' 'WikipediaNetwork/chameleon'  )  # 'cora_ml/'  'citeseer_npz/'
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -32,7 +32,7 @@ python3 main.py   --num_split=10      --net="$net"  --layer="$layer"   --Dataset
              2>&1
             wait $pid
           #done
-        done
+        #done
        done
        done
        done
