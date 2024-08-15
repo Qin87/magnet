@@ -16,7 +16,6 @@ def parse_args():
 
     # for DirGNN
     parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
-    # parser.add_argument("--normalize", action="store_true")
     parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
     parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default=0)
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', None], default=0)
@@ -28,7 +27,7 @@ def parse_args():
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
-    parser.add_argument('--num_split', type=int, default=20, help='num of run in spite of many splits')
+    parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
@@ -48,9 +47,9 @@ def parse_args():
     'Ti(exhaustive k_order), Ii(independent exhaustive, ii independent)'
                                                                  ' *i*s2(s means separate in and out), Ai*(AA, AtAt, AtA, AAt:AiGs2), DirGNN(Rossi, '
                                                                     'RossiGNN, LoG)')
-    parser.add_argument('--seed', type=int, default=2026, help='seed')
+    parser.add_argument('--seed', type=int, default=1999, help='seed')
 
-    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/squirrel', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )
