@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", action="store_true", help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", action="store_true", help="Whether test AAt-A-At")
-    parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
+    parser.add_argument('--num_split', type=int, default=20, help='num of run in spite of many splits')
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
@@ -37,14 +37,12 @@ def parse_args():
 
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')     # TODO false
-    parser.add_argument('--net', type=str, default='Dir-GNN', help='ScaleNet '
+    parser.add_argument('--net', type=str, default='ScaleNet', help='ScaleNet, Dir-GNN '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc'
-                    'DiGib, DiGub,DiGi3, DiGi4----1iG, RiG replace DiG--'
-                                                                    'Dir-GNN)')
-    parser.add_argument('--seed', type=int, default=99, help='seed')
-
-    parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
+                    'DiGib, DiGub,DiGi3, DiGi4----1iG, RiG replace DiG--')
+    parser.add_argument('--seed', type=int, default=99, help='random seed')
+    parser.add_argument('--Dataset', type=str, default='WikiCS/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,'
                                                                                'WebKB/texas, WebKB/Cornell, WebKB/wisconsin, , film/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon'
                                                                                 'dgl/computer, dgl/coauthor-cs, dgl/coauthor-ph, dgl/reddit, dgl/Fyelp,  dgl/yelp, WikiCS_U,  ...,  '
                                                                               )

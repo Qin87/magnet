@@ -473,7 +473,7 @@ try:
                     test_bacc = baccs[2]
                     test_f1 = f1s[2]
                     CountNotImproved = 0
-                    print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
+                    # print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
                 else:
                     CountNotImproved += 1
                 # end_time = time.time()
