@@ -1,16 +1,9 @@
-# ScaleGraphs
-Graph Transformation via Scale Invariance
-
-# Graph Transformation via Scale Invariance of Node classification
-
-Implementation of paper [Graph Transformation via Scale Invariance of Node classification](??).
-
-![]()
+# ScaleNet
+Implementation of paper [ScaleNet: Scale Invariance Learning in Directed Graphs](??).
 
 ## Requirements
 
 This repository has been tested with the following packages:
-
 - Python == 3.9 or 3.10
 - PyTorch == 2.1.2
 - PyTorch Geometric == 2.4.0
@@ -134,12 +127,24 @@ python main.py  --net GCN  --layer=3 --Dataset='cora_ml/'
 python main.py --net TiGi3  --layer=2 --Dataset='citeseer_npz/'
 ```
 
+(1)To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command:
+
+```
+./scale.h
+```
+(2) diff_AAt
+(3) diff_AA
+
+
+
 To run in batches, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
 all the datasets in Direct_dataset. Then in terminal, run: 
 
 ```
 ./net_nest.h
 ```
+
+
 
 ## License
 MIT License

@@ -56,7 +56,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = create_MLP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
     elif args.net.lower() == 'sgc':
         model = create_SGC(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer,K=args.K)
-    elif args.net == 'RossiGNN':
+    elif args.net == 'Dir-GNN':
         model = get_model(num_features,  n_cls, args)
     elif args.net.lower() == 'jk':
         model = JKNet(in_channels=num_features,
@@ -89,17 +89,17 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
         model = APPNP_Model(num_features, n_cls,args.feat_dim, alpha=args.alpha,dropout=args.dropout, layer=args.layer).to(device)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ai', 'Ti', 'Hi','Ii', 'ii')):        # GCN  -->  SAGE
+    elif args.net.startswith(('Di', '1i', 'Ri', 'Ui', 'Li', 'Ai', 'Ti', 'Hi','Ii', 'ii')):        # GCN  -->  SAGE
         if len(args.net) < 4 or args.net.startswith(('Ui', 'Li')):
             if args.BN_model:
                 model = DiSAGE_xBN_nhid(args.net[2], num_features, n_cls, args).to(device)
             else:
                 model = DiSAGE_x_nhid(args.net[2], num_features, n_cls, args).to(device)     # July 24  keep it: the original DiG paper
         else:
-            if args.net[3:].startswith(('Sym', 'Qym')):
+            if args.net[3:].startswith(('Sym', '1ym')):
                 if args.net[6:].startswith('Cat'):
                     if args.net[9:].startswith('Mix'):
-                        if args.net[12:].startswith(('Sym', 'Qym')):
+                        if args.net[12:].startswith(('Sym', '1ym')):
                             model = create_DiG_MixIB_SymCat_Sym_nhid(args.net[2], num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
                         else:
                             model = create_DiG_MixIB_SymCat_nhid(args.net[2],num_features, args.feat_dim, n_cls, args.dropout, args.layer).to(device)
@@ -124,7 +124,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
                             model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)    # keep this: original DiGib paper
                         else:
                             model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
-    elif args.net.startswith(('Sym', 'Qym')):
+    elif args.net.startswith(('Sym', '1ym')):
         model = SymModel(num_features, n_cls, filter_num=args.feat_dim,dropout=args.dropout, layer=args.layer).to(device)
     elif args.net.startswith(('addSym', 'addQym')):
         if not args.net.endswith('para'):
@@ -168,7 +168,7 @@ def get_name(args, IsDirectedGraph):
         dataset_to_print = dataset_to_print + 'Undire'
     else:
         dataset_to_print = dataset_to_print + 'Direct'
-    if args.net.startswith('Wi'):
+    if args.net.startswith('Ri'):
         net_to_print = args.net + str(args.W_degree) + '_'
     elif args.net.startswith('Mag'):
         net_to_print = args.net + str(args.q)
