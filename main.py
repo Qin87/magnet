@@ -73,10 +73,10 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
     if args.net.endswith('ymN1'):   # without 1st-order edges
         biedges = edge_in
     optimizer.zero_grad()
-    if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
+    if args.net.startswith(('Sym', 'addSym', '1ym', 'addQym')):
         out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ai', 'Ti',  'Hi', 'Ii', 'ii')):
-        if args.net[3:].startswith(('Sym', 'Qym')):
+    elif args.net.startswith(('Di', '1i', 'Ri', 'Ui', 'Li', 'Ai', 'Ti',  'Hi', 'Ii', 'ii')) and not args.net.startswith('Dir'):
+        if args.net[3:].startswith(('Sym', '1ym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             out = model(data_x, SparseEdges, edge_weight)
@@ -92,10 +92,10 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
 
     with torch.no_grad():
         model.eval()
-        if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
+        if args.net.startswith(('Sym', 'addSym', '1ym', 'addQym')):
             out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-        elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
-            if args.net[3:].startswith(('Sym', 'Qym')):
+        elif args.net.startswith(('Di', '1i', 'Ri', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')) and not args.net.startswith('Dir'):
+            if args.net[3:].startswith(('Sym', '1ym')):
                 out = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
             else:
                 out = model(data_x, SparseEdges, edge_weight)
@@ -118,10 +118,10 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
 def test():
     global edge_in, in_weight, edge_out, out_weight
     model.eval()
-    if args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
+    if args.net.startswith(('Sym', 'addSym', '1ym', 'addQym')):
         logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight)
-    elif args.net.startswith(('Di', 'Qi', 'Wi', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
-        if args.net[3:].startswith(('Sym', 'Qym')):
+    elif args.net.startswith(('Di', '1i', 'Ri', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')) and not args.net.startswith('Dir'):
+        if args.net[3:].startswith(('Sym', '1ym')):
             logits = model(data_x, biedges, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight)
         else:
             logits = model(data_x, SparseEdges, edge_weight)
@@ -212,13 +212,13 @@ data_test_maskOrigin = data_test_maskOrigin.to(device)
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
 
-if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','Ii', 'ii')):
+if args.net.startswith(('1i', 'Ri', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','Ii', 'ii')) and not args.net.startswith('Dir'):
     if args.feat_proximity:
         average_distance, threshold_value = feat_proximity(edges, data_x)
         proximity_threshold = threshold_value
-    if args.net.startswith('Wi'):
+    if args.net.startswith('Ri'):
         edge_index1, edge_weights1 = WCJ_get_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
-    elif args.net.startswith(('Qi', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
+    elif args.net.startswith(('1i', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi', 'Ii', 'ii')):
         edge_index1, edge_weights1 = Qin_get_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
     elif args.net.startswith('Di'):
         edge_index1, edge_weights1 = get_appr_directed_adj2(args.First_self_loop, args.alpha, edges.long(), data_y.size(-1), data_x.dtype)  # consumiing for large graph
@@ -295,13 +295,13 @@ if args.net.startswith(('Qi', 'Wi', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
             edge_weight = tuple(proximity_weights)
             del proximity_edges, proximity_weights
 
-    if args.net[3:].startswith('Qym'):
+    if args.net[3:].startswith('1ym'):
         biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(), data_y.size(-1), edges_weight)
     elif args.net[3:].startswith('Sym'):
         biedges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(), data_y.size(-1), edges_weight)
 
-elif args.net.startswith(('Sym', 'addSym', 'Qym', 'addQym')):
-    if args.net.startswith(('Qym', 'addQym')):
+elif args.net.startswith(('Sym', 'addSym', '1ym', 'addQym')):
+    if args.net.startswith(('1ym', 'addQym')):
         biedges, edge_in, in_weight, edge_out, out_weight = F_in_out(edges.long(),data_y.size(-1),edges_weight)
     else:
         biedges, edge_in, in_weight, edge_out, out_weight = F_in_out0(edges.long(),data_y.size(-1),edges_weight)
@@ -477,10 +477,10 @@ try:
                 else:
                     CountNotImproved += 1
                 # end_time = time.time()
-                print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+                # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
                 # print(end_time - start_time, file=log_file)
                 # print(end_time - start_time)
-                print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
+                # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
                     # print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
