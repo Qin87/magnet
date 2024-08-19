@@ -82,9 +82,9 @@ Specify the name of the dataset you want to use. The available datasets are cate
 
 - **(2) To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command**:
 
-```
-./scale.h &
-```
+  ```
+  ./scale.h &
+  ```
 
 - **(3) To get performance of removing shared edges with lower-scale graphs**:
   - To get performance of AAt-A-At, AtA-A-At, AAt+AtA-A-At ('-' means removing the shared edges with A or At):
@@ -95,17 +95,17 @@ Specify the name of the dataset you want to use. The available datasets are cate
     args.differ_AA=1
 - **(4) Wilcoxon test** 
 To run the Wilcoxon test on each dataset, execute the corresponding script. For example:
-```
-python3 ./wilcoxon/wilcoxon_cham.py  &
-```
+  ```
+  python3 ./wilcoxon/wilcoxon_cham.py  &
+  ```
 
 - **(5) Customized runing**:
 To run with your own configurations, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
 all the datasets in Direct_dataset. Then in terminal, run: 
 
-```
-./net_nest.h
-```
+  ```
+  ./net_nest.h
+  ```
 
 
 
