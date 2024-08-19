@@ -947,10 +947,12 @@ class DirGCNConv_2(torch.nn.Module):
         self.rm_gen_sloop = args.rm_gen_sloop
         self.differ_AA = args.differ_AA
         self.differ_AAt = args.differ_AAt
-        if self.differ_AA:
-            args.alphaDir, args.betaDir = -1, -1
-        elif self.differ_AAt:
-            args.alphaDir, args.gamaDir = -1, -1
+        if self.differ_AA or self.differ_AAt:
+            args.betaDir, args.gamaDir = -1, -1
+        # if self.differ_AA:
+        #     args.alphaDir, args.betaDir = -1, -1
+        # elif self.differ_AAt:
+        #     args.alphaDir, args.gamaDir = -1, -1
 
         self.alpha = nn.Parameter(torch.ones(1) * args.alphaDir, requires_grad=False)
         self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
@@ -996,7 +998,7 @@ class DirGCNConv_2(torch.nn.Module):
             adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
             self.adj_t_norm = get_norm_adj(adj_t, norm=self.inci_norm)  #
 
-            print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
+            # print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
         if self.adj_norm_in_out is None:
             if self.rm_gen_sloop == 'remove':
@@ -1015,11 +1017,11 @@ class DirGCNConv_2(torch.nn.Module):
 
 
             self.norm_list = [self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out]
-            print('edge_num of AAt, AtA, AA, AtAt: ',
-                  sparse_all(self.adj_norm_in_out, k=1),
-                  sparse_all(self.adj_norm_out_in, k=1),
-                  sparse_all(self.adj_norm_in_in, k=1),
-                  sparse_all(self.adj_norm_out_out, k=1))
+            # print('edge_num of AAt, AtA, AA, AtAt: ',
+            #       sparse_all(self.adj_norm_in_out, k=1),
+            #       sparse_all(self.adj_norm_out_in, k=1),
+            #       sparse_all(self.adj_norm_in_in, k=1),
+            #       sparse_all(self.adj_norm_out_out, k=1))
 
             if self.differ_AA:
                 Union_A_AA, Intersect_A_AA, diff_0 = share_edge(self.adj_norm_in_in, self.adj_norm, self.adj_t_norm)
@@ -1473,7 +1475,6 @@ class GNN(torch.nn.Module):     # from Rossi(LoG paper)
 
 class GCN_JKNet(torch.nn.Module):
     def __init__(self, nfeat, nclass, args):
-
         super(GCN_JKNet, self).__init__()
         jumping_knowledge = args.jk
         layer = args.layer

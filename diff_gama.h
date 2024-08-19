@@ -28,7 +28,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_A${a}_gamaDir${gamadir}__${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-python3 main.py   --differ_AA  --use_best_hyperparams=0   --num_split=1  --gamaDir="$gamadir"    --net="$net"  --layer="$layer" \
+python3 main.py   --differ_AA=1  --use_best_hyperparams=0   --num_split=1  --gamaDir="$gamadir"    --net="$net"  --layer="$layer" \
 --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid

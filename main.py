@@ -260,7 +260,6 @@ if args.net.startswith(('1i', 'Ri', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
         else:    # undirected graph
             edge_index_tuple, edge_weights_tuple = Qin_get_second_adj(edges.long(), data_y.size(-1), k, IsExhaustive)
         if args.net.startswith(('Hi', 'Ai')):
-        # if args.net.startswith('Hi'):
             SparseEdges = edge_index_tuple
             edge_weight = edge_weights_tuple
         else:
@@ -330,11 +329,8 @@ Set_exit = False
 num_run = args.num_split
 preprocess_time = time.time()
 try:
-    # start_time = time.time()
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ', device, file=log_file)
-        # for split in range(splits - 1, -1, -1):
-        # for split in range(splits):
         for split in range(num_run):
             model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
             if split==0:
