@@ -4,11 +4,11 @@ net_values=" ScaleNet  "
 q_value=0
 layer_values=" 4 "
 imbal="2  "
-Dir="0 0.5 1 -1"
+Dir="0 0.5 1 "
 
-# 'Cora/' 'CiteSeer/' 'PubMed/' 'dgl/photo' 'dgl/computer' 'dgl/reddit' 'dgl/coauthor-cs' 'dgl/coauthor-ph' 'dgl/Fyelp' 'dgl/Famazon'
-# 'citeseer_npz/' 'cora_ml/'  'telegram/telegram'  'citeseer_npz/' 'cora_ml/'  'telegram/telegram' 'dgl/pubmed' 'dgl/cora' 'WikiCS/'
-Direct_dataset=( 'telegram/'  )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+# 'citeseer_npz/' 'cora_ml/'  'telegram/' 'dgl/pubmed' 'WikiCS/'
+# 'WikipediaNetwork/squirrel'  'WikipediaNetwork/chameleon'
+Direct_dataset=( 'telegram/' )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -25,10 +25,11 @@ for Didataset in "${Direct_dataset[@]}"; do
         #for gamadir in $Dir; do
 # //        for imba_value  in $imbal; do
         for net in $net_values; do
-            log_output="${Didataset//\//_}_${timestamp}_A${a}_Dir${betadir}__${net}_layer${layer}q${q_value}.log"
+            log_output="${Didataset//\//_}_${timestamp}_A${a}_bataDir${betadir}__${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-python3 main.py   --differ_AAt  --BN_model=1 --First_self_loop='add' --dropout=0.0   --betaDir="$betadir"   --dropout=0.0  --net="$net"  --layer="$layer"   --Dataset="$Didataset" > "$log_output"
+python3 main.py   --differ_AAt  --use_best_hyperparams=0   --num_split=1  --betaDir="$betadir"    --net="$net"  --layer="$layer" \
+--Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
           #done

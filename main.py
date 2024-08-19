@@ -166,8 +166,6 @@ with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
 seed_everything(args.seed)
 
 no_in, homo_ratio_A, no_out,   homo_ratio_At = count_homophilic_nodes(edges, data_y)
-# print('homophic ratio is: ', homo_ratio, file=log_file)
-print('A, At homophic ratio is: ', homo_ratio_A, homo_ratio_At)
 
 biedges = None
 edge_in = None
@@ -340,6 +338,7 @@ try:
         for split in range(num_run):
             model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
             if split==0:
+                print('no_in, homo_in, no_out, homo_out:', no_in, homo_ratio_A, no_out, homo_ratio_At, file=log_file)
                 print(model, file=log_file)
                 print(model)
                 if args.net.startswith('ym'):
@@ -407,27 +406,29 @@ try:
                 print("make imbalanced", file=log_file)
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     make_imbalanced(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
-                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
-                    data_train_mask).item()), file=log_file)
-                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
-                    train_edge_mask).item()), file=log_file)
-                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
-                    data_train_mask).item()))
-                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
-                    train_edge_mask).item()))
+                if split==0:
+                    print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                        data_train_mask).item()), file=log_file)
+                    print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                        train_edge_mask).item()), file=log_file)
+                    print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
+                        data_train_mask).item()))
+                    print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
+                        train_edge_mask).item()))
             else:
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     keep_all_data(edges, data_y, n_data, n_cls, data_train_mask)
-                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNode_' + str(node_train), file=log_file)
-                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdge_' + str(train_edge_mask.size()[0]), file=log_file)
-                print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
-                    data_train_mask).item()))
-                print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
-                    torch.sum(train_edge_mask).item()))
-                sorted_list = sorted(class_num_list, reverse=True)
-                sorted_list_original = sorted(n_data, reverse=True)
-                print('class_num_list is ', n_data)
-                print('sorted class_num_list is ', sorted_list_original)
+                if split == 0:
+                    print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNode_' + str(node_train), file=log_file)
+                    print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdge_' + str(train_edge_mask.size()[0]), file=log_file)
+                    print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeNow_' + str(torch.sum(
+                        data_train_mask).item()))
+                    print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeNow_' + str(
+                        torch.sum(train_edge_mask).item()))
+                    sorted_list = sorted(class_num_list, reverse=True)
+                    sorted_list_original = sorted(n_data, reverse=True)
+                    print('class_num_list is ', n_data)
+                    print('sorted class_num_list is ', sorted_list_original)
 
             sorted_list = sorted(class_num_list, reverse=True)
             sorted_list_original = sorted(n_data, reverse=True)

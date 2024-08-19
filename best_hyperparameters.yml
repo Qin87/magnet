@@ -35,13 +35,11 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
 WikipediaNetwork/squirrel:
   nonlinear: 1
-#  normalize: True    # for DirGNN
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
 #  net: ScaleNet
   layer: 4
   lr: 0.01
   normalize: 1
-#  BN_model: 0
   BN_model: 1 # 0(48.9), 1(72)
   First_self_loop: "remove"     # Sure
   jk: 'max'
