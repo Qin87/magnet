@@ -68,22 +68,22 @@ Specify the name of the dataset you want to use. The available datasets are cate
   - On original datasets:
 
     ```
-    python main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/'
+    python3 main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/'
     ```
   
     ```
-    python main.py --net='Dir-GNN' --use_best_hyperparams=1   --Dataset='citeseer_npz/'
+    python3 main.py --net='Dir-GNN' --use_best_hyperparams=1   --Dataset='citeseer_npz/'
     ```
 
   - For imbalanced datasets:
     ```
-    python main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/   --MakeImbalance   --imb_ratio=100'
+    python3 main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/'   --MakeImbalance   --imb_ratio=100
     ```
 
 - **(2) To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command**:
 
 ```
-./scale.h
+./scale.h &
 ```
 
 - **(3) To get performance of removing shared edges with lower-scale graphs**:
@@ -98,7 +98,7 @@ Specify the name of the dataset you want to use. The available datasets are cate
 - **(4) Wilcoxon test** 
 To run the Wilcoxon test on each dataset, execute the corresponding script. For example:
 ```
-python3 ./wilcoxon/wilcoxon_cham.py > 1.log &
+python3 ./wilcoxon/wilcoxon_cham.py  &
 ```
 
 - **(5) Customized runing**:
