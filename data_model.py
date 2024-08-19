@@ -200,9 +200,11 @@ def get_name(args, IsDirectedGraph):
     if args.net == 'ScaleNet':
         if args.differ_AA or args.differ_AAt:
             if args.differ_AA:
-                diff = 'AA'+str(args.gamaDir)
+                # diff = 'AA'+str(args.gamaDir)
+                diff = 'AA'+str(args.alphaDir)
             else:
-                diff = 'AAt'+str(args.betaDir)
+                # diff = 'AAt'+str(args.betaDir)
+                diff = 'AAt'+str(args.alphaDir)
             net_to_print = net_to_print + '_diff'+diff + '_jk'+str(args.jk)+'_norm'+args.inci_norm
         else:
             net_to_print = net_to_print +'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(

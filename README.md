@@ -88,13 +88,11 @@ Specify the name of the dataset you want to use. The available datasets are cate
 
 - **(3) To get performance of removing shared edges with lower-scale graphs**:
   - To get performance of AAt-A-At, AtA-A-At, AAt+AtA-A-At ('-' means removing the shared edges with A or At):
-    ```
-    ./diff_beta.h &
-    ```
+    
+    args.differ_AAt=1    args.differ_AA=0
   - To get performance of AA-A-At, AtAt-A-At, AA+AtAt-A-At ('-' means removing the shared edges with A or At):
-    ```
-    ./diff_gama.h &
-    ```
+    
+    args.differ_AA=1
 - **(4) Wilcoxon test** 
 To run the Wilcoxon test on each dataset, execute the corresponding script. For example:
 ```
