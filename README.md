@@ -95,15 +95,14 @@ Specify the name of the dataset you want to use. The available datasets are cate
     ```
     ./diff_gama.h &
     ```
-- **(4) Wilcoxon test** for example:
+- **(4) Wilcoxon test** 
+To run the Wilcoxon test on each dataset, execute the corresponding script. For example:
 ```
-./wilcoxon/wilcoxon_cham.py
+python3 ./wilcoxon/wilcoxon_cham.py > 1.log &
 ```
 
-
-
-
-To run in batches, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
+- **(5) Customized runing**:
+To run with your own configurations, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
 all the datasets in Direct_dataset. Then in terminal, run: 
 
 ```
@@ -115,16 +114,13 @@ all the datasets in Direct_dataset. Then in terminal, run:
 ## License
 MIT License
 
-[//]: # (## Contact )
-
-[//]: # (Feel free to email &#40;&#41; for any questions about this work.)
-
 ## Acknowledgements
 
 The code is implemented based on [GraphSHA](https://github.com/wenzhilics/GraphSHA), [DiGCN](https://github.com/flyingtango/DiGCN),  [DirGNN](https://github.com/emalgorithm/directed-graph-neural-network)and 
 [MagNet](https://github.com/matthew-hirn/magnet).
 
-## Citation
+[//]: # (## Citation)
 
-If you find this work is helpful to your research, please consider citing our paper:???
+[//]: # ()
+[//]: # (If you find this work is helpful to your research, please consider citing our paper:???)
 
