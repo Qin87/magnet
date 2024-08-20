@@ -73,38 +73,39 @@ Specify the name of the dataset you want to use. The available datasets are cate
   
     ```
     python3 main.py --net='Dir-GNN' --use_best_hyperparams=1   --Dataset='citeseer_npz/'
+    
     ```
-
   - For imbalanced datasets:
     ```
     python3 main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/'   --MakeImbalance   --imb_ratio=100
     ```
+- **(2)Run in batches**:
+To run with your own configurations, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
+all the datasets in Direct_dataset. Then in terminal, run: 
 
-- **(2) To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command**:
+  ```
+  ./net_nest.h
+  ```
+
+
+
+- **(3) To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command**:
 
   ```
   ./scale.h &
   ```
 
-- **(3) To get performance of removing shared edges with lower-scale graphs**:
+- **(4) To get performance of removing shared edges with lower-scale graphs**:
   - To get performance of AAt-A-At, AtA-A-At, AAt+AtA-A-At ('-' means removing the shared edges with A or At):
     
     args.differ_AAt=1    args.differ_AA=0
   - To get performance of AA-A-At, AtAt-A-At, AA+AtAt-A-At ('-' means removing the shared edges with A or At):
     
     args.differ_AA=1
-- **(4) Wilcoxon test** 
+- **(5) Wilcoxon test** 
 To run the Wilcoxon test on each dataset, execute the corresponding script. For example:
   ```
   python3 ./wilcoxon/wilcoxon_cham.py  &
-  ```
-
-- **(5) Customized runing**:
-To run with your own configurations, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
-all the datasets in Direct_dataset. Then in terminal, run: 
-
-  ```
-  ./net_nest.h
   ```
 
 

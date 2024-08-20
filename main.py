@@ -326,7 +326,7 @@ except:
     splits = 1
 Set_exit = False
 
-num_run = args.num_split
+num_run = args.num_split if args.num_split<splits else splits
 preprocess_time = time.time()
 try:
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-net_values="ScaleNet Dir-GNN "
+net_values="ScaleNet "
 q_value=0
-layer_values=" 2 3 4  "
+layer_values=" 2  "
 imbal="100  "
 
 # 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'
@@ -23,7 +23,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py   --net="$net"  --layer="$layer"     \
+            python3 main.py   --net="$net"  --layer="$layer"  --use_best_hyperparams=1 --num_split=20 \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
