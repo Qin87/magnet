@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
 
     # for DirGNN
-    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-sage")
+    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
     parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
     parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default=0)
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', None], default=0)
@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
-    parser.add_argument('--num_split', type=int, default=1, help='num of run in spite of many splits')
+    parser.add_argument('--num_split', type=int, default=20, help='num of run in spite of many splits')
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
