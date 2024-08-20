@@ -107,8 +107,8 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   jk: 'max'
   jk_inner: 0
   alphaDir: 1
-  betaDir: 1
-  gamaDir: 1
+  betaDir: -1
+  gamaDir: -1
 
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
 WikipediaNetwork/squirrel:
