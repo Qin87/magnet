@@ -52,7 +52,7 @@ def use_best_hyperparams(args, dataset_name):
             setattr(args, name, value)
         else:
             raise ValueError(f"Trying to set non existing parameter: {name}")
-    print(args)
+    # print(args)
     return args
 
 def get_norm_adj(adj, norm):
