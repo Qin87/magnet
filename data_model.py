@@ -82,7 +82,6 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         model = create_GIN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer).to(device)
     elif args.net == 'Cheb':
         model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
-        # model = create_Cheb(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, K=args.K).to(device)
     elif args.net == 'ScaleNet':
         model = GCN_JKNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'GPRGNN':
@@ -184,13 +183,15 @@ def get_name(args, IsDirectedGraph):
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
 
-        if args.First_self_loop:
+        if args.First_self_loop == 'add':
             net_to_print = net_to_print + '_AddSloop'
+        elif args.First_self_loop == 'remove':
+            net_to_print = net_to_print + '_RmSloop'
         else:
             net_to_print = net_to_print + '_NoSloop'
 
-        if args.feat_proximity:
-            net_to_print = net_to_print + '_feaProx'
+        # if args.feat_proximity:
+        #     net_to_print = net_to_print + '_feaProx'
     if args.feat_dim != 64:
         net_to_print = net_to_print + str(args.feat_dim) + 'hid_'
     if args.MakeImbalance:
@@ -200,9 +201,9 @@ def get_name(args, IsDirectedGraph):
     if args.net == 'ScaleNet':
         if args.differ_AA or args.differ_AAt:
             if args.differ_AA:
-                diff = 'AA'+str(args.gamaDir)
+                diff = 'AA'+str(args.alphaDir)
             else:
-                diff = 'AAt'+str(args.betaDir)
+                diff = 'AAt'+str(args.alphaDir)
             net_to_print = net_to_print + '_diff'+diff + '_jk'+str(args.jk)+'_norm'+args.inci_norm
         else:
             net_to_print = net_to_print +'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(
@@ -225,9 +226,10 @@ def load_dataset(args):
     dataset = load_directedData(args)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    data = dataset[0]
-    if args.Dataset in ['ogbn-arxiv/']:
+    if args.Dataset in ['ogbn-arxiv/', 'directed-roman-empire/']:
         data = dataset._data
+    else:
+        data = dataset[0]
 
     global class_num_list, idx_info, prev_out, sample_times
     global data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin  # data split: train, validation, test
@@ -495,7 +497,8 @@ def count_homophilic_nodes(edge_index, y):
     percent_no_out = (no_out_neighbors / num_nodes) * 100
     percent_out_homo = (out_homophilic_count / num_nodes) * 100
 
+    print('percent of no_in, in_homo, no_out, out_homo', end=':')
     print(f"{percent_no_in:.1f} & {percent_in_homo:.1f} & {percent_no_out:.1f} & {percent_out_homo:.1f}")
     # print(f"{percent_no_in:.1f}% & {percent_in_homo:.1f}% & {percent_no_out:.1f}% & {percent_out_homo:.1f}%")
 
-    return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count,
+    return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count

@@ -29,136 +29,97 @@ Specify the name of the dataset you want to use. The available datasets are cate
     - `cora_ml/`
     - `WikiCS/`
     - `telegram/telegram`
-    - `dgl/cora`
     - `dgl/pubmed`
   
   - **Disassortative Graph**:
-    - `WebKB/texas`
-    - `WebKB/Cornell`
-    - `WebKB/wisconsin`
-    - `film/`
     - `WikipediaNetwork/squirrel`
     - `WikipediaNetwork/chameleon`
 
-- **Undirected Datasets**:
-
-  - **Citation**:
-
-    - `Cora/`
-
-    - `CiteSeer/`
-
-    - `PubMed/`
-
-  - **CoPurchase**:
-
-    - `dgl/computer`
-
-    - `dgl/photo`
-
-  
-  - **Coauthor**:
-
-    - `dgl/coauthor-cs`
-
-    - `dgl/coauthor-ph`
-
-  
-  - **Fraud Review**:
-
-    - `dgl/Fyelp`
-
-    - `dgl/Famazon`
-
-  
-  - **Others**:
-
-    - `dgl/yelp`
-
-    - `dgl/reddit`
-
-    - `WikiCS_U`
-  
-
-### GNN Backbone
-Choose the GNN backbone to use. The available options are:
-- **Models invented in this paper is composed of three parts**:
-  - **(1) Graph Transformation Part**:
-    - `Ti` for Tranformation Inception: each type of edges belong to one group
-    - `Ui` for Union of all edges
-    - `Li` for Last Edges
-    - `Ii` for exhaustive independent
-    - `ii` for independent
-    
-  - **(2) Backbone GNN part**:
-    - `G` for GCN
-    - `A` for GAT
-    - `S` for SAGE
-    - `C` for Cheb
-  - **(3) Inception part**:
-    - `i2` interception of 2-order edges
-    - `u3` union of 3-order edges
-    
-  Number 2, 3 can be replaced with any number k>1.
-  
+### GNN Backbone 
 - **GNN baselines**:
+  - `MLP`  
   - `GCN`
   - `GAT`
   - `SAGE` for GraphSAGE
   - `Cheb`
+  - `APPNP`
+
+- **Hermitian Matrix GNNs**:
   - `Mag` for MagNet
   - `Sig`  for SigMaNet
-  - `DiG`, `DiGi2`
-  - `APPNP`
-  - `Sym` for DGCN
-  - 
+  - `Qua` for QuaNet
+- **Symmetric models**: 
+  -  *`Sym`* for DGCN
+      - `1ym`
+  - *`DiG`, `DiGi2`*  for DiGCN(ib) 
+    - `1iG`
+    - `RiG`
+  
+    In DiG\*, 1iG\*, RiG\*,  * can be nothing or exampled as follows**:
+      - `i2` interception of 2-order edges
+      - `u3` union of 3-order edges 
+    Number 2, 3 can be replaced with any number k>1.
+- **BiDirectional models**:
+  - `Dir-GNN`
 
-Please refer to [args.py](args.py) for the full hyper-parameters.
+### How to Run
 
-## How to Run
+- **(1) To run and get the best performance for each model**:
+  - On original datasets:
 
-Pass the above hyper-parameters to `main.py`. For example:
-
-```
-python main.py  --net GCN  --layer=3 --Dataset='cora_ml/'
-```
-
-```
-python main.py --net TiGi3  --layer=2 --Dataset='citeseer_npz/'
-```
-
-(1)To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command:
-
-```
-./scale.h
-```
-(2) diff_AAt
-(3) diff_AA
-
-
-
-To run in batches, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
+    ```
+    python3 main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/'
+    ```
+  
+    ```
+    python3 main.py --net='Dir-GNN' --use_best_hyperparams=1   --Dataset='citeseer_npz/'
+    
+    ```
+  - For imbalanced datasets:
+    ```
+    python3 main.py  --net='ScaleNet' --use_best_hyperparams=1  --Dataset='cora_ml/'   --MakeImbalance   --imb_ratio=100
+    ```
+- **(2)Run in batches**:
+To run with your own configurations, revise net_nest.h by kicking in all the nets in net_values, all the layers in layer_values,
 all the datasets in Direct_dataset. Then in terminal, run: 
 
-```
-./net_nest.h
-```
+  ```
+  ./net_nest.h
+  ```
+
+
+
+- **(3) To compare ScaleNet with the enumeration of the parameters alpha, beta, and gamma, use the following command**:
+
+  ```
+  ./scale.h &
+  ```
+
+- **(4) To get performance of removing shared edges with lower-scale graphs**:
+  - To get performance of AAt-A-At, AtA-A-At, AAt+AtA-A-At ('-' means removing the shared edges with A or At):
+    
+    args.differ_AAt=1    args.differ_AA=0
+  - To get performance of AA-A-At, AtAt-A-At, AA+AtAt-A-At ('-' means removing the shared edges with A or At):
+    
+    args.differ_AA=1
+- **(5) Wilcoxon test** 
+To run the Wilcoxon test on each dataset, execute the corresponding script. For example:
+  ```
+  python3 ./wilcoxon/wilcoxon_cham.py  &
+  ```
 
 
 
 ## License
 MIT License
 
-[//]: # (## Contact )
-
-[//]: # (Feel free to email &#40;&#41; for any questions about this work.)
-
 ## Acknowledgements
 
 The code is implemented based on [GraphSHA](https://github.com/wenzhilics/GraphSHA), [DiGCN](https://github.com/flyingtango/DiGCN),  [DirGNN](https://github.com/emalgorithm/directed-graph-neural-network)and 
 [MagNet](https://github.com/matthew-hirn/magnet).
 
-## Citation
+[//]: # (## Citation)
 
-If you find this work is helpful to your research, please consider citing our paper:???
+[//]: # ()
+[//]: # (If you find this work is helpful to your research, please consider citing our paper:???)
 
