@@ -150,7 +150,6 @@ def test():
 start_time = time.time()
 args = parse_args()
 args = use_best_hyperparams(args, args.Dataset) if args.use_best_hyperparams else args
-print(args)
 
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
@@ -365,7 +364,7 @@ try:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
             if args.has_scheduler:
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=True)
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=False)
 
             if splits == 1:
                 data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
@@ -387,7 +386,8 @@ try:
             for i in range(n_cls):
                 data_num = (data_y == i).sum()
                 n_data0.append(int(data_num.item()))
-            print('class in data: ', sorted(n_data0))
+            if split == 0:
+                print('class in data: ', sorted(n_data0))
 
             stats = data_y[data_train_mask]  # this is selected y. only train nodes of y
             n_data = []  # num of train in each class
@@ -428,13 +428,14 @@ try:
 
             sorted_list = sorted(class_num_list, reverse=True)
             sorted_list_original = sorted(n_data, reverse=True)
-            if sorted_list[-1]:
-                imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
-                print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
-                # imbalance_ratio = sorted_list[0] / sorted_list[-1]
-                # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
-            else:
-                print('the minor class has no training sample')
+            if split == 0:
+                if sorted_list[-1]:
+                    imbalance_ratio_origin = sorted_list_original[0] / sorted_list_original[-1]
+                    print('Origin Imbalance ratio is {:.1f}'.format(imbalance_ratio_origin))
+                    # imbalance_ratio = sorted_list[0] / sorted_list[-1]
+                    # print('New    Imbalance ratio is {:.1f}'.format(imbalance_ratio))
+                else:
+                    print('the minor class has no training sample')
 
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
             val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
