@@ -331,7 +331,7 @@ try:
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ', device, file=log_file)
         for split in range(num_run):
-            model = CreatModel(args, num_features, n_cls, data_x, device).to(device)
+            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
             if split==0:
                 print('no_in, homo_in, no_out, homo_out:', no_in, homo_ratio_A, no_out, homo_ratio_At, file=log_file)
                 print(model, file=log_file)
@@ -360,6 +360,10 @@ try:
             elif hasattr(model, 'reg_params'):
                 optimizer = torch.optim.Adam(
                     [dict(params=model.reg_params, weight_decay=5e-4), dict(params=model.non_reg_params, weight_decay=0), ], lr=args.lr)
+                try:
+                    model.edge_weight.requires_grad = False
+                except:
+                    pass
             else:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
@@ -458,6 +462,17 @@ try:
             CountNotImproved = 0
             end_epoch = 0
             for epoch in range(args.epoch):
+                if epoch == 410:
+                    # Unfreeze edge_weight at epoch 410
+                    if hasattr(model, 'edge_weight') and model.edge_weight is not None:
+                        optimizer = torch.optim.Adam([
+                            dict(params=model.reg_params, weight_decay=5e-4),
+                            dict(params=model.non_reg_params, weight_decay=0)
+                        ], lr=args.lrweight)
+
+                        model.edge_weight.requires_grad = True
+                        if args.has_scheduler:
+                            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=False)
                 val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s = test()
@@ -475,7 +490,7 @@ try:
                 else:
                     CountNotImproved += 1
                 # end_time = time.time()
-                # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+                print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
                 # print(end_time - start_time, file=log_file)
                 # print(end_time - start_time)
                 # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)

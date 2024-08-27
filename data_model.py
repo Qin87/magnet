@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from torch_scatter import scatter_add
 
+from nets.gcn import ParaGCNXBN
 from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1
 
@@ -45,7 +46,7 @@ def init_model(model):
         if isinstance(module, torch.nn.BatchNorm1d):
             module.reset_parameters()  # Res
 
-def CreatModel(args, num_features, n_cls, data_x,device):
+def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
     if args.net.lower() == 'pgnn':
         model = create_pgnn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls,
                             mu=args.mu,
@@ -151,6 +152,8 @@ def CreatModel(args, num_features, n_cls, data_x,device):
     else:
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
+        elif args.net == 'ParaGCN':
+            model = ParaGCNXBN(num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
             model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, head=args.heads)
         elif args.net == "SAGE":
@@ -158,7 +161,7 @@ def CreatModel(args, num_features, n_cls, data_x,device):
         else:
             raise NotImplementedError("Not Implemented Architecture!"+ args.net)
     model = model.to(device)
-    init_model(model)
+    # init_model(model)
     return model
 
 def get_name(args, IsDirectedGraph):
@@ -498,7 +501,7 @@ def count_homophilic_nodes(edge_index, y):
     percent_out_homo = (out_homophilic_count / num_nodes) * 100
 
     print('percent of no_in, in_homo, no_out, out_homo', end=':')
-    print(f"{percent_no_in:.1f} & {percent_in_homo:.1f} & {percent_no_out:.1f} & {percent_out_homo:.1f}")
+    print(f"{percent_no_in:.1f}% & {percent_in_homo:.1f}% & {percent_no_out:.1f}% & {percent_out_homo:.1f}%")
     # print(f"{percent_no_in:.1f}% & {percent_in_homo:.1f}% & {percent_no_out:.1f}% & {percent_out_homo:.1f}%")
 
     return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count
