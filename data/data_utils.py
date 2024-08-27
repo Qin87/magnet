@@ -1,5 +1,6 @@
 import os
 import random
+from torch_geometric.datasets import QM9
 
 import torch_geometric.transforms as transforms
 from torch_geometric.datasets import Actor

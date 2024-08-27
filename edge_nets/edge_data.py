@@ -563,7 +563,8 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     return edge_index,  edge_weight
 
 def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
-    norm = args.inci_norm
+    # norm = args.inci_norm
+    norm = 'sym'
     self_loop = args.First_self_loop
     W_degree = args.W_degree
     # random value to edge weights
@@ -619,7 +620,14 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
         print("proximity weight is random number in [0.1,1]")
     elif W_degree == 5:  # random number in [0.00001,100000]
         edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
-        # edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 ) -5000
+        # edge_weight = torch.rand(num_edges, dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
+
+        # Randomly select half of the edges
+        indices = torch.randperm(edge_index.size(1), device=edge_index.device)[:edge_index.size(1) // 2]
+
+        # Set the selected half of the edge weights to 0
+        edge_weight[indices] = 0
+
         min_val = torch.min(edge_weight).item()
         max_val = torch.max(edge_weight).item()
 

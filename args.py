@@ -22,8 +22,8 @@ def parse_args():
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
     parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
-    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=-1)
-    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
+    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=1)
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='DiG', help='ScaleNet, Dir-GNN, ParaGCN '
+    parser.add_argument('--net', type=str, default='RiG', help='ScaleNet, Dir-GNN, ParaGCN '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)'
