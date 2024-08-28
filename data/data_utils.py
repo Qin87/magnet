@@ -61,6 +61,8 @@ def load_directedData(args):
         num_train_nodes = dataset._data.train_mask.sum().item()
         num_train_nodes0 = dataset._data.val_mask.sum().item()
         num_train_nodes1 = dataset._data.test_mask.sum().item()
+        dataset.y = dataset.y.squeeze()
+        dataset._data.y = dataset._data.y.squeeze()
         print(num_train_nodes, num_train_nodes0, num_train_nodes1)
 
     elif load_func in ["directed-roman-empire"]:

@@ -551,20 +551,21 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     edge_index = torch.unique(edge_index, dim=1).to(device)
 
     # type 1: conside different inci-norm
-    row, col = edge_index
-    adj_norm = get_norm_adj(SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes)), norm=norm).coalesce()
-    # all_hop_edge_index.append(torch.stack(adj_norm.coo()[:2]))
-    edge_weight = adj_norm.storage.value()
-
+    if norm =='dir':
+        row, col = edge_index
+        adj_norm = get_norm_adj(SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes)), norm=norm).coalesce()
+        # all_hop_edge_index.append(torch.stack(adj_norm.coo()[:2]))
+        edge_weight = adj_norm.storage.value()
     # type 2: only GCN_norm
-    # edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
-
+    elif norm == 'sym':
+        edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
 
     return edge_index,  edge_weight
 
 def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
-    # norm = args.inci_norm
-    norm = 'sym'
+    norm = args.inci_norm
+    # norm = 'sym'
+    # norm = 0
     self_loop = args.First_self_loop
     W_degree = args.W_degree
     # random value to edge weights
@@ -620,13 +621,12 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
         print("proximity weight is random number in [0.1,1]")
     elif W_degree == 5:  # random number in [0.00001,100000]
         edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
-        # edge_weight = torch.rand(num_edges, dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
+        # edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (1 - 0.0001)-0.5
 
-        # Randomly select half of the edges
-        indices = torch.randperm(edge_index.size(1), device=edge_index.device)[:edge_index.size(1) // 2]
+        # indices = torch.randperm(edge_index.size(1), device=edge_index.device)[edge_index.size(1) // 2:]
+        # edge_weight[indices] = 0
 
-        # Set the selected half of the edge weights to 0
-        edge_weight[indices] = 0
+        edge_weight[:edge_index.size(1) // 2] = 0
 
         min_val = torch.min(edge_weight).item()
         max_val = torch.max(edge_weight).item()
@@ -668,15 +668,29 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
         deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
         edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
-    else:
+    elif norm == 'dir':
         # type 1: conside different inci-norm
         row, col = edge_index
-        adj_norm = get_norm_adj(SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes)), norm=norm).coalesce()
-        # all_hop_edge_index.append(torch.stack(adj_norm.coo()[:2]))
-        edge_weight = adj_norm.storage.value()
+        deg_row = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+        deg_col = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes)
+
+        row_deg_inv_sqrt = deg_row.pow(-0.5)
+        row_deg_inv_sqrt[row_deg_inv_sqrt == float('inf')] = 0
+
+        col_deg_inv_sqrt = deg_col.pow(-0.5)
+        col_deg_inv_sqrt[col_deg_inv_sqrt == float('inf')] = 0
+
+        edge_weight = row_deg_inv_sqrt[row] * edge_weight * col_deg_inv_sqrt[col]
+
+
+        # adj_norm = get_norm_adj(SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes)), norm=norm).coalesce()
+        # # all_hop_edge_index.append(torch.stack(adj_norm.coo()[:2]))
+        # edge_weight = adj_norm.storage.value()
 
         # type 2: only GCN_norm
         # edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
+    else:
+        pass
 
     min_val = torch.min(edge_weight).item()
     max_val = torch.max(edge_weight).item()
