@@ -1199,6 +1199,7 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
                     B_cpu = B.to(torch.device("cpu"))
                     return torch.sparse.mm(A_cpu, B_cpu).to(A.device)
                 except:
+                    print("CPU operation failed. Attempting chunked multiplication.")
                     return sparse_mm_chunked(A, B, chunk_size=1000).to(A.device)
             else:
                 raise e
