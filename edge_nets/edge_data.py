@@ -1191,9 +1191,15 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
         try:
             return torch.sparse.mm(A, B)
         except RuntimeError as e:
-            if "CUDA error: insufficient resources" in str(e):
-                print("Switching to CPU for sparse matrix multiplication due to insufficient GPU resources.")
-                return sparse_mm_chunked(A, B, chunk_size=1000).to(A.device)
+            # if "CUDA error: insufficient resources" in str(e):
+            if "CUDA out of memory" in str(e) or "CUDA error: insufficient resources" in str(e):
+                try:
+                    print("Switching to CPU for sparse matrix multiplication due to insufficient GPU resources.")
+                    A_cpu = A.to(torch.device("cpu"))
+                    B_cpu = B.to(torch.device("cpu"))
+                    return torch.sparse.mm(A_cpu, B_cpu).to(A.device)
+                except:
+                    return sparse_mm_chunked(A, B, chunk_size=1000).to(A.device)
             else:
                 raise e
 
