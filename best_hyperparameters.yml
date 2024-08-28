@@ -141,3 +141,8 @@ directed-roman-empire/:
   alphaDir: 0.5
   betaDir: -1
   gamaDir: -1
+
+
+ogbn-arxiv/:
+  conv_type: dir-sage
+  layer: 4
