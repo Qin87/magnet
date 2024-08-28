@@ -435,7 +435,6 @@ class ParaGCNXBN(nn.Module):
         self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
         self.norm = norm
 
-
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
         # self.non_reg_params = list(self.conv2.parameters())
         self.non_reg_params = list(self.conv2.parameters()) + [self.edge_weight]
