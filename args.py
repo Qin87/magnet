@@ -22,8 +22,8 @@ def parse_args():
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
     parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
-    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=1)
-    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=-1)
+    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
@@ -32,26 +32,26 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='1iGi2', help='ScaleNet, Dir-GNN, ParaGCN '
+    parser.add_argument('--net', type=str, default='ParaGCN', help='ScaleNet, Dir-GNN, ParaGCN '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)'
                         'Sym, 1ym')
     parser.add_argument('--seed', type=int, default=100, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='ogbn-arxiv/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
                                                 'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
 
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
-    parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
+    parser.add_argument('--epoch', type=int, default=150000, help='epoch1500,')
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
 
     parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
-    parser.add_argument('--lrweight', type=float, default=0.01, help='learning rate for edge_weight')
+    parser.add_argument('--lrweight', type=float, default=0.1, help='learning rate for edge_weight')
     parser.add_argument('--coeflr', type=float, default=2, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')
@@ -74,7 +74,7 @@ def parse_args():
     parser.add_argument('--qua_weights', '-W', action='store_true', help='quaternion weights option')
     parser.add_argument('--qua_bias', '-B', action='store_true', help='quaternion bias options')
 
-    parser.add_argument('--epochs', type=int, default=1500, help='training epochs')
+    # parser.add_argument('--epochs', type=int, default=15000, help='training epochs')
 
 
     parser.add_argument('--log_path', type=str, default='test', help='the path saving model.t7 and the training process, the name of folder will be log/(current time)')

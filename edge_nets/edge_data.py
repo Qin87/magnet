@@ -957,32 +957,60 @@ def fast_sparse_boolean_multi_hop_union(A, k):
 #     return torch.sparse_coo_tensor(unique_indices, values, size=A_in.size(), dtype=torch.float32)
 
 
-def intersect_sparse_tensors(A_in, A_out):
+
+
+def intersect_sparse_tensors_noDense(A_in, A_out):
     device = A_in.device
 
-    indices_in = A_in.indices()
-    indices_out = A_out.indices()
+    try:
+        indices_in = A_in.indices()
+        indices_out = A_out.indices()
 
-    A_in = A_in.to_dense()
-    A_out = A_out.to_dense()
+        A_in = A_in.to_dense()
+        A_out = A_out.to_dense()
 
-    A_in_hat = A_in.to(device)
-    A_out_hat = A_out.to(device)
+        A_in_hat = A_in.to(device)
+        A_out_hat = A_out.to(device)
 
-    A_in_hat[A_out == 0] = 0  # intersection
-    A_out_hat[A_in == 0] = 0
+        A_in_hat[A_out == 0] = 0  # intersection
+        A_out_hat[A_in == 0] = 0
 
-    # L^{(2)}
-    # intersection = (A_in_hat + A_out_hat) / 2.0
-    intersection = A_in_hat
+        # L^{(2)}
+        # intersection = (A_in_hat + A_out_hat) / 2.0
+        intersection = A_in_hat
 
-    indices = intersection.nonzero().t()
-    values = torch.ones(indices.size(1), dtype=torch.float32).to(device)
+        indices = intersection.nonzero().t()
+        values = torch.ones(indices.size(1), dtype=torch.float32).to(device)
 
-    num_intersecting_edges = torch.count_nonzero(intersection)
-    # print('!!!!',  time.time())
+        num_intersecting_edges = torch.count_nonzero(intersection)
+        # print('!!!!',  time.time())
 
-    return torch.sparse_coo_tensor(indices, values, size=intersection.size(), dtype=torch.float32)
+        return torch.sparse_coo_tensor(indices, values, size=intersection.size(), dtype=torch.float32)
+    except:
+        # Get indices and values for A_in and A_out
+        indices_in = A_in.indices()
+        indices_out = A_out.indices()
+
+        # Create sets of tuples for the indices of A_in and A_out
+        set_in = set(map(tuple, indices_in.t().tolist()))
+        set_out = set(map(tuple, indices_out.t().tolist()))
+
+        # Find the intersection of these sets
+        intersect_indices = list(set_in & set_out)
+
+        if len(intersect_indices) == 0:
+            return torch.sparse_coo_tensor([], [], size=A_in.size(), dtype=torch.float32, device=device)
+
+        # Convert intersecting indices back to a tensor
+        intersect_indices = torch.tensor(intersect_indices, dtype=torch.long, device=device).t()
+
+        # Create the intersection sparse tensor
+        values = torch.ones(intersect_indices.size(1), dtype=torch.float32, device=device)
+
+        # Number of intersecting edges
+        num_intersecting_edges = intersect_indices.size(1)
+
+        return torch.sparse_coo_tensor(intersect_indices, values, size=A_in.size(), dtype=torch.float32).coalesce()
 
 
 def sparse_mm_chunked(A, B, chunk_size):
@@ -1191,9 +1219,16 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
         try:
             return torch.sparse.mm(A, B)
         except RuntimeError as e:
-            if "CUDA error: insufficient resources" in str(e):
-                print("Switching to CPU for sparse matrix multiplication due to insufficient GPU resources.")
-                return sparse_mm_chunked(A, B, chunk_size=1000).to(A.device)
+            # if "CUDA error: insufficient resources" in str(e):
+            if "CUDA out of memory" in str(e) or "CUDA error: insufficient resources" in str(e):
+                try:
+                    print("Switching to CPU for sparse matrix multiplication due to insufficient GPU resources.")
+                    A_cpu = A.to(torch.device("cpu"))
+                    B_cpu = B.to(torch.device("cpu"))
+                    return torch.sparse.mm(A_cpu, B_cpu).to(A.device)
+                except:
+                    print("CPU operation failed. Attempting chunked multiplication.")
+                    return sparse_mm_chunked(A, B, chunk_size=1000).to(A.device)
             else:
                 raise e
 
@@ -1218,7 +1253,7 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
             A_result = sparse_remove_self_loops(A_result)
         all_hops = [A_result]
     elif mode == 'intersection':
-        A_result = intersect_sparse_tensors(A_in, A_out)
+        A_result = intersect_sparse_tensors_noDense(A_in, A_out)
         if selfloop == 'remove':
             A_result = sparse_remove_self_loops(A_result)
         all_hops = [A_result]
@@ -1232,10 +1267,10 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
 
     # Compute k-hop neighbors using sparse matrix multiplication and intersections
     for hop in range(1, k):
-        A_in = torch.sparse.mm(A, A_in)
-        A_in = torch.sparse.mm(A_in, A.t())
-        A_out = torch.sparse.mm(A.t(), A_out)
-        A_out = torch.sparse.mm(A_out, A)
+        A_in = sparse_mm_safe(A, A_in)
+        A_in = sparse_mm_safe(A_in, A.t())
+        A_out = sparse_mm_safe(A.t(), A_out)
+        A_out = sparse_mm_safe(A_out, A)
 
         if selfloop == 'remove':
             A_in = sparse_remove_self_loops(A_in)
@@ -1255,7 +1290,7 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
                 A_result = sparse_remove_self_loops(A_result)
             all_hops.append(A_result)
         elif mode == 'intersection':
-            A_result = intersect_sparse_tensors(A_in, A_out)
+            A_result = intersect_sparse_tensors_noDense(A_in, A_out)
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (intersection): ', num_nonzero)
             if selfloop == 'remove':
