@@ -4,7 +4,8 @@ Ref: https://github.com/pyg-team/pytorch_geometric/blob/97d55577f1d0bf33c1bfbe0e
 """
 from typing import Optional, Tuple
 from torch_geometric.typing import Adj, OptTensor, PairTensor
-
+from torch_geometric.nn import GCNConv
+from torch_geometric.utils import add_self_loops, degree
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -121,11 +122,11 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
         deg_inv_sqrt.masked_fill_(deg_inv_sqrt == float('inf'), 0)
         return edge_index, deg_inv_sqrt[col] * edge_weight * deg_inv_sqrt[col]
 
-class GCNConv(MessagePassing):
-    r"""The graph convolutional operator from the `"Semi-supervised
-    Classification with Graph Convolutional Networks"
+class GCNConv_SHA(MessagePassing):
+    r"""GraphSHA
     <https://arxiv.org/abs/1609.02907>`_ paper
     .. math::
+
         \mathbf{X}^{\prime} = \mathbf{\hat{D}}^{-1/2} \mathbf{\hat{A}}
         \mathbf{\hat{D}}^{-1/2} \mathbf{X} \mathbf{\Theta},
     where :math:`\mathbf{\hat{A}} = \mathbf{A} + \mathbf{I}` denotes the
@@ -171,7 +172,7 @@ class GCNConv(MessagePassing):
                  normalize: bool = True, bias: bool = True, **kwargs):
 
         kwargs.setdefault('aggr', 'add')
-        super(GCNConv, self).__init__(**kwargs)
+        super(GCNConv_SHA, self).__init__(**kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -251,7 +252,7 @@ class GCNConv(MessagePassing):
 class StandGCN1(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1):
         super(StandGCN1, self).__init__()
-        self.conv1 = GCNConv(nfeat, nclass, cached=False, normalize=True)
+        self.conv1 = GCNConv_SHA(nfeat, nclass, cached=False, normalize=True)
         self.reg_params = []
         self.non_reg_params = self.conv1.parameters()
         self.is_add_self_loops = True
@@ -267,8 +268,8 @@ class StandGCN1(nn.Module):
 class StandGCN2(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2):
         super(StandGCN2, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=True)
-        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=True)
+        self.conv1 = GCNConv_SHA(nfeat, nhid, cached= False, normalize=True)
+        self.conv2 = GCNConv_SHA(nhid, nclass, cached=False, normalize=True)
         self.dropout_p = dropout
 
         self.is_add_self_loops = True
@@ -302,9 +303,9 @@ class StandGCN2(nn.Module):
 class StandGCNX(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3):
         super(StandGCNX, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=True)
-        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=True)
-        self.convx = nn.ModuleList([GCNConv(nhid, nhid) for _ in range(nlayer-2)])
+        self.conv1 = GCNConv_SHA(nfeat, nhid, cached= False, normalize=True)
+        self.conv2 = GCNConv_SHA(nhid, nclass, cached=False, normalize=True)
+        self.convx = nn.ModuleList([GCNConv_SHA(nhid, nhid) for _ in range(nlayer-2)])
         self.dropout_p = dropout
 
         self.is_add_self_loops = True
@@ -328,7 +329,7 @@ class StandGCNX(nn.Module):
 class StandGCN1BN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, norm=True):
         super(StandGCN1BN, self).__init__()
-        self.conv1 = GCNConv(nfeat, nclass, cached=False, normalize=norm)
+        self.conv1 = GCNConv_SHA(nfeat, nclass, cached=False, normalize=norm)
         self.reg_params = []
         self.non_reg_params = self.conv1.parameters()
         self.is_add_self_loops = True
@@ -349,8 +350,8 @@ class StandGCN1BN(nn.Module):
 class StandGCN2BN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2, norm=True):
         super(StandGCN2BN, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm)
-        self.conv2 = GCNConv(nhid, nhid, cached=False, normalize=norm)
+        self.conv1 = GCNConv_SHA(nfeat, nhid, cached= False, normalize=norm)
+        self.conv2 = GCNConv_SHA(nhid, nhid, cached=False, normalize=norm)
         self.dropout_p = dropout
         self.Conv = nn.Conv1d(nhid, nclass, kernel_size=1)
 
@@ -384,9 +385,9 @@ class StandGCN2BN(nn.Module):
 class StandGCNXBN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
         super(StandGCNXBN, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm)
-        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=norm)
-        self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=norm) for _ in range(nlayer-2)])
+        self.conv1 = GCNConv_SHA(nfeat, nhid, cached= False, normalize=norm)
+        self.conv2 = GCNConv_SHA(nhid, nclass, cached=False, normalize=norm)
+        self.convx = nn.ModuleList([GCNConv_SHA(nhid, nhid, cached=False, normalize=norm) for _ in range(nlayer-2)])
         self.dropout_p = dropout
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
@@ -416,105 +417,79 @@ class StandGCNXBN(nn.Module):
         x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
         return x
 
+
 class ParaGCNXBN(nn.Module):
     def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
         super(ParaGCNXBN, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=False)
+
         self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=False)
         self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=False) for _ in range(nlayer-2)])
         self.dropout_p = dropout
 
         if nlayer == 1:
+            self.conv1 = GCNConv(nfeat, nclass, cached=False, normalize=False)
             self.batch_norm1 = nn.BatchNorm1d(nclass)
         elif nlayer > 2:
+            self.conv1 = GCNConv(nfeat, nhid, cached=False, normalize=False)
             self.batch_norm1 = nn.BatchNorm1d(nhid)
             self.batch_norm3 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nclass)
 
-        self.is_add_self_loops = False  # Qin True is the original
+        self.is_add_self_loops = False
         self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
         self.norm = norm
 
         self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
-        # self.non_reg_params = list(self.conv2.parameters())
-        self.non_reg_params = list(self.conv2.parameters()) + [self.edge_weight]
+        self.non_reg_params = list(self.conv2.parameters())
 
         self.layer = nlayer
-        self.initial_zero_mask = None
-        self._hook_registered = False
-        # self.register_hook()
-
-    def zero_grad_hook(self, grad):
-        print("Hook is being called!")  # Debug print
-        if self.initial_zero_mask is not None:
-            modified_grad = grad * (~self.initial_zero_mask)
-            print(f"Original grad sum: {grad.sum()}, Modified grad sum: {modified_grad.sum()}")  # Debug print
-            return modified_grad
-        return grad
-
-        # self.edge_weight.register_hook(zero_grad_hook)
+        self.current_epoch = 0
+        self.edge_mask = torch.ones_like(self.edge_weight, dtype=torch.bool, device=self.edge_weight.device)
+        self.non_zero = 0
 
     def forward(self, x, adj):
-        # min_value = torch.min(self.edge_weight.data)
-        # max_value = torch.max(self.edge_weight.data)
-        # print(f"Initially, Min value: {min_value.item()}, Max value: {max_value.item()}")
-        if not self._hook_registered:
-            self.edge_weight.register_hook(self.zero_grad_hook)
-            self._hook_registered = True
-            print("Hook registered in forward pass")  # Debug print
+        self.current_epoch += 1
+        with torch.no_grad():  # Ensures this operation doesn't track gradients
+            self.edge_weight[torch.isnan(self.edge_weight)] = 1
 
-        num_zeros = torch.sum(self.edge_weight.data == 0).item()
-        if num_zeros:
-            print(f"Intially, Number of zeros in edge_weight: {num_zeros}")
+            self.edge_weight.data[self.edge_weight.data < 0] = 0
+            self.edge_weight.data[self.edge_weight.data > 1] = 1
+            # if self.current_epoch % 2:
+            #     self.edge_weight.data[self.edge_weight.data < 0] = 0
+            # else:
+            #     negative_indices = (self.edge_weight.data < 0).nonzero(as_tuple=True)[0]
+            #     shuffled_indices = negative_indices[torch.randperm(negative_indices.size(0))]
+            #     half = shuffled_indices.size(0) // 2
+            #     first_half = shuffled_indices[:half]
+            #     second_half = shuffled_indices[half:]
+            #     self.edge_weight.data[first_half] = 0
+            #     self.edge_weight.data[second_half] = 1
 
-        if self.initial_zero_mask is None:
-            with torch.no_grad():
-                self.initial_zero_mask = (self.edge_weight.data == 0.0)
+            self.edge_mask = (self.edge_mask).to(self.edge_weight.device)
+            self.edge_mask = self.edge_mask & (self.edge_weight > 0)
 
-        with torch.no_grad():
-            self.edge_weight.data = torch.where(self.edge_weight.data < 0, torch.tensor(0.0, device=self.edge_weight.device), self.edge_weight.data)
-        # zero_mask = self.edge_weight.data == 0.0
+        num_zeros1 = torch.sum(self.edge_weight.data == 0).item()
 
-        self.zero_mask = (self.edge_weight.data == 0.0)
+        if num_zeros1:
+            if num_zeros1>self.non_zero:
+                # print(f"After, Number of zeros in edge_weight: {num_zeros1}", str(int(self.current_epoch/3)))
+                self.non_zero = num_zeros1
 
-        # self.edge_weight = self.edge_weight * (~self.zero_mask)
-        # if self.edge_weight.requires_grad:
-        #     self.edge_weight.register_hook(lambda grad: grad * (~self.zero_mask))
-        # if self.edge_weight.requires_grad and not hasattr(self.edge_weight, '_has_hook'):
-        #     self.edge_weight.register_hook(self.zero_grad_hook)
-        #     self.edge_weight._has_hook = True
-
-        # non_zero_mask = self.edge_weight.data != 0.0
-        # self.edge_weight = torch.nn.Parameter(self.edge_weight.data * non_zero_mask)
-
-        # def backward_hook(grad):
-        #     grad[zero_mask] = 0.0  # Manually zero out gradients where edge_weight is 0
-        #     return grad
-        #
-        # if self.edge_weight.requires_grad:
-        #     self.edge_weight.register_hook(backward_hook)
-
-        # self.edge_weight.requires_grad = not zero_mask
-
+        self.edge_weight.data = self.edge_weight * self.edge_mask
         edge_weight = self.edge_weight
-        # edge_index = adj
-        edge_index = adj.flip(0)
+        edge_weight = binary_approx(edge_weight)
+        edge_index = adj
+        # edge_index = adj.flip(0)
+
+        non_zero_indices = edge_weight != 0
+
+        # Filter edge_index and edge_weight using non-zero indices
+        edge_index = edge_index[:, non_zero_indices]
+        edge_weight = edge_weight[non_zero_indices]
+
         if self.norm:
-            # with torch.no_grad():
-                edge_index, edge_weight = norm0(edge_index, edge_weight, add_self_loops=self.is_add_self_loops, norm='dir')
-                # edge_index, edge_weight = gcn_norm0(edge_index, edge_weight,  add_self_loops=self.is_add_self_loops)
-
-
-        # # print("after edge_weight:", self.edge_weight)
-        # min_value = torch.min(self.edge_weight.data)
-        # max_value = torch.max(self.edge_weight.data)
-        # print(f"After Norm, Min value: {min_value.item()}, Max value: {max_value.item()}")
-
-        num_zeros = torch.sum(self.edge_weight.data == 0).item()
-        if num_zeros:
-            print(f"AfterNorm, Number of zeros in edge_weight: {num_zeros}")
-
-        x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+            edge_index, edge_weight = norm0(edge_index, edge_weight)
+        x = self.conv1(x, edge_index, edge_weight)
         x = self.batch_norm1(x)
         if self.layer == 1:
             return x
@@ -522,22 +497,33 @@ class ParaGCNXBN(nn.Module):
 
         if self.layer > 2:
             for iter_layer in self.convx:
-                x = F.dropout(x,p= self.dropout_p, training=self.training)
-                x, edge_index = iter_layer(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-                x= self.batch_norm3(x)
+                x = F.dropout(x, p=self.dropout_p, training=self.training)
+                x= iter_layer(x, edge_index, edge_weight)
+                x = self.batch_norm3(x)
                 x = F.relu(x)
 
-        x = F.dropout(x, p= self.dropout_p, training=self.training)
-        x, edge_index = self.conv2(x, edge_index, edge_weight,is_add_self_loops=self.is_add_self_loops)
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
+        x= self.conv2(x, edge_index, edge_weight)
         x = self.batch_norm2(x)
-        # x = F.relu(x)
-        x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
         return x
+    # def backward(self, grad_output):
+    #     # Let the gradient pass through the original edge_weight
+    #     return grad_output
 
-    def zero_grad_hook(self, grad):
-        # Zero out gradients only for elements that were initially zero
-        return grad * (~self.initial_zero_mask)
+class BinaryEdgeWeight(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        return (input > 0.5).float()
 
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, = ctx.saved_tensors
+        grad_input = grad_output.clone()
+        return grad_input
+def binary_approx(edge_weight, temperature=10.0):
+    return torch.sigmoid(temperature * (edge_weight - 0.5))
 
 def create_gcn(nfeat, nhid, nclass, dropout, nlayer, norm=True):
     if nlayer == 1:

@@ -368,7 +368,7 @@ try:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
 
             if args.has_scheduler:
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=False)
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=True)
 
             if splits == 1:
                 data_train_mask, data_val_mask, data_test_mask = (data_train_maskOrigin.clone(),data_val_maskOrigin.clone(),data_test_maskOrigin.clone())
@@ -461,18 +461,47 @@ try:
             test_acc, test_bacc, test_f1 = 0.0, 0.0, 0.0
             CountNotImproved = 0
             end_epoch = 0
+            set_new_opt = True
             for epoch in range(args.epoch):
+
                 if epoch == 410:
+                    CountNotImproved = 0
                     # Unfreeze edge_weight at epoch 410
                     if hasattr(model, 'edge_weight') and model.edge_weight is not None:
-                        optimizer = torch.optim.Adam([
-                            dict(params=model.reg_params, weight_decay=5e-4),
-                            dict(params=model.non_reg_params, weight_decay=0)
-                        ], lr=args.lrweight)
+                        # for param in model.parameters():
+                        #     if param is not model.edge_weight:
+                        #         param.requires_grad = False
 
                         model.edge_weight.requires_grad = True
-                        if args.has_scheduler:
-                            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=False)
+                        optimizer = torch.optim.Adam([
+                            dict(params=[model.edge_weight], weight_decay=0)
+                        ], lr=args.lrweight)
+                # if epoch == 410:
+                elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.95):
+                    set_new_opt = False
+                    best_val_acc = 0
+                    print('###############################')
+                    print('min and max edge-weight:', model.edge_weight.data.min().item(), model.edge_weight.data.max().item())
+                    print(torch.sum(model.edge_weight.data == 0).item())
+                    print('###################')
+                    new_weight = torch.where(model.edge_weight != 0, torch.tensor(1.0, device=model.edge_weight.device), torch.tensor(0.0, device=model.edge_weight.device))
+                    new_weight = torch.nn.Parameter(new_weight, requires_grad=model.edge_weight.requires_grad)
+                    # new_weight = model.edge_weight
+                    model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
+                    model.edge_weight = new_weight
+                    CountNotImproved = 0
+                    optimizer = torch.optim.Adam([
+                        dict(params=model.reg_params, weight_decay=5e-4),
+                        dict(params=model.non_reg_params, weight_decay=0)
+                    ], lr=args.lr)
+                    model.edge_weight.requires_grad = False
+                    if args.has_scheduler:
+                        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=True)
+                else:
+                    if set_new_opt:
+                        CountNotImproved = 0
+                    else:
+                        pass
                 val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s = test()
@@ -491,7 +520,7 @@ try:
                     CountNotImproved += 1
                 if epoch%100 == 0:
                     # end_time = time.time()
-                    print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100))
+                    print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_acc: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_acc*100, test_f1 * 100))
                     # print(end_time - start_time, file=log_file)
                     # print(end_time - start_time)
                     # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)

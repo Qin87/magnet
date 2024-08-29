@@ -145,4 +145,4 @@ directed-roman-empire/:
 
 ogbn-arxiv/:
   conv_type: dir-sage
-  layer: 4
+  layer: 4    # 69.68(4layer)
