@@ -475,11 +475,11 @@ class ParaGCNXBN(nn.Module):
                 # print(f"After, Number of zeros in edge_weight: {num_zeros1}", str(int(self.current_epoch/3)))
                 self.non_zero = num_zeros1
 
-        self.edge_weight.data = self.edge_weight * self.edge_mask
+        # self.edge_weight.data = self.edge_weight * self.edge_mask
         edge_weight = self.edge_weight
         edge_weight = binary_approx(edge_weight)
-        edge_index = adj
-        # edge_index = adj.flip(0)
+        # edge_index = adj
+        edge_index = adj.flip(0)
 
         non_zero_indices = edge_weight != 0
 
