@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from torch_scatter import scatter_add
 
+from nets.gat import GATConvQin, StandGAT1BN_Qin
 from nets.gcn import ParaGCNXBN
 from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1
@@ -156,6 +157,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
             model = ParaGCNXBN(num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
             model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, head=args.heads)
+        elif args.net == 'ParaGAT':
+            model = StandGAT1BN_Qin(data_x.shape[0], num_features, args.feat_dim, n_cls, args.dropout, args.layer, head=args.heads)
         elif args.net == "SAGE":
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:

@@ -418,9 +418,127 @@ class StandGCNXBN(nn.Module):
         return x
 
 
+class GATLikeLayer(nn.Module):
+    def __init__(self, in_features, out_features, num_heads, dropout, concat=True):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.num_heads = num_heads
+        self.concat = concat
+        self.dropout = dropout
+
+        # Linear transformation for input features
+        self.W = nn.Parameter(torch.zeros(size=(in_features, num_heads * out_features)))
+        nn.init.xavier_uniform_(self.W.data)
+
+        # Attention mechanism
+        self.a = nn.Parameter(torch.zeros(size=(1, num_heads, 2 * out_features)))
+        nn.init.xavier_uniform_(self.a.data)
+
+        self.leakyrelu = nn.LeakyReLU(0.2)
+
+    def forward(self, x, edge_index):
+        src, dst = edge_index
+        h = torch.mm(x, self.W).view(-1, self.num_heads, self.out_features)
+
+        # Compute attention coefficients
+        edge_h = torch.cat((h[src], h[dst]), dim=-1)
+        edge_e = self.leakyrelu(torch.sum(self.a * edge_h.unsqueeze(1), dim=-1))
+
+        # Normalize attention coefficients
+        alpha = F.softmax(edge_e, dim=1)
+        alpha = F.dropout(alpha, self.dropout, training=self.training)
+
+        # Apply attention and aggregate
+        out = scatter_add(alpha.unsqueeze(-1) * h[src], dst, dim=0, dim_size=x.size(0))
+
+        if self.concat:
+            out = out.view(-1, self.num_heads * self.out_features)
+        else:
+            out = out.mean(dim=1)
+
+        return out
+
+
 class ParaGCNXBN(nn.Module):
     def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
-        super(ParaGCNXBN, self).__init__()
+        super().__init__()
+        self.num_heads = 8
+        self.dropout = dropout
+
+        self.layers = nn.ModuleList()
+        self.layers.append(GATLikeLayer(nfeat, nhid, self.num_heads, dropout, concat=True))
+        for _ in range(nlayer - 2):
+            self.layers.append(GATLikeLayer(nhid * self.num_heads, nhid, self.num_heads, dropout, concat=True))
+        self.layers.append(GATLikeLayer(nhid * self.num_heads, nclass, 1, dropout, concat=False))
+
+        self.layer_norms = nn.ModuleList([nn.LayerNorm(nhid * self.num_heads) for _ in range(nlayer - 1)])
+        self.layer_norms.append(nn.LayerNorm(nclass))
+
+    def forward(self, x, edge_index):
+        for i, (layer, norm) in enumerate(zip(self.layers, self.layer_norms)):
+            x = F.dropout(x, p=self.dropout, training=self.training)
+            x = layer(x, edge_index)
+            x = norm(x)
+            if i < len(self.layers) - 1:
+                x = F.elu(x)
+        return x
+
+class ParaGCNXBN2(nn.Module):
+    def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
+        super().__init__()
+        self.num_heads = 8
+        self.out_features = nclass
+
+        # Multi-head edge weights
+        self.edge_weights = nn.ParameterList([
+            nn.Parameter(torch.ones(num_edges)) for _ in range(self.num_heads)
+        ])
+
+        # Dynamic weight computation
+        self.weight_func = nn.Sequential(
+            nn.Linear(nfeat * 2, 32),
+            nn.ReLU(),
+            nn.Linear(32, self.num_heads)
+        )
+
+        # Output projection
+        self.proj = nn.Linear(nfeat * self.num_heads, nclass)
+
+        # Layer norm
+        self.layer_norm = nn.LayerNorm(nclass)
+
+    def forward(self, x, edge_index):
+        src, dst = edge_index
+
+        # Compute dynamic weights
+        edge_features = torch.cat([x[src], x[dst]], dim=-1)
+        dynamic_weights = self.weight_func(edge_features).sigmoid()
+
+        outputs = []
+        for head in range(self.num_heads):
+            # Combine static and dynamic weights
+            edge_weight = self.edge_weights[head] * dynamic_weights[:, head]
+
+            # Apply nonlinearity and normalization
+            edge_weight = F.leaky_relu(edge_weight)
+            edge_weight = F.softmax(edge_weight, dim=0)
+
+            # Message passing
+            out = scatter_add(x[src] * edge_weight.unsqueeze(1), dst, dim=0, dim_size=x.size(0))
+            outputs.append(out)
+
+        # Combine multi-head outputs
+        out = torch.cat(outputs, dim=-1)
+        out = self.proj(out)
+        out = self.layer_norm(out)
+
+        return out
+
+
+class ParaGCNXBN1(nn.Module):
+    def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
+        super(ParaGCNXBN1, self).__init__()
 
         self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=False)
         self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=False) for _ in range(nlayer-2)])
@@ -429,7 +547,7 @@ class ParaGCNXBN(nn.Module):
         if nlayer == 1:
             self.conv1 = GCNConv(nfeat, nclass, cached=False, normalize=False)
             self.batch_norm1 = nn.BatchNorm1d(nclass)
-        elif nlayer > 2:
+        elif nlayer > 1:
             self.conv1 = GCNConv(nfeat, nhid, cached=False, normalize=False)
             self.batch_norm1 = nn.BatchNorm1d(nhid)
             self.batch_norm3 = nn.BatchNorm1d(nhid)
@@ -437,10 +555,19 @@ class ParaGCNXBN(nn.Module):
 
         self.is_add_self_loops = False
         self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
+        self.edge_weight_src = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
+        self.edge_weight_dst = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
+        self.feature_scale = nn.Linear(nfeat, 1, bias=False)
         self.norm = norm
 
-        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
-        self.non_reg_params = list(self.conv2.parameters())
+        if nlayer == 1:
+            self.reg_params = list(self.conv1.parameters())
+            self.non_reg_params = []
+        else :
+            self.reg_params = list(self.conv1.parameters())
+            self.non_reg_params = list(self.conv2.parameters())
+            if nlayer >2:
+                self.reg_params += list(self.convx.parameters())
 
         self.layer = nlayer
         self.current_epoch = 0
@@ -454,16 +581,6 @@ class ParaGCNXBN(nn.Module):
 
             self.edge_weight.data[self.edge_weight.data < 0] = 0
             self.edge_weight.data[self.edge_weight.data > 1] = 1
-            # if self.current_epoch % 2:
-            #     self.edge_weight.data[self.edge_weight.data < 0] = 0
-            # else:
-            #     negative_indices = (self.edge_weight.data < 0).nonzero(as_tuple=True)[0]
-            #     shuffled_indices = negative_indices[torch.randperm(negative_indices.size(0))]
-            #     half = shuffled_indices.size(0) // 2
-            #     first_half = shuffled_indices[:half]
-            #     second_half = shuffled_indices[half:]
-            #     self.edge_weight.data[first_half] = 0
-            #     self.edge_weight.data[second_half] = 1
 
             self.edge_mask = (self.edge_mask).to(self.edge_weight.device)
             self.edge_mask = self.edge_mask & (self.edge_weight > 0)
@@ -476,10 +593,13 @@ class ParaGCNXBN(nn.Module):
                 self.non_zero = num_zeros1
 
         # self.edge_weight.data = self.edge_weight * self.edge_mask
-        edge_weight = self.edge_weight
+        # edge_weight = self.edge_weight
+        edge_weight_src = self.edge_weight_src * self.edge_mask
+        edge_weight_dst = self.edge_weight_dst * self.edge_mask
+        edge_weight = edge_weight_src + edge_weight_dst
         edge_weight = binary_approx(edge_weight)
-        # edge_index = adj
-        edge_index = adj.flip(0)
+        edge_index = adj
+        # edge_index = adj.flip(0)
 
         non_zero_indices = edge_weight != 0
 
@@ -507,9 +627,93 @@ class ParaGCNXBN(nn.Module):
         x = self.batch_norm2(x)
         x = F.dropout(x, p=self.dropout_p, training=self.training)
         return x
-    # def backward(self, grad_output):
-    #     # Let the gradient pass through the original edge_weight
-    #     return grad_output
+
+
+class ParaGCNXBN0(nn.Module):
+    def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
+        super(ParaGCNXBN0, self).__init__()
+
+        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=False)
+        self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=False) for _ in range(nlayer-2)])
+        self.dropout_p = dropout
+
+        if nlayer == 1:
+            self.conv1 = GCNConv(nfeat, nclass, cached=False, normalize=False)
+            self.batch_norm1 = nn.BatchNorm1d(nclass)
+        elif nlayer > 1:
+            self.conv1 = GCNConv(nfeat, nhid, cached=False, normalize=False)
+            self.batch_norm1 = nn.BatchNorm1d(nhid)
+            self.batch_norm3 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nclass)
+
+        self.is_add_self_loops = False
+        self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
+        self.norm = norm
+
+        if nlayer == 1:
+            self.reg_params = list(self.conv1.parameters())
+            self.non_reg_params = []
+        else :
+            self.reg_params = list(self.conv1.parameters())
+            self.non_reg_params = list(self.conv2.parameters())
+            if nlayer >2:
+                self.reg_params += list(self.convx.parameters())
+
+        self.layer = nlayer
+        self.current_epoch = 0
+        self.edge_mask = torch.ones_like(self.edge_weight, dtype=torch.bool, device=self.edge_weight.device)
+        self.non_zero = 0
+
+    def forward(self, x, adj):
+        self.current_epoch += 1
+        with torch.no_grad():  # Ensures this operation doesn't track gradients
+            self.edge_weight[torch.isnan(self.edge_weight)] = 1
+
+            self.edge_weight.data[self.edge_weight.data < 0] = 0
+            self.edge_weight.data[self.edge_weight.data > 1] = 1
+
+            self.edge_mask = (self.edge_mask).to(self.edge_weight.device)
+            self.edge_mask = self.edge_mask & (self.edge_weight > 0)
+
+        num_zeros1 = torch.sum(self.edge_weight.data == 0).item()
+
+        if num_zeros1:
+            if num_zeros1>self.non_zero:
+                # print(f"After, Number of zeros in edge_weight: {num_zeros1}", str(int(self.current_epoch/3)))
+                self.non_zero = num_zeros1
+
+        self.edge_weight.data = self.edge_weight * self.edge_mask
+        edge_weight = self.edge_weight
+        edge_weight = binary_approx(edge_weight)
+        edge_index = adj
+        # edge_index = adj.flip(0)
+
+        non_zero_indices = edge_weight != 0
+
+        # Filter edge_index and edge_weight using non-zero indices
+        edge_index = edge_index[:, non_zero_indices]
+        edge_weight = edge_weight[non_zero_indices]
+
+        if self.norm:
+            edge_index, edge_weight = norm0(edge_index, edge_weight)
+        x = self.conv1(x, edge_index, edge_weight)
+        x = self.batch_norm1(x)
+        if self.layer == 1:
+            return x
+        x = F.relu(x)
+
+        if self.layer > 2:
+            for iter_layer in self.convx:
+                x = F.dropout(x, p=self.dropout_p, training=self.training)
+                x= iter_layer(x, edge_index, edge_weight)
+                x = self.batch_norm3(x)
+                x = F.relu(x)
+
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
+        x= self.conv2(x, edge_index, edge_weight)
+        x = self.batch_norm2(x)
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
+        return x
 
 class BinaryEdgeWeight(torch.autograd.Function):
     @staticmethod

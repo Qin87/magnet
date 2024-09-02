@@ -125,7 +125,7 @@ WikipediaNetwork/squirrel:
   betaDir: 1    #-1
   gamaDir: 1    # -1
 
-# 91.23 ± 0.32
+# 91.23 ± 0.32(0.5,-1,-1)
 directed-roman-empire/:
   has_scheduler: 0
   lr: 0.01
@@ -137,9 +137,9 @@ directed-roman-empire/:
   jk: "cat"
   dropout: 0.2
   NotImproved: 200
-  conv_type: "dir-sage"
-  alphaDir: 0.5
-  betaDir: -1
+  conv_type: "dir-gcn"
+  alphaDir: -1
+  betaDir: 0
   gamaDir: -1
 
 
