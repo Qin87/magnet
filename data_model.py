@@ -154,10 +154,10 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'ParaGCN':
-            model = ParaGCNXBN(num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
+            model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
             model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, head=args.heads)
-        elif args.net == 'ParaGAT':
+        elif args.net == 'SimGAT':
             model = StandGAT1BN_Qin(data_x.shape[0], num_features, args.feat_dim, n_cls, args.dropout, args.layer, head=args.heads)
         elif args.net == "SAGE":
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)

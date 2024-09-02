@@ -246,9 +246,6 @@ class GATConvQin(MessagePassing):
                 self.lin_l = torch.nn.Linear(in_channels, heads * out_channels, False)
                 self.lin_r = torch.nn.Linear(in_channels, heads * out_channels, False)
 
-        # self.att_l = Parameter(torch.Tensor(1, heads, out_channels))
-        # self.att_r = Parameter(torch.Tensor(1, heads, out_channels))
-
         self.att_l = Parameter(torch.Tensor(num_node, heads))
         self.att_r = Parameter(torch.Tensor(num_node, heads))
 
@@ -290,11 +287,8 @@ class GATConvQin(MessagePassing):
         if isinstance(x, Tensor):
             assert x.dim() == 2, 'Static graphs not supported in `GATConv`.'
             #x_lyy = x_r = self.lin_l(x).view(-1, H, C)
-            # x = self.lin_l(x) #.view(-1, H, C)
-            # x_l = x_r = x.view(-1,H,C)
-
-            # alpha_l = (x_l * self.att_l).sum(dim=-1)
-            # alpha_r = (x_r * self.att_r).sum(dim=-1)
+            x = self.lin_l(x) #.view(-1, H, C)
+            x_l = x_r = x.view(-1,H,C)
 
             alpha_l = self.att_l
             alpha_r = self.att_r
@@ -322,8 +316,7 @@ class GATConvQin(MessagePassing):
             elif isinstance(edge_index, SparseTensor):
                 edge_index = set_diag(edge_index)
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor)
-        out = self.propagate(edge_index, x=(x_l, x_r),
-                             alpha=(alpha_l, alpha_r), size=size)
+        out = self.propagate(edge_index, x=(x_l, x_r),alpha=(alpha_l, alpha_r), size=size)
 
         alpha = self._alpha
         self._alpha = None

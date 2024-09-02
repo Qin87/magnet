@@ -464,7 +464,7 @@ try:
             set_new_opt = True
             for epoch in range(args.epoch):
                 # if args.net in ['ParaGCN']:
-                #     if epoch == 410:
+                #     if epoch == 210:
                 #         CountNotImproved = 0
                 #         # Unfreeze edge_weight at epoch 410
                 #         if hasattr(model, 'edge_weight') and model.edge_weight is not None:
@@ -476,8 +476,8 @@ try:
                 #             optimizer = torch.optim.Adam([
                 #                 dict(params=[model.edge_weight], weight_decay=0) ], lr=args.lrweight)
                 #
-                #     # if epoch == 410:
-                #     elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.01):
+                #     if epoch == 410:
+                #     # elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.0001):
                 #         set_new_opt = False
                 #         best_val_acc = 0
                 #         print('###############################')

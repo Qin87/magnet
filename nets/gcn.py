@@ -5,7 +5,7 @@ Ref: https://github.com/pyg-team/pytorch_geometric/blob/97d55577f1d0bf33c1bfbe0e
 from typing import Optional, Tuple
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 from torch_geometric.nn import GCNConv
-from torch_geometric.utils import add_self_loops, degree
+from torch_geometric.utils import add_self_loops, degree, remove_self_loops
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -460,7 +460,7 @@ class GATLikeLayer(nn.Module):
         return out
 
 
-class ParaGCNXBN(nn.Module):
+class ParaGCNXBN00(nn.Module):
     def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
         super().__init__()
         self.num_heads = 8
@@ -477,6 +477,7 @@ class ParaGCNXBN(nn.Module):
 
     def forward(self, x, edge_index):
         for i, (layer, norm) in enumerate(zip(self.layers, self.layer_norms)):
+            edge_index, _ = add_self_loops(edge_index, num_nodes=x.size(0))
             x = F.dropout(x, p=self.dropout, training=self.training)
             x = layer(x, edge_index)
             x = norm(x)
@@ -509,6 +510,7 @@ class ParaGCNXBN2(nn.Module):
         self.layer_norm = nn.LayerNorm(nclass)
 
     def forward(self, x, edge_index):
+        edge_index, _ = add_self_loops(edge_index, num_nodes=x.size(0))
         src, dst = edge_index
 
         # Compute dynamic weights
@@ -537,7 +539,7 @@ class ParaGCNXBN2(nn.Module):
 
 
 class ParaGCNXBN1(nn.Module):
-    def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
+    def __init__(self,num_node, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
         super(ParaGCNXBN1, self).__init__()
 
         self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=False)
@@ -553,8 +555,11 @@ class ParaGCNXBN1(nn.Module):
             self.batch_norm3 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nclass)
 
-        self.is_add_self_loops = False
-        self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
+        self.is_add_self_loops = True
+        if self.is_add_self_loops:
+            num_edges = num_edges + num_node
+        # self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
+        self.edge_weight = nn.Parameter(torch.FloatTensor())
         self.edge_weight_src = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
         self.edge_weight_dst = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
         self.feature_scale = nn.Linear(nfeat, 1, bias=False)
@@ -575,6 +580,7 @@ class ParaGCNXBN1(nn.Module):
         self.non_zero = 0
 
     def forward(self, x, adj):
+
         self.current_epoch += 1
         with torch.no_grad():  # Ensures this operation doesn't track gradients
             self.edge_weight[torch.isnan(self.edge_weight)] = 1
@@ -596,10 +602,13 @@ class ParaGCNXBN1(nn.Module):
         # edge_weight = self.edge_weight
         edge_weight_src = self.edge_weight_src * self.edge_mask
         edge_weight_dst = self.edge_weight_dst * self.edge_mask
-        edge_weight = edge_weight_src + edge_weight_dst
-        edge_weight = binary_approx(edge_weight)
+        self.edge_weight = edge_weight_src + edge_weight_dst
+        edge_weight = binary_approx(self.edge_weight)
         edge_index = adj
+        edge_index, _ = add_self_loops(edge_index, num_nodes=x.size(0))
         # edge_index = adj.flip(0)
+
+        # self.edge_weight = edge_weight
 
         non_zero_indices = edge_weight != 0
 
@@ -629,9 +638,9 @@ class ParaGCNXBN1(nn.Module):
         return x
 
 
-class ParaGCNXBN0(nn.Module):
-    def __init__(self, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
-        super(ParaGCNXBN0, self).__init__()
+class ParaGCNXBN(nn.Module):
+    def __init__(self,num_node, num_edges, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
+        super(ParaGCNXBN, self).__init__()
 
         self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=False)
         self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=False) for _ in range(nlayer-2)])
@@ -646,7 +655,9 @@ class ParaGCNXBN0(nn.Module):
             self.batch_norm3 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nclass)
 
-        self.is_add_self_loops = False
+        self.is_add_self_loops = True
+        if self.is_add_self_loops:
+            num_edges = num_edges + num_node
         self.edge_weight = nn.Parameter(torch.ones(size=(num_edges,)), requires_grad=True)
         self.norm = norm
 
@@ -663,6 +674,7 @@ class ParaGCNXBN0(nn.Module):
         self.current_epoch = 0
         self.edge_mask = torch.ones_like(self.edge_weight, dtype=torch.bool, device=self.edge_weight.device)
         self.non_zero = 0
+        self.num_node = num_node
 
     def forward(self, x, adj):
         self.current_epoch += 1
@@ -682,10 +694,13 @@ class ParaGCNXBN0(nn.Module):
                 # print(f"After, Number of zeros in edge_weight: {num_zeros1}", str(int(self.current_epoch/3)))
                 self.non_zero = num_zeros1
 
-        self.edge_weight.data = self.edge_weight * self.edge_mask
+        # self.edge_weight.data = self.edge_weight * self.edge_mask
+        self.edge_weight.data = self.edge_weight
         edge_weight = self.edge_weight
         edge_weight = binary_approx(edge_weight)
         edge_index = adj
+        # edge_index, _ = remove_self_loops(edge_index)
+        edge_index, _ = add_self_loops(edge_index, num_nodes=self.num_node)
         # edge_index = adj.flip(0)
 
         non_zero_indices = edge_weight != 0
