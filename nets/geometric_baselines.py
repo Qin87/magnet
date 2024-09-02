@@ -988,6 +988,7 @@ class DirGCNConv_2(torch.nn.Module):
         self.Intersect_alpha, self.Union_alpha, self.Intersect_beta, self.Union_beta, self.Intersect_gama, self.Union_gama = None, None, None, None, None, None
 
         num_scale = 3
+        self.mlp = None
         if args.mlp:
             self.mlp = torch.nn.Linear(input_dim, output_dim)
             num_scale += 1
@@ -1025,7 +1026,7 @@ class DirGCNConv_2(torch.nn.Module):
 
                 # print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
-            if not(self.beta == -1 and self.gama == -1) and self.adj_norm_in_out is None:
+            if self.adj_norm_in_out is None:
 
                 self.adj_norm_in_out = get_norm_adj(adj @ adj_t,norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
                 self.adj_norm_out_in = get_norm_adj(adj_t @ adj, norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
