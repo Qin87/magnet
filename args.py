@@ -38,7 +38,7 @@ def parse_args():
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)'
                         'Sym, 1ym')
-    parser.add_argument('--seed', type=int, default=0, help='random seed')
+    parser.add_argument('--seed', type=int, default=2099, help='random seed')
     parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
                                                 'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
