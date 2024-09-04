@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
-    parser.add_argument('--num_split', type=int, default=20, help='num of run in spite of many splits')
+    parser.add_argument('--num_split', type=int, default=1, help='num of run in spite of many splits')
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
 
     parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
-    parser.add_argument('--lrweight', type=float, default=0.1, help='learning rate for edge_weight')
+    parser.add_argument('--lrweight', type=float, default=0.4, help='learning rate for edge_weight')
     parser.add_argument('--coeflr', type=float, default=2, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')

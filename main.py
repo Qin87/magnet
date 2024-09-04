@@ -477,7 +477,7 @@ try:
                             dict(params=[model.edge_weight], weight_decay=0)
                         ], lr=args.lrweight)
                 # if epoch == 410:
-                elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.95):
+                elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.9):
                     set_new_opt = False
                     best_val_acc = 0
                     print('###############################')
