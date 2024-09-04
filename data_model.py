@@ -472,6 +472,13 @@ def make_imbalanced(edge_index, label, n_data, n_cls, ratio, train_mask):
 
 
 def count_homophilic_nodes(edge_index, y):
+    in_homophilic_nodes = []
+    out_homophilic_nodes = []
+    no_in_nodes = []
+    no_out_nodes = []
+    in_heterophilic_nodes = []
+    out_heterophilic_nodes= []
+
     num_nodes = y.size(0)
     in_homophilic_count = 0
     out_homophilic_count = 0
@@ -487,15 +494,18 @@ def count_homophilic_nodes(edge_index, y):
         out_neighbors = (edge_index[0] == node).nonzero(as_tuple=True)[0]
         out_neighbors = edge_index[1, out_neighbors]
 
-
         # Check in-neighbor homophily
         if len(in_neighbors) > 0:
             in_neighbor_labels = y[in_neighbors]
             in_most_common_label = torch.mode(in_neighbor_labels).values.item()
             if in_most_common_label == y[node]:
                 in_homophilic_count += 1
+                in_homophilic_nodes.append(node)
+            else:
+                in_heterophilic_nodes.append(node)
         else:
             no_in_neighbors += 1
+            no_in_nodes.append(node)
 
             # Check out-neighbor homophily
         if len(out_neighbors) > 0:
@@ -503,8 +513,15 @@ def count_homophilic_nodes(edge_index, y):
             out_most_common_label = torch.mode(out_neighbor_labels).values.item()
             if out_most_common_label == y[node]:
                 out_homophilic_count += 1
+                out_homophilic_nodes.append(node)
+            else:
+                out_heterophilic_nodes.append(node)
         else:
             no_out_neighbors += 1
+            no_out_nodes.append(node)
+
+        # if len(in_neighbors) == 0 and len(out_neighbors) == 0:
+        #     isolated_nodes.append(node)
 
     percent_no_in = (no_in_neighbors / num_nodes) * 100
     percent_in_homo = (in_homophilic_count / num_nodes) * 100
@@ -512,7 +529,50 @@ def count_homophilic_nodes(edge_index, y):
     percent_out_homo = (out_homophilic_count / num_nodes) * 100
 
     print('percent of no_in, in_homo, no_out, out_homo', end=':')
-    print(f"{percent_no_in:.1f}% & {percent_in_homo:.1f}% & {percent_no_out:.1f}% & {percent_out_homo:.1f}%")
+    print(f"{percent_no_in:.1f}% | {percent_in_homo:.1f}% | {percent_no_out:.1f}% | {percent_out_homo:.1f}%")
     # print(f"{percent_no_in:.1f}% & {percent_in_homo:.1f}% & {percent_no_out:.1f}% & {percent_out_homo:.1f}%")
 
-    return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count
+    return no_in_neighbors, in_homophilic_count, no_out_neighbors, out_homophilic_count, in_homophilic_nodes, out_homophilic_nodes,in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes,  no_out_nodes
+
+
+from sklearn.metrics import balanced_accuracy_score, f1_score
+
+def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
+    if len(node_index_lists) == 0:
+        return 0
+    device = data_test_mask.device
+    results = []
+    node_index_mask = create_mask(node_index_lists, data_y.shape[0]).to(device)
+    mask = node_index_mask & data_test_mask
+
+    test_indices = [i for i in node_index_lists if data_test_mask[i]]
+    percentage = round((len(test_indices))/data_test_mask.sum().item() * 100, 2)
+
+    pred = logits[mask].max(1)[1]
+    y_pred = pred.cpu().numpy()
+    y_true = data_y[mask].cpu().numpy()
+
+    # Calculate metrics
+    acc = round(pred.eq(data_y[test_indices]).sum().item() / len(test_indices), 2)
+    bacc = round(balanced_accuracy_score(y_true, y_pred), 2)
+    f1 = round(f1_score(y_true, y_pred, average='macro'), 2)
+
+    results.append({
+        'num_node': len(node_index_lists),
+        'percentage': percentage,
+        'acc': acc,
+        'bacc': bacc,
+        'f1': f1
+    })
+
+    return results
+
+
+def create_mask(node_index_list, total_nodes):
+    # Initialize a mask array of False values
+    mask = torch.zeros(total_nodes, dtype=torch.bool)
+
+    # Set the positions corresponding to node_index_list to True
+    mask[node_index_list] = True
+
+    return mask

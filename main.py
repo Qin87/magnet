@@ -1,6 +1,10 @@
 ################################
 # this version to ensure that when I stop the process half way, it still could print the result.
 ################################
+import sys
+import os
+print("Python Path:", sys.path)
+print("Current Working Directory:", os.getcwd())
 import os
 import signal
 import statistics
@@ -15,7 +19,7 @@ from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
-from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes
+from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask
 from nets.DiG_NoConv import union_edges
 from nets.models import random_walk_pe
 from nets.src2 import laplacian
@@ -147,7 +151,10 @@ def test():
         accs.append(acc)
         baccs.append(bacc)
         f1s.append(f1)
-    return accs, baccs, f1s
+
+
+
+    return accs, baccs, f1s, logits
 
 
 start_time = time.time()
@@ -162,12 +169,20 @@ log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 print(args)
-with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
-    print(args, file=log_file)
 
 seed_everything(args.seed)
 
-no_in, homo_ratio_A, no_out,   homo_ratio_At = count_homophilic_nodes(edges, data_y)
+no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = count_homophilic_nodes(edges, data_y)
+
+with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
+    print(args, file=log_file)
+    print("in_homophilic_nodes:", in_homophilic_nodes, file=log_file)
+    print(file=log_file)
+    print("out_homophilic_nodes:", out_homophilic_nodes, file=log_file)
+    print(file=log_file)
+    print("no_in_nodes:", no_in_nodes, file=log_file)
+    print(file=log_file)
+    print("no_out_nodes:", no_out_nodes, file=log_file)
 
 biedges = None
 edge_in = None
@@ -398,6 +413,20 @@ try:
                     except:
                         data_test_mask = data_test_maskOrigin.clone()
 
+            all_list = [
+                ("no_in_nodes", no_in_nodes),
+                ("in_homophilic_nodes", in_homophilic_nodes),
+                ("in_heterophilic_nodes", in_heterophilic_nodes),
+                ("no_out_nodes", no_out_nodes),
+                ("out_homophilic_nodes", out_homophilic_nodes),
+                ("out_heterophilic_nodes", out_heterophilic_nodes)
+            ]
+
+            for name, lst in all_list:
+                mask = create_mask(lst, data_x.shape[0]).to(device)
+                train_temp, val_temp, test_temp = mask & data_train_mask, mask & data_val_mask, mask & data_test_mask
+                print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
+
             n_data0 = []  # num of train in each class
             for i in range(n_cls):
                 data_num = (data_y == i).sum()
@@ -516,7 +545,7 @@ try:
                 #             pass
                 val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
-                accs, baccs, f1s = test()
+                accs, baccs, f1s, logits = test()
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 # val_acc_f1 = (val_acc + val_f1) / 2.
@@ -528,6 +557,16 @@ try:
                     test_f1 = f1s[2]
                     CountNotImproved = 0
                     # print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
+                    # Store the calculated metrics in variables instead of printing
+                    no_in_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, no_in_nodes)
+                    in_homophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, in_homophilic_nodes)
+                    in_heterophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, in_heterophilic_nodes)
+                    no_out_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, no_out_nodes)
+                    out_homophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, out_homophilic_nodes)
+                    out_heterophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, out_heterophilic_nodes)
+
+                    # Now you can use these variables to do further processing or analysis
+
                 else:
                     CountNotImproved += 1
                 if epoch%100 == 0:
@@ -538,7 +577,12 @@ try:
                     # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
-                    # print("No improved for consecutive {:3d} epochs, break.".format(args.NotImproved))
+                    print("no_in_nodes:", no_in_nodes_metrics)
+                    print("in_homophilic_nodes:", in_homophilic_nodes_metrics)
+                    print("in_heterophilic_nodes:", in_heterophilic_nodes_metrics)
+                    print("no_out_nodes:", no_out_nodes_metrics)
+                    print("out_homophilic_nodes:", out_homophilic_nodes_metrics)
+                    print("out_heterophilic_nodes:", out_heterophilic_nodes_metrics)
                     break
             dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)
             print(net_to_print+'layer'+str(args.layer), dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr)

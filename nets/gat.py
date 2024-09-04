@@ -493,6 +493,7 @@ class StandGAT1BN_Qin(nn.Module):
     def forward(self, x, adj, edge_weight=None):
 
         edge_index = adj
+        edge_index = edge_index[[1, 0], :]
         x, edge_index = self.conv1(x,edge_index, is_add_self_loops=self.is_add_self_loops)
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.batch_norm1(x)
