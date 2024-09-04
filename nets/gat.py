@@ -260,13 +260,31 @@ class GATConvQin(MessagePassing):
 
         self.reset_parameters()
 
-
     def reset_parameters(self):
+        import torch.nn.init as init
         glorot(self.lin_l.weight)
         glorot(self.lin_r.weight)
         glorot(self.att_l)
         glorot(self.att_r)
         zeros(self.bias)
+        # gain = init.calculate_gain('relu')  # or another appropriate gain
+        # for i in range(self.heads):
+        #     if self.att_l.dim() == 1:
+        #         bound = 1 / math.sqrt(self.att_l.size(0))
+        #         init.uniform_(self.att_l, -bound, bound)
+        #         init.uniform_(self.att_r, -bound, bound)
+        #     else:
+        #         init.xavier_uniform_(self.att_l, gain=gain)
+        #         init.xavier_uniform_(self.att_r, gain=gain)
+        #
+        #     # Optional: Add slight variation to each head
+        #     with torch.no_grad():
+        #         self.att_l += 0.1 * torch.randn_like(self.att_l)
+        #         self.att_r += 0.1 * torch.randn_like(self.att_r)
+        #
+        # # Initialize bias
+        # if self.bias is not None:
+        #     init.zeros_(self.bias)
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
                 size: Size = None, return_attention_weights=None, is_add_self_loops: bool = True):

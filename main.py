@@ -17,6 +17,7 @@ from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes
 from nets.DiG_NoConv import union_edges
+from nets.models import random_walk_pe
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from data.preprocess import  F_in_out, F_in_out0
@@ -86,6 +87,8 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
         out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
     elif args.net.startswith('Qua'):
         out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
+    elif args.net.lower() in ['mamba']:
+        out = model(data_x, data_pe, edges, edge_attr, data_batch)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -151,7 +154,7 @@ start_time = time.time()
 args = parse_args()
 args = use_best_hyperparams(args, args.Dataset) if args.use_best_hyperparams else args
 
-data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
+data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph, edge_attr, data_batch = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
 load_time = time.time()
 
@@ -204,7 +207,6 @@ edges = edges.to(device)
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)
-
 
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
@@ -314,6 +316,16 @@ elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     elif args.net.startswith('Qua'):
         Quaedge_index, norm_real, norm_imag_i, norm_imag_j, norm_imag_k = process_quaternion_laplacian(edge_index=edges, x_real=X_real, edge_weight=edge_weight,
                                                                                                     normalization='sym', return_lambda_max=False)
+
+elif args.net.lower() in ['mamba']:
+    import torch_geometric.transforms as T
+    from torch_geometric.data import Data
+    temp_data = Data(x=data_x, edge_index=edges)
+    transform = T.AddRandomWalkPE(walk_length=20, attr_name='pe')
+    temp_data = transform(temp_data)
+    data_pe = temp_data.pe
+
+
 else:
     pass
 try:
