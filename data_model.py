@@ -5,9 +5,10 @@ import numpy as np
 import torch
 from torch_scatter import scatter_add
 
+from nets.gat import GATConvQin, StandGAT1BN_Qin
 from nets.gcn import ParaGCNXBN
 from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model
-from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1
+from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1, GraphModel
 
 from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from nets.Signum import SigMaNet_node_prediction_one_laplacian_Qin
@@ -53,6 +54,12 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
                             p=args.p,
                             K=args.K,
                             dropout=args.dropout, layer =args.layer)
+    elif args.net.lower() == 'mamba':
+        model = GraphModel(channels=64, pe_dim=8, num_layers=10,
+                           model_type='mamba',
+                           shuffle_ind=1, order_by_degree=False,
+                           d_conv=4, d_state=16,
+                           ).to(device)
     elif args.net.lower() == 'mlp':
         model = create_MLP(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer)
     elif args.net.lower() == 'sgc':
@@ -153,9 +160,11 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         if args.net == 'GCN':
             model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'ParaGCN':
-            model = ParaGCNXBN(num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
+            model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
             model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, head=args.heads)
+        elif args.net == 'SimGAT':
+            model = StandGAT1BN_Qin(data_x.shape[0], num_features, args.feat_dim, n_cls, args.dropout, args.layer, head=args.heads)
         elif args.net == "SAGE":
             model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
@@ -313,7 +322,10 @@ def load_dataset(args):
         IsDirectedGraph = False
         print("Converted to undirected data")
 
-    return data_x, data_y, edges, edges_weight, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph
+    edge_attr = data.edge_attr
+    data_batch = data.batch
+
+    return data_x, data_y, edges, edges_weight, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph, edge_attr, data_batch
 
 def feat_proximity(edge_index1, data_x):
     distances = []

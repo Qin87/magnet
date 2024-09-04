@@ -17,6 +17,7 @@ from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes
 from nets.DiG_NoConv import union_edges
+from nets.models import random_walk_pe
 from nets.src2 import laplacian
 from nets.src2.quaternion_laplacian import process_quaternion_laplacian
 from data.preprocess import  F_in_out, F_in_out0
@@ -86,6 +87,8 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
         out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
     elif args.net.startswith('Qua'):
         out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
+    elif args.net.lower() in ['mamba']:
+        out = model(data_x, data_pe, edges, edge_attr, data_batch)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -151,7 +154,7 @@ start_time = time.time()
 args = parse_args()
 args = use_best_hyperparams(args, args.Dataset) if args.use_best_hyperparams else args
 
-data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph = load_dataset(args)
+data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph, edge_attr, data_batch = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
 load_time = time.time()
 
@@ -204,7 +207,6 @@ edges = edges.to(device)
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)
-
 
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
@@ -314,6 +316,16 @@ elif args.net.startswith(('Mag', 'Sig', 'Qua')):
     elif args.net.startswith('Qua'):
         Quaedge_index, norm_real, norm_imag_i, norm_imag_j, norm_imag_k = process_quaternion_laplacian(edge_index=edges, x_real=X_real, edge_weight=edge_weight,
                                                                                                     normalization='sym', return_lambda_max=False)
+
+elif args.net.lower() in ['mamba']:
+    import torch_geometric.transforms as T
+    from torch_geometric.data import Data
+    temp_data = Data(x=data_x, edge_index=edges)
+    transform = T.AddRandomWalkPE(walk_length=20, attr_name='pe')
+    temp_data = transform(temp_data)
+    data_pe = temp_data.pe
+
+
 else:
     pass
 try:
@@ -463,51 +475,51 @@ try:
             end_epoch = 0
             set_new_opt = True
             for epoch in range(args.epoch):
-
-                if epoch == 410:
-                    CountNotImproved = 0
-                    # Unfreeze edge_weight at epoch 410
-                    if hasattr(model, 'edge_weight') and model.edge_weight is not None:
-                        # for param in model.parameters():
-                        #     if param is not model.edge_weight:
-                        #         param.requires_grad = False
-
-                        model.edge_weight.requires_grad = True
-                        optimizer = torch.optim.Adam([
-                            dict(params=[model.edge_weight], weight_decay=0)
-                        ], lr=args.lrweight)
-                # if epoch == 410:
-                elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.9):
-                    set_new_opt = False
-                    best_val_acc = 0
-                    print('###############################')
-                    print('min and max edge-weight:', model.edge_weight.data.min().item(), model.edge_weight.data.max().item())
-                    print(torch.sum(model.edge_weight.data == 0).item())
-                    print('###################')
-                    new_weight = torch.where(model.edge_weight != 0, torch.tensor(1.0, device=model.edge_weight.device), torch.tensor(0.0, device=model.edge_weight.device))
-                    new_weight = torch.nn.Parameter(new_weight, requires_grad=model.edge_weight.requires_grad)
-                    # new_weight = model.edge_weight
-                    model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
-                    model.edge_weight = new_weight
-                    CountNotImproved = 0
-                    optimizer = torch.optim.Adam([
-                        dict(params=model.reg_params, weight_decay=5e-4),
-                        dict(params=model.non_reg_params, weight_decay=0)
-                    ], lr=args.lr)
-                    model.edge_weight.requires_grad = False
-                    if args.has_scheduler:
-                        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=True)
-                else:
-                    if set_new_opt:
-                        CountNotImproved = 0
-                    else:
-                        pass
+                # if args.net in ['ParaGCN']:
+                #     if epoch == 210:
+                #         CountNotImproved = 0
+                #         # Unfreeze edge_weight at epoch 410
+                #         if hasattr(model, 'edge_weight') and model.edge_weight is not None:
+                #             # for param in model.parameters():
+                #             #     if param is not model.edge_weight:
+                #             #         param.requires_grad = False
+                #
+                #             model.edge_weight.requires_grad = True
+                #             optimizer = torch.optim.Adam([
+                #                 dict(params=[model.edge_weight], weight_decay=0) ], lr=args.lrweight)
+                #
+                #     if epoch == 410:
+                #     # elif set_new_opt and torch.sum(model.edge_weight.data == 0).item() > int(36101*0.0001):
+                #         set_new_opt = False
+                #         best_val_acc = 0
+                #         print('###############################')
+                #         print('min and max edge-weight:', model.edge_weight.data.min().item(), model.edge_weight.data.max().item())
+                #         print(torch.sum(model.edge_weight.data == 0).item())
+                #         print('###################')
+                #         new_weight = torch.where(model.edge_weight != 0, torch.tensor(1.0, device=model.edge_weight.device), torch.tensor(0.0, device=model.edge_weight.device))
+                #         new_weight = torch.nn.Parameter(new_weight, requires_grad=model.edge_weight.requires_grad)
+                #         # new_weight = model.edge_weight
+                #         model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
+                #         model.edge_weight = new_weight
+                #         CountNotImproved = 0
+                #         optimizer = torch.optim.Adam([
+                #             dict(params=model.reg_params, weight_decay=5e-4),
+                #             dict(params=model.non_reg_params, weight_decay=0)
+                #         ], lr=args.lr)
+                #         model.edge_weight.requires_grad = False
+                #         if args.has_scheduler:
+                #             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=args.patience, verbose=True)
+                #     else:
+                #         if set_new_opt:
+                #             CountNotImproved = 0
+                #         else:
+                #             pass
                 val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s = test()
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
-                val_acc_f1 = (val_acc + val_f1) / 2.
+                # val_acc_f1 = (val_acc + val_f1) / 2.
                 if val_acc > best_val_acc:
                     best_val_acc = val_acc
 

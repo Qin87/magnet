@@ -1,6 +1,6 @@
 #!/bin/bash
 
-net_values="ScaleNet "
+net_values="RiG RiGi2 "
 q_value=0
 layer_values=" 2  "
 imbal="100  "
