@@ -553,13 +553,16 @@ def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
     y_true = data_y[mask].cpu().numpy()
 
     # Calculate metrics
-    acc = round(pred.eq(data_y[test_indices]).sum().item() / len(test_indices), 2)
+    # acc = round(pred.eq(data_y[test_indices]).sum().item() / len(test_indices), 2)
+    acc = round(pred.eq(data_y[mask]).sum().item() / len(test_indices), 2)
     bacc = round(balanced_accuracy_score(y_true, y_pred), 2)
     f1 = round(f1_score(y_true, y_pred, average='macro'), 2)
 
     results.append({
         'num_node': len(node_index_lists),
-        'percentage': percentage,
+        'test': len(test_indices),
+        'correct': pred.eq(data_y[mask]).sum().item(),
+        # 'percentage': percentage,
         'acc': acc,
         'bacc': bacc,
         'f1': f1

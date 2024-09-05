@@ -1107,7 +1107,6 @@ class DirGCNConv_2(torch.nn.Module):
         if self.mlp:
             xs.append(self.mlp(x))
 
-
         if self.jumping_knowledge_inner:
             x = self.jump(xs)
             x = self.lin(x)
