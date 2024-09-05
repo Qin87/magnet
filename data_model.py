@@ -7,7 +7,7 @@ from torch_scatter import scatter_add
 
 from nets.gat import GATConvQin, StandGAT1BN_Qin
 from nets.gcn import ParaGCNXBN
-from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model
+from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model, Sloop_JKNet
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1, GraphModel
 
 from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
@@ -92,6 +92,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
     elif args.net == 'ScaleNet':
         model = GCN_JKNet(nfeat=num_features, nclass=n_cls, args=args)
+    elif args.net == 'SloopNet':
+        model = Sloop_JKNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'GPRGNN':
         model = GPRGNN(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, args= args)
     elif args.net == 'APPNP':
@@ -553,13 +555,16 @@ def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
     y_true = data_y[mask].cpu().numpy()
 
     # Calculate metrics
-    acc = round(pred.eq(data_y[test_indices]).sum().item() / len(test_indices), 2)
+    # acc = round(pred.eq(data_y[test_indices]).sum().item() / len(test_indices), 2)
+    acc = round(pred.eq(data_y[mask]).sum().item() / len(test_indices), 2)
     bacc = round(balanced_accuracy_score(y_true, y_pred), 2)
     f1 = round(f1_score(y_true, y_pred, average='macro'), 2)
 
     results.append({
         'num_node': len(node_index_lists),
-        'percentage': percentage,
+        'test': len(test_indices),
+        'correct': pred.eq(data_y[mask]).sum().item(),
+        # 'percentage': percentage,
         'acc': acc,
         'bacc': bacc,
         'f1': f1

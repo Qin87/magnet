@@ -422,7 +422,34 @@ try:
                 ("out_heterophilic_nodes", out_heterophilic_nodes)
             ]
 
-            for name, lst in all_list:
+            noIn_noOut_nodes = list(set(no_in_nodes) & set(no_out_nodes))
+            noIn_outHomo_nodes = list(set(no_in_nodes) & set(out_homophilic_nodes))
+            noIn_outHetero_nodes = list(set(no_in_nodes) & set(out_heterophilic_nodes))
+            inHomo_noOut_nodes = list(set(in_homophilic_nodes) & set(no_out_nodes))
+            inHomo_outHomo_nodes = list(set(in_homophilic_nodes) & set(out_homophilic_nodes))
+            inHomo_outHetero_nodes = list(set(in_homophilic_nodes) & set(out_heterophilic_nodes))
+            inHetero_noOut_nodes = list(set(in_heterophilic_nodes) & set(no_out_nodes))
+            inHetero_outHomo_nodes = list(set(in_heterophilic_nodes) & set(out_homophilic_nodes))
+            inHetero_outHetero_nodes = list(set(in_heterophilic_nodes) & set(out_heterophilic_nodes))
+
+            # New combined list with intersections
+            combined_intersection_list = [
+                ("noIn_noOut_nodes", noIn_noOut_nodes),
+                ("noIn_outHomo_nodes", noIn_outHomo_nodes),
+                ("noIn_outHetero_nodes", noIn_outHetero_nodes),
+                ("inHomo_noOut_nodes", inHomo_noOut_nodes),
+                ("inHomo_outHomo_nodes", inHomo_outHomo_nodes),
+                ("inHomo_outHetero_nodes", inHomo_outHetero_nodes),
+                ("inHetero_noOut_nodes", inHetero_noOut_nodes),
+                ("inHetero_outHomo_nodes", inHetero_outHomo_nodes),
+                ("inHetero_outHetero_nodes", inHetero_outHetero_nodes)
+                ,('all nodes', list(range(data_x.shape[0])))
+            ]
+
+            for name, lst in combined_intersection_list:
+                if len(lst) == 0:
+                    print(f"{name}:No Node")
+                    continue
                 mask = create_mask(lst, data_x.shape[0]).to(device)
                 train_temp, val_temp, test_temp = mask & data_train_mask, mask & data_val_mask, mask & data_test_mask
                 print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
@@ -503,6 +530,7 @@ try:
             CountNotImproved = 0
             end_epoch = 0
             set_new_opt = True
+            # metrics_list = []
             for epoch in range(args.epoch):
                 # if args.net in ['ParaGCN']:
                 #     if epoch == 210:
@@ -550,6 +578,7 @@ try:
                 train_f1, val_f1, tmp_test_f1 = f1s
                 # val_acc_f1 = (val_acc + val_f1) / 2.
                 if val_acc > best_val_acc:
+                    metrics_list = []
                     best_val_acc = val_acc
 
                     test_acc = accs[2]
@@ -558,14 +587,10 @@ try:
                     CountNotImproved = 0
                     # print('test_f1 CountNotImproved reset to 0 in epoch', epoch, file=log_file)
                     # Store the calculated metrics in variables instead of printing
-                    no_in_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, no_in_nodes)
-                    in_homophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, in_homophilic_nodes)
-                    in_heterophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, in_heterophilic_nodes)
-                    no_out_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, no_out_nodes)
-                    out_homophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, out_homophilic_nodes)
-                    out_heterophilic_nodes_metrics = calculate_metrics(logits, data_test_mask, data_y, out_heterophilic_nodes)
 
-                    # Now you can use these variables to do further processing or analysis
+                    for name, lst in combined_intersection_list:
+                        metrics_temp = calculate_metrics(logits, data_test_mask, data_y, lst)
+                        metrics_list.append((name, metrics_temp))
 
                 else:
                     CountNotImproved += 1
@@ -577,12 +602,9 @@ try:
                     # print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
-                    print("no_in_nodes:", no_in_nodes_metrics)
-                    print("in_homophilic_nodes:", in_homophilic_nodes_metrics)
-                    print("in_heterophilic_nodes:", in_heterophilic_nodes_metrics)
-                    print("no_out_nodes:", no_out_nodes_metrics)
-                    print("out_homophilic_nodes:", out_homophilic_nodes_metrics)
-                    print("out_heterophilic_nodes:", out_heterophilic_nodes_metrics)
+                    for name, metric_temp in metrics_list:
+                        print(name, metric_temp)
+
                     break
             dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)
             print(net_to_print+'layer'+str(args.layer), dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr)
