@@ -218,9 +218,9 @@ def get_name(args, IsDirectedGraph):
                 diff = 'AA'+str(args.alphaDir)
             else:
                 diff = 'AAt'+str(args.alphaDir)
-            net_to_print = net_to_print + '_diff'+diff + '_jk'+str(args.jk)+'_norm'+args.inci_norm
+            net_to_print = net_to_print + args.conv_type + '_diff'+diff + '_jk'+str(args.jk)+'_norm'+args.inci_norm
         else:
-            net_to_print = net_to_print +'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(
+            net_to_print = net_to_print  +'_' + args.conv_type +'_part'+str(args.alphaDir)+'_'+ str(args.betaDir)+'_'+str(
                 args.gamaDir)+'_sloop'+str(args.First_self_loop)+str(args.rm_gen_sloop)+'_jk'+str(args.jk)+'_norm'+args.inci_norm
 
     return net_to_print, dataset_to_print
@@ -302,7 +302,16 @@ def load_dataset(args):
     else:
         edges = data.edge_index  # for torch_geometric librar
         data_y = data.y
-        if args.Dataset in ['ogbn-arxiv/'] or (len(data.train_mask.shape) > 1 and data.train_mask.size(-1) > 9):
+        # if isinstance(data_y[0], float):
+        #     data_y = int(data_y)
+        if data_y.dtype.is_floating_point:
+            data_y = data_y.to(torch.long)
+            # data_y = data_y.long()
+        if not hasattr(data, 'train_mask'):
+            data = random_planetoid_splits(data, data_y, train_ratio=0.48, val_ratio=0.1, num_splits=10, Flag=0)
+            data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
+
+        elif args.Dataset in ['ogbn-arxiv/'] or (len(data.train_mask.shape) > 1 and data.train_mask.size(-1) > 9):
             data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin = (data.train_mask.clone(), data.val_mask.clone(), data.test_mask.clone())
         else:
             data = random_planetoid_splits(data, data_y, percls_trn=20, val_lb=30, Flag=1)

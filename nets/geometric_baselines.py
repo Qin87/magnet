@@ -1217,7 +1217,7 @@ class DirGCNConv_sloop(torch.nn.Module):
             x0 = x
         for i, edge_index_temp in enumerate(edge_index_list):
             row, col = edge_index_temp
-            num_nodes = x.shape[0]
+            num_nodes = x0[0].shape[0]
 
             if self.conv_type == 'dir-gcn':
                 if self.adj_norm is None:
@@ -1280,24 +1280,25 @@ class DirGCNConv_sloop(torch.nn.Module):
                 else:
                     out2 = out3 = torch.zeros_like(out1)
             elif self.conv_type in ['dir-gat', 'dir-sage']:
-                edge_index_t = torch.stack([edge_index[1], edge_index[0]], dim=0)
+                # edge_index_t = torch.stack([edge_index[1], edge_index[0]], dim=0)
+                edge_index_t = torch.stack([edge_index_temp[1], edge_index_temp[0]], dim=0)
                 if not(self.beta == -1 and self.gama == -1) and self.edge_in_in is None:
-                    self.edge_in_out, self.edge_out_in, self.edge_in_in, self.edge_out_out =get_higher_edge_index(edge_index, num_nodes, rm_gen_sLoop=rm_gen_sLoop)
-                    self.Intersect_alpha, self.Union_alpha = edge_index_u_i(edge_index, edge_index_t)
+                    self.edge_in_out, self.edge_out_in, self.edge_in_in, self.edge_out_out =get_higher_edge_index(edge_index_temp, num_nodes, rm_gen_sLoop=rm_gen_sLoop)
+                    self.Intersect_alpha, self.Union_alpha = edge_index_u_i(edge_index_temp, edge_index_t)
                     self.Intersect_beta, self.Union_beta = edge_index_u_i(self.edge_in_out, self.edge_out_in)
                     self.Intersect_gama, self.Union_gama = edge_index_u_i(self.edge_in_in, self.edge_out_out)
 
                     if self.differ_AA:
-                        diff_0 = remove_shared_edges(self.edge_in_in, edge_index, edge_index_t)
-                        diff_1 = remove_shared_edges(self.edge_out_out, edge_index, edge_index_t)
+                        diff_0 = remove_shared_edges(self.edge_in_in, edge_index_temp, edge_index_t)
+                        diff_1 = remove_shared_edges(self.edge_out_out, edge_index_temp, edge_index_t)
                     elif self.differ_AAt:
-                        diff_0 = remove_shared_edges(self.edge_in_out, edge_index, edge_index_t)
-                        diff_1 = remove_shared_edges(self.edge_out_in, edge_index, edge_index_t)
+                        diff_0 = remove_shared_edges(self.edge_in_out, edge_index_temp, edge_index_t)
+                        diff_1 = remove_shared_edges(self.edge_out_in, edge_index_temp, edge_index_t)
                     if self.differ_AA or self.differ_AAt:
-                        edge_index = diff_0
+                        edge_index_temp = diff_0
                         edge_index_t = diff_1
 
-                out1 = aggregate_index(x0[i], self.alpha, self.lin_src_to_dst, edge_index, self.lin_dst_to_src, edge_index_t, self.Intersect_alpha, self.Union_alpha)
+                out1 = aggregate_index(x0[i], self.alpha, self.lin_src_to_dst, edge_index_temp, self.lin_dst_to_src, edge_index_t, self.Intersect_alpha, self.Union_alpha)
                 if not (self.beta == -1 and self.gama == -1):
                     out2 = aggregate_index(x, self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
                     out3 = aggregate_index(x, self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
@@ -1884,7 +1885,7 @@ class Sloop_JKNet(torch.nn.Module):
         nonlinear = args.nonlinear
 
         output_dim = nhid if jumping_knowledge else nclass
-        jk_end = 'max'
+        jk_end = 0
         jk_inner = 0
         if layer == 1:
             self.convs = ModuleList([DirGCNConv_sloop(nfeat, output_dim, args, jk_sl=jk_end)])
@@ -1895,7 +1896,7 @@ class Sloop_JKNet(torch.nn.Module):
             self.convs.append(DirGCNConv_sloop(nhid, output_dim, args, jk_sl=jk_end))
 
         if jumping_knowledge:
-            input_dim = hidden_dim * layer if jumping_knowledge == "cat" else hidden_dim
+            input_dim = hidden_dim * layer*3 if jumping_knowledge == "cat" else hidden_dim
             self.lin = Linear(input_dim, nclass)
             self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=hidden_dim, num_layers=layer)
 
@@ -1909,13 +1910,26 @@ class Sloop_JKNet(torch.nn.Module):
         xs = []
         for i, conv in enumerate(self.convs):
             x = conv(x, edge_index)
+            # assert len(x) == 3
             if i != len(self.convs) - 1 or self.jumping_knowledge:
                 if self.nonlinear:
-                    x = F.relu(x)
-                x = F.dropout(x, p=self.dropout, training=self.training)
+                    if isinstance(x, list):
+                        x = [F.relu(i) for i in x]
+                    else:
+                        x = F.relu(x)
+
+                if isinstance(x, list):
+                    x = [F.dropout(i, p=self.dropout, training=self.training) for i in x]
+                else:
+                    x = F.dropout(x, p=self.dropout, training=self.training)
+
                 if self.normalize:
-                    x = F.normalize(x, p=2, dim=1)
-            xs += [x]
+                    if isinstance(x, list):
+                        x = [F.normalize(i, p=2, dim=1) for i in x]
+                    else:
+                        x = F.normalize(x, p=2, dim=1)
+            # xs += [x]
+            xs.extend(x)
 
         if self.jumping_knowledge:
             x = self.jump(xs)

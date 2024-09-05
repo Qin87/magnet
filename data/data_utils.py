@@ -70,9 +70,13 @@ def load_directedData(args):
     elif load_func == 'WebKB':
         load_func = WebKB
         dataset = load_func(root=args.data_path, name=subset)
+
     elif load_func == 'WikipediaNetwork':
         load_func = WikipediaNetwork
-        dataset = load_func(root=args.data_path, name=subset)
+        if subset not in ['crocodile']:
+            dataset = load_func(root=args.data_path, name=subset)
+        else:
+            dataset = load_func(root=args.data_path, name=subset, geom_gcn_preprocess=False)
     elif load_func == 'WikiCS':
         load_func = WikiCS
         dataset = load_func(root=args.data_path, is_undirected=False)

@@ -2,13 +2,13 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--use_best_hyperparams", type=int, help="whether use parameters in best_hyperparameters.yml", default=0)
+    parser.add_argument("--use_best_hyperparams", type=int, help="whether use parameters in best_hyperparameters.yml", default=1)
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
     parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=0)
-    parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default="remove", help="Whether to add self-loops to the graph")
+    parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default=0, help="Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=str, choices=["remove", 0], default=0, help="Whether to remove generated self-loops to the graph")
 
 
@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
 
     # for DirGNN
-    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gat")
+    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-sage")
     parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
     parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default="max")
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', 0], default=0)
@@ -28,21 +28,21 @@ def parse_args():
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
-    parser.add_argument('--num_split', type=int, default=1, help='num of run in spite of many splits')
+    parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
 
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='SloopNet', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet '
+    parser.add_argument('--net', type=str, default='ScaleNet', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)'
                         'Sym, 1ym')
-    parser.add_argument('--seed', type=int, default=100, help='random seed')
+    parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
-                                                'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon')
+                                                'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
