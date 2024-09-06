@@ -563,6 +563,7 @@ try:
                 if CountNotImproved > args.NotImproved:
                     for name, metric_temp in metrics_list:
                         print(name, metric_temp)
+                        print(name, metric_temp, file=log_file)
 
                     break
             dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)

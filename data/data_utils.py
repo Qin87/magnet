@@ -1,6 +1,6 @@
 import os
 import random
-from torch_geometric.datasets import QM9
+from torch_geometric.datasets import QM9, MalNetTiny
 
 import torch_geometric.transforms as transforms
 from torch_geometric.datasets import Actor
@@ -47,7 +47,31 @@ def get_mask(idx, num_nodes):
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Dataset.split('/')[0], args.Dataset.split('/')[1]
-    if load_func == "Cora" or load_func == "CiteSeer" or load_func == "PubMed":
+    if load_func in ['malnet']:
+        dataset = MalNetTiny(root=args.data_path, split='train')
+
+        # Access the first graph in the dataset
+        # data = dataset[0]
+        #
+        # # Print some information about the dataset
+        # print(f'Dataset: {dataset}:')
+        # print('====================')
+        # print(f'Number of graphs: {len(dataset)}')
+        # print(f'Number of features: {dataset.num_features}')
+        # print(f'Number of classes: {dataset.num_classes}')
+        #
+        # # Print information about the first graph
+        # print('\nFirst graph:')
+        # print('====================')
+        # print(f'Number of nodes: {data.num_nodes}')
+        # print(f'Number of edges: {data.num_edges}')
+        # print(f'Average node degree: {data.num_edges / data.num_nodes:.2f}')
+        # print(f'Contains isolated nodes: {data.contains_isolated_nodes()}')
+        # print(f'Contains self-loops: {data.contains_self_loops()}')
+        # print(f'Is undirected: {data.is_undirected()}')
+        # return dataset
+
+    elif load_func == "Cora" or load_func == "CiteSeer" or load_func == "PubMed":
         from torch_geometric.datasets import Planetoid
         dataset = Planetoid(args.data_path, load_func, transform=T.NormalizeFeatures(), split='full')
 
