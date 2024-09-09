@@ -1114,11 +1114,37 @@ class DirGCNConv_2(torch.nn.Module):
         else:
             x = sum(out for out in xs)
 
+        tsne(x)
+
         if self.BN_model:
             x = self.batch_norm2(x)
 
 
         return x
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+def tsne(x):
+    tsne = TSNE(n_components=2, random_state=42)
+    with torch.no_grad():
+        x_numpy = x.detach().cpu().numpy()
+        x_tsne = torch.from_numpy(tsne.fit_transform(x_numpy)).to(x.device)
+
+    # Create a scatter plot
+    plt.figure(figsize=(10, 8))
+    x_tsne_cpu = x_tsne.cpu()  # Move to CPU only for plotting
+    plt.scatter(x_tsne_cpu[:, 0], x_tsne_cpu[:, 1], alpha=0.7)
+    plt.title('t-SNE visualization each (PyTorch)')
+    plt.xlabel('t-SNE feature 1')
+    plt.ylabel('t-SNE feature 2')
+
+    # Add node labels (optional)
+    for i, (x, y) in enumerate(x_tsne_cpu):
+        plt.annotate(str(i), (x.item(), y.item()), xytext=(5, 2), textcoords='offset points', fontsize=8, alpha=0.6)
+
+    plt.tight_layout()
+    plt.show()
 
 class DirGCNConv_sloop(torch.nn.Module):
     def __init__(self, input_dim, output_dim, args, jk_sl):
