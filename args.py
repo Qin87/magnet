@@ -5,7 +5,7 @@ def parse_args():
     parser.add_argument("--use_best_hyperparams", type=int, help="whether use parameters in best_hyperparameters.yml", default=1)
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=0)
+    parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=1)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
     parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=0)
     parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default=0, help="Whether to add self-loops to the graph")
@@ -39,7 +39,7 @@ def parse_args():
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)'
                         'Sym, 1ym')
     parser.add_argument('--seed', type=int, default=0, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer_npz/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+    parser.add_argument('--Dataset', type=str, default='WikiCS/', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
                                                 'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
     parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
