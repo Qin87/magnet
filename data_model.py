@@ -332,10 +332,12 @@ def load_dataset(args):
         edges = to_undirectedBen(edges)
         IsDirectedGraph = False
         print("Converted to undirected data")
-
-    edge_attr = data.edge_attr
-    data_batch = data.batch
-
+    try:
+        edge_attr = data.edge_attr
+        data_batch = data.batch
+    except:
+        edge_attr = None
+        data_batch = None
     return data_x, data_y, edges, edges_weight, dataset_num_features,data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph, edge_attr, data_batch
 
 def feat_proximity(edge_index1, data_x):
