@@ -1179,7 +1179,7 @@ class DirGCNConv_sloop(torch.nn.Module):
         self.edge_in_out, self.edge_out_in, self.edge_in_in, self.edge_out_out = None, None, None, None
         self.Intersect_alpha, self.Union_alpha, self.Intersect_beta, self.Union_beta, self.Intersect_gama, self.Union_gama = None, None, None, None, None, None
 
-        num_scale = 3
+        num_scale = 2
         self.mlp = None
         if args.mlp:
             self.mlp = torch.nn.Linear(input_dim, output_dim)
@@ -1193,12 +1193,12 @@ class DirGCNConv_sloop(torch.nn.Module):
 
         self.jumping_knowledge_sloop = jk_sl
         if self.jumping_knowledge_sloop:
-            num_scale_sl = 3
+            num_scale_sl = 2
             input_dim_jk_sl = output_dim * num_scale_sl if self.jumping_knowledge_sloop == "cat" else output_dim
             self.jump = JumpingKnowledge(mode=self.jumping_knowledge_sloop, channels=input_dim, num_layers=3)
             self.lin = Linear(input_dim_jk_sl, output_dim)
 
-    def forward(self, x, edge_index):
+    def forward(self, x, edge_index, flag):
         if self.rm_gen_sloop == 'remove':
             rm_gen_sLoop = True
         else:
@@ -1207,20 +1207,21 @@ class DirGCNConv_sloop(torch.nn.Module):
         device = edge_index.device
 
         edge_index_add, _ = add_self_loops(edge_index, fill_value=1)
-        edge_index_rm, _ = remove_self_loops(edge_index)
-        edge_index_list = [edge_index_add, edge_index_rm, edge_index]
+        # edge_index_rm, _ = remove_self_loops(edge_index)
+        edge_index_list = [edge_index_add,  edge_index]
 
         x_sloop = []
         if isinstance(x, torch.Tensor):
             x0 = [x.clone(), x.clone(), x.clone()]
-        elif len(x) == 3:
+        elif len(x) == 2:
             x0 = x
         for i, edge_index_temp in enumerate(edge_index_list):
             row, col = edge_index_temp
-            num_nodes = x0[0].shape[0]
+            num_nodes = x0[i].shape[0]
 
             if self.conv_type == 'dir-gcn':
-                if self.adj_norm is None:
+                if self.adj_norm is None or flag:
+                # if flag:
 
                     adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
                     self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
@@ -1229,7 +1230,8 @@ class DirGCNConv_sloop(torch.nn.Module):
                     self.adj_t_norm = get_norm_adj(adj_t, norm=self.inci_norm)  #
                     # print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
-                if self.adj_norm_in_out is None:
+                if self.adj_norm_in_out is None or flag:
+                # if flag:
 
                     self.adj_norm_in_out = get_norm_adj(adj @ adj_t,norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
                     self.adj_norm_out_in = get_norm_adj(adj_t @ adj, norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
@@ -1275,8 +1277,8 @@ class DirGCNConv_sloop(torch.nn.Module):
 
                 out1 = aggregate(x0[i], self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, self.adj_intersection, self.adj_union,  inci_norm=self.inci_norm)
                 if not (self.beta == -1 and self.gama == -1):
-                    out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
-                    out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
+                    out2 = aggregate(x0[i], self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
+                    out3 = aggregate(x0[i], self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
                 else:
                     out2 = out3 = torch.zeros_like(out1)
             elif self.conv_type in ['dir-gat', 'dir-sage']:
@@ -1300,8 +1302,8 @@ class DirGCNConv_sloop(torch.nn.Module):
 
                 out1 = aggregate_index(x0[i], self.alpha, self.lin_src_to_dst, edge_index_temp, self.lin_dst_to_src, edge_index_t, self.Intersect_alpha, self.Union_alpha)
                 if not (self.beta == -1 and self.gama == -1):
-                    out2 = aggregate_index(x, self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
-                    out3 = aggregate_index(x, self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
+                    out2 = aggregate_index(x0[i], self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
+                    out3 = aggregate_index(x0[i], self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
                 else:
                     out2 = out3 = torch.zeros_like(out1)
 
@@ -1323,6 +1325,11 @@ class DirGCNConv_sloop(torch.nn.Module):
 
             x_sloop.append(x)
 
+        # are_close = torch.allclose(x_sloop[0], x_sloop[1], rtol=1e-5, atol=1e-8)
+        # print(f"Are the tensors (0 and 1) close enough to be considered equal? {are_close}")
+        #
+        # are_close = torch.allclose(x_sloop[0], x_sloop[2], rtol=1e-5, atol=1e-8)
+        # print(f"Are the tensors (0 and 2) close enough to be considered equal? {are_close}")
         if self.jumping_knowledge_sloop:
             x = self.jump(x_sloop)
             x = self.lin(x)
@@ -1885,18 +1892,21 @@ class Sloop_JKNet(torch.nn.Module):
         nonlinear = args.nonlinear
 
         output_dim = nhid if jumping_knowledge else nclass
-        jk_end = 0
-        jk_inner = 0
+        jkSl_end = 'max'
+        jkSl_inner = 0
         if layer == 1:
-            self.convs = ModuleList([DirGCNConv_sloop(nfeat, output_dim, args, jk_sl=jk_end)])
+            self.convs = ModuleList([DirGCNConv_sloop(nfeat, output_dim, args, jk_sl=jkSl_end)])
         else:
-            self.convs = ModuleList([DirGCNConv_sloop(nfeat, nhid, args, jk_sl=jk_inner)])
+            self.convs = ModuleList([DirGCNConv_sloop(nfeat, nhid, args, jk_sl=jkSl_inner)])
             for _ in range(layer - 2):
-                self.convs.append(DirGCNConv_sloop(nhid, nhid, args, jk_sl=jk_inner))
-            self.convs.append(DirGCNConv_sloop(nhid, output_dim, args, jk_sl=jk_end))
+                self.convs.append(DirGCNConv_sloop(nhid, nhid, args, jk_sl=jkSl_inner))
+            self.convs.append(DirGCNConv_sloop(nhid, output_dim, args, jk_sl=jkSl_end))
 
         if jumping_knowledge:
-            input_dim = hidden_dim * layer*3 if jumping_knowledge == "cat" else hidden_dim
+            n= layer*3
+            # n= 4
+            # n= layer
+            input_dim = hidden_dim * n if jumping_knowledge == "cat" else hidden_dim
             self.lin = Linear(input_dim, nclass)
             self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=hidden_dim, num_layers=layer)
 
@@ -1909,7 +1919,7 @@ class Sloop_JKNet(torch.nn.Module):
     def forward(self, x, edge_index):
         xs = []
         for i, conv in enumerate(self.convs):
-            x = conv(x, edge_index)
+            x = conv(x, edge_index, flag=1-i)
             # assert len(x) == 3
             if i != len(self.convs) - 1 or self.jumping_knowledge:
                 if self.nonlinear:
@@ -1928,8 +1938,11 @@ class Sloop_JKNet(torch.nn.Module):
                         x = [F.normalize(i, p=2, dim=1) for i in x]
                     else:
                         x = F.normalize(x, p=2, dim=1)
-            # xs += [x]
-            xs.extend(x)
+            # xs += [x[2]]
+            if isinstance(x, list):
+                xs.extend(x)
+            else:
+                xs.append(x)
 
         if self.jumping_knowledge:
             x = self.jump(xs)
