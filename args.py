@@ -36,8 +36,7 @@ def parse_args():
     parser.add_argument('--net', type=str, default='ScaleNet', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
-                    'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)'
-                        'Sym, 1ym')
+                    'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--Dataset', type=str, default='dgl/pubmed', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
                                                 'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, malnet/tiny')
