@@ -1302,11 +1302,11 @@ class DirConv_tSNE(torch.nn.Module):
             x = self.lin(x)
         else:
             x = sum(out for out in xs)
-        if self.visual and epoch%100 == 0 and self.training:
+        if self.visual and epoch%10 == 0 and self.training:
             with torch.no_grad():
                 # visualize_batch_norm_effect_QQ(x, y, epoch)
                 # visualize_batch_norm_effect_PCA(x, y, epoch)
-                visualize_batch_norm_effect_tSNE(x, y, epoch)
+                visualize_batch_norm_effect_tSNE(x, y, edge_index, epoch)
 
 
         if self.BN_model:
@@ -1588,7 +1588,7 @@ def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, ran
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
 
     # Plot original data
-    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10')
+    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10',  zorder=2)
     ax1.set_title('t-SNE of Original Data in epoch '+str(epoch))
     ax1.set_xlabel('t-SNE feature 1')
     ax1.set_ylabel('t-SNE feature 2')
@@ -1598,10 +1598,10 @@ def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, ran
     for (src, dst) in edge_index.t().tolist():
         ax1.plot([X_tsne[src, 0], X_tsne[dst, 0]],
                  [X_tsne[src, 1], X_tsne[dst, 1]],
-                 'k-', alpha=0.1, linewidth=0.5)
+                 'k-', alpha=0.1, linewidth=0.5, zorder=1)
 
     # Plot batch normalized data
-    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='tab10')
+    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='tab10',  zorder=2)
     ax2.set_title('t-SNE of Batch Normalized Data in epoch '+str(epoch))
     ax2.set_xlabel('t-SNE feature 1')
     ax2.set_ylabel('t-SNE feature 2')
@@ -1611,13 +1611,14 @@ def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, ran
     for (src, dst) in edge_index.t().tolist():
         ax2.plot([X_bn_tsne[src, 0], X_bn_tsne[dst, 0]],
                  [X_bn_tsne[src, 1], X_bn_tsne[dst, 1]],
-                 'k-', alpha=0.1, linewidth=0.5)
+                 'k-', alpha=0.1, linewidth=0.5,  zorder=1)
 
     plt.tight_layout()
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     plt.savefig(f't-SNE_comparison_with_edges_{current_time}_epoch_{epoch}.png')
-    plt.show(block=False)
-    plt.pause(2)
+    # plt.show()
+    # plt.show(block=False)
+    # plt.pause(2)
     plt.close()
 
 def visualize_batch_norm_effect_tSNE_noEdge(X, y, epoch, perplexity=30, random_state=42):
