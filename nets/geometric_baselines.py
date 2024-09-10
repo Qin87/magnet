@@ -1114,7 +1114,7 @@ class DirGCNConv_2(torch.nn.Module):
         else:
             x = sum(out for out in xs)
 
-        tsne(x)
+        # tsne(x)
 
         if self.BN_model:
             x = self.batch_norm2(x)
