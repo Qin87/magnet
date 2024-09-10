@@ -1,8 +1,14 @@
 import os
 import random
 from torch_geometric.datasets import QM9, MalNetTiny
-
+import scipy
+from torch_geometric.data import download_url
+from torch_geometric.datasets import (
+    WikipediaNetwork,
+    CitationFull,
+)
 import torch_geometric.transforms as transforms
+
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
 from ogb.nodeproppred import PygNodePropPredDataset
@@ -43,7 +49,81 @@ def get_mask(idx, num_nodes):
     mask[idx] = 1
     return mask
 
+def load_snap_patents_mat(n_classes=5, root="dataset/"):
+    dataset_drive_url = {"snap-patents": "1ldh23TSY1PwXia6dU0MYcpyEgX-w3Hia"}
+    splits_drive_url = {"snap-patents": "12xbBRqd8mtG_XkNLH8dRRNZJvVM4Pw-N"}
 
+    # Build dataset folder
+    if not os.path.exists(f"{root}snap_patents"):
+        os.mkdir(f"{root}snap_patents")
+
+    # Download the data
+    if not os.path.exists(f"{root}snap_patents/snap_patents.mat"):
+        p = dataset_drive_url["snap-patents"]
+        print(f"Snap patents url: {p}")
+        gdown.download(
+            id=dataset_drive_url["snap-patents"],
+            output=f"{root}snap_patents/snap_patents.mat",
+            quiet=False,
+        )
+
+    # Get data
+    fulldata = scipy.io.loadmat(f"{root}snap_patents/snap_patents.mat")
+    edge_index = torch.tensor(fulldata["edge_index"], dtype=torch.long)
+    node_feat = torch.tensor(fulldata["node_feat"].todense(), dtype=torch.float)
+    num_nodes = int(fulldata["num_nodes"])
+    years = fulldata["years"].flatten()
+    label = even_quantile_labels(years, n_classes, verbose=False)
+    label = torch.tensor(label, dtype=torch.long)
+
+    # Download splits
+    name = "snap-patents"
+    if not os.path.exists(f"{root}snap_patents/{name}-splits.npy"):
+        assert name in splits_drive_url.keys()
+        gdown.download(
+            id=splits_drive_url[name],
+            output=f"{root}snap_patents/{name}-splits.npy",
+            quiet=False,
+        )
+
+    # Get splits
+    splits_lst = np.load(f"{root}snap_patents/{name}-splits.npy", allow_pickle=True)
+    train_mask, val_mask, test_mask = process_fixed_splits(splits_lst, num_nodes)
+    data = Data(
+        x=node_feat,
+        edge_index=edge_index,
+        y=label,
+        num_nodes=num_nodes,
+        train_mask=train_mask,
+        val_mask=val_mask,
+        test_mask=test_mask,
+    )
+
+    dataset = DummyDataset(data, n_classes)
+
+    return dataset
+
+# adapting
+# https://github.com/CUAI/Non-Homophily-Large-Scale/blob/82f8f05c5c3ec16bd5b505cc7ad62ab5e09051e6/data_utils.py#L221
+# load splits from here https://github.com/CUAI/Non-Homophily-Large-Scale/tree/82f8f05c5c3ec16bd5b505cc7ad62ab5e09051e6/data/splits
+def process_fixed_splits(splits_lst, num_nodes):
+    n_splits = len(splits_lst)
+    train_mask = torch.zeros(num_nodes, n_splits, dtype=torch.bool)
+    val_mask = torch.zeros(num_nodes, n_splits, dtype=torch.bool)
+    test_mask = torch.zeros(num_nodes, n_splits, dtype=torch.bool)
+    for i in range(n_splits):
+        train_mask[splits_lst[i]["train"], i] = 1
+        val_mask[splits_lst[i]["valid"], i] = 1
+        test_mask[splits_lst[i]["test"], i] = 1
+    return train_mask, val_mask, test_mask
+
+
+class DummyDataset(object):
+    def __init__(self, data, num_classes):
+        self.data = data
+        self.num_classes = num_classes
+
+from ogb.nodeproppred import PygNodePropPredDataset, Evaluator
 def load_directedData(args):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     load_func, subset = args.Dataset.split('/')[0], args.Dataset.split('/')[1]
@@ -70,7 +150,39 @@ def load_directedData(args):
         # print(f'Contains self-loops: {data.contains_self_loops()}')
         # print(f'Is undirected: {data.is_undirected()}')
         # return dataset
+    elif load_func in ['arxiv-year']:
+        path = args.data_path
+        dataset = PygNodePropPredDataset(name="ogbn-arxiv", transform=transforms.ToSparseTensor(), root=path)
+        evaluator = Evaluator(name="ogbn-arxiv")
+        y = even_quantile_labels(dataset._data.node_year.flatten().numpy(), nclasses=5, verbose=False)
+        # dataset._data.y = torch.as_tensor(y).reshape(-1, 1)
+        dataset._data.y = torch.as_tensor(y)
 
+        # if name in ["arxiv-year"]:
+            # Datasets from https://arxiv.org/pdf/2110.14446.pdf have five splits stored
+            # in https://github.com/CUAI/Non-Homophily-Large-Scale/tree/82f8f05c5c3ec16bd5b505cc7ad62ab5e09051e6/data/splits
+        split_number = 10
+        num_nodes = y.shape[0]
+        github_url = f"https://github.com/CUAI/Non-Homophily-Large-Scale/raw/master/data/splits/"
+        split_file_name = f"{load_func}-splits.npy"
+        local_dir = os.path.join(path, load_func.replace("-", "_"), "raw")
+
+        download_url(os.path.join(github_url, split_file_name), local_dir, log=False)
+        splits = np.load(os.path.join(local_dir, split_file_name), allow_pickle=True)
+        split_idx = splits[split_number % len(splits)]
+
+        dataset._data.train_mask = get_mask(split_idx["train"], num_nodes)
+        dataset._data.val_mask = get_mask(split_idx["valid"], num_nodes)
+        dataset._data.test_mask = get_mask(split_idx["test"], num_nodes)
+
+        # return train_mask, val_mask, test_mask
+        # Tran, val and test masks are required during preprocessing. Setting them here to dummy values as
+        # they are overwritten later for this dataset (see get_dataset_split function below)
+        # dataset._data.train_mask, dataset._data.val_mask, dataset._data.test_mask = 0, 0, 0
+        # Create directory for this dataset
+        # os.makedirs(os.path.join(path, name.replace("-", "_"), "raw"), exist_ok=True)
+    elif load_func in ['snap-patents']:
+        dataset = load_snap_patents_mat(n_classes=5, root=args.data_path)
     elif load_func == "Cora" or load_func == "CiteSeer" or load_func == "PubMed":
         from torch_geometric.datasets import Planetoid
         dataset = Planetoid(args.data_path, load_func, transform=T.NormalizeFeatures(), split='full')
@@ -296,3 +408,28 @@ def seed_everything(seed):
     torch.backends.cudnn.qinchmark = False
     random.seed(seed)
     np.random.seed(seed)
+
+def even_quantile_labels(vals, nclasses, verbose=True):
+    """partitions vals into nclasses by a quantile based split,
+    where the first class is less than the 1/nclasses quantile,
+    second class is less than the 2/nclasses quantile, and so on
+
+    vals is np array
+    returns an np array of int class labels
+    """
+    label = -1 * np.ones(vals.shape[0], dtype=np.int64)
+    interval_lst = []
+    lower = -np.inf
+    for k in range(nclasses - 1):
+        upper = np.nanquantile(vals, (k + 1) / nclasses)
+        interval_lst.append((lower, upper))
+        inds = (vals >= lower) * (vals < upper)
+        label[inds] = k
+        lower = upper
+    label[vals >= lower] = nclasses - 1
+    interval_lst.append((lower, np.inf))
+    if verbose:
+        print("Class Label Intervals:")
+        for class_idx, interval in enumerate(interval_lst):
+            print(f"Class {class_idx}: [{interval[0]}, {interval[1]})]")
+    return label

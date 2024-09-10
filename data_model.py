@@ -7,7 +7,7 @@ from torch_scatter import scatter_add
 
 from nets.gat import GATConvQin, StandGAT1BN_Qin
 from nets.gcn import ParaGCNXBN
-from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model, Sloop_JKNet
+from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model, Sloop_JKNet, ScaleNet
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1, GraphModel
 
 from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
@@ -92,6 +92,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
     elif args.net == 'ScaleNet':
         model = GCN_JKNet(nfeat=num_features, nclass=n_cls, args=args)
+    elif args.net == 'tSNE':
+        model = ScaleNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'SloopNet':
         model = Sloop_JKNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'GPRGNN':
@@ -240,8 +242,8 @@ def load_dataset(args):
     dataset = load_directedData(args)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    if args.Dataset in ['ogbn-arxiv/', 'directed-roman-empire/']:
-        data = dataset._data
+    if args.Dataset in ['ogbn-arxiv/', 'directed-roman-empire/', 'snap-patents/', 'arxiv-year/']:
+        data = getattr(dataset, '_data', dataset.data)
     else:
         data = dataset[0]
 
@@ -560,6 +562,8 @@ def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
     mask = node_index_mask & data_test_mask
 
     test_indices = [i for i in node_index_lists if data_test_mask[i]]
+    if len(test_indices) == 0:
+        return 0
     percentage = round((len(test_indices))/data_test_mask.sum().item() * 100, 2)
 
     pred = logits[mask].max(1)[1]
