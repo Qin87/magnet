@@ -1559,7 +1559,68 @@ def visualize_batch_norm_effect_PCA(X, y, epoch, n_components=2, random_state=42
     create_and_save_plot(X_bn_pca, f'PCA of Batch Normalized Data in epoch {epoch}',
                          f'pca_epoch_{epoch}-batch_norm_data.png')
 from datetime import datetime
-def visualize_batch_norm_effect_tSNE(X, y, epoch, perplexity=30, random_state=42):
+
+def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, random_state=42):
+    # Ensure X is on CPU
+    X = X.cpu()
+
+    # Create and apply BatchNorm layer
+    batch_norm = nn.BatchNorm1d(X.shape[1])
+    batch_norm.eval()  # Set to evaluation mode
+    X_bn = batch_norm(X)
+
+    # Convert to numpy for t-SNE
+    X_np = X.numpy()
+    X_bn_np = X_bn.numpy()
+
+    # If y is a tensor, convert it to numpy
+    if isinstance(y, torch.Tensor):
+        y = y.cpu().numpy()
+
+    # Apply t-SNE to original data
+    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=random_state)
+    X_tsne = tsne.fit_transform(X_np)
+
+    # Apply t-SNE to batch normalized data
+    X_bn_tsne = tsne.fit_transform(X_bn_np)
+
+    # Plotting
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+
+    # Plot original data
+    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10')
+    ax1.set_title('t-SNE of Original Data in epoch '+str(epoch))
+    ax1.set_xlabel('t-SNE feature 1')
+    ax1.set_ylabel('t-SNE feature 2')
+    plt.colorbar(scatter1, ax=ax1)
+
+    # Plot edges for original data
+    for (src, dst) in edge_index.t().tolist():
+        ax1.plot([X_tsne[src, 0], X_tsne[dst, 0]],
+                 [X_tsne[src, 1], X_tsne[dst, 1]],
+                 'k-', alpha=0.1, linewidth=0.5)
+
+    # Plot batch normalized data
+    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='tab10')
+    ax2.set_title('t-SNE of Batch Normalized Data in epoch '+str(epoch))
+    ax2.set_xlabel('t-SNE feature 1')
+    ax2.set_ylabel('t-SNE feature 2')
+    plt.colorbar(scatter2, ax=ax2)
+
+    # Plot edges for batch normalized data
+    for (src, dst) in edge_index.t().tolist():
+        ax2.plot([X_bn_tsne[src, 0], X_bn_tsne[dst, 0]],
+                 [X_bn_tsne[src, 1], X_bn_tsne[dst, 1]],
+                 'k-', alpha=0.1, linewidth=0.5)
+
+    plt.tight_layout()
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    plt.savefig(f't-SNE_comparison_with_edges_{current_time}_epoch_{epoch}.png')
+    plt.show(block=False)
+    plt.pause(2)
+    plt.close()
+
+def visualize_batch_norm_effect_tSNE_noEdge(X, y, epoch, perplexity=30, random_state=42):
     # Ensure X is on CPU
     X = X.cpu()
 
