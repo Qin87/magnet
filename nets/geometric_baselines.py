@@ -1302,9 +1302,12 @@ class DirConv_tSNE(torch.nn.Module):
             x = self.lin(x)
         else:
             x = sum(out for out in xs)
-        if self.visual:
+        if self.visual and epoch%100 == 0 and self.training:
             with torch.no_grad():
-                visualize_batch_norm_effect(x, y)
+                # visualize_batch_norm_effect_QQ(x, y, epoch)
+                # visualize_batch_norm_effect_PCA(x, y, epoch)
+                visualize_batch_norm_effect_tSNE(x, y, epoch)
+
 
         if self.BN_model:
             x = self.batch_norm2(x)
@@ -1315,9 +1318,248 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from scipy.stats import wasserstein_distance
+from sklearn.metrics import pairwise_distances
+from scipy import stats
 
 
-def visualize_batch_norm_effect(X, y, perplexity=30, random_state=42):
+# def visualize_batch_norm_effect_QQ(X, y, epoch, feature_indices=None, num_features=4):
+#     # Ensure X is on CPU and convert to numpy
+#     X_np = X.cpu().numpy() if isinstance(X, torch.Tensor) else X
+#
+#     # Get the number of samples and features in the data
+#     num_samples, num_total_features = X_np.shape
+#     print(f"X shape: {X_np.shape}")
+#
+#     # Create and apply BatchNorm layer
+#     batch_norm = nn.BatchNorm1d(num_total_features)
+#     batch_norm.eval()  # Set to evaluation mode
+#     X_bn_np = batch_norm(torch.tensor(X_np).float()).detach().numpy()
+#
+#     # Handle y
+#     if y is not None:
+#         y_np = y.cpu().numpy() if isinstance(y, torch.Tensor) else y
+#         print(f"y shape: {y_np.shape}")
+#         if y_np.ndim == 1 and len(y_np) == num_samples:
+#             unique_labels = np.unique(y_np)
+#             colors = y_np
+#         elif y_np.shape == (1, num_samples):  # If y is a 1xN array
+#             y_np = y_np.flatten()
+#             unique_labels = np.unique(y_np)
+#             colors = y_np
+#         else:
+#             print("Warning: y shape doesn't match X. Using default coloring.")
+#             y_np = np.zeros(num_samples)
+#             unique_labels = [0]
+#             colors = y_np
+#     else:
+#         y_np = np.zeros(num_samples)
+#         unique_labels = [0]
+#         colors = y_np
+#
+#     # If feature_indices is not provided, randomly select num_features
+#     if feature_indices is None:
+#         feature_indices = np.random.choice(num_total_features, min(num_features, num_total_features), replace=False)
+#     elif isinstance(feature_indices, int):
+#         feature_indices = [feature_indices]  # Convert single integer to list
+#
+#     # Filter out any feature indices that are out of bounds
+#     feature_indices = [idx for idx in feature_indices if idx < num_total_features]
+#
+#     if not feature_indices:
+#         print("No valid feature indices provided. Please check your input.")
+#         return
+#
+#     num_features = min(len(feature_indices), 4)  # Limit to 4 features maximum
+#
+#     # Create subplots
+#     fig, axes = plt.subplots(2, 2, figsize=(20, 20))
+#     fig.subplots_adjust(hspace=0.3, wspace=0.3)
+#     axes = axes.ravel()
+#
+#
+#     for i, feature_idx in enumerate(feature_indices[:num_features]):
+#         # Get the data for the current feature
+#         orig_data = X_np[:, feature_idx]
+#         bn_data = X_bn_np[:, feature_idx]
+#
+#         # Create Q-Q plot for original data
+#         ax = axes[i]
+#         ax.set_title(f'Q-Q Plot for Feature {feature_idx} in epoch {epoch}')
+#
+#         # Plot original data
+#         osm, osr = stats.probplot(orig_data, dist="norm", fit=False)
+#         scatter_orig = ax.scatter(osm, osr, c=colors, cmap='viridis', alpha=0.5, marker='o', label='Original')
+#
+#         # Plot batch normalized data
+#         bsm, bsr = stats.probplot(bn_data, dist="norm", fit=False)
+#         scatter_bn = ax.scatter(bsm, bsr, c=colors, cmap='viridis', alpha=0.5, marker='s', label='Batch Normalized')
+#
+#         # Add the reference line
+#         ax.plot([np.min((osm, bsm)), np.max((osm, bsm))],
+#                 [np.min((osr, bsr)), np.max((osr, bsr))], 'r--', label='Reference Line')
+#
+#         ax.set_xlabel('Theoretical Quantiles')
+#         ax.set_ylabel('Sample Quantiles')
+#
+#         # Add legend
+#         ax.legend()
+#
+#         # Add colorbars
+#         plt.colorbar(scatter_orig, ax=ax, label='Original Label', location='left')
+#         plt.colorbar(scatter_bn, ax=ax, label='Batch Normalized Label', location='right')
+#
+#     # Hide any unused subplots
+#     for j in range(num_features, 4):
+#         axes[j].axis('off')
+#
+#     plt.tight_layout()
+#     plt.show()
+
+def visualize_batch_norm_effect_QQ(X, y, epoch, feature_indices=None, num_features=4):
+    # Ensure X is on CPU and convert to numpy
+    X_np = X.cpu().numpy() if isinstance(X, torch.Tensor) else X
+
+    # Get the number of samples and features in the data
+    num_samples, num_total_features = X_np.shape
+    print(f"X shape: {X_np.shape}")
+
+    # Create and apply BatchNorm layer
+    batch_norm = nn.BatchNorm1d(num_total_features)
+    batch_norm.eval()  # Set to evaluation mode
+    X_bn_np = batch_norm(torch.tensor(X_np).float()).detach().numpy()
+
+    # Handle y
+    if y is not None:
+        y_np = y.cpu().numpy() if isinstance(y, torch.Tensor) else y
+        print(f"y shape: {y_np.shape}")
+        if y_np.ndim == 1 and len(y_np) == num_samples:
+            unique_labels = np.unique(y_np)
+            colors = y_np
+        elif y_np.shape == (1, num_samples):  # If y is a 1xN array
+            y_np = y_np.flatten()
+            unique_labels = np.unique(y_np)
+            colors = y_np
+        else:
+            print("Warning: y shape doesn't match X. Using default coloring.")
+            y_np = np.zeros(num_samples)
+            unique_labels = [0]
+            colors = y_np
+    else:
+        y_np = np.zeros(num_samples)
+        unique_labels = [0]
+        colors = y_np
+
+    # If feature_indices is not provided, randomly select num_features
+    if feature_indices is None:
+        feature_indices = np.random.choice(num_total_features, min(num_features, num_total_features), replace=False)
+    elif isinstance(feature_indices, int):
+        feature_indices = [feature_indices]  # Convert single integer to list
+
+    # Filter out any feature indices that are out of bounds
+    feature_indices = [idx for idx in feature_indices if idx < num_total_features]
+
+    if not feature_indices:
+        print("No valid feature indices provided. Please check your input.")
+        return
+
+    num_features = min(len(feature_indices), 4)  # Limit to 4 features maximum
+
+    # Create subplots
+    fig, axes = plt.subplots(num_features, 2, figsize=(20, 5*num_features))
+    # fig.subplots_adjust(hspace=10, wspace=2)
+    fig.subplots_adjust(hspace=0.6, wspace=0.4)
+
+    if num_features == 1:
+        axes = axes.reshape(1, -1)
+
+    for i, feature_idx in enumerate(feature_indices[:num_features]):
+        # Get the data for the current feature
+        orig_data = X_np[:, feature_idx]
+        bn_data = X_bn_np[:, feature_idx]
+
+        # Original data plot
+        ax_orig = axes[i, 0]
+        ax_orig.set_title(f'Original - Feature {feature_idx}, Epoch {epoch}')
+        osm, osr = stats.probplot(orig_data, dist="norm", fit=False)
+        scatter_orig = ax_orig.scatter(osm, osr, c=colors, cmap='viridis', alpha=0.5, marker='o')
+        ax_orig.plot([np.min(osm), np.max(osm)], [np.min(osr), np.max(osr)], 'r--')
+        # ax_orig.set_xlabel('Theoretical Quantiles')
+        # ax_orig.set_ylabel('Sample Quantiles')
+        plt.colorbar(scatter_orig, ax=ax_orig, label='Label')
+
+        # Batch normalized data plot
+        ax_bn = axes[i, 1]
+        ax_bn.set_title(f'Batch Normalized - Feature {feature_idx}, Epoch {epoch}')
+        bsm, bsr = stats.probplot(bn_data, dist="norm", fit=False)
+        scatter_bn = ax_bn.scatter(bsm, bsr, c=colors, cmap='viridis', alpha=0.5, marker='x')
+        ax_bn.plot([np.min(bsm), np.max(bsm)], [np.min(bsr), np.max(bsr)], 'r--')
+        # ax_bn.set_xlabel('Theoretical Quantiles')
+        # ax_bn.set_ylabel('Sample Quantiles')
+        plt.colorbar(scatter_bn, ax=ax_bn, label='Label')
+
+    plt.tight_layout()
+    plt.show()
+
+def visualize_batch_norm_effect_PCA(X, y, epoch, n_components=2, random_state=42):
+    # Ensure X is on CPU
+    X = X.cpu()
+
+    # Create and apply BatchNorm layer
+    batch_norm = nn.BatchNorm1d(X.shape[1])
+    batch_norm.eval()  # Set to evaluation mode
+    X_bn = batch_norm(X)
+
+    # Convert to numpy for PCA
+    X_np = X.numpy()
+    X_bn_np = X_bn.numpy()
+
+    # If y is a tensor, convert it to numpy
+    if isinstance(y, torch.Tensor):
+        y = y.cpu().numpy()
+
+    # Apply PCA to original data
+    pca = PCA(n_components=n_components, random_state=random_state)
+    X_pca = pca.fit_transform(X_np)
+
+    # Apply the same PCA transformation to batch normalized data
+    X_bn_pca = pca.transform(X_bn_np)
+
+    wasserstein_dist = [
+        wasserstein_distance(X_pca[:, i], X_bn_pca[:, i]) for i in range(n_components)
+    ]
+    mean_dist = np.mean(pairwise_distances(X_pca, X_bn_pca))
+    correlation = np.corrcoef(X_pca.flatten(), X_bn_pca.flatten())[0, 1]
+
+    # Function to create and save a single plot
+    def create_and_save_plot(data, title, filename):
+        plt.figure(figsize=(10, 8))
+        scatter = plt.scatter(data[:, 0], data[:, 1], c=y, cmap='viridis')
+        plt.title(title)
+        plt.xlabel('PC 1')
+        plt.ylabel('PC 2')
+        plt.colorbar(scatter)
+
+        # Add explained variance ratio
+        explained_variance_ratio = pca.explained_variance_ratio_
+        plt.text(0.05, 0.95, f'Explained variance ratio: {explained_variance_ratio[0]:.2f}, {explained_variance_ratio[1]:.2f}',
+                 transform=plt.gca().transAxes, verticalalignment='top')
+
+        plt.tight_layout()
+        plt.savefig(filename)
+        plt.close()
+        print(f"Visualization saved as {filename}")
+
+    # Create and save plot for original data
+    create_and_save_plot(X_pca, f'PCA of Original Data in epoch {epoch}',
+                         f'pca_epoch_{epoch}-original_data.png')
+
+    # Create and save plot for batch normalized data
+    create_and_save_plot(X_bn_pca, f'PCA of Batch Normalized Data in epoch {epoch}',
+                         f'pca_epoch_{epoch}-batch_norm_data.png')
+from datetime import datetime
+def visualize_batch_norm_effect_tSNE(X, y, epoch, perplexity=30, random_state=42):
     # Ensure X is on CPU
     X = X.cpu()
 
@@ -1345,21 +1587,25 @@ def visualize_batch_norm_effect(X, y, perplexity=30, random_state=42):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
 
     # Plot original data
-    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='viridis')
-    ax1.set_title('t-SNE of Original Data')
+    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10')
+    ax1.set_title('t-SNE of Original Data in epoch'+str(epoch) )
     ax1.set_xlabel('t-SNE feature 1')
     ax1.set_ylabel('t-SNE feature 2')
     plt.colorbar(scatter1, ax=ax1)
 
     # Plot batch normalized data
-    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='viridis')
-    ax2.set_title('t-SNE of Batch Normalized Data')
+    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='tab10')
+    ax2.set_title('t-SNE of Batch Normalized Data in epoch'+str(epoch) )
     ax2.set_xlabel('t-SNE feature 1')
     ax2.set_ylabel('t-SNE feature 2')
     plt.colorbar(scatter2, ax=ax2)
 
     plt.tight_layout()
-    plt.show()
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    plt.savefig(f't-SNE_comparison_{current_time}_epoch_{epoch}.png')
+    plt.show(block=False)
+    plt.pause(2)
+    plt.close()
 
 class DirGCNConv_sloop(torch.nn.Module):
     def __init__(self, input_dim, output_dim, args, jk_sl):
@@ -2183,12 +2429,12 @@ class ScaleNet(torch.nn.Module):
         self.nonlinear = nonlinear
 
 
-    def forward(self, x, edge_index, y):
+    def forward(self, x, edge_index, y, epoch):
         if self.mlp:
             x_mlp = self.mlp(x)
         xs = []
         for i, conv in enumerate(self.convs):
-            x = conv(x, edge_index, y)
+            x = conv(x, edge_index, y, epoch)
             if i != len(self.convs) - 1 or self.jumping_knowledge:
                 if self.nonlinear:
                     x = F.relu(x)

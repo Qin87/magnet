@@ -94,7 +94,7 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
     elif args.net.lower() in ['mamba']:
         out = model(data_x, data_pe, edges, edge_attr, data_batch)
     elif args.net == 'tSNE':
-        out = model(data_x, edges, data_y)
+        out = model(data_x, edges, data_y, epoch)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -143,7 +143,7 @@ def test():
     elif args.net.startswith('Qua'):  #
         logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
     elif args.net == 'tSNE':
-        logits = model(data_x, edges[:, train_edge_mask], data_y)
+        logits = model(data_x, edges[:, train_edge_mask], data_y, epoch)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -477,11 +477,16 @@ try:
             node_train = torch.sum(data_train_mask).item()
 
             if args.MakeImbalance:
-                print("make imbalanced")
-                print("make imbalanced", file=log_file)
+                print("make imbalanced", args.imb_ratio)
+                print("make imbalanced",args.imb_ratio, file=log_file)
                 class_num_list, data_train_mask, idx_info, train_node_mask, train_edge_mask = \
                     make_imbalanced(edges, data_y, n_data, n_cls, args.imb_ratio, data_train_mask.clone())
+                new_class_num_list = []
+                for tensor_node in idx_info:
+                    new_class_num_list.append(tensor_node.shape[0])
+                new_class_num_list = sorted(new_class_num_list)
                 if split==0:
+                    print('new train class in data: ', new_class_num_list, '\n', 'real imbal ratio: ', new_class_num_list[-1]/new_class_num_list[0])
                     print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
                         data_train_mask).item()), file=log_file)
                     print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
