@@ -3,6 +3,9 @@
 ################################
 import sys
 import os
+
+import numpy as np
+
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
 import os
@@ -124,7 +127,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
         scheduler.step(val_loss, epoch)
 
     return val_loss, new_edge_index, new_x, new_y, new_y_train
-
+# from sklearn.metrics import confusion_matrix
+from collections import Counter
 @torch.no_grad()
 def test():
     global edge_in, in_weight, edge_out, out_weight
@@ -147,6 +151,7 @@ def test():
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
+    class_details = []
     for mask in [data_train_mask, data_val_mask, data_test_mask]:
         pred = logits[mask].max(1)[1]
         y_pred = pred.cpu().numpy()
@@ -154,13 +159,32 @@ def test():
         acc = pred.eq(data_y[mask]).sum().item() / mask.sum().item()
         bacc = balanced_accuracy_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average='macro')
+
+        total_class_counts = Counter(data_y.cpu().numpy())
+        mask_class_counts = Counter(y_true)
+        correct_counts = Counter(y_true[y_true == y_pred])
+
+        details = {}
+        for class_label in np.unique(data_y.cpu().numpy()):
+            total = total_class_counts[class_label]
+            tested = mask_class_counts[class_label]
+            correct = correct_counts[class_label]
+            class_acc = round(correct / tested, 2) if tested > 0 else 0
+
+            details[class_label] = {
+                'total': total,
+                'tested': tested,
+                'correct': correct,
+                'accuracy': class_acc
+            }
+
         accs.append(acc)
         baccs.append(bacc)
         f1s.append(f1)
 
+        class_details.append(details)
 
-
-    return accs, baccs, f1s, logits
+    return accs, baccs, f1s, logits, class_details
 
 
 start_time = time.time()
@@ -522,8 +546,8 @@ try:
                     print('the minor class has no training sample')
 
             train_idx = data_train_mask.nonzero().squeeze()  # get the index of training data
-            val_idx = data_val_mask.nonzero().squeeze()  # get the index of training data
-            test_idx = data_test_mask.nonzero().squeeze()  # get the index of training data
+            val_idx = data_val_mask.nonzero().squeeze()  # get the index of val data
+            test_idx = data_test_mask.nonzero().squeeze()  # get the index of test data
             labels_local = data_y.view([-1])[train_idx]  # view([-1]) is "flattening" the tensor.
             train_idx_list = train_idx.cpu().tolist()
             local2global = {i: train_idx_list[i] for i in range(len(train_idx_list))}
@@ -545,7 +569,7 @@ try:
             for epoch in range(args.epoch):
                 val_loss, new_edge_index, new_x, new_y, new_y_train = train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
-                accs, baccs, f1s, logits = test()
+                accs, baccs, f1s, logits, class_detail = test()
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
                 if val_acc > best_val_acc:
@@ -576,6 +600,9 @@ try:
                     for name, metric_temp in metrics_list:
                         print(name, metric_temp)
                         print(name, metric_temp, file=log_file)
+                    for class_id, class_info in class_detail[-1].items():
+                        print(f"Class {class_id}: {class_info}")
+                        print(f"Class {class_id}: {class_info}", file=log_file)
 
                     break
             dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)
