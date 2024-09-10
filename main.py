@@ -66,7 +66,7 @@ def log_results():
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
+def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real, norm_imag,
           X_img_i, X_img_j, X_img_k,norm_img_i,norm_img_j, norm_img_k, Quaedge_index):
     global class_num_list, idx_info, prev_out, biedges
     global data_train_mask, data_val_mask, data_test_mask
@@ -93,6 +93,8 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
         out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
     elif args.net.lower() in ['mamba']:
         out = model(data_x, data_pe, edges, edge_attr, data_batch)
+    elif args.net == 'tSNE':
+        out = model(data_x, edges, data_y)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -112,6 +114,8 @@ def train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_
             out = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
         elif args.net.startswith('Qua'):  #
             out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
+        elif args.net == 'tSNE':
+            out = model(data_x, edges, data_y, epoch)
         else:
             out = model(data_x, edges)
         val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -138,6 +142,8 @@ def test():
         logits = model(X_real, X_img, norm_real, norm_imag, Sigedge_index)
     elif args.net.startswith('Qua'):  #
         logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
+    elif args.net == 'tSNE':
+        logits = model(data_x, edges[:, train_edge_mask], data_y)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -173,16 +179,17 @@ print(args)
 seed_everything(args.seed)
 
 no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = count_homophilic_nodes(edges, data_y)
+# no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = [1] * 10
 
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
-    print("in_homophilic_nodes:", in_homophilic_nodes, file=log_file)
-    print(file=log_file)
-    print("out_homophilic_nodes:", out_homophilic_nodes, file=log_file)
-    print(file=log_file)
-    print("no_in_nodes:", no_in_nodes, file=log_file)
-    print(file=log_file)
-    print("no_out_nodes:", no_out_nodes, file=log_file)
+    # print("in_homophilic_nodes:", in_homophilic_nodes, file=log_file)
+    # print(file=log_file)
+    # print("out_homophilic_nodes:", out_homophilic_nodes, file=log_file)
+    # print(file=log_file)
+    # print("no_in_nodes:", no_in_nodes, file=log_file)
+    # print(file=log_file)
+    # print("no_out_nodes:", no_out_nodes, file=log_file)
 
 biedges = None
 edge_in = None
@@ -531,7 +538,7 @@ try:
             end_epoch = 0
             set_new_opt = True
             for epoch in range(args.epoch):
-                val_loss, new_edge_index, new_x, new_y, new_y_train = train(edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
+                val_loss, new_edge_index, new_x, new_y, new_y_train = train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_weight, X_real, X_img, Sigedge_index, norm_real,norm_imag,
                                                                                 X_img_i, X_img_j, X_img_k,norm_imag_i, norm_imag_j, norm_imag_k, Quaedge_index)
                 accs, baccs, f1s, logits = test()
                 train_acc, val_acc, tmp_test_acc = accs

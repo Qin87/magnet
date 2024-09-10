@@ -5,7 +5,7 @@ def parse_args():
     parser.add_argument("--use_best_hyperparams", type=int, help="whether use parameters in best_hyperparameters.yml", default=1)
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=1)
+    parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
     parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=0)
     parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default=0, help="Whether to add self-loops to the graph")
@@ -17,12 +17,12 @@ def parse_args():
 
     # for DirGNN
     parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
-    parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
+    parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=0)
     parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default="max")
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', 0], default=0)
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
-    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
     parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--learn_alpha", action="store_true")
@@ -30,18 +30,19 @@ def parse_args():
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
     parser.add_argument('--num_split', type=int, default=10, help='num of run in spite of many splits')
 
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')  # TODO change before git
+    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='ScaleNet', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet '
+    parser.add_argument('--net', type=str, default='tSNE', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, ScaleNet_tSNE '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
     parser.add_argument('--seed', type=int, default=0, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='dgl/pubmed', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
-                                                'ogbn-arxiv/, WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, malnet/tiny')
+    parser.add_argument('--Dataset', type=str, default='telegram/', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+        'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile'
+        'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=4, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
     parser.add_argument('-K', '--K', default=2, type=int)  # for cheb
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
