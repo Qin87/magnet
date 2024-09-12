@@ -1119,6 +1119,185 @@ class DirGCNConv_2(torch.nn.Module):
 
         return x
 
+class RanConv(torch.nn.Module):
+    def __init__(self, input_dim, output_dim, args):
+        super().__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        if args.conv_type == 'dir-gcn':
+            self.lin_src_to_dst = Linear(input_dim, output_dim)
+            self.lin_dst_to_src = Linear(input_dim, output_dim)
+
+            self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
+
+            self.batch_norm2 = nn.BatchNorm1d(output_dim)
+        elif args.conv_type == 'dir-sage':
+            self.lin_src_to_dst = SAGEConv(input_dim, output_dim,  root_weight=False)
+            self.lin_dst_to_src = SAGEConv(input_dim, output_dim, root_weight=False)
+
+            self.linx = nn.ModuleList([SAGEConv(input_dim, output_dim, root_weight=False) for i in range(4)])
+
+            self.batch_norm2 = nn.BatchNorm1d(output_dim)
+        elif args.conv_type == 'dir-gat':
+            heads = 1
+            self.lin_src_to_dst = GATConv(input_dim, output_dim*heads, heads=heads, add_self_loops=False)
+            self.lin_dst_to_src = GATConv(input_dim, output_dim*heads, heads=heads, add_self_loops=False)
+
+            self.linx = nn.ModuleList([GATConv(input_dim, output_dim*heads, heads=heads)for i in range(4)])
+
+            self.batch_norm2 = nn.BatchNorm1d(output_dim*heads)
+        else:
+            raise NotImplementedError
+
+
+        self.First_self_loop = args.First_self_loop
+        self.rm_gen_sloop = args.rm_gen_sloop
+        self.differ_AA = args.differ_AA
+        self.differ_AAt = args.differ_AAt
+        if self.differ_AA or self.differ_AAt:
+            args.betaDir, args.gamaDir = -1, -1
+
+        self.alpha = nn.Parameter(torch.ones(1) * args.alphaDir, requires_grad=False)
+        self.beta = nn.Parameter(torch.ones(1) * args.betaDir, requires_grad=False)
+        self.gama = nn.Parameter(torch.ones(1) * args.gamaDir, requires_grad=False)
+
+        self.norm_list = []
+
+        self.BN_model = args.BN_model
+        self.inci_norm = args.inci_norm
+
+        self.conv_type = args.conv_type
+
+        self.adj_norm, self.adj_t_norm = None, None
+
+        # self
+        self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out = None, None, None, None
+        self.adj_intersection, self.adj_intersection_in_in, self.adj_intersection_in_out = None, None, None
+        self.adj_union, self.adj_union_in_in, self.adj_union_in_out = None, None, None
+        self.edge_in_out, self.edge_out_in, self.edge_in_in, self.edge_out_out = None, None, None, None
+        self.Intersect_alpha, self.Union_alpha, self.Intersect_beta, self.Union_beta, self.Intersect_gama, self.Union_gama = None, None, None, None, None, None
+
+        num_scale = 3
+        jumping_knowledge = args.jk_inner
+        self.jumping_knowledge_inner = jumping_knowledge
+        if jumping_knowledge:
+            input_dim_jk = output_dim * num_scale if jumping_knowledge == "cat" else output_dim
+            self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=input_dim, num_layers=3)
+            self.lin = Linear(input_dim_jk, output_dim)
+
+
+    def forward(self, x, edge_index):
+        device = edge_index.device
+        if self.First_self_loop == 'add':
+
+            edge_index, _ = add_self_loops(edge_index, fill_value=1)
+        elif self.First_self_loop == 'remove':
+            edge_index, _ = remove_self_loops(edge_index)
+        row, col = edge_index
+        num_nodes = x.shape[0]
+
+        if self.rm_gen_sloop == 'remove':
+            rm_gen_sLoop = True
+        else:
+            rm_gen_sLoop = False
+
+        if self.conv_type == 'dir-gcn':
+            if self.adj_norm is None:
+                adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                edge_weight = torch.rand(len(row)) * (10000 - 0.0001) + 0.0001
+                self.adj_norm = directed_norm_weight(adj, edge_weight)     # this is key: improve from 57 to 72
+
+                adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
+                edge_weight_t = edge_weight[adj_t.storage.csr2csc()]
+                # edge_weight_t = torch.rand(len(row)) * (10000 - 0.0001) + 0.0001
+                self.adj_t_norm = directed_norm_weight(adj_t, edge_weight_t)
+
+            if self.adj_norm_in_out is None:
+                self.adj_norm_in_out = get_norm_adj(adj @ adj_t,norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
+                self.adj_norm_out_in = get_norm_adj(adj_t @ adj, norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
+                self.adj_norm_in_in = get_norm_adj(adj @ adj, norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
+                self.adj_norm_out_out = get_norm_adj(adj_t @ adj_t, norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
+
+                self.norm_list = [self.adj_norm_in_out, self.adj_norm_out_in, self.adj_norm_in_in, self.adj_norm_out_out]
+
+                if self.differ_AA:
+                    Union_A_AA, Intersect_A_AA, diff_0 = share_edge(self.adj_norm_in_in, self.adj_norm, self.adj_t_norm)
+                    Union_A_AtAt, Intersect_A_AtAt, diff_t = share_edge(self.adj_norm_out_out, self.adj_norm, self.adj_t_norm)
+                elif self.differ_AAt:
+                    Union_A_AAt,  Intersect_A_AAt, diff_0= share_edge(self.adj_norm_in_out, self.adj_norm, self.adj_t_norm)
+                    Union_A_AtA, Intersect_A_AtA, diff_t = share_edge(self.adj_norm_out_in, self.adj_norm, self.adj_t_norm)
+                if self.differ_AA or self.differ_AAt:
+                    indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
+                    row = indices[0]
+                    col = indices[1]
+                    sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
+
+                    indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
+                    row = indices[0]
+                    col = indices[1]
+                    sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
+                if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
+                    self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
+                    self.adj_intersection_in_out = intersection_adj_norm(self.norm_list[0], self.norm_list[1], self.inci_norm, device)
+                    self.adj_intersection_in_in = intersection_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
+
+                if 2 in (self.alpha, self.beta, self.gama) and self.adj_union is None:
+                    self.adj_union = union_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
+                    self.adj_union_in_out = union_adj_norm(self.norm_list[0], self.norm_list[1], self.inci_norm, device)
+                    self.adj_union_in_in = union_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
+
+            out1 = aggregate(x, self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, self.adj_intersection, self.adj_union,  inci_norm=self.inci_norm)
+            if not (self.beta == -1 and self.gama == -1):
+                out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
+                out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
+            else:
+                out2 = out3 = torch.zeros_like(out1)
+        elif self.conv_type in ['dir-gat', 'dir-sage']:
+            edge_index_t = torch.stack([edge_index[1], edge_index[0]], dim=0)
+            if not(self.beta == -1 and self.gama == -1) and self.edge_in_in is None:
+                self.edge_in_out, self.edge_out_in, self.edge_in_in, self.edge_out_out =get_higher_edge_index(edge_index, num_nodes, rm_gen_sLoop=rm_gen_sLoop)
+                self.Intersect_alpha, self.Union_alpha = edge_index_u_i(edge_index, edge_index_t)
+                self.Intersect_beta, self.Union_beta = edge_index_u_i(self.edge_in_out, self.edge_out_in)
+                self.Intersect_gama, self.Union_gama = edge_index_u_i(self.edge_in_in, self.edge_out_out)
+
+                if self.differ_AA:
+                    diff_0 = remove_shared_edges(self.edge_in_in, edge_index, edge_index_t)
+                    diff_1 = remove_shared_edges(self.edge_out_out, edge_index, edge_index_t)
+                elif self.differ_AAt:
+                    diff_0 = remove_shared_edges(self.edge_in_out, edge_index, edge_index_t)
+                    diff_1 = remove_shared_edges(self.edge_out_in, edge_index, edge_index_t)
+                if self.differ_AA or self.differ_AAt:
+                    edge_index = diff_0
+                    edge_index_t = diff_1
+
+            out1 = aggregate_index(x, self.alpha, self.lin_src_to_dst, edge_index, self.lin_dst_to_src, edge_index_t, self.Intersect_alpha, self.Union_alpha)
+            if not (self.beta == -1 and self.gama == -1):
+                out2 = aggregate_index(x, self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
+                out3 = aggregate_index(x, self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
+            else:
+                out2 = out3 = torch.zeros_like(out1)
+
+        else:
+            raise NotImplementedError
+
+        xs = [out1, out2, out3]
+
+        if self.jumping_knowledge_inner:
+            x = self.jump(xs)
+            x = self.lin(x)
+        else:
+            x = sum(out for out in xs)
+
+        if self.BN_model:
+            x = self.batch_norm2(x)
+
+
+        return x
+
 class DirConv_tSNE(torch.nn.Module):
     def __init__(self, input_dim, output_dim, args, visualize=False):
         super().__init__()
@@ -1302,10 +1481,10 @@ class DirConv_tSNE(torch.nn.Module):
             x = self.lin(x)
         else:
             x = sum(out for out in xs)
-        if self.visual and epoch%10 == 0 and self.training:
+        if (self.visual and epoch%100 == 0 and self.training)  or (epoch<10 ):
             with torch.no_grad():
                 # visualize_batch_norm_effect_QQ(x, y, epoch)
-                # visualize_batch_norm_effect_PCA(x, y, epoch)
+                # visualize_batch_norm_effect_PCA(x, y, edge_index, epoch)
                 visualize_batch_norm_effect_tSNE(x, y, edge_index, epoch)
 
 
@@ -1322,100 +1501,6 @@ from sklearn.decomposition import PCA
 from scipy.stats import wasserstein_distance
 from sklearn.metrics import pairwise_distances
 from scipy import stats
-
-
-# def visualize_batch_norm_effect_QQ(X, y, epoch, feature_indices=None, num_features=4):
-#     # Ensure X is on CPU and convert to numpy
-#     X_np = X.cpu().numpy() if isinstance(X, torch.Tensor) else X
-#
-#     # Get the number of samples and features in the data
-#     num_samples, num_total_features = X_np.shape
-#     print(f"X shape: {X_np.shape}")
-#
-#     # Create and apply BatchNorm layer
-#     batch_norm = nn.BatchNorm1d(num_total_features)
-#     batch_norm.eval()  # Set to evaluation mode
-#     X_bn_np = batch_norm(torch.tensor(X_np).float()).detach().numpy()
-#
-#     # Handle y
-#     if y is not None:
-#         y_np = y.cpu().numpy() if isinstance(y, torch.Tensor) else y
-#         print(f"y shape: {y_np.shape}")
-#         if y_np.ndim == 1 and len(y_np) == num_samples:
-#             unique_labels = np.unique(y_np)
-#             colors = y_np
-#         elif y_np.shape == (1, num_samples):  # If y is a 1xN array
-#             y_np = y_np.flatten()
-#             unique_labels = np.unique(y_np)
-#             colors = y_np
-#         else:
-#             print("Warning: y shape doesn't match X. Using default coloring.")
-#             y_np = np.zeros(num_samples)
-#             unique_labels = [0]
-#             colors = y_np
-#     else:
-#         y_np = np.zeros(num_samples)
-#         unique_labels = [0]
-#         colors = y_np
-#
-#     # If feature_indices is not provided, randomly select num_features
-#     if feature_indices is None:
-#         feature_indices = np.random.choice(num_total_features, min(num_features, num_total_features), replace=False)
-#     elif isinstance(feature_indices, int):
-#         feature_indices = [feature_indices]  # Convert single integer to list
-#
-#     # Filter out any feature indices that are out of bounds
-#     feature_indices = [idx for idx in feature_indices if idx < num_total_features]
-#
-#     if not feature_indices:
-#         print("No valid feature indices provided. Please check your input.")
-#         return
-#
-#     num_features = min(len(feature_indices), 4)  # Limit to 4 features maximum
-#
-#     # Create subplots
-#     fig, axes = plt.subplots(2, 2, figsize=(20, 20))
-#     fig.subplots_adjust(hspace=0.3, wspace=0.3)
-#     axes = axes.ravel()
-#
-#
-#     for i, feature_idx in enumerate(feature_indices[:num_features]):
-#         # Get the data for the current feature
-#         orig_data = X_np[:, feature_idx]
-#         bn_data = X_bn_np[:, feature_idx]
-#
-#         # Create Q-Q plot for original data
-#         ax = axes[i]
-#         ax.set_title(f'Q-Q Plot for Feature {feature_idx} in epoch {epoch}')
-#
-#         # Plot original data
-#         osm, osr = stats.probplot(orig_data, dist="norm", fit=False)
-#         scatter_orig = ax.scatter(osm, osr, c=colors, cmap='viridis', alpha=0.5, marker='o', label='Original')
-#
-#         # Plot batch normalized data
-#         bsm, bsr = stats.probplot(bn_data, dist="norm", fit=False)
-#         scatter_bn = ax.scatter(bsm, bsr, c=colors, cmap='viridis', alpha=0.5, marker='s', label='Batch Normalized')
-#
-#         # Add the reference line
-#         ax.plot([np.min((osm, bsm)), np.max((osm, bsm))],
-#                 [np.min((osr, bsr)), np.max((osr, bsr))], 'r--', label='Reference Line')
-#
-#         ax.set_xlabel('Theoretical Quantiles')
-#         ax.set_ylabel('Sample Quantiles')
-#
-#         # Add legend
-#         ax.legend()
-#
-#         # Add colorbars
-#         plt.colorbar(scatter_orig, ax=ax, label='Original Label', location='left')
-#         plt.colorbar(scatter_bn, ax=ax, label='Batch Normalized Label', location='right')
-#
-#     # Hide any unused subplots
-#     for j in range(num_features, 4):
-#         axes[j].axis('off')
-#
-#     plt.tight_layout()
-#     plt.show()
 
 def visualize_batch_norm_effect_QQ(X, y, epoch, feature_indices=None, num_features=4):
     # Ensure X is on CPU and convert to numpy
@@ -1502,7 +1587,119 @@ def visualize_batch_norm_effect_QQ(X, y, epoch, feature_indices=None, num_featur
     plt.tight_layout()
     plt.show()
 
-def visualize_batch_norm_effect_PCA(X, y, epoch, n_components=2, random_state=42):
+
+def visualize_batch_norm_effect_PCA_highContrast(X, y, edge_index, epoch, n_components=2, random_state=42):
+    # Ensure X is on CPU
+    X = X.cpu()
+
+    # Create and apply BatchNorm layer
+    batch_norm = nn.BatchNorm1d(X.shape[1])
+    batch_norm.eval()  # Set to evaluation mode
+    X_bn = batch_norm(X)
+
+    # Convert to numpy for PCA
+    X_np = X.numpy()
+    X_bn_np = X_bn.numpy()
+
+    # If y is a tensor, convert it to numpy
+    if isinstance(y, torch.Tensor):
+        y = y.cpu().numpy()
+
+    # Apply PCA to original data
+    pca = PCA(n_components=n_components, random_state=random_state)
+    X_pca = pca.fit_transform(X_np)
+
+    # Function to create and save a single plot
+    def create_and_save_plot(data, title, filename):
+        plt.figure(figsize=(12, 10))
+
+        # Set a dark background
+        plt.style.use('dark_background')
+
+        # Plot edges with a bright, high-contrast color
+        for (src, dst) in edge_index.t().tolist():
+            plt.plot(data[[src, dst], 0], data[[src, dst], 1], color='#00FF00', alpha=0.3, linewidth=0.5, zorder=1)
+
+        # Plot nodes using a high-contrast colormap
+        scatter = plt.scatter(data[:, 0], data[:, 1], c=y, cmap='plasma', s=50, edgecolor='white', linewidth=0.5, zorder=2)
+
+        plt.title(title, fontsize=16, fontweight='bold', color='white')
+        plt.xlabel('PC 1', fontsize=12, fontweight='bold', color='white')
+        plt.ylabel('PC 2', fontsize=12, fontweight='bold', color='white')
+
+        # Add a colorbar with a descriptive label
+        cbar = plt.colorbar(scatter)
+        cbar.set_label('Class', fontsize=12, fontweight='bold', color='white')
+
+        # Add explained variance ratio
+        explained_variance_ratio = pca.explained_variance_ratio_
+        plt.text(0.05, 0.95, f'Explained variance ratio:\nPC1: {explained_variance_ratio[0]:.2f}\nPC2: {explained_variance_ratio[1]:.2f}',
+                 transform=plt.gca().transAxes, verticalalignment='top', fontsize=10, color='white',
+                 bbox=dict(facecolor='black', alpha=0.5, edgecolor='white', boxstyle='round,pad=0.5'))
+
+        plt.tight_layout()
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
+        print(f"High-contrast visualization saved as {filename}")
+
+    # Create and save plot for original data
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    create_and_save_plot(X_pca, f'PCA of Original Data (Epoch {epoch})',
+                         f'pca_{current_time}_epoch_{epoch}_high_contrast.png')
+
+
+def visualize_batch_norm_effect_PCA(X, y, edge_index, epoch, n_components=2, random_state=42):
+    # Ensure X is on CPU
+    X = X.cpu()
+
+    # Create and apply BatchNorm layer
+    batch_norm = nn.BatchNorm1d(X.shape[1])
+    batch_norm.eval()  # Set to evaluation mode
+    X_bn = batch_norm(X)
+
+    # Convert to numpy for PCA
+    X_np = X.numpy()
+    X_bn_np = X_bn.numpy()
+
+    # If y is a tensor, convert it to numpy
+    if isinstance(y, torch.Tensor):
+        y = y.cpu().numpy()
+
+    # Apply PCA to original data
+    pca = PCA(n_components=n_components, random_state=random_state)
+    X_pca = pca.fit_transform(X_np)
+
+    # Function to create and save a single plot
+    def create_and_save_plot(data, title, filename):
+        plt.figure(figsize=(10, 8))
+
+        # Plot edges
+        for (src, dst) in edge_index.t().tolist():
+            plt.plot(data[[src, dst], 0], data[[src, dst], 1], color='gray', alpha=0.5, zorder=1)
+
+        # Plot nodes
+        scatter = plt.scatter(data[:, 0], data[:, 1], c=y, cmap='rainbow', zorder=2)
+        plt.title(title)
+        plt.xlabel('PC 1')
+        plt.ylabel('PC 2')
+        plt.colorbar(scatter)
+
+        # Add explained variance ratio
+        explained_variance_ratio = pca.explained_variance_ratio_
+        plt.text(0.05, 0.95, f'Explained variance ratio: {explained_variance_ratio[0]:.2f}, {explained_variance_ratio[1]:.2f}',
+                 transform=plt.gca().transAxes, verticalalignment='top')
+
+        plt.tight_layout()
+        plt.savefig(filename)
+        plt.close()
+        print(f"Visualization saved as {filename}")
+
+    # Create and save plot for original data
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    create_and_save_plot(X_pca, f'PCA of Original Data in epoch {epoch}',
+                         f'pca_{current_time}_epoch_{epoch}-original_data.png')
+
+def visualize_batch_norm_effect_PCA_BN(X, y, epoch, n_components=2, random_state=42):
     # Ensure X is on CPU
     X = X.cpu()
 
@@ -1524,13 +1721,13 @@ def visualize_batch_norm_effect_PCA(X, y, epoch, n_components=2, random_state=42
     X_pca = pca.fit_transform(X_np)
 
     # Apply the same PCA transformation to batch normalized data
-    X_bn_pca = pca.transform(X_bn_np)
-
-    wasserstein_dist = [
-        wasserstein_distance(X_pca[:, i], X_bn_pca[:, i]) for i in range(n_components)
-    ]
-    mean_dist = np.mean(pairwise_distances(X_pca, X_bn_pca))
-    correlation = np.corrcoef(X_pca.flatten(), X_bn_pca.flatten())[0, 1]
+    # X_bn_pca = pca.transform(X_bn_np)
+    #
+    # wasserstein_dist = [
+    #     wasserstein_distance(X_pca[:, i], X_bn_pca[:, i]) for i in range(n_components)
+    # ]
+    # mean_dist = np.mean(pairwise_distances(X_pca, X_bn_pca))
+    # correlation = np.corrcoef(X_pca.flatten(), X_bn_pca.flatten())[0, 1]
 
     # Function to create and save a single plot
     def create_and_save_plot(data, title, filename):
@@ -1556,8 +1753,8 @@ def visualize_batch_norm_effect_PCA(X, y, epoch, n_components=2, random_state=42
                          f'pca_epoch_{epoch}-original_data.png')
 
     # Create and save plot for batch normalized data
-    create_and_save_plot(X_bn_pca, f'PCA of Batch Normalized Data in epoch {epoch}',
-                         f'pca_epoch_{epoch}-batch_norm_data.png')
+    # create_and_save_plot(X_bn_pca, f'PCA of Batch Normalized Data in epoch {epoch}',
+    #                      f'pca_epoch_{epoch}-batch_norm_data.png')
 from datetime import datetime
 
 def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, random_state=42):
@@ -1588,7 +1785,7 @@ def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, ran
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
 
     # Plot original data
-    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10',  zorder=2)
+    scatter1 = ax1.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='rainbow',  zorder=2)
     ax1.set_title('t-SNE of Original Data in epoch '+str(epoch))
     ax1.set_xlabel('t-SNE feature 1')
     ax1.set_ylabel('t-SNE feature 2')
@@ -1601,7 +1798,7 @@ def visualize_batch_norm_effect_tSNE(X, y, edge_index, epoch, perplexity=30, ran
                  'k-', alpha=0.1, linewidth=0.5, zorder=1)
 
     # Plot batch normalized data
-    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='tab10',  zorder=2)
+    scatter2 = ax2.scatter(X_bn_tsne[:, 0], X_bn_tsne[:, 1], c=y, cmap='rainbow',  zorder=2)
     ax2.set_title('t-SNE of Batch Normalized Data in epoch '+str(epoch))
     ax2.set_xlabel('t-SNE feature 1')
     ax2.set_ylabel('t-SNE feature 2')
@@ -2241,6 +2438,36 @@ def directed_norm(adj, rm_gen_sLoop=False):
 
     return adj1
 
+def directed_norm_weight(adj, edge_weight=None, rm_gen_sLoop=False):
+    """
+    Applies the normalization for directed graphs:
+        \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
+    """
+    if edge_weight is not None:
+        row, col, _ = adj.coo()
+        new_values = edge_weight
+        adj = torch_sparse.SparseTensor(row=row, col=col, value=new_values, sparse_sizes=adj.sparse_sizes())
+
+        # adj = mul(adj, edge_weight)
+
+    device = adj.device()
+    in_deg = sparsesum(adj, dim=0)
+    in_deg_inv_sqrt = in_deg.pow(-0.5)
+    in_deg_inv_sqrt.masked_fill_(in_deg_inv_sqrt == float("inf"), 0.0)
+
+    out_deg = sparsesum(adj, dim=1)
+    out_deg_inv_sqrt = out_deg.pow(-0.5)
+    out_deg_inv_sqrt.masked_fill_(out_deg_inv_sqrt == float("inf"), 0.0)
+
+    out_deg_inv_sqrt = out_deg_inv_sqrt.to(device)
+    in_deg_inv_sqrt = in_deg_inv_sqrt.to(adj.device())
+
+    adj0 = mul(adj, out_deg_inv_sqrt.view(-1, 1))
+    adj1 = mul(adj0, in_deg_inv_sqrt.view(1, -1))
+
+    return adj1
+
+
 def directed_norm_Qin(adj, rm_gen_sLoop=False):
     in_deg = sparsesum(adj, dim=0).to(torch.float)
     # in_deg = torch_sparse.sum(adj, dim=0).to(torch.float)
@@ -2444,6 +2671,73 @@ class GCN_JKNet(torch.nn.Module):
 
         return x
 
+class RandomNet(torch.nn.Module):
+    def __init__(self, nfeat, nclass, args):
+        super().__init__()
+        jumping_knowledge = args.jk
+        layer = args.layer
+        nhid = args.feat_dim
+        hidden_dim = nhid
+        normalize = args.normalize
+        dropout = args.dropout
+        nonlinear = args.nonlinear
+
+        output_dim = nhid if jumping_knowledge else nclass
+        if layer == 1:
+            self.convs = ModuleList([RanConv(nfeat, output_dim, args)])
+        else:
+            self.convs = ModuleList([RanConv(nfeat, nhid, args)])
+            for _ in range(layer - 2):
+                self.convs.append(RanConv(nhid, nhid, args))
+            self.convs.append(RanConv(nhid, output_dim, args))
+
+        num_scale = layer
+        self.mlp = None
+        if args.mlp:
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(nfeat, nhid),
+                torch.nn.ReLU(),
+                torch.nn.Linear(nhid, nhid),
+                torch.nn.ReLU(),
+                # torch.nn.BatchNorm1d(nhid),
+                torch.nn.Linear(nhid, output_dim)
+            # ,torch.nn.BatchNorm1d(output_dim)
+            )
+            num_scale += 1
+        if jumping_knowledge:
+            input_dim = hidden_dim * num_scale if jumping_knowledge == "cat" else hidden_dim
+            self.lin = Linear(input_dim, nclass)
+            self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=hidden_dim, num_layers=layer)
+
+        self.num_layers = layer
+        self.dropout = dropout
+        self.jumping_knowledge = jumping_knowledge
+        self.normalize = normalize
+        self.nonlinear = nonlinear
+
+
+    def forward(self, x, edge_index):
+        if self.mlp:
+            x_mlp = self.mlp(x)
+        xs = []
+        for i, conv in enumerate(self.convs):
+            x = conv(x, edge_index)
+            if i != len(self.convs) - 1 or self.jumping_knowledge:
+                if self.nonlinear:
+                    x = F.relu(x)
+                x = F.dropout(x, p=self.dropout, training=self.training)
+                if self.normalize:
+                    x = F.normalize(x, p=2, dim=1)
+            xs += [x]
+
+        if self.mlp:
+            xs += [x_mlp]
+
+        if self.jumping_knowledge:
+            x = self.jump(xs)
+            x = self.lin(x)
+
+        return x
 
 class ScaleNet(torch.nn.Module):
     def __init__(self, nfeat, nclass, args):
