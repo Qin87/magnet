@@ -98,7 +98,7 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   inci_norm: "dir"
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
   nonlinear: 0   #
-#  net: ScaleNet
+  net: ScaleNet
   layer: 4      # 2(78.9), 5(78.8)
   lr: 0.05
   normalize: 1
@@ -116,7 +116,7 @@ WikipediaNetwork/squirrel:
   conv_type: "dir-gcn"
   nonlinear: 1
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
-#  net: ScaleNet
+  net: ScaleNet
   layer: 4
   lr: 0.01
   normalize: 1
@@ -125,8 +125,8 @@ WikipediaNetwork/squirrel:
   jk: 'max'
   jk_inner: 0
   alphaDir: 1   # best is 1,1,-1
-  betaDir: 1    #-1
-  gamaDir: 1    # -1
+#  betaDir: 1    #-1
+#  gamaDir: 1    # -1
 
 # 91.23 ± 0.32(0.5,-1,-1)
 directed-roman-empire/:

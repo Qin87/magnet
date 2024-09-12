@@ -7,7 +7,7 @@ from torch_scatter import scatter_add
 
 from nets.gat import GATConvQin, StandGAT1BN_Qin
 from nets.gcn import ParaGCNXBN
-from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model, Sloop_JKNet, ScaleNet
+from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model, Sloop_JKNet, ScaleNet, RandomNet
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1, GraphModel
 
 from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
@@ -92,6 +92,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         model = ChebModel(num_features, n_cls, K=args.K,filter_num=args.feat_dim, dropout=args.dropout,layer=args.layer).to(device)
     elif args.net == 'ScaleNet':
         model = GCN_JKNet(nfeat=num_features, nclass=n_cls, args=args)
+    elif args.net == 'RandomNet':
+        model = RandomNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'tSNE':
         model = ScaleNet(nfeat=num_features, nclass=n_cls, args=args)
     elif args.net == 'SloopNet':
