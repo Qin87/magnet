@@ -2447,8 +2447,7 @@ def directed_norm_weight(adj, edge_weight=None, rm_gen_sLoop=False):
         row, col, _ = adj.coo()
         new_values = edge_weight
         adj = torch_sparse.SparseTensor(row=row, col=col, value=new_values, sparse_sizes=adj.sparse_sizes())
-
-        # adj = mul(adj, edge_weight)
+        return adj        # this to test without inci-norm
 
     device = adj.device()
     in_deg = sparsesum(adj, dim=0)
