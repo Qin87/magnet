@@ -98,7 +98,7 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   inci_norm: "dir"
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
   nonlinear: 0   #
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4      # 2(78.9), 5(78.8)
   lr: 0.05
   normalize: 1
