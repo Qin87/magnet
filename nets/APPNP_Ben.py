@@ -385,6 +385,41 @@ class ChebModel(torch.nn.Module):
         x = x.permute((0,2,1)).squeeze()
         return F.log_softmax(x, dim=1)
 
+class GCNModel_Cheb(torch.nn.Module):
+    def __init__(self, input_dim, out_dim, filter_num, dropout=False, layer=2):
+        super().__init__()
+        self.dropout = dropout
+        self.conv1 = GCNConv(input_dim, filter_num)
+        self.conv2 = GCNConv(filter_num, filter_num)
+        self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
+
+        self.layer = layer
+        if layer == 3:
+            self.conv3 = GCNConv(filter_num, filter_num)
+
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        if self.layer == 1:
+            return self.process_output(x)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+
+        if self.layer == 3:
+            x = self.conv3(x, edge_index)
+            x = F.relu(x)
+
+        return self.process_output(x)
+
+    def process_output(self, x):
+        if self.dropout > 0:
+            x = F.dropout(x, self.dropout, training=self.training)
+        x = x.unsqueeze(0)
+        x = x.permute((0,2,1))
+        x = self.Conv(x)
+        x = x.permute((0,2,1)).squeeze()
+        return F.log_softmax(x, dim=1)
+
 class APPNPXSimp_BN(nn.Module):
     def __init__(self, in_features, hidden_dim, num_classes, dropout, layer, alpha, K):
         super(APPNPXSimp_BN, self).__init__()

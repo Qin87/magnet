@@ -1237,14 +1237,8 @@ class HighFreConv(torch.nn.Module):
                 adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
                 self.adj_t_norm = get_norm_adj(adj_t, norm=self.inci_norm)  #
 
-
-
-                n = adj.size(0)
-                identity = SparseTensor.eye(n, device=device)
-                # self.adj_norm = identity.add(self.adj_norm.mul_scalar(-1))
                 self.adj_norm = getHP(self.adj_norm, device)
                 self.adj_t_norm = getHP(self.adj_t_norm, device)
-
 
             # if self.adj_norm_in_out is None:
             #     self.adj_norm_in_out = get_norm_adj(adj @ adj_t,norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)

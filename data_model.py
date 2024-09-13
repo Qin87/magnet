@@ -17,7 +17,7 @@ from gens import test_directed
 from nets import create_gcn, create_gat, create_sage
 
 from data.data_utils import random_planetoid_splits, load_directedData
-from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel
+from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel, GCNModel_Cheb
 # from nets.DGCN import SymModel
 # from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
@@ -166,7 +166,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
 
     else:
         if args.net == 'GCN':
-            model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
+            model = GCNModel_Cheb(num_features, n_cls,filter_num=args.feat_dim, dropout=args.dropout, layer=args.layer).to(device)
+            # model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'ParaGCN':
             model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
