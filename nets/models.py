@@ -503,7 +503,7 @@ from torch_geometric.nn.resolver import (
 from torch_geometric.typing import Adj
 from torch_geometric.utils import to_dense_batch
 
-from mamba_ssm import Mamba
+# from mamba_ssm import Mamba
 from torch_geometric.utils import degree, sort_edge_index
 
 def permute_within_batch(x, batch):
