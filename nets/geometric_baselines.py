@@ -934,6 +934,7 @@ class DirGCNConv_2(torch.nn.Module):
 
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.lin = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(4)])
 
         if args.conv_type == 'dir-gcn':
             self.lin_src_to_dst = Linear(input_dim, output_dim)
@@ -942,6 +943,7 @@ class DirGCNConv_2(torch.nn.Module):
             self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
+            self.conv2_1 = Linear(output_dim*2, output_dim)
         elif args.conv_type == 'dir-sage':
             self.lin_src_to_dst = SAGEConv(input_dim, output_dim,  root_weight=False)
             self.lin_dst_to_src = SAGEConv(input_dim, output_dim, root_weight=False)
@@ -949,6 +951,7 @@ class DirGCNConv_2(torch.nn.Module):
             self.linx = nn.ModuleList([SAGEConv(input_dim, output_dim, root_weight=False) for i in range(4)])
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
+            self.conv2_1 = Linear(output_dim * 2, output_dim)
         elif args.conv_type == 'dir-gat':
             # heads = args.heads
             heads = 1
@@ -958,6 +961,7 @@ class DirGCNConv_2(torch.nn.Module):
             self.linx = nn.ModuleList([GATConv(input_dim, output_dim*heads, heads=heads)for i in range(4)])
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim*heads)
+            self.conv2_1 = Linear(output_dim*heads*2, output_dim*heads)
         else:
             raise NotImplementedError
 
@@ -990,19 +994,30 @@ class DirGCNConv_2(torch.nn.Module):
         self.Intersect_alpha, self.Union_alpha, self.Intersect_beta, self.Union_beta, self.Intersect_gama, self.Union_gama = None, None, None, None, None, None
 
         num_scale = 3
-        # self.mlp = None
-        # if args.mlp:
-        #     self.mlp = torch.nn.Linear(input_dim, output_dim)
+        self.mlp = None
+        if args.mlp:
+            nhid = 64
+            # self.mlp = torch.nn.Sequential(
+            #     torch.nn.Linear(input_dim, nhid),
+            #     torch.nn.ReLU(),
+            #     torch.nn.Linear(nhid, nhid),
+            #     torch.nn.ReLU(),
+            #     # torch.nn.BatchNorm1d(nhid),
+            #     torch.nn.Linear(nhid, output_dim)
+            #     # ,torch.nn.BatchNorm1d(output_dim)
+            # )
+            self.mlp = torch.nn.Linear(input_dim, output_dim)
         #     num_scale += 1
         jumping_knowledge = args.jk_inner
         self.jumping_knowledge_inner = jumping_knowledge
         if jumping_knowledge:
             input_dim_jk = output_dim * num_scale if jumping_knowledge == "cat" else output_dim
             self.jump = JumpingKnowledge(mode=jumping_knowledge, channels=input_dim, num_layers=3)
-            self.lin = Linear(input_dim_jk, output_dim)
+            self.linjk = Linear(input_dim_jk, output_dim)
 
 
     def forward(self, x, edge_index):
+        x0= x
         device = edge_index.device
         if self.First_self_loop == 'add':
 
@@ -1068,11 +1083,24 @@ class DirGCNConv_2(torch.nn.Module):
                     self.adj_union_in_in = union_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
 
             out1 = aggregate(x, self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, self.adj_intersection, self.adj_union,  inci_norm=self.inci_norm)
+            # out1 = out1 + self.lin[0](x)
             if not (self.beta == -1 and self.gama == -1):
                 out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
                 out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
             else:
-                out2 = out3 = torch.zeros_like(out1)
+                # out2 = out3 = torch.zeros_like(out1)
+                out2 = torch.zeros_like(out1)
+                out3 = torch.zeros_like(out1)
+            # out2 += 1*self.lin[1](x)
+            # a = 1*self.lin[1](x)
+            # b = 1*self.lin[2](x)
+            # c = 1*self.lin[3](x)
+            # out2 += 1*self.lin[1](x) + self.lin[2](x) + self.lin[3](x)
+            # out3 += 2*self.lin[1](x)+ 2*self.lin[2](x)
+
+            # out2 += 1 * self.lin[1](x)
+            # out3 +=  1 * self.lin[2](x)
+
         elif self.conv_type in ['dir-gat', 'dir-sage']:
             edge_index_t = torch.stack([edge_index[1], edge_index[0]], dim=0)
             if not(self.beta == -1 and self.gama == -1) and self.edge_in_in is None:
@@ -1102,16 +1130,16 @@ class DirGCNConv_2(torch.nn.Module):
             raise NotImplementedError
 
         xs = [out1, out2, out3]
-        # if self.mlp:
-        #     xs.append(self.mlp(x))
 
         if self.jumping_knowledge_inner:
             x = self.jump(xs)
-            x = self.lin(x)
+            x = self.linjk(x)
         else:
             x = sum(out for out in xs)
 
-        # tsne(x)
+        if self.mlp:
+            x = torch.cat((self.mlp(x0), x), dim=-1)
+            x = self.conv2_1(x)
 
         if self.BN_model:
             x = self.batch_norm2(x)
@@ -1213,7 +1241,7 @@ class HighFreConv(torch.nn.Module):
         # self.mlp = None
         # if args.mlp:
         #     self.mlp = torch.nn.Linear(input_dim, output_dim)
-        #     num_scale += 1
+
         jumping_knowledge = args.jk_inner
         self.jumping_knowledge_inner = jumping_knowledge
         if jumping_knowledge:
@@ -1326,7 +1354,9 @@ class HighFreConv(torch.nn.Module):
         else:
             x = sum(out for out in xs)
 
-        # tsne(x)
+        # if self.mlp:
+        #     x = torch.cat((self.mlp(x), x), dim=-1)
+            # torch.vstack(self.mlp(x), x)
 
         if self.BN_model:
             x = self.batch_norm2(x)
@@ -1422,6 +1452,7 @@ class RanConv(torch.nn.Module):
             if self.adj_norm is None:
                 adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
                 edge_weight = torch.rand(len(row)) * (10000 - 0.0001) + 0.0001
+                edge_weight = edge_weight.to(device)
                 self.adj_norm = directed_norm_weight(adj, edge_weight)     # this is key: improve from 57 to 72
 
                 adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))

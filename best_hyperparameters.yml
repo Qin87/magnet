@@ -116,7 +116,7 @@ WikipediaNetwork/squirrel:
   conv_type: "dir-gcn"
   nonlinear: 1
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
   layer: 4
   lr: 0.01
   normalize: 1
@@ -141,8 +141,8 @@ directed-roman-empire/:
   dropout: 0.2
   NotImproved: 200
   conv_type: "dir-gcn"
-  alphaDir: -1
-  betaDir: 0
+  alphaDir: 0.5
+  betaDir: -1
   gamaDir: -1
 
 
