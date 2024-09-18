@@ -19,7 +19,7 @@ from torch_sparse import SparseTensor, matmul
 from torch_geometric.nn.conv import MessagePassing
 from torch_scatter import scatter_add
 
-class SAGEConv(MessagePassing):
+class SAGEConv_SHA(MessagePassing):
     r"""The GraphSAGE operator from the `"Inductive Representation Learning on
     Large Graphs" <https://arxiv.org/abs/1706.02216>`_ paper
     .. math::
@@ -47,7 +47,7 @@ class SAGEConv(MessagePassing):
                  root_weight: bool = True,
                  bias: bool = True, **kwargs):  # yapf: disable
         kwargs.setdefault('aggr', 'mean')
-        super(SAGEConv, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -157,72 +157,45 @@ class GraphSAGEX(nn.Module):
 
         return x
 
-class GraphSAGE1BatNorm(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1):
-        super(GraphSAGE1BatNorm, self).__init__()
-        self.conv1 = SAGEConv(nfeat, nclass)
-        self.batch_norm1 = nn.BatchNorm1d(nclass)
-
-        self.reg_params = []
-        self.non_reg_params = self.conv1.parameters()
-
-    def forward(self, x, adj, edge_weight=None):
-        edge_index = adj
-        x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
-
-        return x
-class GraphSAGE2BatNorm(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2):
-        super(GraphSAGE2BatNorm, self).__init__()
-        self.conv1 = SAGEConv(nfeat, nhid)
-        self.conv2 = SAGEConv(nhid, nclass)
-        self.dropout_p = dropout
-
-        self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nclass)
-
-        self.reg_params = list(self.conv1.parameters())
-        self.non_reg_params = self.conv2.parameters()
-
-    def forward(self, x, adj, edge_weight=None):
-        edge_index = adj
-        x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
-        x = F.dropout(x, p=self.dropout_p, training=self.training)
-        x = self.batch_norm2(self.conv2(x, edge_index, edge_weight))
-        return x
 class GraphSAGEXBatNorm(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3):
         super(GraphSAGEXBatNorm, self).__init__()
-        self.conv1 = SAGEConv(nfeat, nhid)
-        self.conv2 = SAGEConv(nhid, nclass)
-        self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
         self.dropout_p = dropout
+        self.conv1 = SAGEConv_SHA(nfeat, nhid)
+        self.conv2 = SAGEConv_SHA(nhid, nclass)
+        if nlayer >2:
+            self.convx = nn.ModuleList([SAGEConv_SHA(nhid, nhid) for _ in range(nlayer-2)])
+            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nclass)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
-        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+        if nlayer==1:
+            self.batch_norm1 = nn.BatchNorm1d(nclass)
+            self.conv1 = SAGEConv_SHA(nfeat, nclass)
+            self.reg_params = []
+
         self.non_reg_params = self.conv2.parameters()
+
+        self.layer = nlayer
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x = F.relu(self.batch_norm1(self.conv1(x, edge_index, edge_weight)))
+        x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
+        if self.layer == 1:
+            return x
 
-        for iter_layer in self.convx:
-            x = F.dropout(x, p=self.dropout_p, training=self.training)
-            x = F.relu(self.batch_norm3(iter_layer(x, edge_index,edge_weight)))
+        x = F.relu(x)
+
+        if self.layer > 2:
+            for iter_layer in self.convx:
+                x = F.dropout(x, p=self.dropout_p, training=self.training)
+                x = F.relu(self.batch_norm3(iter_layer(x, edge_index,edge_weight)))
 
         x = F.dropout(x, p=self.dropout_p, training=self.training)
         x = self.batch_norm2(self.conv2(x, edge_index,edge_weight))
 
         return x
 
-def create_sage(nfeat, nhid, nclass, dropout, nlayer):
-    if nlayer == 1:
-        model = GraphSAGE1BatNorm(nfeat, nhid, nclass, dropout,nlayer)
-    elif nlayer == 2:
-        model = GraphSAGE2BatNorm(nfeat, nhid, nclass, dropout,nlayer)
-    else:
-        model = GraphSAGEXBatNorm(nfeat, nhid, nclass, dropout,nlayer)
-    return model
+

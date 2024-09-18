@@ -230,7 +230,8 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
         L = D - Theta.multiply(A_sym)  # element-wise  # L= D − H= D− A.P,
 
     if norm:      # Qin delete this block,no use(experiments show keeping is better, in deeper layers)
-        L = (2.0 / max_eigen) * L - diag
+        L = (2.0 / max_eigen) * L - diag      # TODO original in Mag
+        # L = (2.0 / max_eigen) * L
 
     return L
 def QinDirect_hermitian_decomp_sparse3(row, col, size, q=0.25, norm=True,  QinDirect=True, max_eigen=2,

@@ -161,6 +161,8 @@ class ChebConv_Qin(nn.Module):
         else:
             self.register_parameter("bias", None)
 
+        self.L = None
+
     # def forward(self, X_real, X_imag,  edges, q=0, edge_weight=None):
     def forward(self, data):
         '''
@@ -179,15 +181,16 @@ class ChebConv_Qin(nn.Module):
         f_node, e_node = edges[0], edges[1]
         laplacian = True
         gcn_appr = False
-        L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
+        if self.L is None:
+            self.L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
 
-        multi_order_laplacian = cheb_poly_sparse(L, K=2)   # K=2 is temp by me
-        L = multi_order_laplacian
+            multi_order_laplacian = cheb_poly_sparse(self.L, K=1)   # K=2 is temp by me
+            self.L = multi_order_laplacian
         L_img = []
         L_real = []
-        for i in range(len(L)):
-            L_img.append(sparse_mx_to_torch_sparse_tensor(L[i].imag).to(device))
-            L_real.append(sparse_mx_to_torch_sparse_tensor(L[i].real).to(device))
+        for i in range(len(self.L)):
+            L_img.append(sparse_mx_to_torch_sparse_tensor(self.L[i].imag).to(device))
+            L_real.append(sparse_mx_to_torch_sparse_tensor(self.L[i].real).to(device))
         # list of K sparsetensors, each is N by N
         L_norm_real = L_img     # [K, N, N]
         L_norm_imag = L_real    # [K, N, N]

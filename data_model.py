@@ -14,7 +14,7 @@ from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from nets.Signum import SigMaNet_node_prediction_one_laplacian_Qin
 from edge_nets.edge_data import to_undirectedBen
 from gens import test_directed
-from nets import create_gcn, create_gat, create_sage
+from nets import create_gcn, create_gat
 
 from data.data_utils import random_planetoid_splits, load_directedData
 from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel, GCNModel_Cheb
@@ -28,6 +28,7 @@ from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
+from nets.sage import GraphSAGEXBatNorm
 # from nets.UGCL import UGCL_Model_Qin
 from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin, ChebNet_Ben_05
 import torch.nn.init as init
@@ -175,7 +176,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         elif args.net == 'SimGAT':
             model = StandGAT1BN_Qin(data_x.shape[0], num_features, args.feat_dim, n_cls, args.dropout, args.layer, head=args.heads)
         elif args.net == "SAGE":
-            model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
+            model = GraphSAGEXBatNorm(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
+            # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
             raise NotImplementedError("Not Implemented Architecture!"+ args.net)
     model = model.to(device)
