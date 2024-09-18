@@ -1412,7 +1412,7 @@ class DiSAGE_x_nhid(torch.nn.Module):
         x = self.conv2(x, edge_index, edge_weight)
         xs += [x]
 
-        if self.jk is not None:
+        if self.jk is not None and bool(self.jk):
             x = self.jump(xs)
             x = self.lin(x)
 
