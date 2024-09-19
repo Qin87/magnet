@@ -952,6 +952,7 @@ class DirGCNConv_2(torch.nn.Module):
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
             self.conv2_1 = Linear(output_dim * 2, output_dim)
+            self.lin_sage = nn.ModuleList([Linear(input_dim, output_dim) for i in range(3)])
         elif args.conv_type == 'dir-gat':
             # heads = args.heads
             heads = 1
@@ -1083,7 +1084,8 @@ class DirGCNConv_2(torch.nn.Module):
                     self.adj_union_in_in = union_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
 
             out1 = aggregate(x, self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, self.adj_intersection, self.adj_union,  inci_norm=self.inci_norm)
-            # out1 = out1 + self.lin[0](x)
+            if self.conv_type == 'dir-sage':
+                out1 = out1 + self.lin_sage[0](x)
             if not (self.beta == -1 and self.gama == -1):
                 out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
                 out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
@@ -1120,11 +1122,21 @@ class DirGCNConv_2(torch.nn.Module):
                     edge_index_t = diff_1
 
             out1 = aggregate_index(x, self.alpha, self.lin_src_to_dst, edge_index, self.lin_dst_to_src, edge_index_t, self.Intersect_alpha, self.Union_alpha)
+            # if self.conv_type == 'dir-sage':
+            #     out1 = out1 + self.lin_sage[0](x)
             if not (self.beta == -1 and self.gama == -1):
-                out2 = aggregate_index(x, self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
-                out3 = aggregate_index(x, self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
+                if self.beta != -1:
+                    out2 = aggregate_index(x, self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
+                    if self.conv_type == 'dir-sage':
+                        out2 += self.lin_sage[1](x)
+                if self.gama != -1:
+                    out3 = aggregate_index(x, self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
+                    if self.conv_type == 'dir-sage':
+                        out3 += self.lin_sage[2](x)
+
             else:
-                out2 = out3 = torch.zeros_like(out1)
+                out2 = torch.zeros_like(out1)
+                out3 = torch.zeros_like(out1)
 
         else:
             raise NotImplementedError
@@ -2421,6 +2433,8 @@ def aggregate_index(x, alpha, lin0, index0, lin1, index1,  intersection, union):
     else:
         out = (1+alpha)*((1 - alpha) * lin0(x, index0) +  alpha * lin1(x, index1))
 
+    # if conv_type == 'dir-sage':
+    #     out = out + lin(x)
     return out
 
 def union_adj_norm(adj0, adj1, inci_norm, device):

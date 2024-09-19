@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('--coeflr', type=float, default=2, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
     parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4')
-    parser.add_argument('-hds', '--heads', default=8, type=int)
+    parser.add_argument('-hds', '--heads', default=1, type=int)
 
     #  from Magnet
     parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
