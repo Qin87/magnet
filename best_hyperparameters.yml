@@ -125,27 +125,32 @@ WikipediaNetwork/squirrel:
   jk: 'max'
   jk_inner: 0
   alphaDir: 1   # best is 1,1,-1
-#  betaDir: 1    #-1
-#  gamaDir: 1    # -1
+  betaDir: 1    #-1
+  gamaDir: 1    # -1
 
-# 91.23 ± 0.32(0.5,-1,-1)
+# 91.23 ± 0.32(0.5,-1,-1), 92.0±0.4(0.5,-1,-1),
 directed-roman-empire/:
+  nonlinear: 1    # must have this, or acc is 85
   has_scheduler: 0
   lr: 0.01
-  First_self_loop: "remove"
-#  BN_model: 1
-#  normalize: 1
+  First_self_loop: 0   # no selfloops originally
+  BN_model: 0  # no batch norm is better
+  normalize: 0  #
   feat_dim: 256
   layer: 5
   jk: "cat"
   dropout: 0.2
   NotImproved: 200
-  conv_type: "dir-gcn"
+  conv_type: "dir-sage"   # gcn+mlp is worse
   alphaDir: 0.5
-  betaDir: -1
-  gamaDir: -1
+  betaDir: -1     # 0 is 88, 1 is 20
+  gamaDir: -1     # all much worse
 
 
 ogbn-arxiv/:
+  nonlinear: 1
   conv_type: dir-sage
   layer: 4    # 69.68(4layer)
+  alphaDir: 0.5
+  betaDir: -1     # OOM
+  gamaDir: -1     # OOM
