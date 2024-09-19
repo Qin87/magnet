@@ -133,8 +133,8 @@ directed-roman-empire/:
   has_scheduler: 0
   lr: 0.01
   First_self_loop: "remove"
-  BN_model: 1
-  normalize: 1
+#  BN_model: 1
+#  normalize: 1
   feat_dim: 256
   layer: 5
   jk: "cat"
