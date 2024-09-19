@@ -181,6 +181,7 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         else:
             raise NotImplementedError("Not Implemented Architecture!"+ args.net)
     model = model.to(device)
+    # if not args.conv_type == 'dir-sage':
     init_model(model)
     return model
 
