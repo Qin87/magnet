@@ -154,3 +154,26 @@ ogbn-arxiv/:
   alphaDir: 0.5
   betaDir: -1     # OOM
   gamaDir: -1     # OOM
+
+
+WebKB/Cornell:
+  nonlinear: 1
+  conv_type: dir-sage
+  layer: 3
+  alphaDir: 0.5
+  betaDir: -1     #
+  gamaDir: -1     #
+
+
+WebKB/Texas:
+  lr: 0.001  # bettern than 0.01
+  mlp: 1  # 0(some split very bad)
+  nonlinear: 1
+  conv_type: dir-gcn
+  layer: 2
+  alphaDir: 0.5
+  betaDir: -1     #
+  gamaDir: -1     #
+  BN_model: 1  #
+  normalize: 0  #
+

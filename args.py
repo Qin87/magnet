@@ -17,7 +17,7 @@ def parse_args():
 
     # for DirGNN
     parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
-    parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=0)
+    parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
     parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default="max")
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', 0], default=0)
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
@@ -33,18 +33,18 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='Cheb', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
+    parser.add_argument('--net', type=str, default='SAGE', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
-    parser.add_argument('--seed', type=int, default=0, help='random seed')
+    parser.add_argument('--seed', type=int, default=10, help='random seed')
     parser.add_argument('--Dataset', type=str, default='WebKB/Cornell', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  '
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
     parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
-    parser.add_argument('-K', '--K', default=1, type=int)  # for cheb
+    parser.add_argument('-K', '--K', default=1, type=int)  # for cheb and Mag
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
 
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')

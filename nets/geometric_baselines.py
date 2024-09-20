@@ -1085,8 +1085,6 @@ class DirGCNConv_2(torch.nn.Module):
                     self.adj_union_in_in = union_adj_norm(self.norm_list[2], self.norm_list[3], self.inci_norm, device)
 
             out1 = aggregate(x, self.alpha, self.lin_src_to_dst, self.adj_norm, self.lin_dst_to_src, self.adj_t_norm, self.adj_intersection, self.adj_union,  inci_norm=self.inci_norm)
-            if self.conv_type == 'dir-sage':
-                out1 = out1 + self.lin_sage[0](x)
             if not (self.beta == -1 and self.gama == -1):
                 out2 = aggregate(x, self.beta, self.linx[0], self.norm_list[0], self.linx[1], self.norm_list[1], self.adj_intersection_in_out, self.adj_union_in_out, inci_norm=self.inci_norm)
                 out3 = aggregate(x, self.gama, self.linx[2], self.norm_list[2], self.linx[3], self.norm_list[3], self.adj_intersection_in_in, self.adj_union_in_in, inci_norm=self.inci_norm)
@@ -1094,7 +1092,7 @@ class DirGCNConv_2(torch.nn.Module):
                 # out2 = out3 = torch.zeros_like(out1)
                 out2 = torch.zeros_like(out1)
                 out3 = torch.zeros_like(out1)
-            # out2 += 1*self.lin[1](x)
+            out2 += 1*self.lin[1](x)
             # a = 1*self.lin[1](x)
             # b = 1*self.lin[2](x)
             # c = 1*self.lin[3](x)
