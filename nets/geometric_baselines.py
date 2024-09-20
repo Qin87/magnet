@@ -945,10 +945,10 @@ class DirGCNConv_2(torch.nn.Module):
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
             self.conv2_1 = Linear(output_dim*2, output_dim)
         elif args.conv_type == 'dir-sage':
-            self.lin_src_to_dst = SAGEConv(input_dim, output_dim,  root_weight=False)
-            self.lin_dst_to_src = SAGEConv(input_dim, output_dim, root_weight=False)
+            self.lin_src_to_dst = SAGEConv(input_dim, output_dim,  root_weight=True)
+            self.lin_dst_to_src = SAGEConv(input_dim, output_dim, root_weight=True)
 
-            self.linx = nn.ModuleList([SAGEConv(input_dim, output_dim, root_weight=False) for i in range(4)])
+            self.linx = nn.ModuleList([SAGEConv(input_dim, output_dim, root_weight=True) for i in range(4)])
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
             self.conv2_1 = Linear(output_dim * 2, output_dim)
@@ -966,7 +966,6 @@ class DirGCNConv_2(torch.nn.Module):
             self.conv2_1 = Linear(output_dim*heads*2, output_dim*heads)
         else:
             raise NotImplementedError
-
 
         self.First_self_loop = args.First_self_loop
         self.rm_gen_sloop = args.rm_gen_sloop
@@ -999,15 +998,6 @@ class DirGCNConv_2(torch.nn.Module):
         self.mlp = None
         if args.mlp:
             nhid = 64
-            # self.mlp = torch.nn.Sequential(
-            #     torch.nn.Linear(input_dim, nhid),
-            #     torch.nn.ReLU(),
-            #     torch.nn.Linear(nhid, nhid),
-            #     torch.nn.ReLU(),
-            #     # torch.nn.BatchNorm1d(nhid),
-            #     torch.nn.Linear(nhid, output_dim)
-            #     # ,torch.nn.BatchNorm1d(output_dim)
-            # )
             self.mlp = torch.nn.Linear(input_dim, output_dim)
         #     num_scale += 1
         jumping_knowledge = args.jk_inner
@@ -1092,7 +1082,7 @@ class DirGCNConv_2(torch.nn.Module):
                 # out2 = out3 = torch.zeros_like(out1)
                 out2 = torch.zeros_like(out1)
                 out3 = torch.zeros_like(out1)
-            out2 += 1*self.lin[1](x)
+            # out2 += 1*self.lin[1](x)
             # a = 1*self.lin[1](x)
             # b = 1*self.lin[2](x)
             # c = 1*self.lin[3](x)
@@ -1100,7 +1090,7 @@ class DirGCNConv_2(torch.nn.Module):
             # out3 += 2*self.lin[1](x)+ 2*self.lin[2](x)
 
             # out2 += 1 * self.lin[1](x)
-            # out3 +=  1 * self.lin[2](x)
+            # out3 += 1 * self.lin[2](x)
 
         elif self.conv_type in ['dir-gat', 'dir-sage']:
             edge_index_t = torch.stack([edge_index[1], edge_index[0]], dim=0)
@@ -1121,19 +1111,13 @@ class DirGCNConv_2(torch.nn.Module):
                     edge_index_t = diff_1
 
             out1 = aggregate_index(x, self.alpha, self.lin_src_to_dst, edge_index, self.lin_dst_to_src, edge_index_t, self.Intersect_alpha, self.Union_alpha)
-            if self.conv_type == 'dir-sage':
-                out1 = out1 + self.lin_sage[0](x)
             if not (self.beta == -1 and self.gama == -1):
                 if self.beta != -1:
                     out2 = aggregate_index(x, self.beta, self.linx[0], self.edge_in_out, self.linx[1], self.edge_out_in, self.Intersect_beta, self.Union_beta)
-                    if self.conv_type == 'dir-sage':
-                        out2 += self.lin_sage[1](x)
                 else:
                     out2 = torch.zeros_like(out1)
                 if self.gama != -1:
                     out3 = aggregate_index(x, self.gama, self.linx[2], self.edge_in_in, self.linx[3], self.edge_out_out, self.Intersect_gama, self.Union_gama)
-                    if self.conv_type == 'dir-sage':
-                        out3 += self.lin_sage[2](x)
                 else:
                     out3 = torch.zeros_like(out1)
 

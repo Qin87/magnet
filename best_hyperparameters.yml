@@ -168,12 +168,18 @@ WebKB/Cornell:
 WebKB/Texas:
   lr: 0.001  # bettern than 0.01
   mlp: 1  # 0(some split very bad)
-  nonlinear: 1
+  nonlinear: 1    # 1>0
   conv_type: dir-gcn
   layer: 2
   alphaDir: 0.5
   betaDir: -1     #
   gamaDir: -1     #
-  BN_model: 1  #
-  normalize: 0  #
+  BN_model: 0  #
+  normalize: 0  #  for SAGE
+  dropout: 0.5    # for ScaleNEt0.5, for SAGE0.0
 
+WebKB/Wisconsin:
+  lr: 0.0005
+  has_scheduler: 0
+  dropout: 0.0  # Mag(0),
+  NotImproved: 500
