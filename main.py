@@ -572,9 +572,11 @@ try:
                 accs, baccs, f1s, logits, class_detail = test()
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
-                if val_acc > best_val_acc:
+                # if val_acc > best_val_acc:
+                if val_loss < best_val_loss:
                     metrics_list = []
                     best_val_acc = val_acc
+                    best_val_loss = val_loss
 
                     test_acc = accs[2]
                     test_bacc = baccs[2]
@@ -590,14 +592,17 @@ try:
                 else:
                     CountNotImproved += 1
                 if epoch < 100:
-                    print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_acc: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_acc * 100,test_f1 * 100))
+                    print('epoch: {:3d}, val_loss:{:2f}, test_acc: {:.2f}, bacc: {:.2f}, tmp_test_acc: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_acc * 100,
+                                                                                                                              test_f1 * 100))
                 if epoch%100 == 0 :
                     # end_time = time.time()
 
-                    print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_acc: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_acc*100, test_f1 * 100))
+                    print('epoch: {:3d}, val_loss:{:2f}, test_acc: {:.2f}, bacc: {:.2f}, tmp_test_acc: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_acc*100,
+                                                                                                                              test_f1 * 100))
                     # print(end_time - start_time, file=log_file)
                     # print(end_time - start_time)
-                    print('epoch: {:3d}, val_loss:{:2f}, acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100, test_f1 * 100),file=log_file)
+                    print('epoch: {:3d}, val_loss:{:2f}, test_acc: {:.2f}, bacc: {:.2f}, tmp_test_f1: {:.2f}, f1: {:.2f}'.format(epoch, val_loss, test_acc * 100, test_bacc * 100, tmp_test_f1*100,
+                                                                                                                             test_f1 * 100),file=log_file)
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
                     for name, metric_temp in metrics_list:

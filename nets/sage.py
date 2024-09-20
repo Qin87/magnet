@@ -156,11 +156,15 @@ class GraphSAGEX(nn.Module):
         x = self.conv2(x, edge_index,edge_weight)
 
         return x
-
+from torch_geometric.nn import SAGEConv
 class GraphSAGEXBatNorm(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3):
+
+    def __init__(self,  nfeat, nclass, args):
         super(GraphSAGEXBatNorm, self).__init__()
-        self.dropout_p = dropout
+        self.dropout_p = args.dropout
+        nhid = args.feat_dim
+        nlayer= args.layer
+        SAGEConv_SHA = SAGEConv
         self.conv1 = SAGEConv_SHA(nfeat, nhid)
         self.conv2 = SAGEConv_SHA(nhid, nclass)
         if nlayer >2:
@@ -179,10 +183,13 @@ class GraphSAGEXBatNorm(nn.Module):
         self.non_reg_params = self.conv2.parameters()
 
         self.layer = nlayer
+        self.BN = args.BN_model
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x = self.batch_norm1(self.conv1(x, edge_index, edge_weight))
+        x = self.conv1(x, edge_index, edge_weight)
+        if self.BN:
+            x = self.batch_norm1(x)
         if self.layer == 1:
             return x
 
@@ -191,10 +198,15 @@ class GraphSAGEXBatNorm(nn.Module):
         if self.layer > 2:
             for iter_layer in self.convx:
                 x = F.dropout(x, p=self.dropout_p, training=self.training)
-                x = F.relu(self.batch_norm3(iter_layer(x, edge_index,edge_weight)))
+                x = iter_layer(x, edge_index,edge_weight)
+                if self.BN:
+                    x = self.batch_norm3(x)
+                x = F.relu(x)
 
         x = F.dropout(x, p=self.dropout_p, training=self.training)
-        x = self.batch_norm2(self.conv2(x, edge_index,edge_weight))
+        x = self.conv2(x, edge_index,edge_weight)
+        if self.BN:
+            x = self.batch_norm2(x)
 
         return x
 

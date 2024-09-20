@@ -646,7 +646,6 @@ class ChebNet_Ben(nn.Module):
         if self.dropout > 0:
             x = F.dropout(x, self.dropout, training=self.training)
 
-
         x = x.unsqueeze(0)      # can't simplify, because the input of Conv1d is 3D
         x = x.permute((0, 2, 1))
         x = self.Conv(x)

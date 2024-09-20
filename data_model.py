@@ -176,7 +176,7 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         elif args.net == 'SimGAT':
             model = StandGAT1BN_Qin(data_x.shape[0], num_features, args.feat_dim, n_cls, args.dropout, args.layer, head=args.heads)
         elif args.net == "SAGE":
-            model = GraphSAGEXBatNorm(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
+            model = GraphSAGEXBatNorm(nfeat=num_features,  nclass=n_cls, args=args)
             # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
         else:
             raise NotImplementedError("Not Implemented Architecture!"+ args.net)

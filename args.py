@@ -7,24 +7,24 @@ def parse_args():
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
-    parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=0)
+    parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=1)
     parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default=0, help="Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=str, choices=["remove", 0], default=0, help="Whether to remove generated self-loops to the graph")
 
 
-    parser.add_argument("--has_scheduler", type=int, default=1, help="Whether Optimizer has a scheduler")
+    parser.add_argument("--has_scheduler", type=int, default=0, help="Whether Optimizer has a scheduler")
     parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
 
     # for DirGNN
-    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
+    parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-sage")
     parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
     parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default="max")
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', 0], default=0)
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
     parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
-    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=0)
-    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=0.5)
+    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=-1)
+    parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
@@ -33,23 +33,23 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='SAGE', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
+    parser.add_argument('--net', type=str, default='Mag', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
-    parser.add_argument('--seed', type=int, default=10, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='WebKB/Cornell', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
-        'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  '
+    parser.add_argument('--seed', type=int, default=0, help='random seed')
+    parser.add_argument('--Dataset', type=str, default='WebKB/Wisconsin', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+        'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
-    parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
+    parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
     parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
-    parser.add_argument('-K', '--K', default=1, type=int)  # for cheb and Mag
+
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
 
     parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
-    parser.add_argument('--epoch', type=int, default=1500, help='epoch1500,')
-    parser.add_argument('--NotImproved', type=int, default=410, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
+    parser.add_argument('--epoch', type=int, default=3000, help='epoch1500,')
+    parser.add_argument('--NotImproved', type=int, default=500, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
 
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--lrweight', type=float, default=0.4, help='learning rate for edge_weight')
@@ -62,8 +62,9 @@ def parse_args():
     parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
-    parser.add_argument('-norm', '-n', action='store_true', help='if use activation function')
-    parser.add_argument('-activation', '-a', action='store_true', help='if use activation function')
+    parser.add_argument('-norm', '-n', type=int, default=0, help='if use activation function')          # no diff in 0 or 1
+    parser.add_argument('-activation', '-a', type=int, default=0, help='if use activation function')        # 0 is better
+    parser.add_argument('-K', '--K', default=1, type=int)  # for cheb and Mag
 
     # for SigManet
     parser.add_argument('--netflow', '-N', action='store_false', help='if use net flow')
@@ -95,7 +96,7 @@ def parse_args():
     # not use for ScaleNet
     parser.add_argument("--has_1_order", type=int, help="Whether Ai* has 1-order edges:0/1", default=0)
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')
-    parser.add_argument('--gcnconv_norm', '-gcnnorm', type=int, default=1, help='GCNConv forward, normalize edge_index during training')
+    parser.add_argument('--gcnconv_norm', '-gcnnorm', type=int, default=0, help='GCNConv forward, normalize edge_index during training')
     parser.add_argument('--to_undirected', '-tud', type=int, default=0, help='if convert graph to undirected')
     parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
