@@ -2,7 +2,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--use_best_hyperparams", type=int, help="whether use parameters in best_hyperparameters.yml", default=0)
+    parser.add_argument("--use_best_hyperparams", type=int, help="whether use parameters in best_hyperparameters.yml", default=1)
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlp", type=int, help="in ScaleNet, whether include mlp ", default=0)
@@ -38,7 +38,7 @@ def parse_args():
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
     parser.add_argument('--seed', type=int, default=0, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='WebKB/Wisconsin', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+    parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
@@ -59,7 +59,7 @@ def parse_args():
     parser.add_argument('-hds', '--heads', default=1, type=int)
 
     #  from Magnet
-    parser.add_argument('--q', type=float, default=0.25, help='q value for the phase matrix')
+    parser.add_argument('--q', type=float, default=0.15, help='q value for the phase matrix')
     parser.add_argument('--p_q', type=float, default=0.95, help='Direction strength, from 0.5 to 1.')
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
     parser.add_argument('-norm', '-n', type=int, default=0, help='if use activation function')          # no diff in 0 or 1

@@ -22,7 +22,7 @@ from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
-from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask
+from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask, print_x
 from nets.DiG_NoConv import union_edges
 from nets.models import random_walk_pe
 from nets.src2 import laplacian
@@ -34,6 +34,9 @@ from sklearn.metrics import balanced_accuracy_score, f1_score
 import warnings
 
 warnings.filterwarnings("ignore")
+
+
+
 
 
 def signal_handler(sig, frame):
@@ -194,7 +197,7 @@ args = use_best_hyperparams(args, args.Dataset) if args.use_best_hyperparams els
 data_x, data_y, edges, edges_weight, num_features, data_train_maskOrigin, data_val_maskOrigin, data_test_maskOrigin, IsDirectedGraph, edge_attr, data_batch = load_dataset(args)
 net_to_print, dataset_to_print = get_name(args, IsDirectedGraph)
 load_time = time.time()
-
+# data_x=print_x(data_x)
 log_directory, log_file_name_with_timestamp = log_file(net_to_print, dataset_to_print, args)
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)

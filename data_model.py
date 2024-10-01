@@ -605,3 +605,42 @@ def create_mask(node_index_list, total_nodes):
     mask[node_index_list] = True
 
     return mask
+
+
+def print_x(x):
+    x_min = torch.min(x).item()
+    x_max = torch.max(x).item()
+    zero_count = torch.sum(x == 0).item()
+    one_count = torch.sum(x == 1).item()
+
+    print(f"Minimum value: {x_min}")
+    print(f"Maximum value: {x_max}")
+    print(f"Number of zeros: {zero_count}")
+    print(f"Number of ones: {one_count}")
+
+    non_zero_one = x[(x != 0) & (x != 1)]
+    print("Values that are not 0 or 1:", end='')
+    if non_zero_one.numel() > 0:
+        formatted_values = [f"{v:.2f}" for v in non_zero_one.tolist()]
+        if len(formatted_values) > 10:
+            print(" ( total_num =", len(formatted_values),')\n', formatted_values[:10], "... (showing first 10)")
+        else:
+            print(formatted_values)
+        print(f"Total count of values not 0 or 1: {non_zero_one.numel()}")
+    else:
+        print("None")
+
+    x = torch.where(x != 0, torch.tensor(1.0, device=x.device), x)
+    print("\nall features are 0 or 1 now.")
+
+    x_min = torch.min(x).item()
+    x_max = torch.max(x).item()
+    zero_count = torch.sum(x == 0).item()
+    one_count = torch.sum(x == 1).item()
+
+    print(f"Minimum value: {x_min}")
+    print(f"Maximum value: {x_max}")
+    print(f"Number of zeros: {zero_count}")
+    print(f"Number of ones: {one_count}")
+
+    return x
