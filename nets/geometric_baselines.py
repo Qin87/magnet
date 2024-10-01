@@ -934,7 +934,7 @@ class DirGCNConv_2(torch.nn.Module):
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.lin = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(4)])
+        # self.lin = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(4)])
 
         if args.conv_type == 'dir-gcn':
             self.lin_src_to_dst = Linear(input_dim, output_dim)
@@ -943,7 +943,7 @@ class DirGCNConv_2(torch.nn.Module):
             self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
-            self.conv2_1 = Linear(output_dim*2, output_dim)
+            # self.conv2_1 = Linear(output_dim*2, output_dim)
         elif args.conv_type == 'dir-sage':
             self.lin_src_to_dst = SAGEConv(input_dim, output_dim,  root_weight=True)
             self.lin_dst_to_src = SAGEConv(input_dim, output_dim, root_weight=True)
