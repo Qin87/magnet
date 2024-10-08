@@ -1351,7 +1351,7 @@ class DiSAGE_x_nhid(torch.nn.Module):
         self.jk = args.jk
         out1 = out_dim  if layer == 1 else nhid
 
-        if self.jk is not None:
+        if self.jk not in (0, None):
             in_dim_jk = nhid * self.layer if self.jk == "cat" else nhid
             # self.lin = Linear(input_dim, out_dim)
             self.lin = Linear(in_dim_jk, nhid)
@@ -1389,7 +1389,7 @@ class DiSAGE_x_nhid(torch.nn.Module):
         else:
             raise ValueError(f"Model '{m}' not implemented")
 
-        if self.jk is not None:
+        if self.jk not in (0, None):
             in_dim_jk = nhid * self.layer if self.jk == "cat" else nhid
             self.lin = Linear(in_dim_jk, out_dim)
             # self.lin = Linear(in_dim_jk, nhid)
@@ -1421,7 +1421,8 @@ class DiSAGE_x_nhid(torch.nn.Module):
             for iter_layer in self.convx:
                 x = F.dropout(x, self.dropout, training=self.training)
                 x = F.relu(iter_layer(x, edge_index, edge_weight))
-                x = self.mlp23(x)  # Qin temp
+                # x = self.mlp23(x)  # Qin temp
+                # x = self.mlp21(x)  # Qin temp
                 xs += [x]
 
         x = F.dropout(x, self.dropout, training=self.training)
