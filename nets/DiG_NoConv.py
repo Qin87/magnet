@@ -1362,11 +1362,15 @@ class DiSAGE_x_nhid(torch.nn.Module):
             self.conv2 = DiSAGEConv(nhid, out1)
             self.convx = nn.ModuleList([DiSAGEConv(nhid, nhid) for _ in range(layer - 2)])
         elif m == 'G':
-            self.conv1 = DIGCNConv(input_dim, n_change)
-            # self.conv1 = DIGCNConv(input_dim, nhid)  # Qin temp
+            # self.conv1 = DIGCNConv(input_dim, n_change)
+            self.conv1 = DIGCNConv(input_dim, nhid)  # Qin temp
             self.mlp1 = Linear(nhid, nhid)      # Qin temp
+            self.mlp12 = Linear(nhid, nhid)      # Qin temp
+            self.mlp13 = Linear(nhid, nhid)      # Qin temp
             self.mlp11 = Linear(nhid, out1)      # Qin temp
             self.conv2 = DIGCNConv(nhid, out1)
+            self.mlp21 = Linear(out1, out1)
+            self.mlp23 = Linear(out1, out1)
             self.mlp2 = Linear(out1, out1)
             self.mlp22 = Linear(out1, out1)
             # self.conv2 = Linear(nhid, out1)     # Qin temp
@@ -1402,7 +1406,9 @@ class DiSAGE_x_nhid(torch.nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv1(x, edge_index, edge_weight)
         # x = self.mlp1(x)    # Qin temp
-        # x = self.mlp11(x)    # Qin temp
+        # x = self.mlp12(x)    # Qin temp
+        # x = self.mlp13(x)    # Qin temp
+        x = self.mlp11(x)    # Qin temp
         # x = F.relu(x)  # Qin temp
         xs += [x]
         if self.layer == 1:
@@ -1415,12 +1421,15 @@ class DiSAGE_x_nhid(torch.nn.Module):
             for iter_layer in self.convx:
                 x = F.dropout(x, self.dropout, training=self.training)
                 x = F.relu(iter_layer(x, edge_index, edge_weight))
+                x = self.mlp23(x)  # Qin temp
                 xs += [x]
 
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.conv2(x, edge_index, edge_weight)
-        x = self.mlp2(x)  # Qin temp
-        x = self.mlp22(x)  # Qin temp
+        # x = self.mlp2(x)  # Qin temp
+        # x = self.mlp23(x)  # Qin temp
+        # x = self.mlp21(x)  # Qin temp
+        # x = self.mlp22(x)  # Qin temp
         # x = F.relu(x)  # Qin temp
         # x = self.conv2(x)       # Qin temp
         xs += [x]
