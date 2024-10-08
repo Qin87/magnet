@@ -1423,6 +1423,7 @@ class DiSAGE_x_nhid(torch.nn.Module):
                 x = F.relu(iter_layer(x, edge_index, edge_weight))
                 # x = self.mlp23(x)  # Qin temp
                 # x = self.mlp21(x)  # Qin temp
+                # x = self.mlp2(x)  # Qin temp
                 xs += [x]
 
         x = F.dropout(x, self.dropout, training=self.training)

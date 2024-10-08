@@ -18,7 +18,7 @@ def parse_args():
     # for DirGNN
     parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-sage")
     parser.add_argument("--normalize", type=int, help="whether use layer normalization in ScaleNet, model:0/1", default=1)
-    parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default=0)
+    parser.add_argument("--jk", type=str, choices=["max", "cat",  0], default="max")
     parser.add_argument("--jk_inner", type=str, choices=["max", "cat", 'lstm', 0], default=0)
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
@@ -42,7 +42,7 @@ def parse_args():
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.0, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=3, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=4, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
 
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
