@@ -943,7 +943,7 @@ class DirGCNConv_2(torch.nn.Module):
             self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
 
             self.batch_norm2 = nn.BatchNorm1d(output_dim)
-            # self.conv2_1 = Linear(output_dim*2, output_dim)
+            self.conv2_1 = Linear(output_dim*2, output_dim)
         elif args.conv_type == 'dir-sage':
             self.lin_src_to_dst = SAGEConv(input_dim, output_dim,  root_weight=True)
             self.lin_dst_to_src = SAGEConv(input_dim, output_dim, root_weight=True)
@@ -996,7 +996,7 @@ class DirGCNConv_2(torch.nn.Module):
 
         num_scale = 3
         self.mlp = None
-        if args.mlp:
+        if args.mlpIn:
             nhid = 64
             self.mlp = torch.nn.Linear(input_dim, output_dim)
         #     num_scale += 1
@@ -1012,7 +1012,6 @@ class DirGCNConv_2(torch.nn.Module):
         x0= x
         device = edge_index.device
         if self.First_self_loop == 'add':
-
             edge_index, _ = add_self_loops(edge_index, fill_value=1)
         elif self.First_self_loop == 'remove':
             edge_index, _ = remove_self_loops(edge_index)
@@ -1137,8 +1136,10 @@ class DirGCNConv_2(torch.nn.Module):
             x = sum(out for out in xs)
 
         if self.mlp:
-            x = torch.cat((self.mlp(x0), x), dim=-1)
-            x = self.conv2_1(x)
+            # x = torch.cat((self.mlp(x0), x), dim=-1)
+            # x = self.conv2_1(x)
+
+            x += self.mlp(x0)
 
         if self.BN_model:
             x = self.batch_norm2(x)
@@ -2865,14 +2866,14 @@ class GCN_JKNet(torch.nn.Module):
 
         num_scale = layer
         self.mlp = None
-        if args.mlp:
+        if args.mlpOut:
             self.mlp = torch.nn.Sequential(
-                torch.nn.Linear(nfeat, nhid),
-                torch.nn.ReLU(),
-                torch.nn.Linear(nhid, nhid),
-                torch.nn.ReLU(),
+                # torch.nn.Linear(nfeat, nhid),
+                # torch.nn.ReLU(),
+                # torch.nn.Linear(nhid, nhid),
+                # torch.nn.ReLU(),
                 # torch.nn.BatchNorm1d(nhid),
-                torch.nn.Linear(nhid, output_dim)
+                torch.nn.Linear(nfeat, output_dim)
             # ,torch.nn.BatchNorm1d(output_dim)
             )
             num_scale += 1
@@ -2902,7 +2903,7 @@ class GCN_JKNet(torch.nn.Module):
                     x = F.normalize(x, p=2, dim=1)
             xs += [x]
 
-        if self.mlp:
+        if self.mlp not in [None, 0]:
             xs += [x_mlp]
 
         if self.jumping_knowledge:

@@ -20,7 +20,7 @@ telegram/:
 #
 cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
   has_scheduler: 1
-  conv_type: "dir-gcn"
+#  conv_type: "dir-gcn"
   nonlinear: 1
   net: ScaleNet   #  net: QiGi3
   feat_dim: 128   # better than 64
@@ -28,13 +28,13 @@ cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
   lr: 0.01    # 0.1(79), 0.01(80.7)
   normalize: 0
   BN_model: 0   # 0(29), 1(79)  # 1(79), 0(82.7)
-  First_self_loop : 'add'  # sure
+#  First_self_loop : 'add'  # sure
   jk: "max"     # max(80.7), cat(79.8), 0(76.9)
   jk_inner: 0
   dropout: 0.5   # 0.0(80.51), 0.5(80.76)
-  alphaDir: 2   # 0.5,1.-1 before having 2
-  betaDir: -1  # 1
-  gamaDir: -1  # -1 , 0.5
+#  alphaDir: 2   # 0.5,1.-1 before having 2
+#  betaDir: -1  # 1
+#  gamaDir: -1  # -1 , 0.5
 
 #
 citeseer/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.0_0.0_0.5----2.0_0.0_0.0----2.0_2.0_0.5-----0.5_2.0_0.5---0.0_0.5_2.0--0.5_2.0_2.0
@@ -47,7 +47,7 @@ citeseer/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.
   lr: 0.01
   normalize: 1    # 1(68.3), 0 much worse60.7,
   BN_model: 0   # 0(68.3), 1(66.9)  # for high performance 0 is better.
-  First_self_loop : 'add'     # 'add'(64.75), 'remove'(58.2), 0(57.5)
+#  First_self_loop : 'add'     # 'add'(64.75), 'remove'(58.2), 0(57.5)
   jk: 'max'   # 'max'(68.3). 'cat'(), 0(67.8)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
@@ -76,19 +76,28 @@ WikiCS/:
 #
 dgl/pubmed:
 #  net: ScaleNet
-  conv_type: "dir-gcn"   # sage
+#  conv_type: "dir-gcn"   # sage
   jk_inner: 'cat'   #cat(76.1±1.6), 0(75.9)
   nonlinear: 1
   layer: 4
-  lr: 0.01
+#  lr: 0.01
   normalize: 0
   BN_model: 0  #
-  First_self_loop : 'add'
+#  First_self_loop : 'add'
   jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
-  alphaDir: 0.5   # 0.5(72.2), 0(73.2)
-  betaDir: 0.5    #
-  gamaDir: -1
+#  alphaDir: 0.5   # 0.5(72.2), 0(73.2)
+#  betaDir: 0.5    #
+#  gamaDir: -1
+
+#  net: ScaleNet
+#  lr: 0.01
+
+  # Alternative configuration (commented out)
+  # net: 1iG
+  # lr: 0.001   # 0.01(74.8), 0.001(76.0)
+  #  net: 1iGi2
+  #  lr: 0.001   # 0.01(70.0), 0.001(75.1)
 
 
 

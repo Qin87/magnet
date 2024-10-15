@@ -1408,7 +1408,7 @@ class DiSAGE_x_nhid(torch.nn.Module):
         # x = self.mlp1(x)    # Qin temp
         # x = self.mlp12(x)    # Qin temp
         # x = self.mlp13(x)    # Qin temp
-        x = self.mlp11(x)    # Qin temp
+        # x = self.mlp11(x)    # Qin temp  # ######  using this
         # x = F.relu(x)  # Qin temp
         xs += [x]
         if self.layer == 1:
