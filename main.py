@@ -5,6 +5,7 @@ import sys
 import os
 
 import numpy as np
+from torch_sparse import SparseTensor
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
@@ -19,7 +20,7 @@ import torch
 import torch.nn.functional as F
 
 from args import parse_args
-from data.data_utils import keep_all_data, seed_everything, set_device
+from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask, print_x
@@ -256,6 +257,9 @@ edges = edges.to(device)
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)
+
+# edges = scaled_edges(edges, data_x.shape[0])
+
 
 criterion = CrossEntropy().to(device)
 n_cls = data_y.max().item() + 1
@@ -575,8 +579,8 @@ try:
                 accs, baccs, f1s, logits, class_detail = test()
                 train_acc, val_acc, tmp_test_acc = accs
                 train_f1, val_f1, tmp_test_f1 = f1s
-                # if val_acc > best_val_acc:
-                if val_loss < best_val_loss:
+                if val_acc > best_val_acc:
+                # if val_loss < best_val_loss:
                     metrics_list = []
                     best_val_acc = val_acc
                     best_val_loss = val_loss

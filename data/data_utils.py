@@ -12,6 +12,10 @@ import torch_geometric.transforms as transforms
 from torch_geometric.datasets import Actor
 import torch_geometric.transforms as T
 from ogb.nodeproppred import PygNodePropPredDataset
+from torch_sparse import SparseTensor
+
+from utils import get_norm_adj
+
 try:
     import dgl
     from dgl.data import CiteseerGraphDataset, CoraGraphDataset, PubmedGraphDataset, CoauthorCSDataset, AmazonCoBuyComputerDataset, AmazonCoBuyPhotoDataset, CoauthorPhysicsDataset, FraudDataset, \
@@ -117,6 +121,27 @@ def process_fixed_splits(splits_lst, num_nodes):
         test_mask[splits_lst[i]["test"], i] = 1
     return train_mask, val_mask, test_mask
 
+def scaled_edges(edge_index, num_nodes):
+    inci_norm = 'dir'
+    rm_gen_sLoop = False
+
+
+    row, col = edge_index
+    adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+    # adj_norm = get_norm_adj(adj, norm=inci_norm)  # this is key: improve from 57 to 72
+
+    adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
+    # adj_t_norm = get_norm_adj(adj_t, norm=inci_norm)
+
+    # adj_norm_in_in = get_norm_adj(adj @ adj, norm=inci_norm, rm_gen_sLoop=rm_gen_sLoop)
+
+    adj_in_in = adj_t @ adj_t
+    # Convert SparseTensor to edge_index
+    # edge_index = adj_in_in.coo()[:2]
+    row, col = adj_in_in.coo()[:2]
+    edge_index = torch.stack([row, col], dim=0).to(torch.long)
+
+    return edge_index
 
 class DummyDataset(object):
     def __init__(self, data, num_classes):
