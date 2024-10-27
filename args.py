@@ -42,8 +42,8 @@ def parse_args():
     parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
-    parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=600, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--dropout', type=float, default=0, help='dropout prob')
+    parser.add_argument('--layer', type=int, default=100, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
 
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP

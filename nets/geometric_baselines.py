@@ -1032,7 +1032,8 @@ class DirGCNConv_2(torch.nn.Module):
                 self.adj_t_norm = get_norm_adj(adj_t, norm=self.inci_norm)  #
                 # print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
-            if self.adj_norm_in_out is None and not (self.beta == -1 and self.beta == -1):
+            # if self.adj_norm_in_out is None and not (self.beta == -1 and self.beta == -1):
+            if self.adj_norm_in_out is None:
                 # if :
                 #     break
                 self.adj_norm_in_out = get_norm_adj(adj @ adj_t,norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
