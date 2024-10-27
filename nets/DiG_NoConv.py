@@ -1344,7 +1344,7 @@ class DiSAGE_x_nhid(torch.nn.Module):
         self.layer = args.layer
         head = args.heads
         K = args.K
-        if self.layer >1 :
+        if self.layer > 1:
             n_change = nhid
         else:
             n_change = out_dim
