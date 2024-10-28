@@ -164,11 +164,11 @@ class GraphSAGEXBatNorm(nn.Module):
         self.dropout_p = args.dropout
         nhid = args.feat_dim
         nlayer= args.layer
-        SAGEConv_SHA = SAGEConv
-        self.conv1 = SAGEConv_SHA(nfeat, nhid)
-        self.conv2 = SAGEConv_SHA(nhid, nclass)
+        # SAGEConv(input_dim, output_dim, root_weight=False)
+        self.conv1 = SAGEConv(nfeat, nhid)
+        self.conv2 = SAGEConv(nhid, nclass)
         if nlayer >2:
-            self.convx = nn.ModuleList([SAGEConv_SHA(nhid, nhid) for _ in range(nlayer-2)])
+            self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
             self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
@@ -177,7 +177,7 @@ class GraphSAGEXBatNorm(nn.Module):
 
         if nlayer==1:
             self.batch_norm1 = nn.BatchNorm1d(nclass)
-            self.conv1 = SAGEConv_SHA(nfeat, nclass)
+            self.conv1 = SAGEConv(nfeat, nclass)
             self.reg_params = []
 
         self.non_reg_params = self.conv2.parameters()
