@@ -385,9 +385,9 @@ class StandGCN2BN(nn.Module):
 class StandGCNXBN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
         super(StandGCNXBN, self).__init__()
-        self.conv1 = GCNConv_SHA(nfeat, nhid, cached= False, normalize=norm)
-        self.conv2 = GCNConv_SHA(nhid, nclass, cached=False, normalize=norm)
-        self.convx = nn.ModuleList([GCNConv_SHA(nhid, nhid, cached=False, normalize=norm) for _ in range(nlayer-2)])
+        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm)
+        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=norm)
+        self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=norm) for _ in range(nlayer-2)])
         self.dropout_p = dropout
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
@@ -400,21 +400,21 @@ class StandGCNXBN(nn.Module):
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-        x = self.batch_norm1(x)
+        x = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        # x = self.batch_norm1(x)
         x = F.relu(x)
 
         for iter_layer in self.convx:
-            x = F.dropout(x,p= self.dropout_p, training=self.training)
-            x, edge_index = iter_layer(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-            x= self.batch_norm3(x)
+            # x = F.dropout(x,p= self.dropout_p, training=self.training)
+            x = iter_layer(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+            # x= self.batch_norm3(x)
             x = F.relu(x)
 
-        x = F.dropout(x, p= self.dropout_p, training=self.training)
-        x, edge_index = self.conv2(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-        x = self.batch_norm2(x)
+        # x = F.dropout(x, p= self.dropout_p, training=self.training)
+        x = self.conv2(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        # x = self.batch_norm2(x)
         # x = F.relu(x)
-        x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
+        # x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
         return x
 
 
