@@ -2,12 +2,12 @@
 
 net_values="Mag "
 q_value=0
-# layer_values=" 2 3 4 5 "
-layer_values=" 0 0.5 1 "
+layer_values=" 2 3 4 5 "
+# layer_values=" 0 0.5 1 "
 imbal="100  "
 
-# 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'
-Direct_dataset=( 'WebKB/Cornell' 'WebKB/Texas' 'WebKB/Wisconsin' )
+# 'citeseer_npz/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'
+Direct_dataset=(  'WikiCS/')
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -24,7 +24,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py   --use_best_hyperparams=0   --num_split=20   --alphaDir="$layer" \
+            python3 main.py   --use_best_hyperparams=0   --num_split=20   --layer="$layer" \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
