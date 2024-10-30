@@ -116,9 +116,9 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   First_self_loop: 0
   jk: 'max'
   jk_inner: 0
-  alphaDir: 1
-  betaDir: -1
-  gamaDir: -1
+#  alphaDir: 1
+#  betaDir: -1
+#  gamaDir: -1
   seed: 0   # tried 2099,
 
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
