@@ -2,7 +2,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--use_best_hyperparams", type=int, default=0, help="whether use parameters in best_hyperparameters.yml")
+    parser.add_argument("--use_best_hyperparams", type=int, default=1, help="whether use parameters in best_hyperparameters.yml")
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlpIn", type=int, help="in ScaleNet, whether include mlp ", default=0)
@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("--inci_norm", type=str, choices=["dir", "sym", 'row'], default="dir")
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
     parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=1)
-    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=-1)
+    parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=1)
     parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--learn_alpha", action="store_true")
     parser.add_argument("--differ_AA", type=int, default=0, help="Whether test AA-A-At")
@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='Cheb', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
+    parser.add_argument('--net', type=str, default='ScaleNet', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
@@ -65,7 +65,7 @@ def parse_args():
     parser.add_argument('--p_inter', type=float, default=0.1, help='Inter-cluster edge probabilities.')
     parser.add_argument('-norm', '-n', type=int, default=0, help='if use activation function')          # no diff in 0 or 1
     parser.add_argument('-activation', '-a', type=int, default=0, help='if use activation function')        # 0 is better
-    parser.add_argument('-K', '--K', default=2, type=int)  # for cheb and Mag K=1(K=2 is better for citeseer, k=3 for telegram)
+    parser.add_argument('-K', '--K', default=4, type=int)  # for cheb and Mag K=1(K=2 is better for citeseer, k=3 for telegram)
 
     # for SigManet
     parser.add_argument('--netflow', '-N', action='store_false', help='if use net flow')
