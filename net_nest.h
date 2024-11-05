@@ -2,7 +2,7 @@
 
 net_values="Mag "
 q_value=0
-layer_values=" 2 3 4 5 "
+layer_values=" 22 23 54 59 "
 # layer_values=" 0 0.5 1 "
 imbal="100  "
 
@@ -25,7 +25,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py   --use_best_hyperparams=1   --num_split=10   --seed="$layer" \
+            python3 main.py      --num_split=10   --seed="$layer" \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid

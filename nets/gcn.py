@@ -328,8 +328,9 @@ class StandGCNX(nn.Module):
 
 class StandGCN1BN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1, norm=True):
-        super(StandGCN1BN, self).__init__()
+        super().__init__()
         self.conv1 = GCNConv_SHA(nfeat, nclass, cached=False, normalize=norm)
+        self.mlp1 = torch.nn.Linear(nclass, nclass)
         self.reg_params = []
         self.non_reg_params = self.conv1.parameters()
         self.is_add_self_loops = True
@@ -341,6 +342,7 @@ class StandGCN1BN(nn.Module):
         edge_index = adj
         x = F.dropout(x, p=self.dropout_p, training=self.training)  # the best arrangement of dropout and BN
         x, edge_index = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        # x= self.mlp1(x)
         x = self.batch_norm1(x)
         # x = F.dropout(x, p=self.dropout_p, training=self.training)  # the best arrangement of dropout and BN
 
@@ -349,7 +351,7 @@ class StandGCN1BN(nn.Module):
 
 class StandGCN2BN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2, norm=True):
-        super(StandGCN2BN, self).__init__()
+        super().__init__()
         self.conv1 = GCNConv_SHA(nfeat, nhid, cached= False, normalize=norm)
         self.conv2 = GCNConv_SHA(nhid, nhid, cached=False, normalize=norm)
         self.dropout_p = dropout
@@ -384,34 +386,47 @@ class StandGCN2BN(nn.Module):
 
 class StandGCNXBN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
-        super(StandGCNXBN, self).__init__()
-        self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm)
-        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=norm)
-        self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=norm) for _ in range(nlayer-2)])
+        super().__init__()
+        self.is_add_self_loops = True  # Qin TODO True is the original
+
+        if nlayer == 1:
+            self.conv1 = GCNConv(nfeat, nclass, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
+        else:
+            self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
+
+        self.mlp1 = torch.nn.Linear(nhid, nclass)
+        self.conv2 = GCNConv(nhid, nclass, cached=False, normalize=norm, add_self_loops=self.is_add_self_loops)
+        self.convx = nn.ModuleList([GCNConv(nhid, nhid, cached=False, normalize=norm, add_self_loops=self.is_add_self_loops) for _ in range(nlayer-2)])
         self.dropout_p = dropout
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nclass)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
-        self.is_add_self_loops = True  # Qin TODO True is the original
-        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+
+        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())  # no effect to layer=1,
         self.non_reg_params = self.conv2.parameters()
+
+        self.layer = nlayer
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x = self.conv1(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        x = self.conv1(x, edge_index, edge_weight)
+        # x = self.mlp1(x)
+        if self.layer == 1:
+            return x
         # x = self.batch_norm1(x)
         x = F.relu(x)
 
-        for iter_layer in self.convx:
-            # x = F.dropout(x,p= self.dropout_p, training=self.training)
-            x = iter_layer(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
-            # x= self.batch_norm3(x)
-            x = F.relu(x)
+        if self.layer>2:
+            for iter_layer in self.convx:
+                # x = F.dropout(x,p= self.dropout_p, training=self.training)
+                x = iter_layer(x, edge_index, edge_weight)
+                # x= self.batch_norm3(x)
+                x = F.relu(x)
 
         # x = F.dropout(x, p= self.dropout_p, training=self.training)
-        x = self.conv2(x, edge_index, edge_weight, is_add_self_loops=self.is_add_self_loops)
+        x = self.conv2(x, edge_index, edge_weight)
         # x = self.batch_norm2(x)
         # x = F.relu(x)
         # x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
@@ -743,13 +758,3 @@ class BinaryEdgeWeight(torch.autograd.Function):
         return grad_input
 def binary_approx(edge_weight, temperature=10.0):
     return torch.sigmoid(temperature * (edge_weight - 0.5))
-
-def create_gcn(nfeat, nhid, nclass, dropout, nlayer, norm=True):
-    if nlayer == 1:
-        model = StandGCN1BN(nfeat, nhid, nclass, dropout,nlayer, norm)
-    elif nlayer == 2:
-        model = StandGCN2BN(nfeat, nhid, nclass, dropout,nlayer,norm)
-    else:
-        model = StandGCNXBN(nfeat, nhid, nclass, dropout,nlayer,norm)
-
-    return model

@@ -6,7 +6,7 @@ import torch
 from torch_scatter import scatter_add
 
 from nets.gat import GATConvQin, StandGAT1BN_Qin
-from nets.gcn import ParaGCNXBN
+from nets.gcn import ParaGCNXBN, StandGCNXBN
 from nets.geometric_baselines import GCN_JKNet, GPRGNN, get_model, Sloop_JKNet, ScaleNet, RandomNet, High_Frequent
 from nets.models import JKNet, create_MLP, create_SGC, create_pgnn, GPRGNNNet1, GraphModel
 
@@ -14,7 +14,7 @@ from nets.Signum_quaternion import QuaNet_node_prediction_one_laplacian_Qin
 from nets.Signum import SigMaNet_node_prediction_one_laplacian_Qin
 from edge_nets.edge_data import to_undirectedBen
 from gens import test_directed
-from nets import create_gcn, create_gat
+from nets import  create_gat
 
 from data.data_utils import random_planetoid_splits, load_directedData
 from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel, GCNModel_Cheb
@@ -168,7 +168,7 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
     else:
         if args.net == 'GCN':
             # model = GCNModel_Cheb(num_features, n_cls,filter_num=args.feat_dim, dropout=args.dropout, layer=args.layer).to(device)
-            model = create_gcn(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
+            model = StandGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, norm=True)
         elif args.net == 'ParaGCN':
             model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
