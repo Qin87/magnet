@@ -390,6 +390,7 @@ class GCNModel_Cheb(torch.nn.Module):
         super().__init__()
         self.dropout = dropout
         self.conv1 = GCNConv(input_dim, filter_num)
+        self.mlp1 = torch.nn.Linear(filter_num, filter_num)
         self.conv2 = GCNConv(filter_num, filter_num)
         self.Conv = nn.Conv1d(filter_num, out_dim, kernel_size=1)
 
@@ -399,6 +400,7 @@ class GCNModel_Cheb(torch.nn.Module):
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
+        # x = self.mlp1(x)       # TODO  Qin for test
         if self.layer == 1:
             return self.process_output(x)
         x = F.relu(x)
