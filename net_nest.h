@@ -1,6 +1,6 @@
 #!/bin/bash
 
-net_values="GCN SAGE"
+net_values="SAGE"
 q_value=0
 layer_values=" 2 3 4 5 6 7 1 "
 # layer_values=" 0 0.5 1 "
@@ -25,7 +25,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py  --First_self_loop="add"    --layer="$layer" \
+            python3 main.py  --First_self_loop="add"  --net="$net"   --layer="$layer" \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
