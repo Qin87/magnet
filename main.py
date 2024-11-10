@@ -207,13 +207,13 @@ print(args)
 seed_everything(args.seed)
 
 no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = count_homophilic_nodes(edges, data_y)
-mst = find_max_spanning_tree(edges, data_x.shape[0])
+# mst = find_max_spanning_tree(edges, data_x.shape[0])
 
 
 
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
-    print(mst, file=log_file)
+    # print(mst, file=log_file)
 
 biedges = None
 edge_in = None
