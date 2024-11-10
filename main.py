@@ -254,6 +254,8 @@ device = set_device(args)
 data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
+if args.to_reverse_edge:
+    edges = edges[torch.tensor([1, 0])]
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)

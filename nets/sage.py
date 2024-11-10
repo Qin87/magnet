@@ -4,6 +4,8 @@ Ref: https://github.com/pyg-team/pytorch_geometric/blob/97d55577f1d0bf33c1bfbe0e
 """
 
 from typing import Union, Tuple
+
+# from torch_geometric.nn.conv.sage_conv import NormalizedSAGEConv
 from torch_geometric.typing import OptPairTensor, Adj, Size, OptTensor, PairTensor
 
 import torch
@@ -18,6 +20,9 @@ import numpy as np
 from torch_sparse import SparseTensor, matmul
 from torch_geometric.nn.conv import MessagePassing
 from torch_scatter import scatter_add
+
+from nets.sagcn import SAGCN, NormalizedSAGEConv
+
 
 class SAGEConv_SHA(MessagePassing):
     r"""The GraphSAGE operator from the `"Inductive Representation Learning on
@@ -160,11 +165,12 @@ from torch_geometric.nn import SAGEConv
 class GraphSAGEXBatNorm(nn.Module):
 
     def __init__(self,  nfeat, nclass, args):
-        super(GraphSAGEXBatNorm, self).__init__()
+        super().__init__()
         self.dropout_p = args.dropout
         nhid = args.feat_dim
         nlayer= args.layer
         # SAGEConv(input_dim, output_dim, root_weight=False)
+        # SAGEConv = NormalizedSAGEConv  # TODO Qin
         self.conv1 = SAGEConv(nfeat, nhid)
         self.conv2 = SAGEConv(nhid, nclass)
         if nlayer >2:
@@ -209,5 +215,3 @@ class GraphSAGEXBatNorm(nn.Module):
             x = self.batch_norm2(x)
 
         return x
-
-

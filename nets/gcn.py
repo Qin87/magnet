@@ -22,6 +22,10 @@ from torch_geometric.utils import add_remaining_self_loops, to_dense_batch
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_geometric.nn.inits import reset, glorot, zeros
 
+from nets.SAGCN2 import SAGCN2
+from nets.sagcn import SAGCN
+
+
 def gcn_norm0(edge_index, edge_weight=None, num_nodes=None, improved=False,
              add_self_loops=0, dtype=None):
 
@@ -385,10 +389,9 @@ class StandGCN2BN(nn.Module):
 
 
 class StandGCNXBN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, norm=True):
+    def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, is_add_self_loops=True, norm=True):
         super().__init__()
-        self.is_add_self_loops = True  # Qin TODO True is the original
-
+        self.is_add_self_loops = is_add_self_loops  # Qin True is the original
         if nlayer == 1:
             self.conv1 = GCNConv(nfeat, nclass, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
         else:
