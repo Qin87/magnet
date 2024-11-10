@@ -2,13 +2,13 @@
 
 net_values="GCN "
 q_value=0
-layer_values=" 2 3 4 5 1"
+layer_values=" 2 3 4 5 6 7 1 "
 # layer_values=" 0 0.5 1 "
 imbal="100  "
 
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'
-Direct_dataset=(    'WikiCS_U/')
+Direct_dataset=(    'directed-roman-empire/')
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"

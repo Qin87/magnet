@@ -458,3 +458,75 @@ def even_quantile_labels(vals, nclasses, verbose=True):
         for class_idx, interval in enumerate(interval_lst):
             print(f"Class {class_idx}: [{interval[0]}, {interval[1]})]")
     return label
+
+
+import numpy as np
+from collections import defaultdict
+
+
+def find_max_spanning_tree(edge_index, num_nodes, weights=None):
+    """
+    Find the maximum spanning tree of a graph using modified Kruskal's algorithm.
+
+    Parameters:
+    edge_index: numpy array or list of shape (2, num_edges) containing edges
+    num_nodes: int, number of nodes in the graph
+    weights: numpy array or list of shape (num_edges,) containing edge weights
+            If None, all weights are set to 1
+
+    Returns:
+    mst_edges: list of edges in the maximum spanning tree
+    """
+
+    # Convert edge_index to list of edges with weights
+    if weights is None:
+        weights = np.ones(edge_index.shape[1])
+
+    edges = [(edge_index[0, i], edge_index[1, i], weights[i])
+             for i in range(edge_index.shape[1])]
+
+    # Sort edges by weight in descending order
+    edges.sort(key=lambda x: x[2], reverse=True)
+
+    # Initialize disjoint set data structure
+    parent = list(range(num_nodes))
+    rank = [0] * num_nodes
+
+    def find(x):
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
+
+    def union(x, y):
+        px, py = find(x), find(y)
+        if px == py:
+            return
+        if rank[px] < rank[py]:
+            px, py = py, px
+        parent[py] = px
+        if rank[px] == rank[py]:
+            rank[px] += 1
+
+    # Build maximum spanning tree
+    mst_edges = []
+    for u, v, w in edges:
+        if find(u) != find(v):
+            union(u, v)
+            mst_edges.append((u, v, w))
+            if len(mst_edges) == num_nodes - 1:
+                break
+
+    return mst_edges
+
+
+# Example usage
+def example():
+    # Example graph
+    edge_index = np.array([[0, 0, 1, 1, 2],
+                           [1, 2, 2, 3, 3]])
+    num_nodes = 4
+    weights = np.array([4, 3, 5, 2, 1])
+
+    mst = find_max_spanning_tree(edge_index, num_nodes, weights)
+    print("Maximum Spanning Tree edges:", mst)
+    return mst

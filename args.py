@@ -9,7 +9,7 @@ def parse_args():
     parser.add_argument("--mlpOut", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
     parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=1)
-    parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default=0, help="Whether to add self-loops to the graph")
+    parser.add_argument("--First_self_loop", type=str, choices=["add", "remove",  0], default="add", help="Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=str, choices=["remove", 0], default=0, help="Whether to remove generated self-loops to the graph")
 
 
@@ -39,7 +39,7 @@ def parse_args():
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
     parser.add_argument('--seed', type=int, default=101, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='cora_ml/', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+    parser.add_argument('--Dataset', type=str, default='directed-roman-empire/', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
