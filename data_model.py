@@ -396,7 +396,6 @@ def load_dataset(args):
             dataset_num_features = data_x.shape[1]
 
     IsDirectedGraph = test_directed(edges)        # time consuming
-    # IsDirectedGraph = args.IsDirectedData
     print("This is directed graph: ", IsDirectedGraph)
     # print("data_x", data_x.shape)  # [11701, 300])
 
@@ -593,7 +592,7 @@ def count_homophilic_nodes(edge_index, y):
             no_in_neighbors += 1
             no_in_nodes.append(node)
 
-            # Check out-neighbor homophily
+        # Check out-neighbor homophily
         if len(out_neighbors) > 0:
             out_neighbor_labels = y[out_neighbors]
             out_most_common_label = torch.mode(out_neighbor_labels).values.item()

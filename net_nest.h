@@ -8,7 +8,7 @@ imbal="100  "
 
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'
-Direct_dataset=(  'WikiCS/'  'citeseer/' 'WikipediaNetwork/squirrel')
+Direct_dataset=(    'WikiCS_U/')
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
