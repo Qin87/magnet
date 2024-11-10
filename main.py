@@ -5,7 +5,10 @@ import sys
 import os
 
 import numpy as np
+from torch_geometric.utils import add_self_loops
 from torch_sparse import SparseTensor
+
+from nets.geometric_baselines import add_self_loop_qin
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
