@@ -28,6 +28,7 @@ from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
+from nets.sagcn import SAGCN, SAGCNXBN
 from nets.sage import GraphSAGEXBatNorm
 # from nets.UGCL import UGCL_Model_Qin
 from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin, ChebNet_Ben_05
@@ -168,7 +169,7 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
     else:
         if args.net == 'GCN':
             # model = GCNModel_Cheb(num_features, n_cls,filter_num=args.feat_dim, dropout=args.dropout, layer=args.layer).to(device)
-            model = StandGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, norm=True)
+            model = StandGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.First_self_loop, norm=True)
         elif args.net == 'ParaGCN':
             model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
         elif args.net == 'GAT':
@@ -178,6 +179,11 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
         elif args.net == "SAGE":
             model = GraphSAGEXBatNorm(nfeat=num_features,  nclass=n_cls, args=args)
             # model = create_sage(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout,nlayer=args.layer)
+        elif args.net == "SAGCN":
+            model = SAGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, norm=True)
+            # model = GraphSAGEXBatNorm(nfeat=num_features, nclass=n_cls, args=args)
+            # model = SAGCN(num_features,  n_cls,  cached= False, normalize=True, add_self_loops=True)
+            # model = SAGCN(nfeat=num_features,  nclass=n_cls, args=args)
         else:
             raise NotImplementedError("Not Implemented Architecture!"+ args.net)
     model = model.to(device)
@@ -203,6 +209,12 @@ def get_name(args, IsDirectedGraph):
         net_to_print = 'LNorm_' + net_to_print
     else:
         net_to_print = 'NoLNorm_' + net_to_print
+
+    if args.net == 'GCN':
+        if args.First_self_loop == 'add':
+            net_to_print = net_to_print + '_AddSloop'
+        else:
+            net_to_print = net_to_print + '_NoSloop'
     if args.net[1] == 'i':
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
