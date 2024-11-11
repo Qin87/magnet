@@ -169,9 +169,9 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
     else:
         if args.net == 'GCN':
             # model = GCNModel_Cheb(num_features, n_cls,filter_num=args.feat_dim, dropout=args.dropout, layer=args.layer).to(device)
-            model = StandGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.First_self_loop, norm=True)
+            model = StandGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.First_self_loop, norm=args.gcn_norm)
         elif args.net == 'ParaGCN':
-            model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcnconv_norm)
+            model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcn_norm)
         elif args.net == 'GAT':
             model = create_gat(nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, head=args.heads)
         elif args.net == 'SimGAT':
@@ -210,18 +210,28 @@ def get_name(args, IsDirectedGraph):
     else:
         net_to_print = 'NoLNorm_' + net_to_print
 
+
+
     if args.net == 'GCN':
-        if args.First_self_loop == 'add':
+        if args.First_self_loop == 1 or args.add_selfloop:
             net_to_print = net_to_print + '_AddSloop'
         else:
             net_to_print = net_to_print + '_NoSloop'
+        if args.gcn_norm == 1:
+            net_to_print = net_to_print + '_norm'
+        else:
+            net_to_print = net_to_print + '_Nonorm'
+    else:
+        if args.add_selfloop:
+            net_to_print = net_to_print + '_AddSloop'
+
     if args.net[1] == 'i':
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
 
-        if args.First_self_loop == 'add':
+        if args.First_self_loop == 1:
             net_to_print = net_to_print + '_AddSloop'
-        elif args.First_self_loop == 'remove':
+        elif args.First_self_loop == -1:
             net_to_print = net_to_print + '_RmSloop'
         else:
             net_to_print = net_to_print + '_NoSloop'
@@ -396,7 +406,6 @@ def load_dataset(args):
             dataset_num_features = data_x.shape[1]
 
     IsDirectedGraph = test_directed(edges)        # time consuming
-    # IsDirectedGraph = args.IsDirectedData
     print("This is directed graph: ", IsDirectedGraph)
     # print("data_x", data_x.shape)  # [11701, 300])
 
@@ -593,7 +602,7 @@ def count_homophilic_nodes(edge_index, y):
             no_in_neighbors += 1
             no_in_nodes.append(node)
 
-            # Check out-neighbor homophily
+        # Check out-neighbor homophily
         if len(out_neighbors) > 0:
             out_neighbor_labels = y[out_neighbors]
             out_most_common_label = torch.mode(out_neighbor_labels).values.item()

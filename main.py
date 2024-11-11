@@ -5,7 +5,10 @@ import sys
 import os
 
 import numpy as np
+from torch_geometric.utils import add_self_loops
 from torch_sparse import SparseTensor
+
+from nets.geometric_baselines import add_self_loop_qin
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
@@ -20,7 +23,7 @@ import torch
 import torch.nn.functional as F
 
 from args import parse_args
-from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges
+from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges, find_max_spanning_tree
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask, print_x
@@ -204,20 +207,19 @@ if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 print(args)
 
+if args.add_selfloop:
+    edges, _ = add_self_loops(edges)
+
 seed_everything(args.seed)
 
 no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = count_homophilic_nodes(edges, data_y)
-# no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = [1] * 10
+# mst = find_max_spanning_tree(edges, data_x.shape[0])
+
+
 
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
-    # print("in_homophilic_nodes:", in_homophilic_nodes, file=log_file)
-    # print(file=log_file)
-    # print("out_homophilic_nodes:", out_homophilic_nodes, file=log_file)
-    # print(file=log_file)
-    # print("no_in_nodes:", no_in_nodes, file=log_file)
-    # print(file=log_file)
-    # print("no_out_nodes:", no_out_nodes, file=log_file)
+    # print(mst, file=log_file)
 
 biedges = None
 edge_in = None

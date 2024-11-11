@@ -98,7 +98,7 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
         adj_t = edge_index
         if not adj_t.has_value():
             adj_t = adj_t.fill_value(1., dtype=dtype)
-        if add_self_loops == 'add':
+        if add_self_loops == 1:
             adj_t = fill_diag(adj_t, fill_value)
         deg = sum(adj_t, dim=1)
         deg_inv_sqrt = deg.pow_(-0.5)
@@ -114,7 +114,7 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
             edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
 
-        if add_self_loops == 'add':
+        if add_self_loops == 1:
             edge_index, tmp_edge_weight = add_remaining_self_loops(
                 edge_index, edge_weight, fill_value, num_nodes)
             assert tmp_edge_weight is not None
@@ -175,7 +175,7 @@ class GCNConv_SHA(MessagePassing):
                  improved: bool = False, cached: bool = False,
                  normalize: bool = True, bias: bool = True, **kwargs):
 
-        kwargs.setdefault('aggr', 'add')
+        kwargs.setdefault('aggr', 1)
         super(GCNConv_SHA, self).__init__(**kwargs)
 
         self.in_channels = in_channels
