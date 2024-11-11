@@ -462,9 +462,9 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 def get_second_directed_adj(selfloop, edge_index, num_nodes, dtype):
     edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                              device=edge_index.device)
-    if selfloop == 'add':
+    if selfloop == 1:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
-    elif selfloop == 'remove':
+    elif selfloop == -1:
         edge_index, _ = remove_self_loops(edge_index)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
@@ -542,9 +542,9 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     selfloop = args.First_self_loop
     norm = args.inci_norm
     device = edge_index.device
-    if selfloop == 'add':
+    if selfloop == 1:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       # with selfloop, QiG get better
-    elif selfloop == 'remove':
+    elif selfloop == -1:
         edge_index, _ = remove_self_loops(edge_index)
     edge_index = torch.unique(edge_index, dim=1).to(device)
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
@@ -573,9 +573,9 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
-    if self_loop == 'add':
+    if self_loop == 1:
         edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
-    elif self_loop == 'remove':
+    elif self_loop == -1:
         edge_index, _ = remove_self_loops(edge_index)
     row, col = edge_index
     deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)  # row degree
@@ -737,9 +737,9 @@ def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_w
     if edge_weight is None:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
-    if selfloop == 'add':
+    if selfloop == 1:
         edge_index, edge_weight = add_self_loops(edge_index.long(), edge_weight, fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
-    elif selfloop == 'remove':
+    elif selfloop == -1:
         edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
     edge_weight = edge_weight.to(device)
@@ -1125,7 +1125,7 @@ def sparse_boolean_multi_hopExhaust(args, A, k, mode='union'):
     else:   # intersection
         A_result = intersect_sparse_tensors(A_in, A_out)
 
-    if selfloop == 'remove':
+    if selfloop == -1:
         A_result = sparese_remove_self_loops(A_result)
     all_hops = [A_result]
 
@@ -1142,7 +1142,7 @@ def sparse_boolean_multi_hopExhaust(args, A, k, mode='union'):
 
             # num_nonzero_result = A_result._nnz()
             # print('num of edges:', num_nonzero_result)
-            if selfloop == 'remove':
+            if selfloop == -1:
                 A_result = sparese_remove_self_loops(A_result)
             all_hops.append(A_result)
 
@@ -1174,7 +1174,7 @@ def sparse_boolean_multi_hop_DirGNN(has_1_order, rm_gen_self_loop, A, k):
     num_nonzero_out = B_in._nnz()
     print('number of edges:', num_nonzero_in, num_nonzero_out)
 
-    if rm_gen_self_loop == 'remove':
+    if rm_gen_self_loop == -1:
         order_tuple_1 = [sparse_remove_self_loops(A_in), sparse_remove_self_loops(B_in), sparse_remove_self_loops(A_out), sparse_remove_self_loops(B_out)]
     else:
         order_tuple_1 = [A_in, B_in, A_out, B_out]
@@ -1185,7 +1185,7 @@ def sparse_boolean_multi_hop_DirGNN(has_1_order, rm_gen_self_loop, A, k):
         for edge_matrix in order_tuple_list[-1]:        # TODO : might improve efficiency for symmetry
             N_in = sparse_mm_safe(edge_matrix, A)
             N_out = sparse_mm_safe(edge_matrix, A.t())
-            if rm_gen_self_loop == 'remove':
+            if rm_gen_self_loop == -1:
                 order_tuple_temp.extend([sparse_remove_self_loops(N_in), sparse_remove_self_loops(N_out)])
             else:
                 order_tuple_temp.extend([N_in, N_out])
@@ -1238,7 +1238,7 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
 
     # A_in = sparse_mm_safe(A, A)
     # A_out = sparse_mm_safe(A.t(), A.t())
-    if selfloop == 'remove':
+    if selfloop == -1:
         A_in = sparse_remove_self_loops(A_in)
         A_out = sparse_remove_self_loops(A_out)
     num_nonzero_in = A_in._nnz()
@@ -1249,16 +1249,16 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
         A_result = A_in + A_out
         A_result = A_result.coalesce()
         A_result._values().clamp_(0, 1)  # Ensuring binary values
-        if selfloop == 'remove':
+        if selfloop == -1:
             A_result = sparse_remove_self_loops(A_result)
         all_hops = [A_result]
     elif mode == 'intersection':
         A_result = intersect_sparse_tensors_noDense(A_in, A_out)
-        if selfloop == 'remove':
+        if selfloop == -1:
             A_result = sparse_remove_self_loops(A_result)
         all_hops = [A_result]
     elif mode == 'separate':
-        if selfloop == 'remove':
+        if selfloop == -1:
             A_in = sparse_remove_self_loops(A_in)
             A_out = sparse_remove_self_loops(A_out)
         all_hops = [A_in, A_out]
@@ -1272,7 +1272,7 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
         A_out = sparse_mm_safe(A.t(), A_out)
         A_out = sparse_mm_safe(A_out, A)
 
-        if selfloop == 'remove':
+        if selfloop == -1:
             A_in = sparse_remove_self_loops(A_in)
             A_out = sparse_remove_self_loops(A_out)
 
@@ -1286,18 +1286,18 @@ def sparse_boolean_multi_hop(args, A, k, mode='union'):
             A_result._values().clamp_(0, 1)  # Ensuring binary values
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (union): ', num_nonzero)
-            if selfloop == 'remove':
+            if selfloop == -1:
                 A_result = sparse_remove_self_loops(A_result)
             all_hops.append(A_result)
         elif mode == 'intersection':
             A_result = intersect_sparse_tensors_noDense(A_in, A_out)
             num_nonzero = A_result._nnz()
             print(hop + 2, 'order num of edges (intersection): ', num_nonzero)
-            if selfloop == 'remove':
+            if selfloop == -1:
                 A_result = sparse_remove_self_loops(A_result)
             all_hops.append(A_result)
         elif mode == 'separate':
-            if selfloop == 'remove':
+            if selfloop == -1:
                 A_in = sparse_remove_self_loops(A_in)
                 A_out = sparse_remove_self_loops(A_out)
             all_hops.extend([A_in, A_out])
@@ -1409,9 +1409,9 @@ def sparse_intersection(U, I):
 def Qin_get_second_directed_adj(args, edge_index, num_nodes, k, IsExhaustive, mode, norm='dir'):     #
     self_loop = args.First_self_loop
     device = edge_index.device
-    if self_loop == 'add':
+    if self_loop == 1:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
-    elif self_loop == 'remove':
+    elif self_loop == -1:
         edge_index, _ = remove_self_loops(edge_index)
     edge_index = edge_index.to(device)
 
@@ -1510,9 +1510,9 @@ def Qin_get_all_directed_adj(args,  edge_index, num_nodes, k, IsExhaustive, mode
     rm_gen_sloop = args.rm_gen_sloop
 
     device = edge_index.device
-    if selfloop == 'add':
+    if selfloop == 1:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)       #
-    elif selfloop == 'remove':
+    elif selfloop == -1:
         edge_index, _ = remove_self_loops(edge_index)
     else:
         pass

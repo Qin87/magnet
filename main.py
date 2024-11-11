@@ -207,6 +207,9 @@ if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 print(args)
 
+if args.add_selfloop:
+    edges, _ = add_self_loops(edges)
+
 seed_everything(args.seed)
 
 no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = count_homophilic_nodes(edges, data_y)

@@ -210,8 +210,10 @@ def get_name(args, IsDirectedGraph):
     else:
         net_to_print = 'NoLNorm_' + net_to_print
 
+
+
     if args.net == 'GCN':
-        if args.First_self_loop == 'add':
+        if args.First_self_loop == 1 or args.add_selfloop:
             net_to_print = net_to_print + '_AddSloop'
         else:
             net_to_print = net_to_print + '_NoSloop'
@@ -219,13 +221,17 @@ def get_name(args, IsDirectedGraph):
             net_to_print = net_to_print + '_norm'
         else:
             net_to_print = net_to_print + '_Nonorm'
+    else:
+        if args.add_selfloop:
+            net_to_print = net_to_print + '_AddSloop'
+
     if args.net[1] == 'i':
         if args.paraD:
             net_to_print = net_to_print + 'paraD' + str(args.coeflr)
 
-        if args.First_self_loop == 'add':
+        if args.First_self_loop == 1:
             net_to_print = net_to_print + '_AddSloop'
-        elif args.First_self_loop == 'remove':
+        elif args.First_self_loop == -1:
             net_to_print = net_to_print + '_RmSloop'
         else:
             net_to_print = net_to_print + '_NoSloop'
