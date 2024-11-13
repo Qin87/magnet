@@ -460,7 +460,7 @@ class GraphSAGEXBatNorm(nn.Module):
         # SAGEConv= SAGEConv_QinNov
         self.conv1 = SAGEConv(nfeat, nhid)
         # self.conv1_1 = SAGEConv(nfeat, nhid)
-        # self.conv2 = SAGEConv(nhid, nclass)
+        self.conv2 = SAGEConv(nhid, nclass)
         if nlayer >2:
             self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
             self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
@@ -488,7 +488,7 @@ class GraphSAGEXBatNorm(nn.Module):
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x1 = self.conv1(x, edge_index)
+        x = self.conv1(x, edge_index)
         # x2 = self.conv1_1(x, edge_index, edge_weight)
         # x= torch.cat((x1, x2), dim=-1)
         # x = self.mlp1(x1) + self.mlp2(x2)
@@ -500,7 +500,7 @@ class GraphSAGEXBatNorm(nn.Module):
             # x = self.Conv(x)
             # x = F.log_softmax(x, dim=1)  # transforms the raw output scores (logits) into log probabilities, which are more numerically stable for computation and training
             # x = x.permute(2, 1, 0).squeeze()
-            return x1
+            return x
 
         x = F.relu(x)
 
