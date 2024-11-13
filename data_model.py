@@ -29,7 +29,7 @@ from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
 from nets.sagcn import SAGCN, SAGCNXBN
-from nets.sage import GraphSAGEXBatNorm
+from nets.gcn import GraphSAGEXBatNorm
 # from nets.UGCL import UGCL_Model_Qin
 from nets.sparse_magnet import ChebNet_Ben, ChebNet_BenQin, ChebNet_Ben_05
 import torch.nn.init as init
@@ -169,7 +169,7 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
     else:
         if args.net == 'GCN':
             # model = GCNModel_Cheb(num_features, n_cls,filter_num=args.feat_dim, dropout=args.dropout, layer=args.layer).to(device)
-            model = StandGCNXBN(num_features, args.feat_dim, n_cls, args.dropout, args.layer, args.First_self_loop, norm=args.gcn_norm)
+            model = StandGCNXBN(num_features, n_cls, args=args)
         elif args.net == 'ParaGCN':
             model = ParaGCNXBN(num_node=data_x.shape[0] ,num_edges=num_edges, nfeat=num_features, nhid=args.feat_dim, nclass=n_cls, dropout=args.dropout, nlayer=args.layer, norm= args.gcn_norm)
         elif args.net == 'GAT':

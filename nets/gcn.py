@@ -4,7 +4,7 @@ Ref: https://github.com/pyg-team/pytorch_geometric/blob/97d55577f1d0bf33c1bfbe0e
 """
 from typing import Optional, Tuple
 from torch_geometric.typing import Adj, OptTensor, PairTensor
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import GCNConv, SAGEConv
 from torch_geometric.utils import add_self_loops, degree, remove_self_loops
 import torch
 import torch.nn as nn
@@ -24,6 +24,8 @@ from torch_geometric.nn.inits import reset, glorot, zeros
 
 from nets.SAGCN2 import SAGCN2
 from nets.sagcn import SAGCN
+from nets.sage import SAGEConv_SHA
+from nets.src2.sage_qin import SAGEConv_QinNov
 
 
 def gcn_norm0(edge_index, edge_weight=None, num_nodes=None, improved=False,
@@ -389,11 +391,18 @@ class StandGCN2BN(nn.Module):
 
 
 class StandGCNXBN(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout, nlayer=3, is_add_self_loops=True, norm=True):
+    def __init__(self, nfeat, nclass, args):
         super().__init__()
+        nhid = args.feat_dim
+        dropout = args.dropout
+        nlayer = args.layer
+        is_add_self_loops = args.First_self_loop
+        norm = args.gcn_norm
         self.is_add_self_loops = is_add_self_loops  # Qin True is the original
         if nlayer == 1:
             self.conv1 = GCNConv(nfeat, nclass, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
+            # self.conv1 = SAGEConv_QinNov(nfeat, nclass)      #  delete
+            # self.conv1 = SAGEConv(nfeat, nclass)      #  delete
         else:
             self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
 
@@ -407,14 +416,14 @@ class StandGCNXBN(nn.Module):
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
 
-        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())  # no effect to layer=1,
-        self.non_reg_params = self.conv2.parameters()
+        # self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())  # no effect to layer=1,
+        # self.non_reg_params = self.conv2.parameters()
 
         self.layer = nlayer
 
     def forward(self, x, adj, edge_weight=None):
         edge_index = adj
-        x = self.conv1(x, edge_index, edge_weight)
+        x = self.conv1(x, edge_index)
         # x = self.mlp1(x)
         if self.layer == 1:
             return x
@@ -435,6 +444,80 @@ class StandGCNXBN(nn.Module):
         # x = F.dropout(x, p=self.dropout_p, training=self.training)      # this is the best dropout arrangement
         return x
 
+
+class GraphSAGEXBatNorm(nn.Module):
+    def __init__(self,  nfeat, nclass, args):
+        super().__init__()
+        self.dropout_p = args.dropout
+        nhid = args.feat_dim
+        nlayer= args.layer
+        # self.Conv = nn.Conv1d(nhid*2 , nclass, kernel_size=1)
+        # SAGEConv(input_dim, output_dim, root_weight=False)
+        # SAGEConv = NormalizedSAGEConv  #  Qin
+        # SAGEConv= SAGEConv_SHA
+        # SAGEConv= SAGEConv_Qin
+        # SAGEConv= GCNConv
+        # SAGEConv= SAGEConv_QinNov
+        self.conv1 = SAGEConv(nfeat, nhid)
+        # self.conv1_1 = SAGEConv(nfeat, nhid)
+        # self.conv2 = SAGEConv(nhid, nclass)
+        if nlayer >2:
+            self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
+            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nclass)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        if nlayer==1:
+            # self.batch_norm1 = nn.BatchNorm1d(nclass)
+
+            self.conv1 = SAGEConv(nfeat, nclass)
+
+            # self.conv1 = SAGEConv(nfeat, nhid)        #  delete after test Qin
+            self.mlp1 = torch.nn.Linear(nhid, nhid)
+            self.mlp2 = torch.nn.Linear(nhid, nhid)
+
+        #     self.reg_params =[]
+        #     self.non_reg_params = self.conv2.parameters()
+        # else:
+        #     self.non_reg_params = self.conv2.parameters()
+
+        self.layer = nlayer
+        self.BN = args.BN_model
+
+    def forward(self, x, adj, edge_weight=None):
+        edge_index = adj
+        x1 = self.conv1(x, edge_index)
+        # x2 = self.conv1_1(x, edge_index, edge_weight)
+        # x= torch.cat((x1, x2), dim=-1)
+        # x = self.mlp1(x1) + self.mlp2(x2)
+        # if self.BN:
+        #     x = self.batch_norm1(x)
+        if self.layer == 1:
+            # x = x.unsqueeze(0)  # can't simplify, because the input of Conv1d is 3D
+            # x = x.permute((0, 2, 1))
+            # x = self.Conv(x)
+            # x = F.log_softmax(x, dim=1)  # transforms the raw output scores (logits) into log probabilities, which are more numerically stable for computation and training
+            # x = x.permute(2, 1, 0).squeeze()
+            return x1
+
+        x = F.relu(x)
+
+        if self.layer > 2:
+            for iter_layer in self.convx:
+                x = F.dropout(x, p=self.dropout_p, training=self.training)
+                x = iter_layer(x, edge_index,edge_weight)
+                if self.BN:
+                    x = self.batch_norm3(x)
+                x = F.relu(x)
+
+        x = F.dropout(x, p=self.dropout_p, training=self.training)
+        x = self.conv2(x, edge_index,edge_weight)
+        if self.BN:
+            x = self.batch_norm2(x)
+
+        return x
 
 class GATLikeLayer(nn.Module):
     def __init__(self, in_features, out_features, num_heads, dropout, concat=True):

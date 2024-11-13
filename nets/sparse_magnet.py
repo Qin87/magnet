@@ -155,6 +155,7 @@ class ChebConv_Qin(nn.Module):
         stdv = 1. / math.sqrt(self.weight.size(-1))
         self.weight.data.uniform_(-stdv, stdv)      # Qin learn: initializes the weights from a uniform distribution bounded by -stdv and stdv.
 
+        # self.weight = nn.Parameter(torch.ones(K + 1, in_c, out_c), requires_grad=False)  #  delete after test
         if bias:
             self.bias = nn.Parameter(torch.Tensor(1, out_c))
             nn.init.zeros_(self.bias)
@@ -182,6 +183,7 @@ class ChebConv_Qin(nn.Module):
         laplacian = True
         gcn_appr = False
         if self.L is None:
+            # self.L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=False, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)   # original True
             self.L = hermitian_decomp_sparse(f_node, e_node, size, q, norm=True, laplacian=laplacian, max_eigen=2.0, gcn_appr=gcn_appr, edge_weight=edge_weight)
 
             multi_order_laplacian = cheb_poly_sparse(self.L, K=1)   # K=2 is temp by me

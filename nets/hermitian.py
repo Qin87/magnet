@@ -218,6 +218,8 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
         D = coo_matrix((d, (np.arange(size), np.arange(size))), shape=(size, size), dtype=np.float32)
         A_sym = D.dot(A_sym).dot(D)
 
+    is_symmetric = (A != A.T).nnz == 0
+    print("A is symmetric: ", is_symmetric)
     if laplacian:
         Theta = 2 * np.pi * q * 1j * (A - A.T)  # phase angle array # Each element of Theta will represent the phase angle value associated with the difference between corresponding elements of A and its transpose.
         Theta.data = np.exp(Theta.data)     # computes the element-wise exponential of the phase angle values stored in the matrix Theta  # Accessing the .data attribute of a sparse matrix in SciPy returns the non-zero elements of the sparse matrix
@@ -232,7 +234,8 @@ def hermitian_decomp_sparse(row, col, size, q=0.25, norm=True, laplacian=True, m
     if norm:      # Qin delete this block,no use(experiments show keeping is better, in deeper layers)
         L = (2.0 / max_eigen) * L - diag      # TODO original in Mag
         # L = (2.0 / max_eigen) * L
-
+    # else:
+    #     L = (2.0 / max_eigen) * L - D   # Qin delete it after test
     return L
 def QinDirect_hermitian_decomp_sparse3(row, col, size, q=0.25, norm=True,  QinDirect=True, max_eigen=2,
                             gcn_appr=False, edge_weight=None):

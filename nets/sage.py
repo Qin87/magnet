@@ -3,7 +3,7 @@ Pytorch Geometric
 Ref: https://github.com/pyg-team/pytorch_geometric/blob/97d55577f1d0bf33c1bfbe0ef864923ad5cb844d/torch_geometric/nn/conv/sage_conv.py
 """
 
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 # from torch_geometric.nn.conv.sage_conv import NormalizedSAGEConv
 from torch_geometric.typing import OptPairTensor, Adj, Size, OptTensor, PairTensor
@@ -18,12 +18,34 @@ import scipy
 import numpy as np
 
 from torch_sparse import SparseTensor, matmul
-from torch_geometric.nn.conv import MessagePassing
+from torch_geometric.nn import MessagePassing
+# from torch_geometric.nn.conv import MessagePassing
 from torch_scatter import scatter_add
 
 from nets.sagcn import SAGCN, NormalizedSAGEConv
+from typing import Optional
 
+import torch
+from torch import Tensor
+from torch.nn import Parameter
 
+from torch_geometric.nn.conv import MessagePassing
+from torch_geometric.nn.dense.linear import Linear
+from torch_geometric.nn.inits import zeros
+from torch_geometric.typing import OptTensor
+from torch_geometric.utils import get_laplacian
+
+from nets.src2.sage_qin import SAGEConv_QinNov
+from torch_geometric.nn import SAGEConv, GCNConv
+from torch_geometric.utils import (
+    is_torch_sparse_tensor,
+    scatter,
+    spmm,
+    to_edge_index,
+)
+from torch_geometric.utils.num_nodes import maybe_num_nodes
+from torch.nn import Parameter
+from torch_geometric.nn import GCNConv, SAGEConv
 class SAGEConv_SHA(MessagePassing):
     r"""The GraphSAGE operator from the `"Inductive Representation Learning on
     Large Graphs" <https://arxiv.org/abs/1706.02216>`_ paper
@@ -51,8 +73,13 @@ class SAGEConv_SHA(MessagePassing):
                  out_channels: int, normalize: bool = False,
                  root_weight: bool = True,
                  bias: bool = True, **kwargs):  # yapf: disable
-        kwargs.setdefault('aggr', 'mean')
+        # kwargs.setdefault('aggr', 'mean')
+        # super().__init__(**kwargs)
+        # super().__init__(aggr='mean')
+        kwargs.setdefault('aggr', 'add')
         super().__init__(**kwargs)
+        # Add this line to declare edge_weight support
+        self.propagate_type = {'x': OptPairTensor, 'edge_weight': OptTensor}
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -63,8 +90,11 @@ class SAGEConv_SHA(MessagePassing):
             in_channels = (in_channels, in_channels)
 
         self.lin_l = Linear(in_channels[0], out_channels, bias=bias)
+        self.lin_l1 = Linear(in_channels[0], in_channels[0], bias=bias)
+        self.l1 = Linear(in_channels[0], in_channels[0], bias=bias)
         if self.root_weight:
             self.temp_weight = Linear(in_channels[1], out_channels, bias=False)
+            self.temp_weight1 = Linear(in_channels[1], in_channels[1], bias=False)
 
         self.reset_parameters()
 
@@ -79,139 +109,148 @@ class SAGEConv_SHA(MessagePassing):
         if isinstance(x, Tensor):
             x: OptPairTensor = (x, x)
 
+
         # propagate_type: (x: OptPairTensor)
-        out = self.propagate(edge_index, x=x, size=size)
+        x = self.l1(x[0])
+        edge_index, edge_weight = inci_norm(  # yapf: disable
+            edge_index, edge_weight,
+             # self.flow,
+            # x.dtype
+        )   #  Qin
+
+        # out = self.propagate(edge_index, x=x, edge_weight=edge_weight)
+        # out = self.propagate(edge_index, size=size, x=x, norm=edge_weight)
+        out = self.propagate(edge_index, x=x, norm=edge_weight)
+        # out = self.propagate(edge_index, x=x, edge_weight=edge_weight, size=None)
+        # out = self.propagate(edge_index, x=x, size=size)
+        out = self.lin_l1(out)  #  Qin delete
         out = self.lin_l(out)
 
         x_r = x[1]
+        # out_r = self.temp_weight(x_r)
+
+        out_r = self.temp_weight1(x_r)  #  remove this Qin
+        out_r = self.temp_weight(out_r)
+
         if self.root_weight and x_r is not None:
-            out += self.temp_weight(x_r)
+            out += out_r
 
         if self.normalize:
             out = F.normalize(out, p=2., dim=-1)
 
         return out
 
-    def message(self, x_j: Tensor) -> Tensor:
-        return x_j
+    # def message(self, x_j: Tensor) -> Tensor:
+    #     return x_j
+    # def message(self, x_j: Tensor, edge_weight: OptTensor) -> Tensor:  #  from GCN
+    #     return x_j if edge_weight is None else edge_weight.view(-1, 1) * x_j
+    def message(self, x_j: Tensor, norm: Tensor) -> Tensor:
+        return norm.view(-1, 1) * x_j
 
-    def message_and_aggregate(self, adj_t: SparseTensor,
-                              x: OptPairTensor) -> Tensor:
+    # def message_and_aggregate(self, adj_t: SparseTensor,
+    #                           x: OptPairTensor) -> Tensor:
+    #     adj_t = adj_t.set_value(None, layout=None)
+    #     return matmul(adj_t, x[0], reduce=self.aggr)
+    # def message_and_aggregate(self, adj_t: Adj, x: Tensor) -> Tensor:
+    #     return spmm(adj_t, x, reduce=self.aggr)
+
+    def message_and_aggregate(self, adj_t: SparseTensor, x: OptPairTensor) -> Tensor:
         adj_t = adj_t.set_value(None, layout=None)
         return matmul(adj_t, x[0], reduce=self.aggr)
+
+
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__, self.in_channels,
                                    self.out_channels)
 
-class GraphSAGE1(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=1):
-        super(GraphSAGE1, self).__init__()
-        self.conv1 = SAGEConv(nfeat, nclass)
+class SAGEConv_Qin(MessagePassing):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        normalize: bool = True,
+        bias: bool = True,
+        **kwargs,
+    ):
+        kwargs.setdefault('aggr', 'mean')  # Use mean for SAGE default
+        super().__init__(**kwargs)
 
-        self.reg_params = []
-        self.non_reg_params = self.conv1.parameters()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.normalize = normalize
 
-    def forward(self, x, adj, edge_weight=None):
-        edge_index = adj
-        x = self.conv1(x, edge_index, edge_weight)
+        # Linear transformations
+        self.lin_l = Linear(in_channels, out_channels, bias=False)
+        self.lin_r = Linear(in_channels, out_channels, bias=bias)
 
-        return x
+        self.reset_parameters()
+
+        if bias:
+            self.bias = Parameter(torch.empty(out_channels))
+        else:
+            self.register_parameter('bias', None)
+
+    def reset_parameters(self):
+        self.lin_l.reset_parameters()
+        self.lin_r.reset_parameters()
+
+    def forward(self, x: Tensor, edge_index: Adj,
+                edge_weight: OptTensor = None) -> Tensor:
+        """"""
+        if isinstance(x, Tensor):
+            x: OptPairTensor = (x, x)
+
+        edge_index, edge_attr = inci_norm(  # yapf: disable
+            edge_index, edge_weight
+        )
+
+        # Transform node features
+        x1= self.lin_l(x[0])
+
+        # Propagate
+        out = self.propagate(edge_index, x=x1, edge_weight=edge_attr)
+
+        # Apply skip-connection with right transformation
+        x_r = self.lin_r(x[1])
+        # out += x_r
+
+        if self.normalize:
+            out = F.normalize(out, p=2., dim=-1)
+        if self.bias is not None:
+            out = out + self.bias
+
+        return out
+
+    def message(self, x_j: Tensor, edge_weight: OptTensor) -> Tensor:
+        return x_j if edge_weight is None else edge_weight.view(-1, 1) * x_j
+
+    def message_and_aggregate(self, adj_t: SparseTensor, x: Tensor) -> Tensor:
+        return spmm(adj_t, x, reduce=self.aggr)
+
+def inci_norm(edge_index, edge_weight):
+    """
+    Normalize edge weights using GCN-style normalization
+    """
+
+    num_nodes = edge_index.max().item() + 1
+    if edge_weight is None:
+        edge_weight = torch.ones((edge_index.size(1),),
+                                 device=edge_index.device)
+
+    row, col = edge_index[0], edge_index[1]
+
+    # Compute node degrees
+    # deg = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes)
+    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+
+    # Compute D^(-1/2)
+    deg_inv_sqrt = deg.pow_(-0.5)
+    deg_inv_sqrt.masked_fill_(deg_inv_sqrt == float('inf'), 0)
+
+    # Normalize edge weights
+    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+    return edge_index, edge_weight
 
 
-class GraphSAGE2(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=2):
-        super(GraphSAGE2, self).__init__()
-        self.conv1 = SAGEConv(nfeat, nhid)
-        self.conv2 = SAGEConv(nhid, nclass)
-        self.dropout_p = dropout
-
-        self.reg_params = list(self.conv1.parameters())
-        self.non_reg_params = self.conv2.parameters()
-
-    def forward(self, x, adj, edge_weight=None):
-        edge_index = adj
-        x = F.relu(self.conv1(x, edge_index, edge_weight))
-        x = F.dropout(x, p=self.dropout_p, training=self.training)
-        x = self.conv2(x, edge_index, edge_weight)
-        return x
-
-
-
-class GraphSAGEX(nn.Module):
-    def __init__(self, nfeat, nhid, nclass, dropout,nlayer=3):
-        super(GraphSAGEX, self).__init__()
-        self.conv1 = SAGEConv(nfeat, nhid)
-        self.conv2 = SAGEConv(nhid, nclass)
-        self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
-        self.dropout_p = dropout
-
-        self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
-        self.non_reg_params = self.conv2.parameters()
-
-    def forward(self, x, adj, edge_weight=None):
-        edge_index = adj
-        x = F.relu(self.conv1(x, edge_index, edge_weight))
-
-        for iter_layer in self.convx:
-            x = F.dropout(x, p= self.dropout_p, training=self.training)
-            x = F.relu(iter_layer(x, edge_index,edge_weight))
-
-        x = F.dropout(x, p=self.dropout_p, training=self.training)
-        x = self.conv2(x, edge_index,edge_weight)
-
-        return x
-from torch_geometric.nn import SAGEConv
-class GraphSAGEXBatNorm(nn.Module):
-
-    def __init__(self,  nfeat, nclass, args):
-        super().__init__()
-        self.dropout_p = args.dropout
-        nhid = args.feat_dim
-        nlayer= args.layer
-        # SAGEConv(input_dim, output_dim, root_weight=False)
-        # SAGEConv = NormalizedSAGEConv  # TODO Qin
-        self.conv1 = SAGEConv(nfeat, nhid)
-        self.conv2 = SAGEConv(nhid, nclass)
-        if nlayer >2:
-            self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
-            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
-
-        self.batch_norm1 = nn.BatchNorm1d(nhid)
-        self.batch_norm2 = nn.BatchNorm1d(nclass)
-        self.batch_norm3 = nn.BatchNorm1d(nhid)
-
-        if nlayer==1:
-            self.batch_norm1 = nn.BatchNorm1d(nclass)
-            self.conv1 = SAGEConv(nfeat, nclass)
-            self.reg_params = []
-
-        self.non_reg_params = self.conv2.parameters()
-
-        self.layer = nlayer
-        self.BN = args.BN_model
-
-    def forward(self, x, adj, edge_weight=None):
-        edge_index = adj
-        x = self.conv1(x, edge_index, edge_weight)
-        if self.BN:
-            x = self.batch_norm1(x)
-        if self.layer == 1:
-            return x
-
-        x = F.relu(x)
-
-        if self.layer > 2:
-            for iter_layer in self.convx:
-                x = F.dropout(x, p=self.dropout_p, training=self.training)
-                x = iter_layer(x, edge_index,edge_weight)
-                if self.BN:
-                    x = self.batch_norm3(x)
-                x = F.relu(x)
-
-        x = F.dropout(x, p=self.dropout_p, training=self.training)
-        x = self.conv2(x, edge_index,edge_weight)
-        if self.BN:
-            x = self.batch_norm2(x)
-
-        return x
