@@ -234,7 +234,7 @@ with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     # print("Percent of node with hops larger than num-layer:", count/len(result)*100, file=log_file)
     # print(mst, file=log_file)
 # print("Percent of node with hops larger than num-layer:", count/len(result)*100)
-print(f"Percent of node with hops larger than num-layer: {count / len(result) * 100:.1f}", "largest hop:", max(result))
+#     print(f"Percent of node with hops larger than num-layer: {count / len(result) * 100:.1f}", "largest hop:", max(result))
 
 
 biedges = None
