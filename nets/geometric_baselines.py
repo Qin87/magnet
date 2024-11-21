@@ -1011,14 +1011,14 @@ class DirGCNConv_2(torch.nn.Module):
     def forward(self, x, edge_index):
         x0= x
         device = edge_index.device
-        if self.First_self_loop == 'add':
+        if self.First_self_loop == 1:
             edge_index, _ = add_self_loops(edge_index, fill_value=1)
-        elif self.First_self_loop == 'remove':
+        elif self.First_self_loop == -1:
             edge_index, _ = remove_self_loops(edge_index)
         row, col = edge_index
         num_nodes = x.shape[0]
 
-        if self.rm_gen_sloop == 'remove':
+        if self.rm_gen_sloop:
             rm_gen_sLoop = True
         else:
             rm_gen_sLoop = False
@@ -1432,7 +1432,7 @@ class RanConv(torch.nn.Module):
 
     def forward(self, x, edge_index):
         device = edge_index.device
-        if self.First_self_loop == 'add':
+        if self.First_self_loop == 1:
 
             edge_index, _ = add_self_loops(edge_index, fill_value=1)
         elif self.First_self_loop == 'remove':
@@ -1618,7 +1618,7 @@ class DirConv_tSNE(torch.nn.Module):
 
     def forward(self, x, edge_index, y, epoch):
         device = edge_index.device
-        if self.First_self_loop == 'add':
+        if self.First_self_loop == 1:
 
             edge_index, _ = add_self_loops(edge_index, fill_value=1)
         elif self.First_self_loop == 'remove':

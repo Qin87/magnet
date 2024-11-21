@@ -463,7 +463,7 @@ class GraphSAGEXBatNorm(nn.Module):
         self.conv2 = SAGEConv(nhid, nclass)
         if nlayer >2:
             self.convx = nn.ModuleList([SAGEConv(nhid, nhid) for _ in range(nlayer-2)])
-            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+            # self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
 
         self.batch_norm1 = nn.BatchNorm1d(nhid)
         self.batch_norm2 = nn.BatchNorm1d(nclass)

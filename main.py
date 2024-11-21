@@ -8,6 +8,7 @@ import numpy as np
 from torch_geometric.utils import add_self_loops
 from torch_sparse import SparseTensor
 
+from longest import  longest_hop_undirect, longest_hop_direct
 from nets.geometric_baselines import add_self_loop_qin
 
 print("Python Path:", sys.path)
@@ -214,12 +215,27 @@ seed_everything(args.seed)
 
 no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophilic_nodes, in_heterophilic_nodes, out_heterophilic_nodes, no_in_nodes, no_out_nodes = count_homophilic_nodes(edges, data_y)
 # mst = find_max_spanning_tree(edges, data_x.shape[0])
+if args.to_reverse_edge:
+    edges = edges[torch.tensor([1, 0])]
 
+
+# result = longest_hop_direct(edges[torch.tensor([1, 0])], data_x.shape[0])
 
 
 with open(log_directory + log_file_name_with_timestamp, 'w') as log_file:
     print(args, file=log_file)
+
+    # result = longest_hop_direct(edges, data_x.shape[0])
+    # count = sum(1 for x in result if x > args.layer)
+    # print(count)
+    # print("Longest hop for each node:", result, file=log_file)
+    # print(f"Percent of node with hops larger than num-layer: {count / len(result) * 100:.1f}", "largest hop:",max(result), file=log_file)
+
+    # print("Percent of node with hops larger than num-layer:", count/len(result)*100, file=log_file)
     # print(mst, file=log_file)
+# print("Percent of node with hops larger than num-layer:", count/len(result)*100)
+print(f"Percent of node with hops larger than num-layer: {count / len(result) * 100:.1f}", "largest hop:", max(result))
+
 
 biedges = None
 edge_in = None
@@ -256,8 +272,7 @@ device = set_device(args)
 data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
-if args.to_reverse_edge:
-    edges = edges[torch.tensor([1, 0])]
+
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
 data_test_maskOrigin = data_test_maskOrigin.to(device)
