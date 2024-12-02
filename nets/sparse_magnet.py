@@ -640,7 +640,6 @@ class ChebNet_Ben(nn.Module):
         Returns:
 
         '''
-
         real, imag, edges, q, edge_weight = self.Chebs((real, imag,  edges, q, edge_weight))
         # real, imag = self.cheb_Qin((real, imag, edges, q, edge_weight))
         x = torch.cat((real, imag), dim=-1)     # unwind the complex X into real-valued X

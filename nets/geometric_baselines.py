@@ -1009,7 +1009,7 @@ class DirGCNConv_2(torch.nn.Module):
 
 
     def forward(self, x, edge_index):
-        x0= x
+        # x0= x
         device = edge_index.device
         if self.First_self_loop == 1:
             edge_index, _ = add_self_loops(edge_index, fill_value=1)
@@ -2600,6 +2600,8 @@ def get_norm_adj(adj, norm, rm_gen_sLoop=0):
     elif norm == "dir":
 
         return directed_norm(adj, rm_gen_sLoop=rm_gen_sLoop)
+    elif norm is None:
+        return adj
     else:
         raise ValueError(f"{norm} normalization is not supported")
 

@@ -459,13 +459,15 @@ def get_appr_directed_adj(alpha, edge_index, num_nodes, dtype, edge_weight=None)
 
     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-def get_second_directed_adj(selfloop, edge_index, num_nodes, dtype):
-    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
-                             device=edge_index.device)
+def get_second_directed_adj(args,  edge_index, num_nodes, dtype):
+    selfloop = args.First_self_loop
     if selfloop == 1:
         edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+
     elif selfloop == -1:
         edge_index, _ = remove_self_loops(edge_index)
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
     deg_inv = deg.pow(-1)
@@ -492,12 +494,14 @@ def get_second_directed_adj(selfloop, edge_index, num_nodes, dtype):
     edge_weight = L_values
 
     # row normalization
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    if args.inci_norm is not None:
+        row, col = edge_index
+        deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+        deg_inv_sqrt = deg.pow(-0.5)
+        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-    return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+    return edge_index, edge_weight
 
 
 
@@ -559,6 +563,9 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     # type 2: only GCN_norm
     elif norm == 'sym':
         edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
+    elif norm is None:
+        edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
+                                     device=edge_index.device)
 
     return edge_index,  edge_weight
 
@@ -731,7 +738,8 @@ def WCJ_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
 #     return edge_index,  edge_weight
 
 
-def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_weight=None):
+def get_appr_directed_adj2(args, edge_index, num_nodes, dtype, edge_weight=None):
+    selfloop, alpha = args.First_self_loop, args.alpha
     device = edge_index.device
 
     if edge_weight is None:
@@ -812,17 +820,18 @@ def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_w
 
 
     # row normalization
-    row, col = edge_index
-    deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-    deg_inv_sqrt = deg.pow(-0.5)
-    deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+    if args.inci_norm is not None:
+        row, col = edge_index
+        deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+        deg_inv_sqrt = deg.pow(-0.5)
+        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
-    edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+        edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col].to(device)
 
-    min_val = torch.min(edge_weight).item()
-    max_val = torch.max(edge_weight).item()
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
 
-    print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
+        print(f"Normalized Edge weight range: [{min_val}, {max_val}]")
     # plt.hist(edge_weight.cpu(), bins=50, edgecolor='k')
     # plt.xlabel('Absolute Edge Weight')
     # plt.ylabel('Frequency')
@@ -832,8 +841,8 @@ def get_appr_directed_adj2(selfloop, alpha, edge_index, num_nodes, dtype, edge_w
     # delete TODO
     # edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
     # edge_weight = torch.cat([edge_weight, torch.ones((num_nodes,), device=edge_weight.device)])
-    edge_index = edge_index.to(device)
-    edge_weight = edge_weight.to(device)
+    # edge_index = edge_index.to(device)
+    # edge_weight = edge_weight.to(device)
 
     return edge_index, edge_weight
 
@@ -1440,7 +1449,10 @@ def Qin_get_second_directed_adj(args, edge_index, num_nodes, k, IsExhaustive, mo
         row, col = L._indices()
         adj_norm = get_norm_adj(SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes)), norm=norm).coalesce()
         all_hop_edge_index.append(torch.stack(adj_norm.coo()[:2]))
-        all_hops_weight.append(adj_norm.storage.value())
+        if adj_norm.storage.value() is None:
+            all_hops_weight.append(torch.ones(row.size(0), dtype=torch.int).to(device))
+        else:
+            all_hops_weight.append(adj_norm.storage.value())
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 
