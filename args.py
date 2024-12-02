@@ -14,7 +14,7 @@ def parse_args():
 
 
     parser.add_argument("--has_scheduler", type=int, default=1, help="Whether Optimizer has a scheduler")
-    parser.add_argument('--patience', type=int, default=80, help='patience to reduce lr,')
+    parser.add_argument('--patience', type=int, default=400, help='patience to reduce lr,80')
 
     # for DirGNN
     parser.add_argument("--conv_type", type=str, help="DirGNN Model", default="dir-gcn")
@@ -43,7 +43,7 @@ def parse_args():
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=4, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=2, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
 
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
