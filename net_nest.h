@@ -1,8 +1,8 @@
 #!/bin/bash
 
-net_values="SAGE "
+net_values="Dir-GNN "
 q_value=0
-layer_values=" 3 4 5 6 7 "
+layer_values=" 2 3 4 5 6 7 1 "
 # layer_values=" 0 0.5 1 "
 imbal="100  "
 
