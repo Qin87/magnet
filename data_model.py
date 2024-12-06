@@ -581,6 +581,7 @@ def count_homophilic_nodes(edge_index, y):
     no_out_neighbors = 0
 
     for node in range(num_nodes):
+        y_node = y[node].item()
         # Find the in-neighbors (nodes that point to the current node)
         in_neighbors = (edge_index[1] == node).nonzero(as_tuple=True)[0]
         in_neighbors = edge_index[0, in_neighbors]
@@ -593,7 +594,9 @@ def count_homophilic_nodes(edge_index, y):
         if len(in_neighbors) > 0:
             in_neighbor_labels = y[in_neighbors]
             in_most_common_label = torch.mode(in_neighbor_labels).values.item()
-            if in_most_common_label == y[node]:
+            if node == 14:
+                print(in_most_common_label, in_neighbor_labels)
+            if in_most_common_label == y_node:
                 in_homophilic_count += 1
                 in_homophilic_nodes.append(node)
             else:
@@ -606,7 +609,9 @@ def count_homophilic_nodes(edge_index, y):
         if len(out_neighbors) > 0:
             out_neighbor_labels = y[out_neighbors]
             out_most_common_label = torch.mode(out_neighbor_labels).values.item()
-            if out_most_common_label == y[node]:
+            if node == 2144:
+                print(out_most_common_label, out_neighbor_labels, y_node)
+            if out_most_common_label == y_node:
                 out_homophilic_count += 1
                 out_homophilic_nodes.append(node)
             else:
@@ -632,7 +637,7 @@ def count_homophilic_nodes(edge_index, y):
 
 from sklearn.metrics import balanced_accuracy_score, f1_score
 
-def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
+def calculate_metrics(logits, data_test_mask, data_y, node_index_lists, edge_index):
     if len(node_index_lists) == 0:
         return 0
     device = data_test_mask.device
@@ -640,11 +645,14 @@ def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
     node_index_mask = create_mask(node_index_lists, data_y.shape[0]).to(device)
     mask = node_index_mask & data_test_mask
 
-    test_indices = [i for i in node_index_lists if data_test_mask[i]]
+    # test_indices = [i for i in node_index_lists if data_test_mask[i]]
+    test_indices = [i for i in node_index_lists if mask[i]]
+    test_indices.sort()
     if len(test_indices) == 0:
         return 0
     percentage = round((len(test_indices))/data_test_mask.sum().item() * 100, 2)
 
+    pred_origin = logits.max(1)[1]
     pred = logits[mask].max(1)[1]
     y_pred = pred.cpu().numpy()
     y_true = data_y[mask].cpu().numpy()
@@ -654,15 +662,58 @@ def calculate_metrics(logits, data_test_mask, data_y, node_index_lists):
     acc = round(pred.eq(data_y[mask]).sum().item() / len(test_indices), 2)
     bacc = round(balanced_accuracy_score(y_true, y_pred), 2)
     f1 = round(f1_score(y_true, y_pred, average='macro'), 2)
+    correct = pred.eq(data_y[mask]).sum().item()
+
+    # masked_data_y = data_y[mask]
+
+    wrong_indices = [(test_indices[i], y_pred[i], y_true[i]) for i in range(len(pred)) if y_pred[i] != y_true[i]]
+    # wrong_i, wrong_indices = zip(*[(i, index) for i, index in enumerate(test_indices) if pred[i] != masked_data_y[i]])
+    # wrong_indices = [index for i, index in enumerate(test_indices) if pred[i] != data_y[mask][i]]
+    # wrong_here = (pred != data_y[mask]).nonzero()
+    wrong_node_info = {}
+
+    # for i, idx in enumerate(wrong_indices):
+    # for i, idx in zip(wrong_i, wrong_indices):
+        # print(data_y.shape)
+        # print(mask.shape)
+    i=0
+    for idx, pred_val, true_val in wrong_indices:
+        if idx == 184 or idx == 1054:
+            print(data_y[idx].item())
+        if true_val.item() != data_y[idx].item():
+            print('fault: node', idx, true_val.item(),  data_y[idx].item())
+        wrong_node_info[i] = {
+            'node': idx,
+            # 'predicted_class': pred_origin[idx].item(),
+            # 'predicted_class': pred[i].item(),
+            'predicted_class': pred_val.item(),
+            # 'true_class': data_y[idx].item(),
+            # 'true_class': masked_data_y[i].item(),
+            'true_class': true_val.item(),
+            'neighbors': {
+                'in': {
+                    # 'nodes': edge_index[0][edge_index[1] == idx].tolist(),
+                    'classes': data_y[edge_index[0][edge_index[1] == idx]].tolist()
+                },
+                'out': {
+                    # 'nodes': edge_index[1][edge_index[0] == idx].tolist(),
+                    'classes': data_y[edge_index[1][edge_index[0] == idx]].tolist()
+                }
+            }
+        }
+        i += 1
 
     results.append({
         'num_node': len(node_index_lists),
         'test': len(test_indices),
-        'correct': pred.eq(data_y[mask]).sum().item(),
+        'correct': correct,
         # 'percentage': percentage,
+
         'acc': acc,
         'bacc': bacc,
-        'f1': f1
+        'f1': f1,
+        'wrong_node_info': wrong_node_info
+
     })
 
     return results

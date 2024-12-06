@@ -612,7 +612,7 @@ try:
                     # Store the calculated metrics in variables instead of printing
 
                     for name, lst in combined_intersection_list:
-                        metrics_temp = calculate_metrics(logits, data_test_mask, data_y, lst)
+                        metrics_temp = calculate_metrics(logits, data_test_mask, data_y, lst, edges)
                         metrics_list.append((name, metrics_temp))
 
                 else:
@@ -629,9 +629,11 @@ try:
                                                                                                                              test_f1 * 100),file=log_file)
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
+
                     for name, metric_temp in metrics_list:
                         print(name, metric_temp)
                         print(name, metric_temp, file=log_file)
+
                     for class_id, class_info in class_detail[-1].items():
                         print(f"Class {class_id}: {class_info}")
                         print(f"Class {class_id}: {class_info}", file=log_file)
