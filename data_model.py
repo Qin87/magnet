@@ -678,8 +678,8 @@ def calculate_metrics(logits, data_test_mask, data_y, node_index_lists, edge_ind
         # print(mask.shape)
     i=0
     for idx, pred_val, true_val in wrong_indices:
-        if idx == 184 or idx == 1054:
-            print(data_y[idx].item())
+        # if idx == 184 or idx == 1054:
+        #     print(data_y[idx].item())
         if true_val.item() != data_y[idx].item():
             print('fault: node', idx, true_val.item(),  data_y[idx].item())
         wrong_node_info[i] = {
