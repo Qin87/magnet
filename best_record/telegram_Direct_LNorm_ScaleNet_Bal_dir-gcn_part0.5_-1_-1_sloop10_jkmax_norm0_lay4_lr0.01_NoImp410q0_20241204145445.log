@@ -1,0 +1,244 @@
+Namespace(use_best_hyperparams=1, GPUdevice=0, CPU=False, mlpIn=0, mlpOut=0, BN_model=1, nonlinear=1, First_self_loop=1, rm_gen_sloop=0, has_scheduler=1, patience=80, conv_type='dir-gcn', normalize=1, jk='max', jk_inner=0, inci_norm=0, fs='dir', alphaDir=0.5, betaDir=-1, gamaDir=-1, learn_alpha=False, differ_AA=0, differ_AAt=0, num_split=20, MakeImbalance=False, imb_ratio=20, net='ScaleNet', seed=101, Dataset='telegram/', dropout=0.0, layer=4, alpha=0.1, AP_K=10, feat_dim=64, epoch=1500, NotImproved=410, lr=0.01, lrweight=0.4, coeflr=2, wd4coef=0.05, l2=0, heads=1, q=0, p_q=0.95, p_inter=0.1, norm=0, activation=0, K=2, netflow=True, follow_math=True, gcn=True, i_complex=True, qua_weights=False, qua_bias=False, log_path='test', data_path='../dataset/data/tmp/', ppnp='GPR_prop', Init='PPR', p=2, mu=0.1, W_degree=5, has_1_order=0, paraD=False, gcn_norm=0, add_selfloop=0, to_undirected=0, to_reverse_edge=0, feat_proximity=False, ibx1=False, log_root='../logs/')
+Using Device:  cuda:0
+no_in, homo_in, no_out, homo_out: 41 79 62 80
+GCN_JKNet(
+  (convs): ModuleList(
+    (0): DirGCNConv_2(
+      (lin_src_to_dst): Linear(in_features=1, out_features=64, bias=True)
+      (lin_dst_to_src): Linear(in_features=1, out_features=64, bias=True)
+      (linx): ModuleList(
+        (0-3): 4 x Linear(in_features=1, out_features=64, bias=True)
+      )
+      (batch_norm2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2_1): Linear(in_features=128, out_features=64, bias=True)
+    )
+    (1-3): 3 x DirGCNConv_2(
+      (lin_src_to_dst): Linear(in_features=64, out_features=64, bias=True)
+      (lin_dst_to_src): Linear(in_features=64, out_features=64, bias=True)
+      (linx): ModuleList(
+        (0-3): 4 x Linear(in_features=64, out_features=64, bias=True)
+      )
+      (batch_norm2): BatchNorm1d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2_1): Linear(in_features=128, out_features=64, bias=True)
+    )
+  )
+  (lin): Linear(in_features=64, out_features=4, bias=True)
+  (jump): JumpingKnowledge(max)
+)
+telegram_Direct	totalNode_245	 trainNode_145
+telegram_Direct	totalEdge_8912	 trainEdge_8912
+epoch:   0, val_loss:1.317771, test_acc: 42.00, bacc: 37.50, tmp_test_f1: 26.91, f1: 26.91
+epoch: 100, val_loss:0.052816, test_acc: 98.00, bacc: 98.53, tmp_test_f1: 94.71, f1: 98.60
+epoch: 200, val_loss:0.042781, test_acc: 98.00, bacc: 98.53, tmp_test_f1: 97.01, f1: 98.60
+epoch: 300, val_loss:0.051027, test_acc: 98.00, bacc: 98.53, tmp_test_f1: 97.01, f1: 98.60
+epoch: 400, val_loss:0.052829, test_acc: 98.00, bacc: 98.53, tmp_test_f1: 97.01, f1: 98.60
+noIn_noOut_nodes 0
+noIn_outHomo_nodes 0
+noIn_outHetero_nodes [{'num_node': 40, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 4, 'correct': 3, 'acc': 0.75, 'bacc': 0.83, 'f1': 0.73}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 10, 'correct': 10, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 3, 'correct': 3, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 9, 'correct': 9, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 12, 'correct': 12, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 49, 'acc': 0.98, 'bacc': 0.99, 'f1': 0.99}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 8, 'accuracy': 1.0}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 5, 'accuracy': 0.83}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 482 lr 0.01
+Split  0, acc: 98.00, bacc: 98.53, f1: 98.60
+epoch:   0, val_loss:1.466706, test_acc: 42.00, bacc: 47.06, tmp_test_f1: 27.50, f1: 27.50
+epoch: 100, val_loss:0.172615, test_acc: 96.00, bacc: 92.71, tmp_test_f1: 92.59, f1: 93.96
+epoch: 200, val_loss:0.154637, test_acc: 96.00, bacc: 92.71, tmp_test_f1: 94.19, f1: 93.96
+epoch: 300, val_loss:0.177153, test_acc: 96.00, bacc: 92.71, tmp_test_f1: 94.86, f1: 93.96
+epoch: 400, val_loss:0.171912, test_acc: 96.00, bacc: 92.71, tmp_test_f1: 90.82, f1: 93.96
+noIn_noOut_nodes 0
+noIn_outHomo_nodes [{'num_node': 1, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+noIn_outHetero_nodes [{'num_node': 40, 'test': 6, 'correct': 5, 'acc': 0.83, 'bacc': 0.83, 'f1': 0.6}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 12, 'correct': 12, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 5, 'correct': 4, 'acc': 0.8, 'bacc': 0.83, 'f1': 0.78}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 10, 'correct': 10, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 5, 'correct': 5, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 10, 'correct': 10, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 48, 'acc': 0.96, 'bacc': 0.93, 'f1': 0.94}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 8, 'accuracy': 1.0}
+Class 1: {'total': 84, 'tested': 17, 'correct': 16, 'accuracy': 0.94}
+Class 2: {'total': 30, 'tested': 6, 'correct': 4, 'accuracy': 0.67}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 437 lr 0.01
+Split  1, acc: 96.00, bacc: 92.71, f1: 93.96
+epoch:   0, val_loss:1.311326, test_acc: 36.00, bacc: 28.12, tmp_test_f1: 18.63, f1: 18.63
+epoch: 100, val_loss:0.165272, test_acc: 94.00, bacc: 93.93, tmp_test_f1: 97.19, f1: 94.94
+epoch: 200, val_loss:0.206945, test_acc: 94.00, bacc: 93.93, tmp_test_f1: 97.19, f1: 94.94
+epoch: 300, val_loss:0.238840, test_acc: 94.00, bacc: 93.93, tmp_test_f1: 94.20, f1: 94.94
+epoch: 400, val_loss:0.263233, test_acc: 94.00, bacc: 93.93, tmp_test_f1: 94.20, f1: 94.94
+noIn_noOut_nodes 0
+noIn_outHomo_nodes [{'num_node': 1, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+noIn_outHetero_nodes [{'num_node': 40, 'test': 8, 'correct': 8, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 2, 'correct': 2, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 13, 'correct': 13, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 2, 'correct': 1, 'acc': 0.5, 'bacc': 0.5, 'f1': 0.33}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 13, 'correct': 13, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 3, 'correct': 2, 'acc': 0.67, 'bacc': 0.75, 'f1': 0.67}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 8, 'correct': 7, 'acc': 0.88, 'bacc': 0.9, 'f1': 0.87}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 47, 'acc': 0.94, 'bacc': 0.94, 'f1': 0.95}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 8, 'accuracy': 1.0}
+Class 1: {'total': 84, 'tested': 17, 'correct': 15, 'accuracy': 0.88}
+Class 2: {'total': 30, 'tested': 6, 'correct': 5, 'accuracy': 0.83}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 451 lr 0.01
+Split  2, acc: 94.00, bacc: 93.93, f1: 94.94
+epoch:   0, val_loss:1.564326, test_acc: 12.00, bacc: 8.82, tmp_test_f1: 7.50, f1: 7.50
+epoch: 100, val_loss:0.143654, test_acc: 90.00, bacc: 83.33, tmp_test_f1: 95.02, f1: 83.93
+epoch: 200, val_loss:0.063731, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 94.87, f1: 100.00
+epoch: 300, val_loss:0.074214, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 94.87, f1: 100.00
+epoch: 400, val_loss:0.070180, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 95.02, f1: 100.00
+epoch: 500, val_loss:0.074047, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 94.87, f1: 100.00
+noIn_noOut_nodes 0
+noIn_outHomo_nodes 0
+noIn_outHetero_nodes [{'num_node': 40, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 3, 'correct': 3, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 12, 'correct': 12, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 4, 'correct': 4, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 13, 'correct': 13, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 3, 'correct': 3, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 9, 'correct': 9, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 50, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 7, 'accuracy': 0.88}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 6, 'accuracy': 1.0}
+Class 3: {'total': 92, 'tested': 19, 'correct': 18, 'accuracy': 0.95}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 545 lr 0.01
+Split  3, acc: 100.00, bacc: 100.00, f1: 100.00
+epoch:   0, val_loss:1.496514, test_acc: 12.00, bacc: 25.00, tmp_test_f1: 5.45, f1: 5.45
+epoch: 100, val_loss:0.220116, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 96.41, f1: 100.00
+epoch: 200, val_loss:0.144530, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 96.41, f1: 100.00
+epoch: 300, val_loss:0.140567, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 96.41, f1: 100.00
+epoch: 400, val_loss:0.155365, test_acc: 100.00, bacc: 100.00, tmp_test_f1: 96.41, f1: 100.00
+noIn_noOut_nodes 0
+noIn_outHomo_nodes 0
+noIn_outHetero_nodes [{'num_node': 40, 'test': 8, 'correct': 8, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 14, 'correct': 14, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 2, 'correct': 2, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 13, 'correct': 13, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 3, 'correct': 3, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 9, 'correct': 9, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 50, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 7, 'accuracy': 0.88}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 6, 'accuracy': 1.0}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 447 lr 0.01
+Split  4, acc: 100.00, bacc: 100.00, f1: 100.00
+epoch:   0, val_loss:1.334049, test_acc: 36.00, bacc: 26.32, tmp_test_f1: 15.58, f1: 15.58
+epoch: 100, val_loss:0.102571, test_acc: 98.00, bacc: 96.88, tmp_test_f1: 100.00, f1: 96.41
+epoch: 200, val_loss:0.047682, test_acc: 98.00, bacc: 96.88, tmp_test_f1: 100.00, f1: 96.41
+epoch: 300, val_loss:0.082945, test_acc: 98.00, bacc: 96.88, tmp_test_f1: 100.00, f1: 96.41
+epoch: 400, val_loss:0.091046, test_acc: 98.00, bacc: 96.88, tmp_test_f1: 100.00, f1: 96.41
+noIn_noOut_nodes 0
+noIn_outHomo_nodes [{'num_node': 1, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+noIn_outHetero_nodes [{'num_node': 40, 'test': 9, 'correct': 9, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes 0
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 14, 'correct': 14, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 2, 'correct': 2, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 11, 'correct': 11, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 4, 'correct': 4, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 9, 'correct': 8, 'acc': 0.89, 'bacc': 0.89, 'f1': 0.82}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 49, 'acc': 0.98, 'bacc': 0.97, 'f1': 0.96}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 8, 'accuracy': 1.0}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 6, 'accuracy': 1.0}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 453 lr 0.01
+Split  5, acc: 98.00, bacc: 96.88, f1: 96.41
+epoch:   0, val_loss:1.367058, test_acc: 50.00, bacc: 46.23, tmp_test_f1: 37.43, f1: 37.43
+epoch: 100, val_loss:0.082291, test_acc: 94.00, bacc: 87.50, tmp_test_f1: 85.90, f1: 88.17
+epoch: 200, val_loss:0.096159, test_acc: 94.00, bacc: 87.50, tmp_test_f1: 85.52, f1: 88.17
+epoch: 300, val_loss:0.040872, test_acc: 94.00, bacc: 87.50, tmp_test_f1: 85.49, f1: 88.17
+epoch: 400, val_loss:0.046951, test_acc: 94.00, bacc: 87.50, tmp_test_f1: 85.49, f1: 88.17
+epoch: 500, val_loss:0.037323, test_acc: 94.00, bacc: 87.50, tmp_test_f1: 85.49, f1: 88.17
+noIn_noOut_nodes 0
+noIn_outHomo_nodes 0
+noIn_outHetero_nodes [{'num_node': 40, 'test': 7, 'correct': 7, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 2, 'correct': 2, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 11, 'correct': 11, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 6, 'correct': 3, 'acc': 0.5, 'bacc': 0.67, 'f1': 0.42}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 8, 'correct': 8, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 4, 'correct': 4, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 12, 'correct': 12, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 47, 'acc': 0.94, 'bacc': 0.88, 'f1': 0.88}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 7, 'accuracy': 0.88}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 3, 'accuracy': 0.5}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 526 lr 0.01
+Split  6, acc: 94.00, bacc: 87.50, f1: 88.17
+epoch:   0, val_loss:1.309606, test_acc: 42.00, bacc: 41.67, tmp_test_f1: 28.24, f1: 28.24
+epoch: 100, val_loss:0.215080, test_acc: 88.00, bacc: 87.45, tmp_test_f1: 95.87, f1: 88.40
+epoch: 200, val_loss:0.188801, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 97.32, f1: 96.26
+epoch: 300, val_loss:0.150706, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 97.32, f1: 96.26
+epoch: 400, val_loss:0.154711, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 97.32, f1: 96.26
+epoch: 500, val_loss:0.147248, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 100.00, f1: 96.26
+noIn_noOut_nodes 0
+noIn_outHomo_nodes 0
+noIn_outHetero_nodes [{'num_node': 40, 'test': 11, 'correct': 10, 'acc': 0.91, 'bacc': 0.88, 'f1': 0.9}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 3, 'correct': 3, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 8, 'correct': 8, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 4, 'correct': 4, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 12, 'correct': 12, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 49, 'acc': 0.98, 'bacc': 0.96, 'f1': 0.96}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 8, 'accuracy': 1.0}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 6, 'accuracy': 1.0}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 530 lr 0.01
+Split  7, acc: 98.00, bacc: 95.83, f1: 96.26
+epoch:   0, val_loss:1.532868, test_acc: 40.00, bacc: 36.03, tmp_test_f1: 25.62, f1: 25.62
+epoch: 100, val_loss:0.171146, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 93.44, f1: 96.26
+epoch: 200, val_loss:0.062491, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 96.26, f1: 96.26
+epoch: 300, val_loss:0.052646, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 96.26, f1: 96.26
+epoch: 400, val_loss:0.058555, test_acc: 98.00, bacc: 95.83, tmp_test_f1: 96.26, f1: 96.26
+noIn_noOut_nodes 0
+noIn_outHomo_nodes [{'num_node': 1, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+noIn_outHetero_nodes [{'num_node': 40, 'test': 8, 'correct': 8, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 11, 'correct': 11, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 2, 'correct': 1, 'acc': 0.5, 'bacc': 0.5, 'f1': 0.33}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 10, 'correct': 10, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 11, 'correct': 11, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 49, 'acc': 0.98, 'bacc': 0.96, 'f1': 0.96}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 8, 'accuracy': 1.0}
+Class 1: {'total': 84, 'tested': 17, 'correct': 17, 'accuracy': 1.0}
+Class 2: {'total': 30, 'tested': 6, 'correct': 5, 'accuracy': 0.83}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 459 lr 0.01
+Split  8, acc: 98.00, bacc: 95.83, f1: 96.26
+epoch:   0, val_loss:1.427421, test_acc: 38.00, bacc: 33.33, tmp_test_f1: 22.27, f1: 22.27
+epoch: 100, val_loss:0.251249, test_acc: 96.00, bacc: 94.36, tmp_test_f1: 86.88, f1: 95.62
+epoch: 200, val_loss:0.186325, test_acc: 96.00, bacc: 94.36, tmp_test_f1: 92.16, f1: 95.62
+epoch: 300, val_loss:0.253240, test_acc: 96.00, bacc: 94.36, tmp_test_f1: 92.16, f1: 95.62
+epoch: 400, val_loss:0.257493, test_acc: 96.00, bacc: 94.36, tmp_test_f1: 92.16, f1: 95.62
+noIn_noOut_nodes 0
+noIn_outHomo_nodes [{'num_node': 1, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+noIn_outHetero_nodes [{'num_node': 40, 'test': 6, 'correct': 6, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_noOut_nodes [{'num_node': 9, 'test': 1, 'correct': 1, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHomo_nodes [{'num_node': 54, 'test': 13, 'correct': 13, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHomo_outHetero_nodes [{'num_node': 16, 'test': 5, 'correct': 4, 'acc': 0.8, 'bacc': 0.89, 'f1': 0.82}]
+inHetero_noOut_nodes [{'num_node': 53, 'test': 13, 'correct': 13, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+inHetero_outHomo_nodes [{'num_node': 25, 'test': 4, 'correct': 3, 'acc': 0.75, 'bacc': 0.75, 'f1': 0.73}]
+inHetero_outHetero_nodes [{'num_node': 47, 'test': 7, 'correct': 7, 'acc': 1.0, 'bacc': 1.0, 'f1': 1.0}]
+all nodes [{'num_node': 245, 'test': 50, 'correct': 48, 'acc': 0.96, 'bacc': 0.94, 'f1': 0.96}]
+Class 0: {'total': 39, 'tested': 8, 'correct': 7, 'accuracy': 0.88}
+Class 1: {'total': 84, 'tested': 17, 'correct': 16, 'accuracy': 0.94}
+Class 2: {'total': 30, 'tested': 6, 'correct': 5, 'accuracy': 0.83}
+Class 3: {'total': 92, 'tested': 19, 'correct': 19, 'accuracy': 1.0}
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0 4 telegram_0 EndEpoch 451 lr 0.01
+Split  9, acc: 96.00, bacc: 94.36, f1: 95.62
+Time(s): Total_40= Load_0 + Preprocess_0 + Train_39
+LNorm_ScaleNet_Bal_dir-gcn_part0.5_-1_-1_sloop10_jkmax_norm0_4_telegram_0_acc97.2±2.1_bacc95.6±3.8_Macro F1:96.0±3.4
