@@ -206,9 +206,9 @@ def get_name(args, IsDirectedGraph):
     if args.net[1:3] == 'iA' or args.net == 'GAT':
         net_to_print = net_to_print + '_Head' + str(args.heads)
     if args.BN_model:
-        net_to_print = 'LNorm_' + net_to_print
+        net_to_print = 'BNorm_' + net_to_print
     else:
-        net_to_print = 'NoLNorm_' + net_to_print
+        net_to_print = 'NoBNorm_' + net_to_print
 
 
 
