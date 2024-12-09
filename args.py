@@ -39,7 +39,7 @@ def parse_args():
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
     parser.add_argument('--seed', type=int, default=101, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/chameleon', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+    parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/squirrel', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument('--lrweight', type=float, default=0.4, help='learning rate for edge_weight')
     parser.add_argument('--coeflr', type=float, default=2, help='coef lr get multiplied with it')
     parser.add_argument('--wd4coef', type=float, default=5e-2, help='coef change slower with weight decay')
-    parser.add_argument('--l2', type=float, default=0, help='l2 regularizer, 5e-4, 0 is better')
+    parser.add_argument('--l2', type=float, default=5e-4, help='l2 regularizer, 5e-4, 0 is better')
     parser.add_argument('-hds', '--heads', default=1, type=int)
 
     #  from Magnet

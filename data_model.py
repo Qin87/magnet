@@ -594,8 +594,8 @@ def count_homophilic_nodes(edge_index, y):
         if len(in_neighbors) > 0:
             in_neighbor_labels = y[in_neighbors]
             in_most_common_label = torch.mode(in_neighbor_labels).values.item()
-            if node == 14:
-                print(in_most_common_label, in_neighbor_labels)
+            # if node == 14:
+            #     print(in_most_common_label, in_neighbor_labels)
             if in_most_common_label == y_node:
                 in_homophilic_count += 1
                 in_homophilic_nodes.append(node)
@@ -609,8 +609,8 @@ def count_homophilic_nodes(edge_index, y):
         if len(out_neighbors) > 0:
             out_neighbor_labels = y[out_neighbors]
             out_most_common_label = torch.mode(out_neighbor_labels).values.item()
-            if node == 2144:
-                print(out_most_common_label, out_neighbor_labels, y_node)
+            # if node == 2144:
+            #     print(out_most_common_label, out_neighbor_labels, y_node)
             if out_most_common_label == y_node:
                 out_homophilic_count += 1
                 out_homophilic_nodes.append(node)
