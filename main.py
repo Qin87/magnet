@@ -509,7 +509,7 @@ try:
                     continue
                 mask = create_mask(lst, data_x.shape[0]).to(device)
                 train_temp, val_temp, test_temp = mask & data_train_mask, mask & data_val_mask, mask & data_test_mask
-                print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
+                # print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
 
             n_data0 = []  # num of train in each class
             for i in range(n_cls):
@@ -630,9 +630,9 @@ try:
                 end_epoch = epoch
                 if CountNotImproved > args.NotImproved:
 
-                    for name, metric_temp in metrics_list:
-                        print(name, metric_temp)
-                        print(name, metric_temp, file=log_file)
+                    # for name, metric_temp in metrics_list:
+                    #     print(name, metric_temp)
+                    #     print(name, metric_temp, file=log_file)
 
                     for class_id, class_info in class_detail[-1].items():
                         print(f"Class {class_id}: {class_info}")
