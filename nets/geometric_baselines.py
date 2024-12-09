@@ -6,7 +6,7 @@ import torch_sparse
 # from dgl.backend.mxnet import no_grad
 from torch import triu
 from torch.nn import Linear, ModuleList, init
-from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP, JumpingKnowledge
+from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 from torch.nn import Parameter
 from torch_geometric.utils import remove_self_loops
 from torch_sparse import SparseTensor
@@ -17,6 +17,8 @@ from torch_sparse import mul
 # from dgl.python.dgl import add_self_loop
 from nets.gcn import gcn_norm
 from torch_geometric.utils import add_self_loops
+
+from nets.jumping_weight import JumpingKnowledge
 
 ####################################################################
 # Link Prediction Models
@@ -932,6 +934,7 @@ class DirGCNConv_2(torch.nn.Module):
     def __init__(self, input_dim, output_dim, args):
         super().__init__()
 
+
         self.input_dim = input_dim
         self.output_dim = output_dim
         # self.lin = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(4)])
@@ -1142,7 +1145,7 @@ class DirGCNConv_2(torch.nn.Module):
             # x = torch.cat((self.mlp(x0), x), dim=-1)
             # x = self.conv2_1(x)
 
-            x += self.mlp(x0)
+            x += self.mlp(x)
 
         if self.BN_model:
             x = self.batch_norm2(x)
