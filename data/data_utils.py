@@ -426,6 +426,7 @@ def set_device(args):
     return device
 
 def seed_everything(seed):
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
     torch.cuda.empty_cache()
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
