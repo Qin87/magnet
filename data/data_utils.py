@@ -433,6 +433,9 @@ def seed_everything(seed):
     torch.backends.cudnn.benchmark = False
     random.seed(seed)
     np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)  # For multi-GPU
+    torch.use_deterministic_algorithms(True)  # For newer PyTorch versions
+    os.environ['PYTHONHASHSEED'] = str(seed)
 
 def even_quantile_labels(vals, nclasses, verbose=True):
     """partitions vals into nclasses by a quantile based split,
