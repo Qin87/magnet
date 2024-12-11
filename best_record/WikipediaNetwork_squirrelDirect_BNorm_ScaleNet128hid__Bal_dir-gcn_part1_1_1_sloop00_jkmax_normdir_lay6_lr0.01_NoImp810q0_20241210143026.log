@@ -1,0 +1,296 @@
+Namespace(use_best_hyperparams=1, GPUdevice=0, CPU=False, mlpIn=0, mlpOut=0, BN_model=1, nonlinear=1, First_self_loop=0, rm_gen_sloop=0, has_scheduler=1, patience=400, conv_type='dir-gcn', normalize=1, jk='max', jk_inner=0, inci_norm='dir', fs='dir', alphaDir=1, betaDir=1, gamaDir=1, learn_alpha=False, differ_AA=0, differ_AAt=0, num_split=20, MakeImbalance=False, imb_ratio=20, net='ScaleNet', seed=11, Dataset='WikipediaNetwork/squirrel', dropout=0.0, layer=6, alpha=0.1, AP_K=10, feat_dim=128, epoch=10000, NotImproved=810, lr=0.01, lrweight=0.4, coeflr=2, wd4coef=0.05, l2=0, heads=1, q=0, p_q=0.95, p_inter=0.1, norm=0, activation=0, K=2, netflow=True, follow_math=True, gcn=True, i_complex=True, qua_weights=False, qua_bias=False, log_path='test', data_path='../dataset/data/tmp/', ppnp='GPR_prop', Init='PPR', p=2, mu=0.1, W_degree=5, has_1_order=0, paraD=False, gcn_norm=0, add_selfloop=0, to_undirected=0, to_reverse_edge=0, feat_proximity=False, ibx1=False, log_root='../logs/')
+Using Device:  cuda:0
+no_in, homo_in, no_out, homo_out: 2996 441 0 1258
+GCN_JKNet(
+  (convs): ModuleList(
+    (0): DirGCNConv_2(
+      (lin_src_to_dst): Linear(in_features=2089, out_features=128, bias=True)
+      (lin_dst_to_src): Linear(in_features=2089, out_features=128, bias=True)
+      (linx): ModuleList(
+        (0-3): 4 x Linear(in_features=2089, out_features=128, bias=True)
+      )
+      (batch_norm2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2_1): Linear(in_features=256, out_features=128, bias=True)
+    )
+    (1-5): 5 x DirGCNConv_2(
+      (lin_src_to_dst): Linear(in_features=128, out_features=128, bias=True)
+      (lin_dst_to_src): Linear(in_features=128, out_features=128, bias=True)
+      (linx): ModuleList(
+        (0-3): 4 x Linear(in_features=128, out_features=128, bias=True)
+      )
+      (batch_norm2): BatchNorm1d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2_1): Linear(in_features=256, out_features=128, bias=True)
+    )
+  )
+  (lin): Linear(in_features=128, out_features=5, bias=True)
+  (jump): JumpingKnowledge(max)
+)
+WikipediaNetwork_squirrelDirect	totalNode_5201	 trainNode_2496
+WikipediaNetwork_squirrelDirect	totalEdge_217073	 trainEdge_217073
+epoch:   0, val_loss:1.616511, test_acc: 19.79, bacc: 20.00, tmp_test_f1: 6.61, f1: 6.61
+epoch: 100, val_loss:0.949264, test_acc: 71.47, bacc: 71.64, tmp_test_f1: 63.58, f1: 71.66
+epoch: 200, val_loss:0.984871, test_acc: 74.93, bacc: 75.02, tmp_test_f1: 74.81, f1: 74.56
+epoch: 300, val_loss:1.020828, test_acc: 74.93, bacc: 75.02, tmp_test_f1: 70.71, f1: 74.56
+epoch: 400, val_loss:2.047287, test_acc: 74.93, bacc: 75.02, tmp_test_f1: 38.44, f1: 74.56
+epoch: 500, val_loss:1.159185, test_acc: 74.93, bacc: 75.02, tmp_test_f1: 75.62, f1: 74.56
+epoch: 600, val_loss:1.173675, test_acc: 76.85, bacc: 76.92, tmp_test_f1: 75.58, f1: 76.82
+epoch: 700, val_loss:1.187651, test_acc: 76.85, bacc: 76.93, tmp_test_f1: 75.03, f1: 76.81
+epoch: 800, val_loss:1.313773, test_acc: 76.85, bacc: 76.93, tmp_test_f1: 74.41, f1: 76.81
+epoch: 900, val_loss:1.215597, test_acc: 76.85, bacc: 76.93, tmp_test_f1: 75.16, f1: 76.81
+epoch: 1000, val_loss:1.197491, test_acc: 76.85, bacc: 76.93, tmp_test_f1: 77.06, f1: 76.81
+epoch: 1100, val_loss:1.241766, test_acc: 76.75, bacc: 76.86, tmp_test_f1: 75.07, f1: 76.78
+epoch: 1200, val_loss:1.265905, test_acc: 76.75, bacc: 76.86, tmp_test_f1: 76.02, f1: 76.78
+epoch: 1300, val_loss:1.270127, test_acc: 76.75, bacc: 76.86, tmp_test_f1: 76.23, f1: 76.78
+epoch: 1400, val_loss:1.276425, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.27, f1: 76.62
+epoch: 1500, val_loss:1.285009, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.47, f1: 76.62
+epoch: 1600, val_loss:1.296719, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.58, f1: 76.62
+epoch: 1700, val_loss:1.281717, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.54, f1: 76.62
+epoch: 1800, val_loss:1.297642, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.21, f1: 76.62
+epoch: 1900, val_loss:1.293990, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.09, f1: 76.62
+epoch: 2000, val_loss:1.290004, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.77, f1: 76.62
+epoch: 2100, val_loss:1.329279, test_acc: 76.66, bacc: 76.75, tmp_test_f1: 76.67, f1: 76.62
+Class 0: {'total': 1042, 'tested': 213, 'correct': 146, 'accuracy': 0.69}
+Class 1: {'total': 1040, 'tested': 206, 'correct': 141, 'accuracy': 0.68}
+Class 2: {'total': 1039, 'tested': 215, 'correct': 161, 'accuracy': 0.75}
+Class 3: {'total': 1040, 'tested': 201, 'correct': 168, 'accuracy': 0.84}
+Class 4: {'total': 1040, 'tested': 206, 'correct': 178, 'accuracy': 0.86}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 2188 lr 0.01
+Split  0, acc: 76.66, bacc: 76.75, f1: 76.62
+epoch:   0, val_loss:1.655904, test_acc: 21.33, bacc: 20.00, tmp_test_f1: 7.03, f1: 7.03
+epoch: 100, val_loss:1.101201, test_acc: 69.74, bacc: 69.17, tmp_test_f1: 66.71, f1: 68.39
+epoch: 200, val_loss:1.189824, test_acc: 71.37, bacc: 71.33, tmp_test_f1: 67.71, f1: 70.98
+epoch: 300, val_loss:1.239588, test_acc: 75.50, bacc: 75.40, tmp_test_f1: 75.51, f1: 75.16
+epoch: 400, val_loss:1.167935, test_acc: 76.27, bacc: 76.14, tmp_test_f1: 76.77, f1: 75.87
+epoch: 500, val_loss:1.155812, test_acc: 76.27, bacc: 76.14, tmp_test_f1: 75.19, f1: 75.87
+epoch: 600, val_loss:1.272980, test_acc: 76.85, bacc: 76.66, tmp_test_f1: 76.91, f1: 76.50
+epoch: 700, val_loss:1.338744, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 75.98, f1: 76.71
+epoch: 800, val_loss:1.360211, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 73.09, f1: 76.71
+epoch: 900, val_loss:1.374801, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 75.50, f1: 76.71
+epoch: 1000, val_loss:1.379404, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 76.09, f1: 76.71
+epoch: 1100, val_loss:1.406829, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 75.90, f1: 76.71
+epoch: 1200, val_loss:1.370827, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 75.92, f1: 76.71
+epoch: 1300, val_loss:1.454751, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 76.41, f1: 76.71
+epoch: 1400, val_loss:1.449439, test_acc: 77.04, bacc: 76.83, tmp_test_f1: 76.31, f1: 76.71
+Class 0: {'total': 1042, 'tested': 217, 'correct': 146, 'accuracy': 0.67}
+Class 1: {'total': 1040, 'tested': 199, 'correct': 131, 'accuracy': 0.66}
+Class 2: {'total': 1039, 'tested': 203, 'correct': 150, 'accuracy': 0.74}
+Class 3: {'total': 1040, 'tested': 200, 'correct': 169, 'accuracy': 0.84}
+Class 4: {'total': 1040, 'tested': 222, 'correct': 205, 'accuracy': 0.92}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 1499 lr 0.01
+Split  1, acc: 77.04, bacc: 76.83, f1: 76.71
+epoch:   0, val_loss:1.648641, test_acc: 20.08, bacc: 20.95, tmp_test_f1: 11.62, f1: 11.62
+epoch: 100, val_loss:1.037405, test_acc: 68.20, bacc: 68.49, tmp_test_f1: 65.36, f1: 67.93
+epoch: 200, val_loss:1.002016, test_acc: 73.01, bacc: 73.40, tmp_test_f1: 71.56, f1: 73.33
+epoch: 300, val_loss:1.193346, test_acc: 73.20, bacc: 73.76, tmp_test_f1: 61.95, f1: 73.30
+epoch: 400, val_loss:1.218448, test_acc: 73.20, bacc: 73.76, tmp_test_f1: 67.30, f1: 73.30
+epoch: 500, val_loss:1.403707, test_acc: 73.20, bacc: 73.76, tmp_test_f1: 60.03, f1: 73.30
+epoch: 600, val_loss:1.281162, test_acc: 74.93, bacc: 75.32, tmp_test_f1: 74.73, f1: 75.08
+epoch: 700, val_loss:1.225082, test_acc: 76.18, bacc: 76.48, tmp_test_f1: 75.24, f1: 76.30
+epoch: 800, val_loss:1.355537, test_acc: 76.18, bacc: 76.48, tmp_test_f1: 72.95, f1: 76.30
+epoch: 900, val_loss:1.391244, test_acc: 76.18, bacc: 76.48, tmp_test_f1: 74.41, f1: 76.30
+epoch: 1000, val_loss:1.313956, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 76.13, f1: 76.19
+epoch: 1100, val_loss:1.301477, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 75.49, f1: 76.19
+epoch: 1200, val_loss:1.396494, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 75.35, f1: 76.19
+epoch: 1300, val_loss:1.360072, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 75.65, f1: 76.19
+epoch: 1400, val_loss:1.421781, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 74.86, f1: 76.19
+epoch: 1500, val_loss:1.376066, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 75.30, f1: 76.19
+epoch: 1600, val_loss:1.403455, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 74.48, f1: 76.19
+epoch: 1700, val_loss:1.428028, test_acc: 76.08, bacc: 76.39, tmp_test_f1: 75.23, f1: 76.19
+Class 0: {'total': 1042, 'tested': 231, 'correct': 146, 'accuracy': 0.63}
+Class 1: {'total': 1040, 'tested': 208, 'correct': 142, 'accuracy': 0.68}
+Class 2: {'total': 1039, 'tested': 203, 'correct': 147, 'accuracy': 0.72}
+Class 3: {'total': 1040, 'tested': 207, 'correct': 171, 'accuracy': 0.83}
+Class 4: {'total': 1040, 'tested': 192, 'correct': 168, 'accuracy': 0.88}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 1783 lr 0.01
+Split  2, acc: 76.08, bacc: 76.39, f1: 76.19
+epoch:   0, val_loss:1.642486, test_acc: 20.27, bacc: 20.09, tmp_test_f1: 6.91, f1: 6.91
+epoch: 100, val_loss:1.584317, test_acc: 70.99, bacc: 70.87, tmp_test_f1: 36.63, f1: 70.43
+epoch: 200, val_loss:1.380470, test_acc: 73.20, bacc: 73.53, tmp_test_f1: 65.86, f1: 72.72
+epoch: 300, val_loss:1.169158, test_acc: 76.56, bacc: 76.77, tmp_test_f1: 71.15, f1: 76.38
+epoch: 400, val_loss:1.358588, test_acc: 76.08, bacc: 76.41, tmp_test_f1: 71.16, f1: 75.87
+epoch: 500, val_loss:1.334821, test_acc: 78.67, bacc: 78.76, tmp_test_f1: 77.61, f1: 78.64
+epoch: 600, val_loss:1.498522, test_acc: 78.58, bacc: 78.72, tmp_test_f1: 34.82, f1: 78.51
+epoch: 700, val_loss:1.268560, test_acc: 78.58, bacc: 78.72, tmp_test_f1: 77.08, f1: 78.51
+epoch: 800, val_loss:1.321517, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 78.42, f1: 78.81
+epoch: 900, val_loss:1.311437, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 74.66, f1: 78.81
+epoch: 1000, val_loss:1.335608, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 68.41, f1: 78.81
+epoch: 1100, val_loss:1.407745, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 77.22, f1: 78.81
+epoch: 1200, val_loss:1.404464, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 78.00, f1: 78.81
+epoch: 1300, val_loss:1.424029, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 78.06, f1: 78.81
+epoch: 1400, val_loss:1.436519, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 78.49, f1: 78.81
+epoch: 1500, val_loss:1.474365, test_acc: 78.87, bacc: 78.99, tmp_test_f1: 78.09, f1: 78.81
+Class 0: {'total': 1042, 'tested': 209, 'correct': 135, 'accuracy': 0.65}
+Class 1: {'total': 1040, 'tested': 219, 'correct': 149, 'accuracy': 0.68}
+Class 2: {'total': 1039, 'tested': 192, 'correct': 161, 'accuracy': 0.84}
+Class 3: {'total': 1040, 'tested': 211, 'correct': 177, 'accuracy': 0.84}
+Class 4: {'total': 1040, 'tested': 210, 'correct': 192, 'accuracy': 0.91}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 1593 lr 0.01
+Split  3, acc: 78.87, bacc: 78.99, f1: 78.81
+epoch:   0, val_loss:1.625503, test_acc: 20.27, bacc: 20.44, tmp_test_f1: 9.87, f1: 9.87
+epoch: 100, val_loss:1.226270, test_acc: 65.42, bacc: 65.14, tmp_test_f1: 62.51, f1: 65.25
+epoch: 200, val_loss:1.410909, test_acc: 74.54, bacc: 74.55, tmp_test_f1: 58.26, f1: 74.48
+epoch: 300, val_loss:1.244079, test_acc: 75.02, bacc: 74.84, tmp_test_f1: 73.90, f1: 74.75
+epoch: 400, val_loss:1.287373, test_acc: 74.54, bacc: 74.52, tmp_test_f1: 73.71, f1: 74.35
+epoch: 500, val_loss:1.189336, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 70.21, f1: 76.28
+epoch: 600, val_loss:1.254732, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 72.81, f1: 76.28
+epoch: 700, val_loss:1.307876, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 73.32, f1: 76.28
+epoch: 800, val_loss:1.288486, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 72.91, f1: 76.28
+epoch: 900, val_loss:1.850617, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 60.07, f1: 76.28
+epoch: 1000, val_loss:1.363585, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 74.53, f1: 76.28
+epoch: 1100, val_loss:1.412676, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 74.05, f1: 76.28
+epoch: 1200, val_loss:1.400064, test_acc: 76.46, bacc: 76.36, tmp_test_f1: 74.03, f1: 76.28
+Class 0: {'total': 1042, 'tested': 217, 'correct': 134, 'accuracy': 0.62}
+Class 1: {'total': 1040, 'tested': 200, 'correct': 131, 'accuracy': 0.66}
+Class 2: {'total': 1039, 'tested': 202, 'correct': 138, 'accuracy': 0.68}
+Class 3: {'total': 1040, 'tested': 217, 'correct': 183, 'accuracy': 0.84}
+Class 4: {'total': 1040, 'tested': 205, 'correct': 183, 'accuracy': 0.89}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 1241 lr 0.01
+Split  4, acc: 76.46, bacc: 76.36, f1: 76.28
+epoch:   0, val_loss:1.701933, test_acc: 19.12, bacc: 20.00, tmp_test_f1: 6.42, f1: 6.42
+epoch: 100, val_loss:1.218798, test_acc: 62.25, bacc: 61.47, tmp_test_f1: 56.94, f1: 60.34
+epoch: 200, val_loss:1.307360, test_acc: 71.47, bacc: 71.51, tmp_test_f1: 61.33, f1: 71.20
+epoch: 300, val_loss:1.434023, test_acc: 71.47, bacc: 71.51, tmp_test_f1: 51.23, f1: 71.20
+epoch: 400, val_loss:1.358626, test_acc: 74.16, bacc: 74.25, tmp_test_f1: 52.78, f1: 73.94
+epoch: 500, val_loss:2.164460, test_acc: 75.70, bacc: 75.82, tmp_test_f1: 23.31, f1: 75.64
+epoch: 600, val_loss:1.123928, test_acc: 75.70, bacc: 75.82, tmp_test_f1: 75.45, f1: 75.64
+epoch: 700, val_loss:1.214792, test_acc: 75.70, bacc: 75.68, tmp_test_f1: 74.89, f1: 75.52
+epoch: 800, val_loss:1.245269, test_acc: 75.79, bacc: 75.78, tmp_test_f1: 75.10, f1: 75.66
+epoch: 900, val_loss:1.252393, test_acc: 75.70, bacc: 75.71, tmp_test_f1: 72.47, f1: 75.54
+epoch: 1000, val_loss:1.252859, test_acc: 75.70, bacc: 75.71, tmp_test_f1: 75.66, f1: 75.54
+epoch: 1100, val_loss:1.266390, test_acc: 75.70, bacc: 75.71, tmp_test_f1: 75.54, f1: 75.54
+epoch: 1200, val_loss:1.290907, test_acc: 75.70, bacc: 75.71, tmp_test_f1: 75.54, f1: 75.54
+epoch: 1300, val_loss:1.303451, test_acc: 75.70, bacc: 75.71, tmp_test_f1: 75.79, f1: 75.54
+epoch: 1400, val_loss:1.326884, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 74.90, f1: 75.48
+epoch: 1500, val_loss:1.324021, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 74.65, f1: 75.48
+epoch: 1600, val_loss:1.328614, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 75.39, f1: 75.48
+epoch: 1700, val_loss:1.249966, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 75.16, f1: 75.48
+epoch: 1800, val_loss:1.322794, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 75.05, f1: 75.48
+epoch: 1900, val_loss:1.352041, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 75.24, f1: 75.48
+epoch: 2000, val_loss:1.343673, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 75.16, f1: 75.48
+epoch: 2100, val_loss:1.355453, test_acc: 75.60, bacc: 75.64, tmp_test_f1: 74.96, f1: 75.48
+Class 0: {'total': 1042, 'tested': 227, 'correct': 148, 'accuracy': 0.65}
+Class 1: {'total': 1040, 'tested': 191, 'correct': 120, 'accuracy': 0.63}
+Class 2: {'total': 1039, 'tested': 209, 'correct': 160, 'accuracy': 0.77}
+Class 3: {'total': 1040, 'tested': 215, 'correct': 176, 'accuracy': 0.82}
+Class 4: {'total': 1040, 'tested': 199, 'correct': 177, 'accuracy': 0.89}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 2122 lr 0.01
+Split  5, acc: 75.60, bacc: 75.64, f1: 75.48
+epoch:   0, val_loss:1.645866, test_acc: 20.85, bacc: 19.91, tmp_test_f1: 6.90, f1: 6.90
+epoch: 100, val_loss:1.143464, test_acc: 59.75, bacc: 60.03, tmp_test_f1: 58.80, f1: 58.80
+epoch: 200, val_loss:1.290145, test_acc: 71.37, bacc: 71.67, tmp_test_f1: 60.32, f1: 71.05
+epoch: 300, val_loss:1.132930, test_acc: 71.28, bacc: 71.58, tmp_test_f1: 69.96, f1: 70.84
+epoch: 400, val_loss:1.069383, test_acc: 72.62, bacc: 72.75, tmp_test_f1: 70.36, f1: 72.43
+epoch: 500, val_loss:1.130821, test_acc: 74.35, bacc: 74.55, tmp_test_f1: 74.69, f1: 74.28
+epoch: 600, val_loss:1.157614, test_acc: 73.97, bacc: 74.19, tmp_test_f1: 74.51, f1: 73.92
+epoch: 700, val_loss:1.170355, test_acc: 73.97, bacc: 74.19, tmp_test_f1: 74.66, f1: 73.92
+epoch: 800, val_loss:1.178303, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 75.09, f1: 74.88
+epoch: 900, val_loss:1.243122, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 74.39, f1: 74.88
+epoch: 1000, val_loss:1.222493, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 74.86, f1: 74.88
+epoch: 1100, val_loss:1.248502, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 74.87, f1: 74.88
+epoch: 1200, val_loss:1.270248, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 75.03, f1: 74.88
+epoch: 1300, val_loss:1.256086, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 74.60, f1: 74.88
+epoch: 1400, val_loss:1.272073, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 74.07, f1: 74.88
+epoch: 1500, val_loss:1.266928, test_acc: 75.02, bacc: 75.25, tmp_test_f1: 75.53, f1: 74.88
+Class 0: {'total': 1042, 'tested': 217, 'correct': 142, 'accuracy': 0.65}
+Class 1: {'total': 1040, 'tested': 222, 'correct': 149, 'accuracy': 0.67}
+Class 2: {'total': 1039, 'tested': 195, 'correct': 153, 'accuracy': 0.78}
+Class 3: {'total': 1040, 'tested': 189, 'correct': 146, 'accuracy': 0.77}
+Class 4: {'total': 1040, 'tested': 218, 'correct': 194, 'accuracy': 0.89}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 1519 lr 0.01
+Split  6, acc: 75.02, bacc: 75.25, f1: 74.88
+epoch:   0, val_loss:1.671521, test_acc: 19.31, bacc: 20.00, tmp_test_f1: 6.48, f1: 6.48
+epoch: 100, val_loss:1.201447, test_acc: 64.36, bacc: 64.69, tmp_test_f1: 56.18, f1: 63.58
+epoch: 200, val_loss:1.207433, test_acc: 67.82, bacc: 68.15, tmp_test_f1: 63.12, f1: 67.52
+epoch: 300, val_loss:1.135270, test_acc: 72.53, bacc: 72.76, tmp_test_f1: 66.64, f1: 72.48
+epoch: 400, val_loss:1.334578, test_acc: 73.87, bacc: 74.12, tmp_test_f1: 65.90, f1: 73.45
+epoch: 500, val_loss:1.538764, test_acc: 73.58, bacc: 73.78, tmp_test_f1: 54.84, f1: 73.29
+epoch: 600, val_loss:1.169067, test_acc: 76.66, bacc: 76.86, tmp_test_f1: 74.80, f1: 76.63
+epoch: 700, val_loss:1.337552, test_acc: 76.66, bacc: 76.86, tmp_test_f1: 67.94, f1: 76.63
+epoch: 800, val_loss:1.350051, test_acc: 76.66, bacc: 76.86, tmp_test_f1: 70.39, f1: 76.63
+epoch: 900, val_loss:1.312285, test_acc: 76.66, bacc: 76.86, tmp_test_f1: 75.64, f1: 76.63
+epoch: 1000, val_loss:1.384158, test_acc: 76.66, bacc: 76.86, tmp_test_f1: 74.28, f1: 76.63
+epoch: 1100, val_loss:1.344025, test_acc: 75.50, bacc: 75.71, tmp_test_f1: 74.40, f1: 75.36
+epoch: 1200, val_loss:1.319250, test_acc: 75.50, bacc: 75.71, tmp_test_f1: 75.04, f1: 75.36
+epoch: 1300, val_loss:1.353877, test_acc: 76.85, bacc: 77.06, tmp_test_f1: 74.58, f1: 76.75
+epoch: 1400, val_loss:1.346485, test_acc: 76.27, bacc: 76.48, tmp_test_f1: 75.73, f1: 76.17
+epoch: 1500, val_loss:1.493291, test_acc: 76.85, bacc: 77.05, tmp_test_f1: 72.29, f1: 76.75
+epoch: 1600, val_loss:1.364055, test_acc: 76.46, bacc: 76.66, tmp_test_f1: 77.00, f1: 76.38
+epoch: 1700, val_loss:1.353338, test_acc: 76.46, bacc: 76.66, tmp_test_f1: 76.88, f1: 76.38
+epoch: 1800, val_loss:1.371980, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 76.38, f1: 76.28
+epoch: 1900, val_loss:1.373271, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 76.86, f1: 76.28
+epoch: 2000, val_loss:1.380874, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 77.26, f1: 76.28
+epoch: 2100, val_loss:1.372752, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 76.59, f1: 76.28
+epoch: 2200, val_loss:1.382798, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 77.18, f1: 76.28
+epoch: 2300, val_loss:1.385457, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 77.15, f1: 76.28
+epoch: 2400, val_loss:1.452136, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 75.22, f1: 76.28
+epoch: 2500, val_loss:1.384563, test_acc: 76.37, bacc: 76.57, tmp_test_f1: 77.07, f1: 76.28
+Class 0: {'total': 1042, 'tested': 213, 'correct': 135, 'accuracy': 0.63}
+Class 1: {'total': 1040, 'tested': 212, 'correct': 150, 'accuracy': 0.71}
+Class 2: {'total': 1039, 'tested': 201, 'correct': 164, 'accuracy': 0.82}
+Class 3: {'total': 1040, 'tested': 216, 'correct': 174, 'accuracy': 0.81}
+Class 4: {'total': 1040, 'tested': 199, 'correct': 178, 'accuracy': 0.89}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 2592 lr 0.01
+Split  7, acc: 76.37, bacc: 76.57, f1: 76.28
+epoch:   0, val_loss:1.623796, test_acc: 19.60, bacc: 20.00, tmp_test_f1: 6.55, f1: 6.55
+epoch: 100, val_loss:1.183501, test_acc: 63.69, bacc: 63.80, tmp_test_f1: 61.61, f1: 63.63
+epoch: 200, val_loss:1.083824, test_acc: 71.09, bacc: 71.05, tmp_test_f1: 69.33, f1: 71.08
+epoch: 300, val_loss:1.350728, test_acc: 71.37, bacc: 71.20, tmp_test_f1: 58.78, f1: 70.95
+epoch: 400, val_loss:1.207681, test_acc: 71.76, bacc: 71.61, tmp_test_f1: 68.04, f1: 71.32
+epoch: 500, val_loss:1.841658, test_acc: 70.80, bacc: 70.84, tmp_test_f1: 45.96, f1: 70.30
+epoch: 600, val_loss:1.499122, test_acc: 70.80, bacc: 70.84, tmp_test_f1: 60.22, f1: 70.30
+epoch: 700, val_loss:1.307708, test_acc: 70.80, bacc: 70.84, tmp_test_f1: 65.90, f1: 70.30
+epoch: 800, val_loss:1.348491, test_acc: 70.80, bacc: 70.84, tmp_test_f1: 64.33, f1: 70.30
+epoch: 900, val_loss:1.371841, test_acc: 70.80, bacc: 70.84, tmp_test_f1: 66.47, f1: 70.30
+epoch: 1000, val_loss:1.196868, test_acc: 71.18, bacc: 71.15, tmp_test_f1: 70.99, f1: 70.82
+epoch: 1100, val_loss:1.311248, test_acc: 71.28, bacc: 71.29, tmp_test_f1: 69.99, f1: 71.08
+epoch: 1200, val_loss:1.374044, test_acc: 71.28, bacc: 71.29, tmp_test_f1: 70.78, f1: 71.08
+epoch: 1300, val_loss:1.508295, test_acc: 71.57, bacc: 71.48, tmp_test_f1: 64.80, f1: 71.40
+epoch: 1400, val_loss:1.446134, test_acc: 71.57, bacc: 71.48, tmp_test_f1: 70.47, f1: 71.40
+epoch: 1500, val_loss:1.387996, test_acc: 71.57, bacc: 71.48, tmp_test_f1: 70.27, f1: 71.40
+epoch: 1600, val_loss:1.420807, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.97, f1: 71.28
+epoch: 1700, val_loss:1.474720, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.55, f1: 71.28
+epoch: 1800, val_loss:1.476032, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.52, f1: 71.28
+epoch: 1900, val_loss:1.491153, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.78, f1: 71.28
+epoch: 2000, val_loss:1.497341, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.71, f1: 71.28
+epoch: 2100, val_loss:1.496147, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.90, f1: 71.28
+epoch: 2200, val_loss:1.509344, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.78, f1: 71.28
+epoch: 2300, val_loss:1.508722, test_acc: 71.37, bacc: 71.46, tmp_test_f1: 70.95, f1: 71.28
+Class 0: {'total': 1042, 'tested': 240, 'correct': 153, 'accuracy': 0.64}
+Class 1: {'total': 1040, 'tested': 190, 'correct': 106, 'accuracy': 0.56}
+Class 2: {'total': 1039, 'tested': 203, 'correct': 147, 'accuracy': 0.72}
+Class 3: {'total': 1040, 'tested': 204, 'correct': 153, 'accuracy': 0.75}
+Class 4: {'total': 1040, 'tested': 204, 'correct': 181, 'accuracy': 0.89}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 2370 lr 0.01
+Split  8, acc: 71.37, bacc: 71.46, f1: 71.28
+epoch:   0, val_loss:1.631268, test_acc: 20.17, bacc: 20.00, tmp_test_f1: 6.71, f1: 6.71
+epoch: 100, val_loss:1.065047, test_acc: 71.18, bacc: 70.32, tmp_test_f1: 70.33, f1: 70.33
+epoch: 200, val_loss:1.405047, test_acc: 75.12, bacc: 74.60, tmp_test_f1: 50.55, f1: 74.37
+epoch: 300, val_loss:1.088499, test_acc: 76.46, bacc: 76.05, tmp_test_f1: 75.28, f1: 76.05
+epoch: 400, val_loss:1.629471, test_acc: 76.66, bacc: 76.31, tmp_test_f1: 50.27, f1: 76.29
+epoch: 500, val_loss:1.727471, test_acc: 76.66, bacc: 76.31, tmp_test_f1: 50.97, f1: 76.29
+epoch: 600, val_loss:1.318233, test_acc: 77.33, bacc: 76.85, tmp_test_f1: 77.25, f1: 76.77
+epoch: 700, val_loss:1.834154, test_acc: 77.33, bacc: 76.91, tmp_test_f1: 60.78, f1: 76.89
+epoch: 800, val_loss:1.320614, test_acc: 77.33, bacc: 76.91, tmp_test_f1: 76.30, f1: 76.89
+epoch: 900, val_loss:1.418563, test_acc: 77.33, bacc: 76.91, tmp_test_f1: 75.92, f1: 76.89
+epoch: 1000, val_loss:1.440400, test_acc: 77.52, bacc: 76.99, tmp_test_f1: 75.70, f1: 76.95
+epoch: 1100, val_loss:1.410451, test_acc: 77.52, bacc: 76.99, tmp_test_f1: 76.76, f1: 76.95
+epoch: 1200, val_loss:1.593449, test_acc: 77.52, bacc: 76.99, tmp_test_f1: 72.63, f1: 76.95
+epoch: 1300, val_loss:1.449181, test_acc: 77.52, bacc: 76.99, tmp_test_f1: 75.94, f1: 76.95
+epoch: 1400, val_loss:1.383358, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.71, f1: 76.90
+epoch: 1500, val_loss:1.496372, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.09, f1: 76.90
+epoch: 1600, val_loss:1.477085, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.50, f1: 76.90
+epoch: 1700, val_loss:1.435366, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 77.10, f1: 76.90
+epoch: 1800, val_loss:1.439883, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.79, f1: 76.90
+epoch: 1900, val_loss:1.479511, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.73, f1: 76.90
+epoch: 2000, val_loss:1.466743, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.51, f1: 76.90
+epoch: 2100, val_loss:1.472773, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.37, f1: 76.90
+epoch: 2200, val_loss:1.488806, test_acc: 77.43, bacc: 76.95, tmp_test_f1: 76.62, f1: 76.90
+Class 0: {'total': 1042, 'tested': 184, 'correct': 119, 'accuracy': 0.65}
+Class 1: {'total': 1040, 'tested': 204, 'correct': 138, 'accuracy': 0.68}
+Class 2: {'total': 1039, 'tested': 211, 'correct': 165, 'accuracy': 0.78}
+Class 3: {'total': 1040, 'tested': 232, 'correct': 193, 'accuracy': 0.83}
+Class 4: {'total': 1040, 'tested': 210, 'correct': 188, 'accuracy': 0.9}
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir 6 WikipediaNetwork_squirrel0 EndEpoch 2200 lr 0.01
+Split  9, acc: 77.43, bacc: 76.95, f1: 76.90
+Time(s): Total_9800= Load_2 + Preprocess_0 + Train_9797
+BNorm_ScaleNet128hid__Bal_dir-gcn_part1_1_1_sloop00_jkmax_normdir_6_WikipediaNetwork_squirrel0_acc76.1±2.0_bacc76.1±1.9_Macro F1:75.9±1.9
