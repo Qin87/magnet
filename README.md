@@ -1,5 +1,5 @@
 # ScaleNet
-Implementation of paper [ScaleNet: Scale Invariance Learning in Directed Graphs](??).
+Implementation of paper [Scale Invariance of Graph Neural Networks](https://arxiv.org/abs/2411.19392).
 
 ## Requirements
 
@@ -25,10 +25,10 @@ Specify the name of the dataset you want to use. The available datasets are cate
 
 - **Directed Datasets**:
   - **Assortative Graph**:
-    - `citeseer_npz/`
+    - `citeseer/`
     - `cora_ml/`
     - `WikiCS/`
-    - `telegram/telegram`
+    - `telegram/`
     - `dgl/pubmed`
   
   - **Disassortative Graph**:
@@ -121,5 +121,5 @@ The code is implemented based on [GraphSHA](https://github.com/wenzhilics/GraphS
 [//]: # (## Citation)
 
 [//]: # ()
-[//]: # (If you find this work is helpful to your research, please consider citing our paper:???)
+[//]: # (If you find this work is helpful to your research, please consider citing our paper:Jiang, Qin, et al. "Scale Invariance of Graph Neural Networks." arXiv preprint arXiv:2411.19392 (2024).)
 
