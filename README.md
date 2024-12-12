@@ -10,6 +10,7 @@ This repository has been tested with the following packages:
 - torch-scatter==2.1.2
 - torch-sparse==0.6.18
 
+Performance may vary slightly with different version of Python, GPU, cuda, PyTorch.
 ## Installation Instructions
 
 1. Follow the official instructions to install [PyTorch](https://pytorch.org/get-started/previous-versions/).
