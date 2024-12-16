@@ -150,7 +150,7 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
 
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
 WikipediaNetwork/squirrel:
-  feat_dim: 128
+#  feat_dim: 128
   l2: 0
   NotImproved: 810
   epoch: 10000

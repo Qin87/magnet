@@ -2,7 +2,7 @@
 
 net_values="Dir-GNN "
 q_value=0
-layer_values="  6 7 2 3 4 5 1 "
+layer_values="    2 3 4  6 7 8 9"
 imbal="100  "
 
 
@@ -14,7 +14,7 @@ generate_timestamp() {
 }
 timestamp=$(generate_timestamp)
 
-# Iterate over each dataset   --net="$net"    --layer="$layer"
+# Iterate over each dataset   --net="$net"    --layer="$layer"    --net="$net"
 for Didataset in "${Direct_dataset[@]}"; do
     for layer in $layer_values; do
         logfile="outforlayer${layer}.log"
@@ -24,7 +24,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py    --net="$net"   --layer="$layer" \
+            python3 main.py     --feat_dim="$layer" \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
