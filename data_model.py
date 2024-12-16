@@ -193,6 +193,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
 
 def get_name(args, IsDirectedGraph):
     dataset_to_print = args.Dataset.replace('/', '_')
+    if args.all1:
+        dataset_to_print += 'all1'
     if not IsDirectedGraph:
         dataset_to_print = dataset_to_print + 'Undire'
     else:

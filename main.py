@@ -24,7 +24,7 @@ import torch
 import torch.nn.functional as F
 
 from args import parse_args
-from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges, find_max_spanning_tree
+from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges, find_max_spanning_tree, visualize_tensor_network, visualize_class_relationships
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
     WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask, print_x
@@ -270,8 +270,12 @@ bacc_list = []
 device = set_device(args)
 
 data_x = data_x.to(device)
+if args.all1:
+    data_x = torch.ones_like(data_x)
 data_y = data_y.to(device)
 edges = edges.to(device)
+
+visualize_class_relationships(edges, data_y)
 
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)

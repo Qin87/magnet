@@ -534,3 +534,514 @@ def example():
     mst = find_max_spanning_tree(edge_index, num_nodes, weights)
     print("Maximum Spanning Tree edges:", mst)
     return mst
+
+
+import networkx as nx
+import matplotlib.pyplot as plt
+import torch
+import numpy as np
+
+
+def visualize_tensor_network_Undirected(edges_tensor, y_tensor, sample_size=100):
+    """
+    Create a network visualization from tensor data
+
+    Parameters:
+    edges_tensor: torch.Tensor of shape (2, E) where E is number of edges
+    y_tensor: torch.Tensor of shape (N, 1) where N is number of nodes
+    sample_size: int, number of edges to sample for visualization
+    """
+    # Convert tensors to numpy for networkx compatibility
+    edges = edges_tensor.cpu().numpy()
+    y = y_tensor.cpu().numpy().flatten()
+
+    # Get unique classes
+    unique_classes = np.unique(y)
+
+    # Create a color map
+    color_map = plt.cm.get_cmap('tab10')(np.linspace(0, 1, len(unique_classes)))
+    color_dict = dict(zip(unique_classes, color_map))
+
+    # Sample edges if there are too many
+    # if edges.shape[1] > sample_size:
+    #     indices = np.random.choice(edges.shape[1], sample_size, replace=False)
+    #     sampled_edges = edges[:, indices]
+    # else:
+    sampled_edges = edges
+
+    # Create edge list in the format networkx expects
+    edge_list = list(zip(sampled_edges[0], sampled_edges[1]))
+
+    # Create graph
+    G = nx.Graph()
+    G.add_edges_from(edge_list)
+
+    # Set up the plot
+    plt.figure(figsize=(15, 10))
+
+    # Get nodes in the sampled graph
+    nodes = list(G.nodes())
+
+    # Get colors for nodes in the graph
+    node_colors = [color_dict[y[int(node)]] for node in nodes]
+
+    # Draw the network
+    pos = nx.spring_layout(G, k=1.5, iterations=50)
+    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=200, alpha=0.7)
+    nx.draw_networkx_edges(G, pos, edge_color='gray', width=0.5, alpha=0.5)
+
+    # Add small labels if there aren't too many nodes
+    if len(nodes) <= 50:
+        nx.draw_networkx_labels(G, pos, font_size=8)
+
+    # Create legend
+    legend_elements = [plt.Line2D([0], [0], marker='o', color='w',
+                                  markerfacecolor=color_dict[label],
+                                  label=f'Class {label}', markersize=10)
+                       for label in unique_classes]
+    plt.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
+
+    plt.title(f'Network Graph Sample\n(showing {len(edge_list)} edges from {edges.shape[1]} total)')
+    plt.axis('off')
+    plt.tight_layout()
+
+    # Add statistics
+    stats_text = f'Total nodes: {len(y)}\nTotal edges: {edges.shape[1]}\nUnique classes: {len(unique_classes)}'
+    plt.figtext(0.02, 0.02, stats_text, fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
+
+    plt.show()
+
+    # Print some network statistics
+    print(f"Network Statistics:")
+    print(f"Total number of nodes: {len(y)}")
+    print(f"Total number of edges: {edges.shape[1]}")
+    print(f"Number of unique classes: {len(unique_classes)}")
+    print(f"Class distribution:")
+    for cls in unique_classes:
+        count = np.sum(y == cls)
+        percentage = (count / len(y)) * 100
+        print(f"  Class {cls}: {count} nodes ({percentage:.1f}%)")
+
+
+def visualize_tensor_network_directed(edges_tensor, y_tensor, sample_size=100):
+    """
+    Create a directed network visualization from tensor data
+
+    Parameters:
+    edges_tensor: torch.Tensor of shape (2, E) where E is number of edges
+    y_tensor: torch.Tensor of shape (N, 1) where N is number of nodes
+    sample_size: int, number of edges to sample for visualization
+    """
+    # Convert tensors to numpy for networkx compatibility
+    edges = edges_tensor.cpu().numpy()
+    y = y_tensor.cpu().numpy().flatten()
+
+    # Get unique classes
+    unique_classes = np.unique(y)
+
+    # Create a color map
+    color_map = plt.cm.get_cmap('tab10')(np.linspace(0, 1, len(unique_classes)))
+    color_dict = dict(zip(unique_classes, color_map))
+
+    # Sample edges if there are too many
+    # if edges.shape[1] > sample_size:
+    #     indices = np.random.choice(edges.shape[1], sample_size, replace=False)
+    #     sampled_edges = edges[:, indices]
+    # else:
+    sampled_edges = edges
+
+    # Create edge list in the format networkx expects
+    edge_list = list(zip(sampled_edges[0], sampled_edges[1]))
+
+    # Create directed graph
+    G = nx.DiGraph()
+    G.add_edges_from(edge_list)
+
+    # Set up the plot
+    plt.figure(figsize=(150, 100))
+
+    # Get nodes in the sampled graph
+    nodes = list(G.nodes())
+
+    # Get colors for nodes in the graph
+    node_colors = [color_dict[y[int(node)]] for node in nodes]
+
+    # Draw the network with arrows
+    pos = nx.spring_layout(G, k=1.5, iterations=50)
+
+    # Draw nodes
+    nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=200, alpha=0.7)
+
+    # Draw edges with arrows
+    nx.draw_networkx_edges(G, pos,
+                           edge_color='gray',
+                           width=0.5,
+                           alpha=0.5,
+                           arrowsize=10,  # Size of arrow head
+                           arrowstyle='->',  # Arrow style
+                           connectionstyle='arc3,rad=0.1')  # Slightly curved edges
+
+    # Add small labels if there aren't too many nodes
+    if len(nodes) <= 50:
+        nx.draw_networkx_labels(G, pos, font_size=8)
+
+    # Create legend
+    legend_elements = [plt.Line2D([0], [0], marker='o', color='w',
+                                  markerfacecolor=color_dict[label],
+                                  label=f'Class {label}', markersize=10)
+                       for label in unique_classes]
+    plt.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1, 1))
+
+    plt.title(f'Directed Network Graph Sample\n(showing {len(edge_list)} edges from {edges.shape[1]} total)')
+    plt.axis('off')
+    plt.tight_layout()
+
+    # Add statistics
+    stats_text = (f'Total nodes: {len(y)}\n'
+                  f'Total edges: {edges.shape[1]}\n'
+                  f'Unique classes: {len(unique_classes)}')
+    plt.figtext(0.02, 0.02, stats_text, fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
+
+    # plt.show()
+    filename = 'network_visualization.png'
+    plt.savefig(filename, bbox_inches='tight', dpi=300)
+    plt.close()
+
+    # Print some network statistics
+    print(f"Network Statistics:")
+    print(f"Total number of nodes: {len(y)}")
+    print(f"Total number of edges: {edges.shape[1]}")
+    print(f"Number of unique classes: {len(unique_classes)}")
+    print(f"Class distribution:")
+    for cls in unique_classes:
+        count = np.sum(y == cls)
+        percentage = (count / len(y)) * 100
+        print(f"  Class {cls}: {count} nodes ({percentage:.1f}%)")
+
+
+def create_layered_layout(G, y, nodes):
+    """Create a custom layout where nodes of the same class are arranged in horizontal layers"""
+    pos = {}
+    unique_classes = np.unique(y)
+    num_classes = len(unique_classes)
+
+    # Create a mapping of class to node indices
+    class_to_nodes = {cls: [] for cls in unique_classes}
+    for node in nodes:
+        class_to_nodes[y[int(node)]].append(node)
+
+    # Position nodes in layers
+    for i, cls in enumerate(unique_classes):
+        nodes_in_class = class_to_nodes[cls]
+        num_nodes = len(nodes_in_class)
+
+        # Calculate y-coordinate for this layer
+        y_coord = (num_classes - i) / (num_classes + 1)
+
+        # Arrange nodes horizontally within their layer
+        for j, node in enumerate(nodes_in_class):
+            x_coord = (j + 1) / (num_nodes + 1)
+            pos[node] = np.array([x_coord, y_coord])
+
+    return pos
+
+
+def visualize_tensor_network_dullarrow(edges_tensor, y_tensor, filename='network_visualization_class.png'):
+    """
+    Create and save a directed network visualization with nodes arranged by class
+
+    Parameters:
+    edges_tensor: torch.Tensor of shape (2, E) where E is number of edges
+    y_tensor: torch.Tensor of shape (N, 1) where N is number of nodes
+    filename: str, path where to save the figure
+    """
+    # Convert tensors to numpy for networkx compatibility
+    edges = edges_tensor.cpu().numpy()
+    y = y_tensor.cpu().numpy().flatten()
+
+    # Create edge list
+    edge_list = list(zip(edges[0], edges[1]))
+
+    # Create directed graph
+    G = nx.DiGraph()
+    G.add_edges_from(edge_list)
+
+    # Get unique classes and create color map
+    unique_classes = np.unique(y)
+    # colors = plt.cm.Set3(np.linspace(0, 1, len(unique_classes)))  # Using Set3 for better class distinction
+    # color_dict = dict(zip(unique_classes, colors))
+    color_map = plt.cm.get_cmap('tab10')(np.linspace(0, 1, len(unique_classes)))
+    color_dict = dict(zip(unique_classes, color_map))
+
+    # Set up the plot with high DPI
+    plt.figure(figsize=(20, 12), dpi=300)
+
+    # Get nodes and their colors
+    nodes = list(G.nodes())
+    node_colors = [color_dict[y[int(node)]] for node in nodes]
+
+    # Create layered layout
+    pos = create_layered_layout(G, y, nodes)
+
+    # Draw the network
+    # Draw edges first so they're in the background
+    nx.draw_networkx_edges(G, pos,
+                           edge_color='gray',
+                           width=0.3,
+                           alpha=0.2,
+                           arrowsize=5,
+                           arrowstyle='->',
+                           connectionstyle='arc3,rad=0.1')
+
+    # Draw nodes
+    nx.draw_networkx_nodes(G, pos,
+                           node_color=node_colors,
+                           node_size=100,
+                           alpha=0.7)
+
+    # Create legend
+    legend_elements = [plt.Line2D([0], [0], marker='o', color='w',
+                                  markerfacecolor=color_dict[label],
+                                  label=f'Class {label}', markersize=10)
+                       for label in unique_classes]
+    plt.legend(handles=legend_elements,
+               loc='center left',
+               bbox_to_anchor=(1, 0.5),
+               title="Classes")
+
+    plt.title('Layered Network Graph\nNodes arranged by class', pad=20)
+    plt.axis('off')
+
+    # Add statistics
+    stats_text = (f'Total nodes: {len(y)}\n'
+                  f'Total edges: {edges.shape[1]}\n'
+                  f'Unique classes: {len(unique_classes)}')
+    plt.figtext(0.02, 0.02, stats_text, fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
+
+    # Save with tight layout
+    plt.savefig(filename, bbox_inches='tight', dpi=300)
+    plt.close()
+
+    print(f"Figure saved as: {os.path.abspath(filename)}")
+    print(f"\nNetwork Statistics:")
+    print(f"Total number of nodes: {len(y)}")
+    print(f"Total number of edges: {edges.shape[1]}")
+    print(f"Number of unique classes: {len(unique_classes)}")
+    print(f"Class distribution:")
+    for cls in unique_classes:
+        count = np.sum(y == cls)
+        percentage = (count / len(y)) * 100
+        print(f"  Class {cls}: {count} nodes ({percentage:.1f}%)")
+
+
+def visualize_tensor_network(edges_tensor, y_tensor, filename='network_visualization.png'):
+    """
+    Create and save a directed network visualization with nodes arranged by class
+    and colored arrows based on source node class
+
+    Parameters:
+    edges_tensor: torch.Tensor of shape (2, E) where E is number of edges
+    y_tensor: torch.Tensor of shape (N, 1) where N is number of nodes
+    filename: str, path where to save the figure
+    """
+    # Convert tensors to numpy for networkx compatibility
+    edges = edges_tensor.cpu().numpy()
+    y = y_tensor.cpu().numpy().flatten()
+
+    # Create edge list
+    edge_list = list(zip(edges[0], edges[1]))
+
+    # Create directed graph
+    G = nx.DiGraph()
+    G.add_edges_from(edge_list)
+
+    # Get unique classes and create color map
+    unique_classes = np.unique(y)
+    color_map = plt.cm.get_cmap('tab10')(np.linspace(0, 1, len(unique_classes)))
+    color_dict = dict(zip(unique_classes, color_map))
+    # colors = plt.cm.Set3(np.linspace(0, 1, len(unique_classes)))  # Using Set3 for better class distinction
+    # color_dict = dict(zip(unique_classes, colors))
+
+    # Set up the plot with high DPI
+    plt.figure(figsize=(20, 12), dpi=300)
+
+    # Get nodes and their colors
+    nodes = list(G.nodes())
+    node_colors = [color_dict[y[int(node)]] for node in nodes]
+
+    # Create layered layout
+    pos = create_layered_layout(G, y, nodes)
+
+    # Group edges by source node class
+    edges_by_class = {}
+    for (src, dst) in G.edges():
+        src_class = y[int(src)]
+        if src_class not in edges_by_class:
+            edges_by_class[src_class] = []
+        edges_by_class[src_class].append((src, dst))
+
+    # Draw edges with colors based on source node class
+    for cls in unique_classes:
+        if cls in edges_by_class:
+            nx.draw_networkx_edges(G, pos,
+                                   edgelist=edges_by_class[cls],
+                                   edge_color=[color_dict[cls]],
+                                   width=0.3,
+                                   alpha=0.4,
+                                   arrowsize=5,
+                                   arrowstyle='->',
+                                   connectionstyle='arc3,rad=0.1')
+
+    # Draw nodes
+    nx.draw_networkx_nodes(G, pos,
+                           node_color=node_colors,
+                           node_size=100,
+                           alpha=0.7)
+
+    # Create legend for both nodes and edges
+    legend_elements = []
+    for label in unique_classes:
+        # Add node color to legend
+        legend_elements.append(plt.Line2D([0], [0], marker='o', color='w',
+                                          markerfacecolor=color_dict[label],
+                                          label=f'Class {label} nodes',
+                                          markersize=10))
+        # Add edge color to legend
+        legend_elements.append(plt.Line2D([0], [0], color=color_dict[label],
+                                          label=f'Class {label} edges',
+                                          linestyle='-',
+                                          marker='>'))
+
+    plt.legend(handles=legend_elements,
+               loc='center left',
+               bbox_to_anchor=(1, 0.5),
+               title="Classes")
+
+    plt.title('Layered Network Graph\nNodes and edges colored by class', pad=20)
+    plt.axis('off')
+
+    # Add statistics
+    stats_text = (f'Total nodes: {len(y)}\n'
+                  f'Total edges: {edges.shape[1]}\n'
+                  f'Unique classes: {len(unique_classes)}')
+    plt.figtext(0.02, 0.02, stats_text, fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
+
+    # Save with tight layout
+    plt.savefig(filename, bbox_inches='tight', dpi=300)
+    plt.close()
+
+    print(f"Figure saved as: {os.path.abspath(filename)}")
+    print(f"\nNetwork Statistics:")
+    print(f"Total number of nodes: {len(y)}")
+    print(f"Total number of edges: {edges.shape[1]}")
+    print(f"Number of unique classes: {len(unique_classes)}")
+    print(f"Class distribution:")
+    for cls in unique_classes:
+        count = np.sum(y == cls)
+        percentage = (count / len(y)) * 100
+        print(f"  Class {cls}: {count} nodes ({percentage:.1f}%)")
+
+
+def analyze_class_relationships(edges_tensor, y_tensor):
+    """
+    Analyze relationships between classes by counting neighbor connections
+    """
+    edges = edges_tensor.cpu().numpy()
+    y = y_tensor.cpu().numpy().flatten()
+
+    # Create a dictionary to store neighbor counts for each node
+    node_neighbors = defaultdict(lambda: defaultdict(int))
+
+    # Count neighbors of each class for each node
+    for src, dst in zip(edges[0], edges[1]):
+        src_class = y[src]
+        dst_class = y[dst]
+        node_neighbors[src][dst_class] += 1
+
+    # Calculate average connections between classes
+    class_connections = defaultdict(lambda: defaultdict(float))
+    class_node_counts = defaultdict(int)
+
+    # Count nodes in each class
+    for node_class in y:
+        class_node_counts[node_class] += 1
+
+    # Calculate average connections
+    for src, neighbors in node_neighbors.items():
+        src_class = y[src]
+        for dst_class, count in neighbors.items():
+            class_connections[src_class][dst_class] += count
+
+    # Normalize by number of nodes in source class
+    for src_class in class_connections:
+        for dst_class in class_connections[src_class]:
+            class_connections[src_class][dst_class] /= class_node_counts[src_class]
+
+    return dict(class_connections), dict(class_node_counts)
+
+
+def visualize_class_relationships(edges_tensor, y_tensor, filename='class_relationships.png'):
+    """
+    Create and save a visualization showing average connections between classes
+    """
+    class_connections, class_node_counts = analyze_class_relationships(edges_tensor, y_tensor)
+
+    # Create figure
+    plt.figure(figsize=(15, 10), dpi=300)
+
+    # Get unique classes
+    unique_classes = sorted(class_node_counts.keys())
+    num_classes = len(unique_classes)
+
+    # Create position dictionary for nodes (circular layout)
+    pos = {}
+    for i, cls in enumerate(unique_classes):
+        angle = 2 * np.pi * i / num_classes
+        pos[cls] = np.array([np.cos(angle), np.sin(angle)])
+
+    # Create color map
+    colors = plt.cm.Set3(np.linspace(0, 1, num_classes))
+    color_dict = dict(zip(unique_classes, colors))
+
+    # Draw nodes (classes)
+    node_sizes = [class_node_counts[cls] * 100 for cls in unique_classes]  # Size proportional to number of nodes
+    nx.draw_networkx_nodes(nx.Graph(), pos,
+                           nodelist=unique_classes,
+                           node_color=[color_dict[cls] for cls in unique_classes],
+                           node_size=node_sizes,
+                           alpha=0.7)
+
+    # Add node labels with class info
+    labels = {cls: f'Class {cls}\n({class_node_counts[cls]} nodes)' for cls in unique_classes}
+    nx.draw_networkx_labels(nx.Graph(), pos, labels, font_size=8)
+
+    # Add connection information
+    for src_class in unique_classes:
+        text = f"\nClass {src_class} connections:\n"
+        for dst_class in unique_classes:
+            if dst_class in class_connections.get(src_class, {}):
+                avg_connections = class_connections[src_class][dst_class]
+                text += f"→ Class {dst_class}: {avg_connections:.1f} avg\n"
+
+        # Add text box with connection info
+        plt.figtext(0.02, 0.98 - (src_class * 0.15), text,
+                    fontsize=8, bbox=dict(facecolor='white', alpha=0.8))
+
+    plt.title('Class Relationships in Network\nNode size proportional to number of nodes in class')
+    plt.axis('equal')
+    plt.axis('off')
+
+    # Save the figure
+    plt.savefig(filename, bbox_inches='tight', dpi=300)
+    plt.close()
+
+    # Print statistics
+    print(f"Figure saved as: {os.path.abspath(filename)}")
+    print("\nClass Statistics:")
+    for cls in sorted(class_node_counts.keys()):
+        print(f"\nClass {cls}:")
+        print(f"  Nodes: {class_node_counts[cls]}")
+        print("  Average connections to other classes:")
+        for dst_cls in sorted(class_connections.get(cls, {}).keys()):
+            avg = class_connections[cls][dst_cls]
+            print(f"    → Class {dst_cls}: {avg:.1f}")
