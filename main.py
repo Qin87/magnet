@@ -270,9 +270,12 @@ bacc_list = []
 device = set_device(args)
 
 if args.all1:
-    # data_x = torch.ones_like(data_x)
-    data_x = torch.ones((data_x.shape[0], 1))
-    num_features = 1
+    all1d = args.all1d
+    if all1d:
+        data_x = torch.ones((data_x.shape[0], all1d))
+        num_features = all1d
+    else:
+        data_x = torch.ones_like(data_x)
 data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
