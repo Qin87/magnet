@@ -271,7 +271,8 @@ device = set_device(args)
 
 data_x = data_x.to(device)
 if args.all1:
-    data_x = torch.ones_like(data_x)
+    # data_x = torch.ones_like(data_x)
+    data_x = torch.ones((data_x.shape[0], 1))
 data_y = data_y.to(device)
 edges = edges.to(device)
 
