@@ -3,7 +3,7 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--all1", type=int, help="feature all 1 ", default=1)
-    parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=0)
+    parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=100)
     parser.add_argument("--use_best_hyperparams", type=int, default=1, help="whether use parameters in best_hyperparameters.yml")
     parser.add_argument('--GPUdevice', type=int, default=0, help='device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
