@@ -211,11 +211,16 @@ WebKB/Cornell:
 
 
 WebKB/Texas:
-  lr: 0.001  # bettern than 0.01
-  mlp: 1  # 0(some split very bad)
+  feat_dim: 64
+  epoch: 1500
+  NotImproved: 410
+  patience: 80
+  First_self_loop: 0   # 83(0), 73(1)
+  lr: 0.1  # bettern than 0.01
+#  mlp: 1  # 0(some split very bad)
   nonlinear: 1    # 1>0
   conv_type: dir-gcn
-  layer: 2
+  layer: 4
   alphaDir: 0.5
   betaDir: -1     #
   gamaDir: -1     #
@@ -224,6 +229,7 @@ WebKB/Texas:
   dropout: 0.5    # for ScaleNEt0.5, for SAGE0.0
 
 WebKB/Wisconsin:
+  First_self_loop: 0
   lr: 0.0005
   has_scheduler: 0
   dropout: 0.0  # Mag(0),

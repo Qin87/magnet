@@ -2,10 +2,11 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--all1", type=int, help="feature all 1 ", default=1)
-    parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=100)
+    parser.add_argument("--monitor", type=str, help="optimiser monitor: val_acc, val_loss", default="acc")
+    parser.add_argument("--all1", type=int, help="feature all 1 ", default=0)
+    parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=1)
     parser.add_argument("--use_best_hyperparams", type=int, default=1, help="whether use parameters in best_hyperparameters.yml")
-    parser.add_argument('--GPUdevice', type=int, default=0, help='device')
+    parser.add_argument('--GPU', type=int, default=0, help='GPU device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlpIn", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--mlpOut", type=int, help="in ScaleNet, whether include mlp ", default=0)
@@ -35,11 +36,11 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='ScaleNet', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
+    parser.add_argument('--net', type=str, default='mlp', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
-    parser.add_argument('--seed', type=int, default=1, help='random seed')
+    parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--Dataset', type=str, default='WikipediaNetwork/squirrel', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
