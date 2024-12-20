@@ -2213,7 +2213,6 @@ class DirGCNConv_sloop(torch.nn.Module):
 
             if self.conv_type == 'dir-gcn':
                 if self.adj_norm is None or flag:
-                # if flag:
 
                     adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
                     self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
@@ -2223,7 +2222,6 @@ class DirGCNConv_sloop(torch.nn.Module):
                     # print('edge number(A, At):', sparse_all(self.adj_norm), sparse_all(self.adj_t_norm))
 
                 if self.adj_norm_in_out is None or flag:
-                # if flag:
 
                     self.adj_norm_in_out = get_norm_adj(adj @ adj_t,norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
                     self.adj_norm_out_in = get_norm_adj(adj_t @ adj, norm=self.inci_norm, rm_gen_sLoop=rm_gen_sLoop)
@@ -2613,8 +2611,10 @@ def row_norm(adj):
         \mathbf{D}_{out}^{-1} \mathbf{A}
     """
     row_sum = sparsesum(adj, dim=1)
+    inv_deg = 1 / row_sum.view(-1, 1)
+    inv_deg.masked_fill_(inv_deg == float("inf"), 0.0)
 
-    return mul(adj, 1 / row_sum.view(-1, 1))
+    return mul(adj, inv_deg)
 
 # def remove_self_loops(adj):
 #     """Remove self-loops from the adjacency matrix."""
