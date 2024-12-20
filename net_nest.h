@@ -2,12 +2,12 @@
 
 net_values="Dir-GNN "
 q_value=0
-layer_values="    2 3 4  6 7 8 9"
+layer_values="    5 8 9 10 11   "
 imbal="100  "
 
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'
-Direct_dataset=(  'telegram/' )
+Direct_dataset=(  'WikipediaNetwork/squirrel'  )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
