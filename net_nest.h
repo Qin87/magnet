@@ -2,7 +2,7 @@
 
 net_values="Dir-GNN "
 q_value=0
-layer_values="    5 8 9 10 11   "
+layer_values="  12 13 14 15 16 17 18 19 20 21 22 23 24 25      "
 imbal="100  "
 
 
