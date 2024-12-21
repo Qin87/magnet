@@ -2,19 +2,19 @@
 
 net_values="Dir-GNN "
 q_value=0
-layer_values="   41 42 43 44 45 46 47 48 49 50    "
+layer_values="  row  dir sym "
 imbal="100  "
 
 
-# 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'
-Direct_dataset=(  'WikipediaNetwork/squirrel'  )
+# 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'   --net="$net"
+Direct_dataset=(  'WikipediaNetwork/chameleon'  'WikipediaNetwork/squirrel'   )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }
 timestamp=$(generate_timestamp)
 
-# Iterate over each dataset   --net="$net"    --layer="$layer"    --net="$net"
+# Iterate over each dataset   --net="$net"    --layer="$layer"
 for Didataset in "${Direct_dataset[@]}"; do
     for layer in $layer_values; do
         logfile="outforlayer${layer}.log"
@@ -24,7 +24,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py  --GPU=1   --feat_dim="$layer" \
+            python3 main.py     --inci_norm="$layer" \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
