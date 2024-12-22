@@ -125,12 +125,13 @@ dgl/pubmed:
 
 # (1,-1,-1@79.6±1.7)--(1,1,1@79.1±1.5)
 WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,-1@79.6±1.7)--(1,1,1@79.1±1.5)
+  monitor: 'acc'
   l2: 0  # 5e-4 is a bit worse
   NotImproved: 810
   epoch: 10000
   patience: 400
   has_scheduler: 1
-#  feat_dim: 128
+  feat_dim: 128
   conv_type: "dir-gcn"
 #  inci_norm: "dir"
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
@@ -150,14 +151,15 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
 
 # (1_1_-1) 74.7±2.4,   (1,-1,-1) 75.2±1.7
 WikipediaNetwork/squirrel:
-#  feat_dim: 128
+  monitor: 'acc'
+  feat_dim: 128
   l2: 0
   NotImproved: 810
   epoch: 10000
   patience: 400
   has_scheduler: 1
   conv_type: "dir-gcn"
-  inci_norm: "dir"  # 0(70.5),
+#  inci_norm: "dir"  # 0(70.5),
   nonlinear: 1
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
   net: ScaleNet

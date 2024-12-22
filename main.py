@@ -280,7 +280,7 @@ data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
 
-visualize_class_relationships(edges, data_y)
+# visualize_class_relationships(edges, data_y)
 
 data_train_maskOrigin = data_train_maskOrigin.to(device)
 data_val_maskOrigin = data_val_maskOrigin.to(device)
