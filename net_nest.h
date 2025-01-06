@@ -2,7 +2,7 @@
 
 net_values="Dir-GNN "
 q_value=0
-layer_values=" sym  dir row  0 "
+layer_values=" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  "
 imbal="100  "
 
 
@@ -24,7 +24,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py     --inci_norm="$layer"   \
+            python3 main.py     --layer="$layer"   \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid
