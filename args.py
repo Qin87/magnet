@@ -4,7 +4,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--monitor", type=str, help="optimiser monitor: val_acc(acc), val_loss(loss)", default="acc")
     parser.add_argument("--all1", type=int, help="feature all 1 ", default=1)
-    parser.add_argument("--degfea", type=int, help="degree as feature: in-degree 1, out-degree -1, both 2,   ", default=2)
+    parser.add_argument("--degfea", type=int, help="degree as feature: in-degree 1, out-degree -1, both 2,   ", default=1)
     parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=1)
     parser.add_argument("--use_best_hyperparams", type=int, default=1, help="whether use parameters in best_hyperparameters.yml")
     parser.add_argument('--GPU', type=int, default=0, help='GPU device')
