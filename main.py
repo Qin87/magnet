@@ -656,7 +656,8 @@ try:
                         print(f"Class {class_id}: {class_info}", file=log_file)
 
                     break
-            dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)
+            # dataset_to_print = args.Dataset.replace('/', '_') + str(args.to_undirected)
+            dataset_to_print = dataset_to_print.replace('/', '_') + str(args.to_undirected)
             print(net_to_print+'layer'+str(args.layer), dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr)
             print('Split{:3d}, acc: {:.2f}, bacc: {:.2f}, f1: {:.2f}'.format(split, test_acc * 100, test_bacc * 100, test_f1 * 100))
             print(net_to_print, args.layer, dataset_to_print, 'EndEpoch', str(end_epoch), 'lr', args.lr, file=log_file)
