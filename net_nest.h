@@ -5,7 +5,7 @@ q_value=0
 layer_values="  30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200  "
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'   --net="$net"
-Direct_dataset=(   'citeseer/' 'cora_ml/'  'telegram/'  )
+Direct_dataset=(     'telegram/'  )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
