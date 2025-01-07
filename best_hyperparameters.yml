@@ -87,7 +87,7 @@ WikiCS/:
   lr: 0.001   #0.01
   normalize: 1
   BN_model: 0  # 0(23), 1(73.5)
-  First_self_loop : 1  # add(79.1±0.8),0(77.3±0.8), remove(77.4)
+#  First_self_loop : 1  # add(79.1±0.8),0(77.3±0.8), remove(77.4)
 #  jk: 'max'   # max(75.9),cat(75.99), 0(73.5)
   jk_inner: 0   # not cat
   dropout: 0.5  # 0.5(75.9), 0.0(73.9)
@@ -105,7 +105,7 @@ dgl/pubmed:
   lr: 0.01
   normalize: 0
   BN_model: 0  #
-  First_self_loop : 1
+#  First_self_loop : 1
 #  jk: 'max'
   dropout: 0.0  #0.5(39), 0.0(77.5)
   alphaDir: 1   # 0.5(72.2), 0(73.2)
