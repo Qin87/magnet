@@ -138,7 +138,7 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
         elif args.net == 'ScaleNet':
             from torch_geometric.data import Data
             data = Data(x=data_x, edge_index=edges)
-            out = model(data)
+            out = model([data])
         else:
             out = model(data_x, edges)
 
@@ -172,7 +172,7 @@ def test():
     elif args.net == 'ScaleNet':
         from torch_geometric.data import Data
         data = Data(x=data_x, edge_index=edges[:, train_edge_mask])
-        logits = model(data)
+        logits = model([data])
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
