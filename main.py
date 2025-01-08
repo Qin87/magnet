@@ -451,16 +451,18 @@ try:
         for split in range(num_run):
             # model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
             model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1])
-            model.to(device)
+            # model.to(device)
+            model.to('cuda:0')
 
             if torch.cuda.device_count() > 1:
                 model = DataParallel(model, device_ids=[0, 1, 2])  # Adjust based on your available GPUs
                 # model = DataParallel(model)
                 print(f'model parallel!', flush=True)
-                print(f"Model parameters on devices: {[param.device for param in model.parameters()]}")
+                # print(f"Model parameters on devices: {[param.device for param in model.parameters()]}")
 
             # model.to(device)
-            print(f"Data on device: {data_x.device}")
+            model.to('cuda')
+            # print(f"Data on device: {data_x.device}")
 
             if split==0:
                 print('no_in, homo_in, no_out, homo_out:', no_in, homo_ratio_A, no_out, homo_ratio_At, file=log_file)
