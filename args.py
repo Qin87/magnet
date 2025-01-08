@@ -52,7 +52,7 @@ def parse_args():
 
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
 
-    parser.add_argument('--feat_dim', type=int, default=10, help='feature dimension')
+    parser.add_argument('--feat_dim', type=int, default=64, help='feature dimension')
     parser.add_argument('--epoch', type=int, default=10000, help='epoch1500,')
     parser.add_argument('--NotImproved', type=int, default=810, help='consecutively Not Improved, break, 500, 450, 410, 210, 60')
 
