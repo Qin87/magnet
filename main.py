@@ -267,7 +267,12 @@ macro_F1 = []
 acc_list = []
 bacc_list = []
 
-device = set_device(args)
+# device = set_device(args)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# if torch.cuda.device_count() > 1:
+#     model = torch.nn.DataParallel(model)
+#     print(f'model parallel!', flush=True)
+# model.to(device)
 
 if args.all1:
     all1d = args.all1d
@@ -427,7 +432,13 @@ try:
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ', device, file=log_file)
         for split in range(num_run):
-            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
+            # model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
+            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1])
+            if torch.cuda.device_count() > 1:
+                model = torch.nn.DataParallel(model)
+                print(f'model parallel!', flush=True)
+            model.to(device)
+
             if split==0:
                 print('no_in, homo_in, no_out, homo_out:', no_in, homo_ratio_A, no_out, homo_ratio_At, file=log_file)
                 print(model, file=log_file)
