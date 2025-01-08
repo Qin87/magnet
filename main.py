@@ -452,6 +452,7 @@ try:
             # model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
             model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1])
             model.to(device)
+
             if torch.cuda.device_count() > 1:
                 # model = DataParallel(model, device_ids=[0, 1, 2])  # Adjust based on your available GPUs
                 model = DataParallel(model)
