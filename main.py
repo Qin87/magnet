@@ -3,7 +3,7 @@
 ################################
 import sys
 import os
-
+from torch_geometric.nn import DataParallel
 import numpy as np
 from torch_geometric.utils import add_self_loops
 from torch_sparse import SparseTensor
@@ -435,7 +435,7 @@ try:
             # model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
             model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1])
             if torch.cuda.device_count() > 1:
-                model = torch.nn.DataParallel(model)
+                model = DataParallel(model)
                 print(f'model parallel!', flush=True)
             model.to(device)
 
