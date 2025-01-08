@@ -111,7 +111,7 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
         data_para = Data(x=data_x, edge_index=edges)
         print(type(data_para))  # Should be <class 'torch_geometric.data.Data'>
         print(data_para.x.shape, data_para.edge_index.shape)
-        out = model(data_para)
+        out = model([data_para])
     else:
         out = model(data_x, edges)
 
