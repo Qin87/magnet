@@ -2896,7 +2896,10 @@ class GCN_JKNet(torch.nn.Module):
         self.nonlinear = nonlinear
 
 
-    def forward(self, x, edge_index):
+    # def forward(self, x, edge_index):
+    def forward(self, data):
+        x = data.x
+        edge_index = data.edge_index
         if self.mlp:
             x_mlp = self.mlp(x)
         xs = []
