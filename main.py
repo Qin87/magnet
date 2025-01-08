@@ -109,6 +109,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
     elif args.net == 'ScaleNet':
         from torch_geometric.data import Data
         data = Data(x=data_x, edge_index=edges)
+        print(type(data))  # Should be <class 'torch_geometric.data.Data'>
+        print(data.x.shape, data.edge_index.shape)
         out = model(data)
     else:
         out = model(data_x, edges)
