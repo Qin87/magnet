@@ -7,7 +7,7 @@ layer_values="  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  "
 #layer_values="  300 400  1000  2000  "
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'   --net="$net"
-Direct_dataset=(    'WikiCS/'  )
+Direct_dataset=(    'WikipediaNetwork/chameleon'  )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
