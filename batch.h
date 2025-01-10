@@ -47,7 +47,7 @@ q_value=0
 layer_values=" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  "
 
 # 'citeseer/' 'cora_ml/'  'telegram/telegram'
-Direct_dataset=( 'citeseer/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+Direct_dataset=( 'WikiCS/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
