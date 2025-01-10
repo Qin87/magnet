@@ -135,7 +135,7 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   conv_type: "dir-gcn"
   inci_norm: "dir"
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
-  nonlinear: 0   #
+  nonlinear: 1   # on diff in small layer, but deeper differs great, 0 is worse
   net: ScaleNet
 #  layer: 5      # 80.1
   lr: 0.005

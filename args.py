@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='mlp', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
+    parser.add_argument('--net', type=str, default='GCN', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
@@ -47,7 +47,7 @@ def parse_args():
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
         'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/,  malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
-    parser.add_argument('--layer', type=int, default=64, help='number of layers (2 or 3), default: 2')
+    parser.add_argument('--layer', type=int, default=30, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
 
     parser.add_argument('-AP_K', '--AP_K', default=10, type=int)  # for APPNP
