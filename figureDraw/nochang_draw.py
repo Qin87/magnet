@@ -26,16 +26,18 @@ plt.fill_between(layers,
                  color='blue', alpha=0.2)
 
 # Plot Squirrel data
-plt.plot(layers_squi, acc_mean_1_squi, 'g-', label='Squirrel', linewidth=2)
-plt.fill_between(layers_squi,
-                 np.array(acc_mean_1_squi) - np.array(acc_vari_1_squi),
-                 np.array(acc_mean_1_squi) + np.array(acc_vari_1_squi),
-                 color='green', alpha=0.2)
+# plt.plot(layers_squi, acc_mean_1_squi, 'g-', label='Squirrel', linewidth=2)
+# plt.fill_between(layers_squi,
+#                  np.array(acc_mean_1_squi) - np.array(acc_vari_1_squi),
+#                  np.array(acc_mean_1_squi) + np.array(acc_vari_1_squi),
+#                  color='green', alpha=0.2)
 
+data_name = 'Squirrel'
+# data_name = 'Chameleon'
 # Customize the plot
 plt.xlabel('Number of Layers', fontsize=12)
 plt.ylabel('Accuracy (%)', fontsize=12)
-plt.title('Accuracy vs Number of Layers', fontsize=14)
+plt.title(data_name+ ' Accuracy by Number of Layers', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.legend(fontsize=10)
 
@@ -43,13 +45,13 @@ plt.legend(fontsize=10)
 plt.ylim(45, 80)
 
 # Add x-axis ticks
-plt.xticks(np.concatenate([np.arange(1, 21, 2), np.array([30, 40, 50, 60, 70])]))
+plt.xticks(np.concatenate([np.arange(1, 21, 2), np.array([30, 40, 50])]))
 
 # Rotate x-axis labels for better readability
 plt.xticks(rotation=45)
 
 # Adjust layout to prevent label cutoff
 plt.tight_layout()
-
+plt.savefig(data_name+ " accuracy_multiple hop.pdf", dpi=300)
 # Show the plot
 plt.show()

@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--jk_inner", choices=["max", "cat", 'lstm', 0, 'weighted'], default='weighted')
     parser.add_argument("--inci_norm", choices=["dir", "sym", 'row', 0], default=0)
     parser.add_argument("--fs", type=str, choices=["sum", "cat", 'weight_sum', 'linear'], default="dir", help='fusion method')
-    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=1)
+    parser.add_argument("--alphaDir", type=float, help="Direction convex combination params", default=0.5)
     parser.add_argument("--betaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--gamaDir", type=float, help="Direction convex combination params", default=-1)
     parser.add_argument("--learn_alpha", action="store_true")

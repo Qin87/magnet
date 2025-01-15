@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-data = 'chame'
+data = 'Squirrel'
 # if data == 'chame':
 data_name1 = 'Chameleon'
 layers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 40, 50]
@@ -31,8 +31,8 @@ acc_vari_1_squi = [1.8, 1.8, 2.0, 1.4, 1.9, 1.9, 1.9, 1.6, 1.7, 2.1,
 
 # Plot
 plt.figure(figsize=(15, 6))
-plt.errorbar(layers, k_acc_mean, yerr=k_acc_vari, fmt='-o', capsize=4, label='1&2-hop')
-plt.errorbar(layers, acc_mean_1, yerr=acc_vari_1, fmt='o-', capsize=4, label='1-hop')
+# plt.errorbar(layers, k_acc_mean, yerr=k_acc_vari, fmt='-o', capsize=4, label='1&2-hop')
+# plt.errorbar(layers, acc_mean_1, yerr=acc_vari_1, fmt='o-', capsize=4, label='1-hop')
 
 # Labels and title
 plt.title( ' Accuracy vs Layers: Without Relu', fontsize=16)
