@@ -133,7 +133,7 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   has_scheduler: 1
   feat_dim: 128
   conv_type: "dir-gcn"
-  inci_norm: "dir"
+#  inci_norm: "dir"
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
   nonlinear: 1   # on diff in small layer, but deeper differs great, 0 is worse
 #  net: ScaleNet
@@ -162,7 +162,7 @@ WikipediaNetwork/squirrel:
   inci_norm: "dir"  # 0(70.5),
   nonlinear: 1
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
 #  layer: 6
   lr: 0.01
   normalize: 1
