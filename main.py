@@ -225,7 +225,8 @@ if args.rm_bidirect_edge:
 if args.Ak:
     edges = get_k_hop_edges(edges, data_x.shape[0], args.Ak)
 
-results = analyze_edge_index(edges, data_x.shape[0], k_max=20)
+if args.num_edge:
+    results = analyze_edge_index(edges, data_x.shape[0], k_max=20)
 
 
 # result = longest_hop_direct(edges[torch.tensor([1, 0])], data_x.shape[0])
