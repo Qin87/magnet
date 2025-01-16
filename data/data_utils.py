@@ -425,6 +425,12 @@ def set_device(args):
 
     return device
 
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# if torch.cuda.device_count() > 1:
+#     model = torch.nn.DataParallel(model)
+#     print(f'model parallel!', flush=True)
+# model.to(device)
+
 def seed_everything(seed):
     os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
     torch.cuda.empty_cache()

@@ -54,9 +54,9 @@ cora_ml/:     # 2,0.5,-1---2.0_0.5_2.0--2.0_0.5_0.5--2.0_-1.0_-1.0
 citeseer/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.0_0.0_0.5----2.0_0.0_0.0----2.0_2.0_0.5-----0.5_2.0_0.5---0.0_0.5_2.0--0.5_2.0_2.0
   NotImproved: 810
   epoch: 10000
-  patience: 400
+  patience: 80  # 400
   has_scheduler: 1
-  net: ScaleNet
+#  net: ScaleNet
   conv_type: "dir-gcn"
 #  jk_inner: 0
   nonlinear: 0    # 0(68.3), 1(67.6)
@@ -69,9 +69,9 @@ citeseer/:        # 0.5,2,0----1.0_0.0_0.5, ----1.0_2.0_0.5----2.0_2.0_0.0----2.
 #  jk: 'max'   # 'max'(68.3). 'cat'(), 0(67.8)
   dropout: 0.5   # 0(61.44), 0.5(64.75)
   inci_norm: 'dir'    # dir(64.8), sym(63.9), row(63.8)
-  alphaDir: 0.5   # 0,0,0.5 before having 2
-  betaDir: 2
-  gamaDir: -1
+#  alphaDir: 0.5   # 0,0,0.5 before having 2
+#  betaDir: 2
+#  gamaDir: -1
 
 
 # 79.1±0.8-----
@@ -92,7 +92,7 @@ WikiCS/:
   jk_inner: 0   # not cat
   dropout: 0.5  # 0.5(75.9), 0.0(73.9)
   alphaDir: 0.5
-  betaDir: 2
+#  betaDir: 2
   gamaDir: -1   # 0(76.5)
 
 #
@@ -133,11 +133,11 @@ WikipediaNetwork/chameleon:     # 1,2,1----1,2,-1------1,1,2-----1,-1,1---(1,-1,
   has_scheduler: 1
   feat_dim: 128
   conv_type: "dir-gcn"
-  inci_norm: "dir"
+#  inci_norm: "dir"
   dropout: 0.0  # 0.5(acc65), 0.0(acc75)
-  nonlinear: 0   #
-  net: ScaleNet
-#  layer: 5      # 80.1
+  nonlinear: 1   # on diff in small layer, but deeper differs great, 0 is worse
+#  net: ScaleNet
+  layer: 5      # 80.1
   lr: 0.005
   normalize: 1
   BN_model: 0  #  without layerNorm, very bad(but Dir-GNN prefer no LN)
@@ -162,7 +162,7 @@ WikipediaNetwork/squirrel:
   inci_norm: "dir"  # 0(70.5),
   nonlinear: 1
   dropout: 0.0  # 0.5(acc72.7), 0.0(acc75)
-  net: ScaleNet
+#  net: ScaleNet
 #  layer: 6
   lr: 0.01
   normalize: 1

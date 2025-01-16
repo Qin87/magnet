@@ -2,7 +2,7 @@
 
 ################# Part-1 Slurm directives ####################
 ## Working dir
-##SBATCH -D /users/username
+## SBATCH -D /users/qj2004
 ## Environment variables
 #SBATCH --export=ALL
 ## Output and Error Files
@@ -44,17 +44,18 @@ mkdir -p "$RESULTS_DIR"
 # Customize this section to suit your needs.
 net_values="Dir-GNN "
 q_value=0
-layer_values=" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  "
+layer_values="  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  "
+#layer_values="   1  15 16 17 18 19 20 30 40 50 60 70 "
 
-# 'citeseer/' 'cora_ml/'  'telegram/telegram'
-Direct_dataset=( 'citeseer/' )  # 'cora_ml/'  'citeseer_npz/'  'WebKB/Cornell' 'WebKB/wisconsin'  'WebKB/texas' 'WebKB/texas' 'WebKB/wisconsin'  telegram/telegram
+# 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'   --net="$net"
+Direct_dataset=(    'cora_ml/'  'telegram/'  )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
 }
 timestamp=$(generate_timestamp)
 
-# Iterate over each dataset
+# Iterate over each dataset   --net="$net"    --layer="$layer"
 for Didataset in "${Direct_dataset[@]}"; do
     for layer in $layer_values; do
         logfile="outforlayer${layer}.log"
@@ -64,7 +65,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py     --layer="$layer"   \
+            python3 main.py     --Ak="$layer"   \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid

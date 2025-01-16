@@ -3,11 +3,10 @@
 net_values="Dir-GNN "
 q_value=0
 layer_values="  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  "
-#layer_values="  30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200  "
-#layer_values="  300 400  1000  2000  "
+#layer_values="   1  15 16 17 18 19 20 30 40 50 60 70 "
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'  'WikipediaNetwork/chameleon' 'WikipediaNetwork/squirrel'   --net="$net"
-Direct_dataset=(    'WikipediaNetwork/chameleon'  )
+Direct_dataset=(    'cora_ml/'  'telegram/'  )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
@@ -24,7 +23,7 @@ for Didataset in "${Direct_dataset[@]}"; do
             log_output="${Didataset//\//_}_${timestamp}_${net}_layer${layer}q${q_value}.log"
 
             # Run the Python script with parameters and log output
-            python3 main.py     --layer="$layer"   \
+            python3 main.py     --Ak="$layer"   \
             --Dataset="$Didataset" > "$log_output"
              2>&1
             wait $pid

@@ -3,13 +3,14 @@
 ################################
 import sys
 import os
-from torch_geometric.nn import DataParallel
+
 import numpy as np
-from torch_geometric.utils import add_self_loops
+from torch_geometric.utils import add_self_loops, remove_self_loops
 from torch_sparse import SparseTensor
 
 from longest import  longest_hop_undirect, longest_hop_direct
 from nets.geometric_baselines import add_self_loop_qin
+from utils0.util_qin import analyze_edge_index, remove_bidirectional_edges, get_k_hop_edges
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
@@ -106,16 +107,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
         out = model(data_x, data_pe, edges, edge_attr, data_batch)
     elif args.net == 'tSNE':
         out = model(data_x, edges, data_y, epoch)
-    elif args.net == 'ScaleNet':
-        from torch_geometric.data import Data
-        data_para = Data(x=data_x, edge_index=edges)
-        print(type(data_para))  # Should be <class 'torch_geometric.data.Data'>
-        print(data_para.x.shape, data_para.edge_index.shape)
-        out = model([data_para])
     else:
         out = model(data_x, edges)
-
-
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
 
     with torch.no_grad():
@@ -135,13 +128,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
             out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
         elif args.net == 'tSNE':
             out = model(data_x, edges, data_y, epoch)
-        elif args.net == 'ScaleNet':
-            from torch_geometric.data import Data
-            data = Data(x=data_x, edge_index=edges)
-            out = model([data])
         else:
             out = model(data_x, edges)
-
         val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
     optimizer.step()
     if args.has_scheduler:
@@ -169,10 +157,6 @@ def test():
         logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
     elif args.net == 'tSNE':
         logits = model(data_x, edges[:, train_edge_mask], data_y, epoch)
-    elif args.net == 'ScaleNet':
-        from torch_geometric.data import Data
-        data = Data(x=data_x, edge_index=edges[:, train_edge_mask])
-        logits = model([data])
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -225,8 +209,10 @@ if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 print(args)
 
-if args.add_selfloop:
+if args.add_selfloop  == 1:
     edges, _ = add_self_loops(edges)
+elif args.add_selfloop  == -1:
+    edges, _ = remove_self_loops(edges)
 
 seed_everything(args.seed)
 
@@ -234,6 +220,13 @@ no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophili
 # mst = find_max_spanning_tree(edges, data_x.shape[0])
 if args.to_reverse_edge:
     edges = edges[torch.tensor([1, 0])]
+if args.rm_bidirect_edge:
+    edges = remove_bidirectional_edges(edges)
+if args.Ak:
+    edges = get_k_hop_edges(edges, data_x.shape[0], args.Ak)
+
+if args.num_edge:
+    results = analyze_edge_index(edges, data_x.shape[0], k_max=20)
 
 
 # result = longest_hop_direct(edges[torch.tensor([1, 0])], data_x.shape[0])
@@ -284,12 +277,8 @@ macro_F1 = []
 acc_list = []
 bacc_list = []
 
-# device = set_device(args)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# if torch.cuda.device_count() > 1:
-#     model = torch.nn.DataParallel(model)
-#     print(f'model parallel!', flush=True)
-# model.to(device)
+device = set_device(args)
+# device = set_device1(args)
 
 if args.all1:
     all1d = args.all1d
@@ -449,21 +438,7 @@ try:
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ', device, file=log_file)
         for split in range(num_run):
-            # model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
-            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1])
-            # model.to(device)
-            model.to('cuda:0')
-
-            if torch.cuda.device_count() > 1:
-                model = DataParallel(model, device_ids=[0, 1, 2])  # Adjust based on your available GPUs
-                # model = DataParallel(model)
-                print(f'model parallel!', flush=True)
-                # print(f"Model parameters on devices: {[param.device for param in model.parameters()]}")
-
-            # model.to(device)
-            model.to('cuda')
-            # print(f"Data on device: {data_x.device}")
-
+            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
             if split==0:
                 print('no_in, homo_in, no_out, homo_out:', no_in, homo_ratio_A, no_out, homo_ratio_At, file=log_file)
                 print(model, file=log_file)
