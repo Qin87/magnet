@@ -5,11 +5,12 @@ import sys
 import os
 
 import numpy as np
-from torch_geometric.utils import add_self_loops
+from torch_geometric.utils import add_self_loops, remove_self_loops
 from torch_sparse import SparseTensor
 
 from longest import  longest_hop_undirect, longest_hop_direct
 from nets.geometric_baselines import add_self_loop_qin
+from utils0.util_qin import analyze_edge_index, remove_bidirectional_edges, get_k_hop_edges
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
@@ -208,8 +209,10 @@ if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 print(args)
 
-if args.add_selfloop:
+if args.add_selfloop  == 1:
     edges, _ = add_self_loops(edges)
+elif args.add_selfloop  == -1:
+    edges, _ = remove_self_loops(edges)
 
 seed_everything(args.seed)
 
@@ -217,6 +220,12 @@ no_in, homo_ratio_A, no_out,   homo_ratio_At, in_homophilic_nodes, out_homophili
 # mst = find_max_spanning_tree(edges, data_x.shape[0])
 if args.to_reverse_edge:
     edges = edges[torch.tensor([1, 0])]
+if args.rm_bidirect_edge:
+    edges = remove_bidirectional_edges(edges)
+if args.Ak:
+    edges = get_k_hop_edges(edges, data_x.shape[0], args.Ak)
+
+results = analyze_edge_index(edges, data_x.shape[0], k_max=20)
 
 
 # result = longest_hop_direct(edges[torch.tensor([1, 0])], data_x.shape[0])

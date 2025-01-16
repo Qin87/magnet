@@ -223,9 +223,9 @@ def get_name(args, IsDirectedGraph):
         else:
             net_to_print = net_to_print + '_NoSloop'
         if args.gcn_norm == 1:
-            net_to_print = net_to_print + '_norm'
+            net_to_print = net_to_print + '_gcnnorm'
         else:
-            net_to_print = net_to_print + '_Nonorm'
+            net_to_print = net_to_print + '_Nogcnnorm'
     else:
         if args.add_selfloop:
             net_to_print = net_to_print + '_AddSloop'
@@ -264,7 +264,9 @@ def get_name(args, IsDirectedGraph):
 
 
 def log_file(net_to_print, dataset_to_print, args):
-    log_file_name = dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)+'q'+str(args.q)
+    if args.Ak:
+        net_to_print = net_to_print + 'Ak' + str(args.Ak)
+    log_file_name = dataset_to_print+'_'+net_to_print+'_lay'+str(args.layer)+'_lr'+str(args.lr)+'_NoImp'+str(args.NotImproved)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     log_file_name_with_timestamp = f"{log_file_name}_{timestamp}.log"
 
