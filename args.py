@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument("--mlpOut", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=1)
     parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=1)
-    parser.add_argument("--First_self_loop", type=int, choices=[1, -1,  0], default=-1, help="1 is add, -1 is remove, Whether to add self-loops to the graph")
+    parser.add_argument("--First_self_loop", type=int, choices=[1, -1,  0], default=0, help="1 is add, -1 is remove, Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=int, choices=[1, 0], default=0, help="Whether to remove generated self-loops to the graph")
 
     parser.add_argument("--has_scheduler", type=int, default=1, help="Whether Optimizer has a scheduler")
@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=20, help='imbalance ratio')
 
-    parser.add_argument('--net', type=str, default='SAGE', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
+    parser.add_argument('--net', type=str, default='GCN', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '
                      'Mag, Sig, QuaNet, '
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
@@ -99,10 +99,12 @@ def parse_args():
     # not use for ScaleNet
     parser.add_argument("--has_1_order", type=int, help="Whether Ai* has 1-order edges:0/1", default=0)
     parser.add_argument('--paraD', action='store_true', help='ib is weighted sum')
-    parser.add_argument('--gcn_norm', '-gcnnorm', type=int, default=0, help='GCNConv forward, normalize edge_index during training')
-    parser.add_argument('--add_selfloop',  type=int, default=0, help='add selfloop in before model')
+    parser.add_argument('--gcn_norm', '-gcnnorm', type=int, default=1, help='GCNConv forward, normalize edge_index during training')
+    parser.add_argument('--add_selfloop',  type=int, default=1, help='add selfloop in before model 1, remove -1, 0')
     parser.add_argument('--to_undirected', '-tud', type=int, default=0, help='if convert graph to undirected')
     parser.add_argument('--to_reverse_edge', '-tre', type=int, default=0, help='if reverse direction of edges')
+    parser.add_argument('--rm_bidirect_edge', '-rbe', type=int, default=0, help='make all edges directed')
+    parser.add_argument('--Ak', '-Ak', type=int, default=8, help='use A^k as adjacency matrix')
 
     parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')
     parser.add_argument('--ibx1', action='store_true', help='share the same ibx block in DiGSymCatib')
