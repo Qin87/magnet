@@ -210,9 +210,10 @@ if not os.path.exists(log_directory):
 print(args)
 
 if args.add_selfloop  == 1:
-    edges, _ = add_self_loops(edges)
+    edges, _ = add_self_loops(edges)   # this system function is rubbish, got duplicate edge
 elif args.add_selfloop  == -1:
     edges, _ = remove_self_loops(edges)
+edges = torch.unique(edges, dim=1)
 
 seed_everything(args.seed)
 
