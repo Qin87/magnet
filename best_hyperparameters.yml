@@ -80,7 +80,7 @@ WikiCS/:
   NotImproved: 410
   epoch: 1500
   patience: 80
-  net: ScaleNet
+#  net: ScaleNet
   conv_type: "dir-gcn"
   nonlinear: 1
 #  layer: 2
@@ -97,7 +97,7 @@ WikiCS/:
 
 #
 dgl/pubmed:
-  net: ScaleNet
+#  net: ScaleNet
   conv_type: "dir-gcn"   # sage
   jk_inner: 'cat'   #cat(76.1±1.6), 0(75.9)
   nonlinear: 1
