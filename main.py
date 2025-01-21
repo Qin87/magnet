@@ -560,7 +560,7 @@ try:
                     new_class_num_list.append(tensor_node.shape[0])
                 new_class_num_list = sorted(new_class_num_list)
                 if split==0:
-                    print('new train class in data: ', new_class_num_list, '\n', 'real imbal ratio: ', new_class_num_list[-1]/new_class_num_list[0])
+                    # print('new train class in data: ', new_class_num_list, '\n', 'real imbal ratio: ', new_class_num_list[-1]/new_class_num_list[0])
                     print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
                         data_train_mask).item()), file=log_file)
                     print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
