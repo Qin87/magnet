@@ -554,6 +554,8 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
 
+    # if args.net.startswith('1'):
+    #     norm = 'sym'
     # type 1: conside different inci-norm
     if norm =='dir':
         row, col = edge_index
@@ -563,7 +565,7 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     # type 2: only GCN_norm
     elif norm == 'sym':
         edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
-    elif norm is None:
+    elif norm is None or norm == 0:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
 
