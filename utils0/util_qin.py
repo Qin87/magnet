@@ -36,6 +36,10 @@ def matrix_power_analysis(edge_index, size, k_max=5):
 
         results.append((current_power, density))
 
+        print(f"\nPower {k}:")
+        print(f"Non-zero elements: {nnz}")
+        print(f"Density: {density:.4f}%")
+
         # Calculate next power
         if k < k_max:
             current_power = torch.sparse.mm(current_power, A)
@@ -48,10 +52,10 @@ def analyze_edge_index(edge_index, size, k_max=5):
     results = matrix_power_analysis(edge_index, size, k_max)
 
     print(f"Analysis of matrix powers:")
-    for k, (matrix, density) in enumerate(results, 1):
-        print(f"\nPower {k}:")
-        print(f"Non-zero elements: {matrix.coalesce().indices().shape[1]}")
-        print(f"Density: {density:.4f}%")
+    # for k, (matrix, density) in enumerate(results, 1):
+    #     print(f"\nPower {k}:")
+    #     print(f"Non-zero elements: {matrix.coalesce().indices().shape[1]}")
+    #     print(f"Density: {density:.4f}%")
 
     return results
 

@@ -218,10 +218,12 @@ def get_name(args, IsDirectedGraph):
 
 
     if args.net == 'GCN':
-        if args.First_self_loop == 1 or args.add_selfloop:
+        if args.First_self_loop == 1 or args.add_selfloop == 1:
             net_to_print = net_to_print + '_AddSloop'
+        elif args.add_selfloop == -1:
+            net_to_print = net_to_print + '_RmSloop'
         else:
-            net_to_print = net_to_print + '_NoSloop'
+            net_to_print = net_to_print + '_NoAddSloop'
         if args.gcn_norm == 1:
             net_to_print = net_to_print + '_gcnnorm'
         else:

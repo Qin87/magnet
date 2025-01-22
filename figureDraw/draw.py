@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MultipleLocator
 
-data = 'CiteSeer'
+data = 'PubMed'       # CoraML
 Adj = 'A'
 
 # Data
@@ -82,6 +82,9 @@ elif data== 'PubMed' and Adj == 'A':
     layers = list(range(1, 21))
     Ak_mean = [73.8, 73.9, 73.8, 73.4, 73.2, 73.0, 72.6, 72.1, 71.6, 71.4, 71.3, 71.3, 71.2, 71.2, 71.2, 71.2, 71.2, 71.2, 71.2, 71.2]
     Ak_vari = [0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
+    layer_mean = [73.8, 73.8, 73.7, 73.2, 72.1, 65.9, 63.6, 61.3, 60.4, 38.2, 34.3, 34.4, 35.0, 35.1, 35.0, 34.9, 35.2, 34.9, 34.9, 34.5]
+    layer_vari = [0.6, 0.1, 0.4, 0.9, 3.0, 7.1, 2.8, 6.1, 5.8, 10.5, 3.2, 2.1, 2.0, 2.7, 0.7, 2.1, 1.4, 2.2, 2.8, 1.6]
+    density = [0.0165, 0.0676, 0.1842, 0.3832, 0.5720, 0.7361, 0.8372, 0.9018, 0.9355, 0.9530, 0.9616, 0.9653, 0.9668, 0.9673, 0.9674, 0.9674, 0.9674, 0.9674, 0.9674, 0.9674]
 
 # Calculate standard error from variance
 std_err_1 = np.sqrt(layer_vari)
@@ -106,13 +109,13 @@ density_line = ax2.plot(layers, np.array(density)/100, 'k-', label='Density', ma
 ax2.set_ylabel('Density', fontsize=14)
 
 # Format density axis as percentage
-# ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.2%}'))
+ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.2%}'))
 
 # Combine legends properly
 lines1, labels1 = ax1.get_legend_handles_labels()
-# lines2, labels2 = density_line, ['Density']
-# ax1.legend(lines1 + lines2, labels1 + labels2,
-#           loc='upper right', bbox_to_anchor=(1, 0.75))
+lines2, labels2 = density_line, ['Density']
+ax1.legend(lines1 + lines2, labels1 + labels2,
+          loc='upper right', bbox_to_anchor=(1, 0.5))
 
 # Add grid
 ax1.grid(True, alpha=0.1)
