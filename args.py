@@ -7,7 +7,7 @@ def parse_args():
     parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=1)
 
     parser.add_argument("--degfea", type=int, help="degree as feature: in-degree 1, out-degree -1, both 2, no 0  ", default=0)
-    parser.add_argument("--use_best_hyperparams", type=int, default=0, help="whether use parameters in best_hyperparameters.yml")
+    parser.add_argument("--use_best_hyperparams", type=int, default=1, help="whether use parameters in best_hyperparameters.yml")
     parser.add_argument('--GPU', type=int, default=0, help='GPU device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlpIn", type=int, help="in ScaleNet, whether include mlp ", default=0)
@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument("--differ_AAt", type=int, default=0,  help="Whether test AAt-A-At")
     parser.add_argument('--num_split', type=int, default=20, help='num of run in spite of many splits')
 
-    parser.add_argument('--MakeImbalance', '-imbal', action='store_false', help='if convert graph to undirecteds')
+    parser.add_argument('--MakeImbalance', '-imbal', action='store_true', help='if convert graph to undirecteds')
     parser.add_argument('--imb_ratio', type=float, default=100, help='imbalance ratio')
 
     parser.add_argument('--net', type=str, default='1iG', help='mlp, Dir-GNN, ParaGCN, SimGAT, ScaleNet, SloopNet, tSNE, RandomNet, HFNet '

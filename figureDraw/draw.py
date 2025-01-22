@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MultipleLocator
 
-data = 'CoraML'
-Adj = 'At'
+data = 'CiteSeer'
+Adj = 'A'
 
 # Data
 if data == 'CiteSeer' and Adj == 'A':
@@ -78,6 +78,11 @@ elif data == 'Telegram' and Adj == 'At':
     layer_vari = [5.7, 8.3, 7.1, 8.2, 3.9, 6.8, 7.4, 6.2, 7.2, 7.5, 6.3, 6.4, 6.8, 6.0, 6.4, 5.7, 7.7, 7.7, 6.2, 8.0]
     density = [15.2553, 45.3511, 57.8376, 59.9417, 60.1233, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316, 60.1316]
 
+elif data== 'PubMed' and Adj == 'A':
+    layers = list(range(1, 21))
+    Ak_mean = [73.8, 73.9, 73.8, 73.4, 73.2, 73.0, 72.6, 72.1, 71.6, 71.4, 71.3, 71.3, 71.2, 71.2, 71.2, 71.2, 71.2, 71.2, 71.2, 71.2]
+    Ak_vari = [0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
+
 # Calculate standard error from variance
 std_err_1 = np.sqrt(layer_vari)
 std_err_2 = np.sqrt(Ak_vari)
@@ -95,19 +100,19 @@ ax1.set_ylabel('Accuracy (%)', fontsize=14)
 ax1.xaxis.set_major_locator(MultipleLocator(1))  # Set x-axis grid to every 1 unit
 ax1.yaxis.set_major_locator(MultipleLocator(5))
 
-# Create second y-axis and plot density
+# # Create second y-axis and plot density
 ax2 = ax1.twinx()
 density_line = ax2.plot(layers, np.array(density)/100, 'k-', label='Density', marker='d', markersize=5)
 ax2.set_ylabel('Density', fontsize=14)
 
 # Format density axis as percentage
-ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.2%}'))
+# ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.2%}'))
 
 # Combine legends properly
 lines1, labels1 = ax1.get_legend_handles_labels()
-lines2, labels2 = density_line, ['Density']
-ax1.legend(lines1 + lines2, labels1 + labels2,
-          loc='upper right', bbox_to_anchor=(1, 0.75))
+# lines2, labels2 = density_line, ['Density']
+# ax1.legend(lines1 + lines2, labels1 + labels2,
+#           loc='upper right', bbox_to_anchor=(1, 0.75))
 
 # Add grid
 ax1.grid(True, alpha=0.1)
