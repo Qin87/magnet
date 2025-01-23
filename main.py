@@ -107,6 +107,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
         out = model(data_x, data_pe, edges, edge_attr, data_batch)
     elif args.net == 'tSNE':
         out = model(data_x, edges, data_y, epoch)
+    elif args.net == 'GCN':
+        out = model(data_x, edges, args)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -128,6 +130,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
             out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
         elif args.net == 'tSNE':
             out = model(data_x, edges, data_y, epoch)
+        elif args.net == 'GCN':
+            out = model(data_x, edges, args)
         else:
             out = model(data_x, edges)
         val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -157,6 +161,8 @@ def test():
         logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
     elif args.net == 'tSNE':
         logits = model(data_x, edges[:, train_edge_mask], data_y, epoch)
+    elif args.net == 'GCN':
+        logits = model(data_x, edges[:, train_edge_mask], args)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
