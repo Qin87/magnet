@@ -10,7 +10,7 @@ from torch_sparse import SparseTensor
 
 from longest import  longest_hop_undirect, longest_hop_direct
 from nets.geometric_baselines import add_self_loop_qin
-from utils0.util_qin import analyze_edge_index, remove_bidirectional_edges, get_k_hop_edges
+from utils0.util_qin import analyze_edge_index, remove_bidirectional_edges, get_k_hop_edges, matrix_power_analysis
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
@@ -234,7 +234,7 @@ if args.Ak:
     edges = get_k_hop_edges(edges, data_x.shape[0], args.Ak)
 
 if args.num_edge:
-    results = analyze_edge_index(edges, data_x.shape[0], k_max=20)
+    results = matrix_power_analysis(edges, data_x.shape[0], k_max=20)
 
 
 # result = longest_hop_direct(edges[torch.tensor([1, 0])], data_x.shape[0])
@@ -544,7 +544,7 @@ try:
                     continue
                 mask = create_mask(lst, data_x.shape[0]).to(device)
                 train_temp, val_temp, test_temp = mask & data_train_mask, mask & data_val_mask, mask & data_test_mask
-                # print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
+                print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
 
             n_data0 = []  # num of train in each class
             for i in range(n_cls):
