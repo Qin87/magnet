@@ -6334,15 +6334,15 @@ class Di_IB_X_nhid(torch.nn.Module):
             self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
 
         # self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
-        if layer > 2:
-            self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
-            self.non_reg_params = self.ib2.parameters()
-        elif layer == 2:
-            self.reg_params = []
-            self.non_reg_params =  list(self.ib1.parameters()) + list(self.ib2.parameters())
-        elif layer == 1:
-            self.reg_params = []
-            self.non_reg_params = self.ib1.parameters()
+        # if layer > 2:
+        #     self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+        #     self.non_reg_params = self.ib2.parameters()
+        # elif layer == 2:
+        #     self.reg_params = []
+        #     self.non_reg_params = list(self.ib1.parameters()) + list(self.ib2.parameters())
+        # elif layer == 1:
+        #     self.reg_params = []
+        #     self.non_reg_params = self.ib1.parameters()
 
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):

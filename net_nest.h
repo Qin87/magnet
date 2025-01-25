@@ -1,11 +1,11 @@
 #!/bin/bash
 
-net_values="  1iGib "
+net_values="  1iG 1iGib DiG DiGib "
 layer_values=" 1 2 3  4 5 "
 #layer_values="   1  15 16 17 18 19 20 30 40 50 60 70 "   1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18
 
 # 'citeseer/' 'cora_ml/'  'telegram/'   'dgl/pubmed'  'WikiCS/'     --net="$net"  'WikipediaNetwork/chameleon'
-Direct_dataset=(   'PubMed'   )
+Direct_dataset=(   'Coauthor-physics'   )
 Direct_dataset_filename=$(echo $Direct_dataset | sed 's/\//_/g')
 generate_timestamp() {
   date +"%d%H%Ms%S"
