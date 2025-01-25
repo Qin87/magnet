@@ -425,30 +425,30 @@ class StandGCNXBN(nn.Module):
         # x = self.mlp1(x)
         if self.layer == 1:
             return x
-        if args.BN_model:
-            x = self.batch_norm1(x)
+        # if args.BN_model:
+        #     x = self.batch_norm1(x)
         x = F.relu(x)
-        if args.dropout:
-            x = F.dropout(x, p=args.dropout, training=self.training)
-        if args.normalize:
-            x = F.normalize(x, p=2, dim=1)
+        # if args.dropout:
+        #     x = F.dropout(x, p=args.dropout, training=self.training)
+        # if args.normalize:
+        #     x = F.normalize(x, p=2, dim=1)
 
         if self.layer>2:
             for iter_layer in self.convx:
                 # x = F.dropout(x,p= self.dropout_p, training=self.training)
                 x = iter_layer(x, edge_index)
-                if args.BN_model:
-                    x= self.batch_norm3(x)
+                # if args.BN_model:
+                #     x= self.batch_norm3(x)
                 x = F.relu(x)
                 if args.dropout:
                     x = F.dropout(x, p=args.dropout, training=self.training)
-                if args.normalize:
-                    x = F.normalize(x, p=2, dim=1)
+                # if args.normalize:
+                #     x = F.normalize(x, p=2, dim=1)
 
         # x = F.dropout(x, p= self.dropout_p, training=self.training)
         x = self.conv2(x, edge_index)
-        if args.BN_model:
-            x = self.batch_norm2(x)
+        # if args.BN_model:
+        #     x = self.batch_norm2(x)
         # x = F.relu(x)
         # if args.dropout:
         #     x = F.dropout(x, p=args.dropout, training=self.training)

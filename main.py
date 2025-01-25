@@ -27,7 +27,8 @@ import torch.nn.functional as F
 from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges, find_max_spanning_tree, visualize_tensor_network, visualize_class_relationships, calculate_degree_features
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
-    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
+    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges, \
+    get_second_directed_adj_weight1, get_second_directed_adj_random
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask, print_x
 from nets.DiG_NoConv import union_edges
 from nets.models import random_walk_pe
@@ -342,10 +343,14 @@ if args.net.startswith(('1i', 'Ri', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                 IsExhaustive = False
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net[-2] == 'i':
-                if k == 2 and args.net.startswith('Di'):
+                if (k == 2 and args.net.startswith('Di')) or args.net.endswith('ib'):
                     edge_list = []
                     if args.net.startswith('Di'):
                         edge_index_tuple, edge_weights_tuple = get_second_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
+                    elif args.net == '1iGib':
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj_weight1(args, edges.long(), data_y.size(-1), data_x.dtype)
+                    elif args.net == 'RiGib':
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj_random(args, edges.long(), data_y.size(-1), data_x.dtype)
                     else:   # just for debug
                         edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
                     edge_list.append(edge_index_tuple)

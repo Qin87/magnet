@@ -944,7 +944,7 @@ class DirGCNConv_2(torch.nn.Module):
             self.lin_src_to_dst = Linear(input_dim, output_dim)
             # from torch_geometric.nn.dense.linear import Linear
             # self.lin_src_to_dst = Linear(input_dim, output_dim, bias=False,
-            #               weight_initializer='glorot')   # TODO
+            #               weight_initializer='glorot')
             self.lin_dst_to_src = Linear(input_dim, output_dim)
 
             self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
@@ -2419,8 +2419,8 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1,  intersection, union, inci_norm=
     else:
         # out = 0.5*(1+alpha)*(alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
         m = lin0(x)
-        out = 0.5*(1+alpha)*(alpha * (adj0 @ m) + (1 - alpha) * lin1(adj1 @ x))    # TODO
-        # out = (alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))       # TODO
+        out = 0.5*(1+alpha)*(alpha * (adj0 @ m) + (1 - alpha) * lin1(adj1 @ x))
+        # out = (alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
 
     return out
 

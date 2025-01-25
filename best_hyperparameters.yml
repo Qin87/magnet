@@ -7,7 +7,7 @@ telegram/:
   NotImproved: 410
   epoch: 1500
   patience: 80
-#  net: ScaleNet         # 1iGi3
+  net: ScaleNet         # 1iGi3
   conv_type: "dir-gcn"
   nonlinear: 1
   layer: 4
@@ -236,3 +236,6 @@ WebKB/Wisconsin:
   has_scheduler: 0
   dropout: 0.0  # Mag(0),
   NotImproved: 500
+
+Amazon-Photo:
+  l2: 0

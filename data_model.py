@@ -22,9 +22,9 @@ from nets.APPNP_Ben import APPNP_Model, ChebModel, SymModel, GCNModel_Cheb
 # from nets.DiGCN import DiModel, DiGCN_IB
 from nets.DiG_NoConv import (create_DiG_MixIB_SymCat_Sym_nhid,
                              create_DiG_MixIB_SymCat_nhid, create_DiG_IB_SymCat_nhid, create_DiG_IB_Sym_nhid, create_DiG_IB_Sym_nhid_para,
-                             create_DiG_IB_nhid_para, create_DiSAGESimple_nhid, create_Di_IB_nhid, Si_IB_X_nhid, DiGCN_IB_XBN_nhid_para, Di_IB_XBN_nhid_ConV, DiSAGE_xBN_nhid_BN,
+                             create_DiG_IB_nhid_para, create_DiSAGESimple_nhid, Si_IB_X_nhid, DiGCN_IB_XBN_nhid_para, Di_IB_XBN_nhid_ConV, DiSAGE_xBN_nhid_BN,
                              create_DiSAGESimple_nhid0, DiSAGE_x_nhid, DiSAGE_xBN_nhid, DiGCN_IB_X_nhid_para, Si_IB_X_nhid, DiSAGE_1BN_nhid,
-                             DiSAGE_2BN_nhid, DiGCN_IB_X_nhid_para_Jk, Di_IB_XBN_nhid_ConV_JK)
+                             DiSAGE_2BN_nhid, DiGCN_IB_X_nhid_para_Jk, Di_IB_XBN_nhid_ConV_JK, Di_IB_X_nhid, Di_IB_1_nhid)
 # from nets.DiG_NoConv import  create_DiG_IB
 from nets.GIN_Ben import create_GIN
 from nets.Sym_Reg import create_SymReg_add, create_SymReg_para_add
@@ -137,8 +137,8 @@ def CreatModel(args, num_features, n_cls, data_x,device, num_edges=None):
                     if args.paraD:
                         model = DiGCN_IB_XBN_nhid_para(args.net[2], num_features,  n_cls,  args).to(device)        # July 25
                     else:
-                        if args.net.startswith('Di'):
-                            model = create_Di_IB_nhid(m=args.net[2], nfeat=num_features, nclass=n_cls, args=args).to(device)    # keep this: original DiGib paper
+                        if args.net.startswith('Di') or args.net.endswith('ib'):
+                            model = Di_IB_X_nhid(args.net[2], num_features, n_cls, args).to(device)    # keep this: original DiGib paper
                         else:
                             model = Di_IB_XBN_nhid_ConV(m=args.net[2], input_dim=num_features, out_dim=n_cls, args=args).to(device)     # July 24: 1 BN
     elif args.net.startswith(('Sym', '1ym')):
