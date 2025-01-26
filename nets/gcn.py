@@ -389,6 +389,52 @@ class StandGCN2BN(nn.Module):
 
         return x
 
+from torch_geometric.nn.dense.linear import Linear
+class StandGCNXBN_Ak(nn.Module):
+    def __init__(self, nfeat, nclass, args):
+        super().__init__()
+        nhid = args.feat_dim
+        dropout = args.dropout
+        nlayer = args.Ak        # Differ
+        is_add_self_loops = args.First_self_loop
+        norm = args.gcn_norm
+        self.is_add_self_loops = is_add_self_loops  # Qin True is the original
+        if nlayer == 1:
+            self.conv1 = GCNConv(nfeat, nclass, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
+        else:
+            self.conv1 = GCNConv(nfeat, nhid, cached= False, normalize=norm, add_self_loops=self.is_add_self_loops)
+
+        self.mlp1 = torch.nn.Linear(nhid, nclass)
+        # self.lin = Linear(in_channels, out_channels, bias=False,
+        #                   weight_initializer='glorot')
+        self.conv2 = Linear(nhid, nclass, bias=True, weight_initializer='glorot')
+
+        self.convx = nn.ModuleList([Linear(nhid, nhid, bias=True, weight_initializer='glorot') for _ in range(nlayer-2)])
+        self.dropout_p = dropout
+
+        self.batch_norm1 = nn.BatchNorm1d(nhid)
+        self.batch_norm2 = nn.BatchNorm1d(nclass)
+        self.batch_norm3 = nn.BatchNorm1d(nhid)
+
+        self.layer = nlayer
+
+    def forward(self, x, adj, args, edge_weight=None):
+        edge_index = adj
+        x = self.conv1(x, edge_index)
+        if self.layer == 1:
+            return x
+
+        if self.layer>2:
+            for iter_layer in self.convx:
+                x = iter_layer(x)
+                x = F.relu(x)
+                if args.dropout:
+                    x = F.dropout(x, p=args.dropout, training=self.training)
+
+        x = self.conv2(x)
+
+        return x
+
 
 class StandGCNXBN(nn.Module):
     def __init__(self, nfeat, nclass, args):
