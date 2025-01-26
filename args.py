@@ -12,7 +12,7 @@ def parse_args():
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
     parser.add_argument("--mlpIn", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--mlpOut", type=int, help="in ScaleNet, whether include mlp ", default=0)
-    parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=0)
+    parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=1)
     parser.add_argument("--nonlinear", type=int, help="whether use activation(relu) in ScaleNet model:0/1", default=1)
     parser.add_argument("--First_self_loop", type=int, choices=[1, -1,  0], default=0, help="1 is add, -1 is remove, Whether to add self-loops to the graph")
     parser.add_argument("--rm_gen_sloop", type=int, choices=[1, 0], default=0, help="Whether to remove generated self-loops to the graph")
@@ -43,9 +43,9 @@ def parse_args():
                     'GCN, GAT, SAGE, Cheb, APPNP, GPRGNN, pgnn, mlp, sgc,'
                     'DiGib, DiGub,DiGi3, DiGi4 (1iG, RiG replace DiG)''Sym, 1ym')
     parser.add_argument('--seed', type=int, default=0, help='random seed')
-    parser.add_argument('--Dataset', type=str, default='Coauthor-physics', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
+    parser.add_argument('--Dataset', type=str, default='Amazon-Computers', help='citeseer/ , cora_ml/, dgl/pubmed, telegram/,  WikiCS/, dgl/cora ,film/'
         'WikipediaNetwork/squirrel, WikipediaNetwork/chameleon, WikipediaNetwork/crocodile, WebKB/Cornell, WebKB/Texas,  WebKB/Wisconsin'
-        'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/, Amazon-Photo, Coauthor-physics, malnet/tiny')
+        'ogbn-arxiv/, directed-roman-empire/, arxiv-year/, snap-patents/, Amazon-Photo, Amazon-Computers, malnet/tiny')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout prob')
     parser.add_argument('--layer', type=int, default=1, help='number of layers (2 or 3), default: 2')
     parser.add_argument('--alpha', type=float, default=0.1, help='alpha teleport prob')
@@ -104,7 +104,7 @@ def parse_args():
     parser.add_argument('--to_undirected', '-tud', type=int, default=0, help='if convert graph to undirected')
     parser.add_argument('--to_reverse_edge', '-tre', type=int, default=0, help='if reverse direction of edges')
     parser.add_argument('--rm_bidirect_edge', '-rbe', type=int, default=0, help='make all edges directed')
-    parser.add_argument('--Ak', '-Ak', type=int, default=3, help='use A^k as adjacency matrix, 0 or 1 is not')
+    parser.add_argument('--Ak', '-Ak', type=int, default=0, help='use A^k as adjacency matrix, 0 or 1 is not')
     parser.add_argument('--num_edge', '-nedge', type=int, default=0, help='1 to print number of edges of Ak')
 
     parser.add_argument('--feat_proximity', action='store_true', help='filter out non similar nodes in scaled graph')

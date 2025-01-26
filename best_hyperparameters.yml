@@ -239,10 +239,22 @@ WebKB/Wisconsin:
   NotImproved: 500
 
 Amazon-Photo:
+  lr: 0.0005
   l2: 0
 
+Amazon-Computers:
+  BN_model: 1  # 0 is bad37, 1 is76
+
 Coauthor-physics:
+  BN_model: 0   # not test 1
+  lr: 0.0005
+  l2: 0
+
+Coauthor-CS:
+  BN_model: 0   # not test 1
+  lr: 0.0005
   l2: 0
 
 PubMed:
+  BN_model: 0   # not test 1
   l2: 5e-4

@@ -1247,15 +1247,15 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(nhid)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
-        if self.layer == 1:
-            self.reg_params = []
-            self.non_reg_params = self.conv1.parameters()
-        elif self.layer == 2:
-            self.reg_params = list(self.conv1.parameters())
-            self.non_reg_params = self.conv2.parameters()
-        else:
-            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
-            self.non_reg_params = self.conv2.parameters()
+        # if self.layer == 1:           # TODO test whether need this block
+        #     self.reg_params = []
+        #     self.non_reg_params = self.conv1.parameters()
+        # elif self.layer == 2:
+        #     self.reg_params = list(self.conv1.parameters())
+        #     self.non_reg_params = self.conv2.parameters()
+        # else:
+        #     self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+        #     self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, edge_index, edge_weight):
         xs = []
