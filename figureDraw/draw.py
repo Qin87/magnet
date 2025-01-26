@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MultipleLocator
 
-data = 'CoraML'       # CoraML
+data = 'CiteSeer'       # CoraML
 Adj = 'A3'
 
 # Data
@@ -24,11 +24,11 @@ elif data == 'CiteSeer' and Adj == 'At':
 
 elif data== 'CiteSeer' and Adj == 'A3':
     layers = list(range(1, 21))
-    Ak_mean = []
+    Ak_mean = [59.2, 57.2, 57.5, 57.9, 57.3, 57.1, 57.3, 57.7, 57.7,57.7, 57.7, 57.7, 57.7, 57.7, 57.7, 57.7, 57.7, 57.7, 57.7, 57.7]
     layer_mean = [57.5, 58.2, 56.7, 54.4, 54.2, 54.0, 50.9, 48.7, 48.0, 48.6, 46.6, 45.1, 44.4, 40.8, 38.9, 34.4, 34.3, 31.6, 31.1, 31.5 ]
-    Ak_vari = []
+    Ak_vari = [2.8, 2.3, 2.4, 2.6, 1.7, 1.9, 2.2, 2.5, 2.5,  2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
     layer_vari = [1.5, 2.7, 2.9, 2.9, 2.6, 2.8, 4.3, 4.7, 3.9, 2.2, 3.5, 1.9, 4.8, 3.3, 4.0, 5.5, 6.0, 6.2, 7.0, 7.3]
-    density = []
+    density = [0.1105, 0.1163, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164, 0.1164]
 
 elif data == 'CiteSeer' and Adj == 'Undirect':
     layers = list(range(1, 21))
@@ -171,7 +171,7 @@ ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.2%}'))
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = density_line, ['Density']
 ax1.legend(lines1 + lines2, labels1 + labels2,
-          loc='upper right', bbox_to_anchor=(1, 0.5))
+          loc='upper right', bbox_to_anchor=(1, 0.7))
 
 # Add grid
 ax1.grid(True, alpha=0.1)

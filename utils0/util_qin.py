@@ -51,7 +51,7 @@ def matrix_power_analysis(edge_index, size, k_max=5):
 def analyze_edge_index(edge_index, size, k_max=5):
     results = matrix_power_analysis(edge_index, size, k_max)
 
-    print(f"Analysis of matrix powers:")
+    # print(f"Analysis of matrix powers:")
     # for k, (matrix, density) in enumerate(results, 1):
     #     print(f"\nPower {k}:")
     #     print(f"Non-zero elements: {matrix.coalesce().indices().shape[1]}")
