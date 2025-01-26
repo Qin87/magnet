@@ -418,7 +418,7 @@ class StandGCNXBN_Ak(nn.Module):
 
         self.layer = nlayer
 
-    def forward(self, x, adj, args, edge_weight=None):
+    def forward(self, x, adj, edge_weight=None):
         edge_index = adj
         x = self.conv1(x, edge_index)
         if self.layer == 1:
@@ -428,8 +428,8 @@ class StandGCNXBN_Ak(nn.Module):
             for iter_layer in self.convx:
                 x = iter_layer(x)
                 x = F.relu(x)
-                if args.dropout:
-                    x = F.dropout(x, p=args.dropout, training=self.training)
+                if self.dropout_p:
+                    x = F.dropout(x, p=self.dropout_p, training=self.training)
 
         x = self.conv2(x)
 
