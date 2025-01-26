@@ -1,3 +1,4 @@
+import gc
 import itertools
 import sys
 import time
@@ -503,6 +504,114 @@ def get_second_directed_adj(args,  edge_index, num_nodes, dtype):
 
     return edge_index, edge_weight
 
+def get_second_directed_adj_weight1(args,  edge_index, num_nodes, dtype):
+    selfloop = args.First_self_loop
+    if selfloop == 1:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+
+    elif selfloop == -1:
+        edge_index, _ = remove_self_loops(edge_index)
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+    # row normalization
+    if args.inci_norm is not None:
+        row, col = edge_index
+        deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+        deg_inv_sqrt = deg.pow(-0.5)
+        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+    return edge_index, edge_weight
+
+def get_second_directed_adj_random(args,  edge_index, num_nodes, dtype):
+    W_degree = args.W_degree
+    device = edge_index.device
+
+    selfloop = args.First_self_loop
+    if selfloop == 1:
+        edge_index, _ = add_self_loops(edge_index.long(), fill_value=1, num_nodes=num_nodes)  # with selfloop, QiG get better
+
+    elif selfloop == -1:
+        edge_index, _ = remove_self_loops(edge_index)
+    edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+                             device=edge_index.device)
+    row, col = edge_index
+    deg0 = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes).to(device)  # row degree
+    deg1 = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes).to(device)  # col degree
+    deg2 = deg0 + deg1
+
+    if W_degree == 0:  # in-degree
+        edge_weight = deg0[edge_index[0]] + deg0[edge_index[1]]
+        print("Using deg0")
+    elif W_degree == 1:     # out-degree
+        edge_weight = deg1[edge_index[0]] + deg0[edge_index[1]]
+        print("Using deg1")
+    elif W_degree == 2:     # total-degree
+        edge_weight = deg2[edge_index[0]] + deg0[edge_index[1]]
+        print("Using deg2")
+    elif W_degree == 3:     # random number in [1,100]
+        edge_weight = torch.randint(1, 101, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
+        print("proximity weight is random number in [1,100]")
+    elif W_degree == 300:     # random number in [1,10000]
+        edge_weight = torch.randint(1, 10001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
+        print("proximity weight is random number in [1,100]")
+    elif W_degree == 30000:     # random number in [1,1000000]
+        edge_weight = torch.randint(1, 1000001, (edge_index.size(1),), dtype=dtype, device=edge_index.device)
+        print("proximity weight is random number in [1,100]")
+    elif W_degree == 400:  # random number in [0.001,1]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.999 + 0.001
+        print("proximity weight is random number in [0.1,1]")
+    elif W_degree == 40000:  # random number in [0.00001,1]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.99999 + 0.00001
+        print("proximity weight is random number in [0.1,1]")
+    elif W_degree == 4:  # random number in [0.1,1]       # random number in [0.1,1]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * 0.9 + 0.1
+        print("proximity weight is random number in [0.1,1]")
+    elif W_degree == 5:  # random number in [0.00001,100000]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
+        # edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (1 - 0.0001)-0.5
+
+        # indices = torch.randperm(edge_index.size(1), device=edge_index.device)[edge_index.size(1) // 2:]
+        # edge_weight[indices] = 0
+
+        edge_weight[:edge_index.size(1) // 2] = 0
+
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
+
+        print(f"Original Edge weight range: [{min_val}, {max_val}]")
+        # edge_weight = random_values * (10000 - 0.0001) + 0.0001
+    elif W_degree == 50:  # random number in [0.00001,100000]
+        edge_weight = torch.rand(edge_index.size(1), dtype=dtype, device=edge_index.device) * (10000 - 0.0001) + 0.0001
+        edge_weight = torch.abs(torch.sin(edge_weight))
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
+
+        print(f"Original Edge weight range: [{min_val}, {max_val}]")
+        # edge_weight = random_values * (10000 - 0.0001) + 0.0001
+    elif W_degree == -3:   # three peaks
+        edge_weight = trimodal_distribution(edge_index.size(1), edge_index.device, dtype)
+    elif W_degree == -2:   # two peaks
+        edge_weight = trimodal_distribution2(edge_index.size(1), edge_index.device, dtype)
+        min_val = torch.min(edge_weight).item()
+        max_val = torch.max(edge_weight).item()
+
+        print(f"Original Edge weight range: [{min_val}, {max_val}]")
+    elif W_degree == -4:   # two peaks
+        edge_weight = trimodal_distribution4(edge_index.size(1), edge_index.device, dtype)
+    else:
+        NotImplementedError('Not Implemented edge-weight type')
+
+    # row normalization
+    if args.inci_norm is not None:
+        row, col = edge_index
+        deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+        deg_inv_sqrt = deg.pow(-0.5)
+        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        edge_weight = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
+    return edge_index, edge_weight
+
 
 
 def Qin_get_second_directed_adj0(edge_index, num_nodes, dtype):
@@ -554,6 +663,8 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
     edge_index = torch.unique(edge_index, dim=1).to(device)
 
+    # if args.net.startswith('1'):
+    #     norm = 'sym'
     # type 1: conside different inci-norm
     if norm =='dir':
         row, col = edge_index
@@ -563,7 +674,7 @@ def Qin_get_directed_adj(args, edge_index, num_nodes, dtype, edge_weight=None):
     # type 2: only GCN_norm
     elif norm == 'sym':
         edge_weight = normalize_row_edges(edge_index, num_nodes).to(device)
-    elif norm is None:
+    elif norm is None or norm == 0:
         edge_weight = torch.ones((edge_index.size(1), ), dtype=dtype,
                                      device=edge_index.device)
 
@@ -1453,6 +1564,10 @@ def Qin_get_second_directed_adj(args, edge_index, num_nodes, k, IsExhaustive, mo
             all_hops_weight.append(torch.ones(row.size(0), dtype=torch.int).to(device))
         else:
             all_hops_weight.append(adj_norm.storage.value())
+
+    del edge_index, edge_weight, A, L_tuple
+    gc.collect()
+    torch.cuda.empty_cache()
 
     return tuple(all_hop_edge_index), tuple(all_hops_weight)
 

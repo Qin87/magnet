@@ -5,7 +5,8 @@ import torch.nn.functional as F
 import torch_sparse
 # from dgl.backend.mxnet import no_grad
 from torch import triu
-from torch.nn import Linear, ModuleList, init
+from torch.nn import Linear
+from torch.nn import ModuleList, init
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, ChebConv, GINConv, APPNP
 from torch.nn import Parameter
 from torch_geometric.utils import remove_self_loops
@@ -941,6 +942,9 @@ class DirGCNConv_2(torch.nn.Module):
 
         if args.conv_type == 'dir-gcn':
             self.lin_src_to_dst = Linear(input_dim, output_dim)
+            # from torch_geometric.nn.dense.linear import Linear
+            # self.lin_src_to_dst = Linear(input_dim, output_dim, bias=False,
+            #               weight_initializer='glorot')
             self.lin_dst_to_src = Linear(input_dim, output_dim)
 
             self.linx = nn.ModuleList([Linear(input_dim, output_dim) for i in range(4)])
@@ -2413,7 +2417,10 @@ def aggregate(x, alpha, lin0, adj0, lin1, adj1,  intersection, union, inci_norm=
     elif alpha == 3:
         out = lin0(intersection @ x)
     else:
-        out = (1+alpha)*(alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
+        # out = 0.5*(1+alpha)*(alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
+        m = lin0(x)
+        out = 0.5*(1+alpha)*(alpha * (adj0 @ m) + (1 - alpha) * lin1(adj1 @ x))
+        # out = (alpha * lin0(adj0 @ x) + (1 - alpha) * lin1(adj1 @ x))
 
     return out
 

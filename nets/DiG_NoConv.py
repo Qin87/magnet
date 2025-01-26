@@ -6318,34 +6318,47 @@ class Di_IB_XBN_nhid_ConV_JK(torch.nn.Module):
         # return torch.nn.functional.log_softmax(x, dim=1)
 
 class Di_IB_X_nhid(torch.nn.Module):
-    def __init__(self, m, input_dim,   out_dim, args):
+    def __init__(self, m, input_dim, out_dim, args):
         super(Di_IB_X_nhid, self).__init__()
         self._dropout = args.dropout
         nhid = args.feat_dim
         layer = args.layer
 
-        self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
+        if layer ==1:
+            self.ib1 = InceptionBlock_Di(m, input_dim, out_dim, args)
+        else:
+            self.ib1 = InceptionBlock_Di(m, input_dim, nhid, args)
         self.ib2 = InceptionBlock_Di(m, nhid, out_dim, args)
         self.layer = args.layer
-        self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
+        if layer >2:
+            self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
 
-        self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
+        # self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
+        if layer > 2:
+            self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+            self.non_reg_params = self.ib2.parameters()
+        elif layer == 2:
+            self.reg_params = []
+            self.non_reg_params =  list(self.ib1.parameters()) + list(self.ib2.parameters())
+        elif layer == 1:
+            self.reg_params = []
+            self.non_reg_params = self.ib1.parameters()
 
-        self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
-        self.non_reg_params = self.ib2.parameters()
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
         x = features
         x = self.ib1(x, edge_index_tuple, edge_weight_tuple)
         x = F.dropout(x, p=self._dropout, training=self.training)
+        if self.layer == 1:
+            return x
 
-        for iter_layer in self.ibx:
-            x = F.dropout(x, p=self._dropout, training=self.training)
-            x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+        if self.layer >2:
+            for iter_layer in self.ibx:
+                x = iter_layer(x, edge_index_tuple, edge_weight_tuple)
+                x = F.dropout(x, p=self._dropout, training=self.training)
 
         x = self.ib2(x, edge_index_tuple, edge_weight_tuple)
-
-        x = F.dropout(x, p=self._dropout, training=self.training)
+        # x = F.dropout(x, p=self._dropout, training=self.training)
         return x
 
 class Si_IB_X_nhid(torch.nn.Module):

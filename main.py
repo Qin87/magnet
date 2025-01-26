@@ -27,7 +27,8 @@ import torch.nn.functional as F
 from args import parse_args
 from data.data_utils import keep_all_data, seed_everything, set_device, scaled_edges, find_max_spanning_tree, visualize_tensor_network, visualize_class_relationships, calculate_degree_features
 from edge_nets.edge_data import get_second_directed_adj, get_second_directed_adj_union, \
-    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges
+    WCJ_get_directed_adj, Qin_get_second_directed_adj, Qin_get_directed_adj, get_appr_directed_adj2, Qin_get_second_directed_adj0, Qin_get_second_adj, Qin_get_all_directed_adj, normalize_row_edges, \
+    get_second_directed_adj_weight1, get_second_directed_adj_random
 from data_model import CreatModel, log_file, get_name, load_dataset, feat_proximity, delete_edges, make_imbalanced, count_homophilic_nodes, calculate_metrics, create_mask, print_x
 from nets.DiG_NoConv import union_edges
 from nets.models import random_walk_pe
@@ -107,6 +108,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
         out = model(data_x, data_pe, edges, edge_attr, data_batch)
     elif args.net == 'tSNE':
         out = model(data_x, edges, data_y, epoch)
+    elif args.net == 'GCN':
+        out = model(data_x, edges, args)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -128,6 +131,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
             out = model(X_real, X_img_i, X_img_j, X_img_k,norm_img_i, norm_img_j, norm_img_k, norm_real,Quaedge_index)
         elif args.net == 'tSNE':
             out = model(data_x, edges, data_y, epoch)
+        elif args.net == 'GCN':
+            out = model(data_x, edges, args)
         else:
             out = model(data_x, edges)
         val_loss = F.cross_entropy(out[data_val_mask], data_y[data_val_mask])
@@ -157,6 +162,8 @@ def test():
         logits = model(X_real, X_img_i, X_img_j, X_img_k, norm_imag_i, norm_imag_j, norm_imag_k, norm_real, Quaedge_index)
     elif args.net == 'tSNE':
         logits = model(data_x, edges[:, train_edge_mask], data_y, epoch)
+    elif args.net == 'GCN':
+        logits = model(data_x, edges[:, train_edge_mask], args)
     else:
         logits = model(data_x, edges[:, train_edge_mask])
     accs, baccs, f1s = [], [], []
@@ -336,10 +343,14 @@ if args.net.startswith(('1i', 'Ri', 'Di', 'pan', 'Ui', 'Li', 'Ti', 'Ai', 'Hi','I
                 IsExhaustive = False
                 edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj(args, edges.long(), data_y.size(-1), k, IsExhaustive, mode='independent', norm=args.inci_norm)
             elif args.net[-2] == 'i':
-                if k == 2 and args.net.startswith('Di'):
+                if (k == 2 and args.net.startswith('Di')) or args.net.endswith('ib'):
                     edge_list = []
                     if args.net.startswith('Di'):
                         edge_index_tuple, edge_weights_tuple = get_second_directed_adj(args, edges.long(), data_y.size(-1), data_x.dtype)
+                    elif args.net == '1iGib':
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj_weight1(args, edges.long(), data_y.size(-1), data_x.dtype)
+                    elif args.net == 'RiGib':
+                        edge_index_tuple, edge_weights_tuple = get_second_directed_adj_random(args, edges.long(), data_y.size(-1), data_x.dtype)
                     else:   # just for debug
                         edge_index_tuple, edge_weights_tuple = Qin_get_second_directed_adj0(edges.long(), data_y.size(-1), data_x.dtype)
                     edge_list.append(edge_index_tuple)
@@ -560,7 +571,7 @@ try:
                     new_class_num_list.append(tensor_node.shape[0])
                 new_class_num_list = sorted(new_class_num_list)
                 if split==0:
-                    print('new train class in data: ', new_class_num_list, '\n', 'real imbal ratio: ', new_class_num_list[-1]/new_class_num_list[0])
+                    # print('new train class in data: ', new_class_num_list, '\n', 'real imbal ratio: ', new_class_num_list[-1]/new_class_num_list[0])
                     print(dataset_to_print + '\ttotalNode_' + str(data_train_mask.size()[0]) + '\t trainNodeBal_' + str(node_train) + '\t trainNodeImbal_' + str(torch.sum(
                         data_train_mask).item()), file=log_file)
                     print(dataset_to_print + '\ttotalEdge_' + str(edges.size()[1]) + '\t trainEdgeBal_' + str(train_edge_mask.size()[0]) + '\t trainEdgeImbal_' + str(torch.sum(
