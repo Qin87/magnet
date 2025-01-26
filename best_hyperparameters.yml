@@ -258,3 +258,8 @@ Coauthor-CS:
 PubMed:
   BN_model: 0   # not test 1
   l2: 5e-4
+
+CiteSeer:
+  lr: 0.1
+#  l2: 0  # no change
+  BN_model: 1
