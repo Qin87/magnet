@@ -1247,15 +1247,15 @@ class DiSAGE_xBN_nhid(torch.nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(nhid)
         self.batch_norm3 = nn.BatchNorm1d(nhid)
 
-        # if self.layer == 1:           # TODO test whether need this block
-        #     self.reg_params = []
-        #     self.non_reg_params = self.conv1.parameters()
-        # elif self.layer == 2:
-        #     self.reg_params = list(self.conv1.parameters())
-        #     self.non_reg_params = self.conv2.parameters()
-        # else:
-        #     self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
-        #     self.non_reg_params = self.conv2.parameters()
+        if self.layer == 1:
+            self.reg_params = self.conv1.parameters()
+            self.non_reg_params = []
+        elif self.layer == 2:
+            self.reg_params = list(self.conv1.parameters())
+            self.non_reg_params = self.conv2.parameters()
+        else:
+            self.reg_params = list(self.conv1.parameters()) + list(self.convx.parameters())
+            self.non_reg_params = self.conv2.parameters()
 
     def forward(self, x, edge_index, edge_weight):
         xs = []
@@ -6334,15 +6334,15 @@ class Di_IB_X_nhid(torch.nn.Module):
             self.ibx = nn.ModuleList([InceptionBlock_Di(m, nhid, nhid, args) for _ in range(layer - 2)])
 
         # self.Conv = nn.Conv1d(nhid,  out_dim, kernel_size=1)
-        # if layer > 2:
-        #     self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
-        #     self.non_reg_params = self.ib2.parameters()
-        # elif layer == 2:
-        #     self.reg_params = []
-        #     self.non_reg_params = list(self.ib1.parameters()) + list(self.ib2.parameters())
-        # elif layer == 1:
-        #     self.reg_params = []
-        #     self.non_reg_params = self.ib1.parameters()
+        if layer > 2:
+            self.reg_params = list(self.ib1.parameters()) + list(self.ibx.parameters())
+            self.non_reg_params = self.ib2.parameters()
+        elif layer == 2:
+            self.reg_params = list(self.ib1.parameters()) + list(self.ib2.parameters())
+            self.non_reg_params = []
+        elif layer == 1:
+            self.reg_params = self.ib1.parameters()
+            self.non_reg_params = []
 
 
     def forward(self, features, edge_index_tuple, edge_weight_tuple):
