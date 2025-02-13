@@ -317,15 +317,6 @@ else:
     data_train_maskOrigin = data_train_maskOrigin.to(device)
     data_val_maskOrigin = data_val_maskOrigin.to(device)
     data_test_maskOrigin = data_test_maskOrigin.to(device)
-# device = torch.device('cuda:0')
-# print("Edge index shape:", edges.shape)
-
-
-# visualize_class_relationships(edges, data_y)
-
-
-
-# edges = scaled_edges(edges, data_x.shape[0])
 
 
 criterion = CrossEntropy().to(device)
@@ -566,7 +557,11 @@ try:
                 if len(lst) == 0:
                     print(f"{name}:No Node")
                     continue
-                mask = create_mask(lst, data_x.shape[0]).to(device)
+                mask = create_mask(lst, data_x.shape[0])
+                if args.paral:
+                    mask.to(device)
+                else:
+                    mask = mask.to(device)
                 train_temp, val_temp, test_temp = mask & data_train_mask, mask & data_val_mask, mask & data_test_mask
                 print(f"{name}: Train={train_temp.sum().item()}, Val={val_temp.sum().item()}, Test={test_temp.sum().item()}")
 
