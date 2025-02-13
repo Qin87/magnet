@@ -110,7 +110,7 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
     elif args.net == 'tSNE':
         out = model(data_x, edges, data_y, epoch)
     elif args.net == 'GCN':
-        print(model.device, data_x.device, edges.device)
+        # print(model.device, data_x.device, edges.device)
         out = model(data_x, edges.contiguous(), args)
     else:
         out = model(data_x, edges)
