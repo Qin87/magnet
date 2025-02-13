@@ -2,14 +2,17 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--GPU', type=int, default=0, help='GPU device')
+    parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
+    parser.add_argument("--paral", type=int, default=0, help="whether use multiple GPU")
+
     parser.add_argument("--monitor", type=str, help="optimiser monitor: val_acc(acc), val_loss(loss)", default="acc")
     parser.add_argument("--all1", type=int, help="feature all 1 ", default=0)
     parser.add_argument("--all1d", type=int, help="feature dimention in all 1, 0 is keep original d ", default=1)
 
     parser.add_argument("--degfea", type=int, help="degree as feature: in-degree 1, out-degree -1, both 2, no 0  ", default=0)
     parser.add_argument("--use_best_hyperparams", type=int, default=0, help="whether use parameters in best_hyperparameters.yml")
-    parser.add_argument('--GPU', type=int, default=0, help='GPU device')
-    parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
+
     parser.add_argument("--mlpIn", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--mlpOut", type=int, help="in ScaleNet, whether include mlp ", default=0)
     parser.add_argument("--BN_model", type=int, help="whether use layer normalization in model:0/1", default=1)
