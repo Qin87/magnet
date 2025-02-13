@@ -86,7 +86,6 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
     new_x = None
     new_y = None
     new_y_train = None
-    print("Edge index shape in Train:", edges.shape)
 
     model.train()
     if args.net.endswith('ymN1'):   # without 1st-order edges
@@ -110,8 +109,7 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
     elif args.net == 'tSNE':
         out = model(data_x, edges, data_y, epoch)
     elif args.net == 'GCN':
-        # print(model.device, data_x.device, edges.device)
-        out = model(data_x, edges.contiguous(), args)
+        out = model(data_x, edges, args)
     else:
         out = model(data_x, edges)
     criterion(out[data_train_mask], data_y[data_train_mask]).backward()
@@ -286,8 +284,6 @@ proximity_threshold = 0.0
 macro_F1 = []
 acc_list = []
 bacc_list = []
-
-
 
 if args.all1:
     all1d = args.all1d
