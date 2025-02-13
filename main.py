@@ -86,6 +86,8 @@ def train(epoch, edge_in, in_weight, edge_out, out_weight, SparseEdges, edge_wei
     new_x = None
     new_y = None
     new_y_train = None
+    print("Edge index shape in Train:", edges.shape)
+
     model.train()
     if args.net.endswith('ymN1'):   # without 1st-order edges
         biedges = edge_in
@@ -303,6 +305,8 @@ if args.degfea:
 data_x = data_x.to(device)
 data_y = data_y.to(device)
 edges = edges.to(device)
+print("Edge index shape:", edges.shape)
+
 
 # visualize_class_relationships(edges, data_y)
 
