@@ -286,11 +286,7 @@ macro_F1 = []
 acc_list = []
 bacc_list = []
 
-# if args.paral:
-#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# else:
-# device = set_device(args)
-device = torch.device('cuda:0')
+
 
 if args.all1:
     all1d = args.all1d
@@ -302,10 +298,19 @@ if args.all1:
 if args.degfea:
     data_x = calculate_degree_features(edges, args.degfea)
     num_features = abs(args.degfea)
-data_x = data_x.to(device)
-data_y = data_y.to(device)
-edges = edges.to(device)
-print("Edge index shape:", edges.shape)
+
+if args.paral:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    data_x.to(device)
+    data_y.to(device)
+    edges.to(device)
+else:
+    device = set_device(args)
+    data_x = data_x.to(device)
+    data_y = data_y.to(device)
+    edges = edges.to(device)
+# device = torch.device('cuda:0')
+# print("Edge index shape:", edges.shape)
 
 
 # visualize_class_relationships(edges, data_y)
@@ -461,8 +466,9 @@ try:
                 if torch.cuda.device_count() > 1:
                     model = torch.nn.DataParallel(model)
                     print(f'model parallel!', flush=True)
-            # else:
-            #     model = model.to(device)
+                    model.to(device)
+            else:
+                model = model.to(device)
             if split==0:
                 print('no_in, homo_in, no_out, homo_out:', no_in, homo_ratio_A, no_out, homo_ratio_At, file=log_file)
                 print(model, file=log_file)
