@@ -4,7 +4,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--GPU', type=int, default=0, help='GPU device')
     parser.add_argument('--CPU', action='store_true', help='use CPU even has GPU')
-    parser.add_argument("--paral", type=int, default=0, help="whether use multiple GPU")
+    parser.add_argument("--paral", type=int, default=0, help="whether parallely use multiple GPU")
 
     parser.add_argument("--monitor", type=str, help="optimiser monitor: val_acc(acc), val_loss(loss)", default="acc")
     parser.add_argument("--all1", type=int, help="feature all 1 ", default=0)
