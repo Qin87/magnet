@@ -451,7 +451,7 @@ try:
     with open(log_directory + log_file_name_with_timestamp, 'a') as log_file:
         print('Using Device: ', device, file=log_file)
         for split in range(num_run):
-            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1]).to(device)
+            model = CreatModel(args, num_features, n_cls, data_x, device, edges.shape[1])
             if args.paral:
                 if torch.cuda.device_count() > 1:
                     model = torch.nn.DataParallel(model)
