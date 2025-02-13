@@ -301,23 +301,29 @@ if args.degfea:
 
 if args.paral:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     data_x.to(device)
     data_y.to(device)
     edges.to(device)
+    data_train_maskOrigin.to(device)
+    data_val_maskOrigin.to(device)
+    data_test_maskOrigin.to(device)
 else:
     device = set_device(args)
+
     data_x = data_x.to(device)
     data_y = data_y.to(device)
     edges = edges.to(device)
+    data_train_maskOrigin = data_train_maskOrigin.to(device)
+    data_val_maskOrigin = data_val_maskOrigin.to(device)
+    data_test_maskOrigin = data_test_maskOrigin.to(device)
 # device = torch.device('cuda:0')
 # print("Edge index shape:", edges.shape)
 
 
 # visualize_class_relationships(edges, data_y)
 
-data_train_maskOrigin = data_train_maskOrigin.to(device)
-data_val_maskOrigin = data_val_maskOrigin.to(device)
-data_test_maskOrigin = data_test_maskOrigin.to(device)
+
 
 # edges = scaled_edges(edges, data_x.shape[0])
 
