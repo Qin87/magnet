@@ -14,7 +14,6 @@ from utils0.util_qin import analyze_edge_index, remove_bidirectional_edges, get_
 
 print("Python Path:", sys.path)
 print("Current Working Directory:", os.getcwd())
-import os
 import signal
 import statistics
 import sys
