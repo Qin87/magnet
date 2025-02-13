@@ -287,7 +287,8 @@ bacc_list = []
 # if args.paral:
 #     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # else:
-device = set_device(args)
+# device = set_device(args)
+device = torch.device('cuda:0')
 
 if args.all1:
     all1d = args.all1d
