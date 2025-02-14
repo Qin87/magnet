@@ -147,7 +147,7 @@ def gcn_norm(edge_index, edge_weight=None, num_nodes=None, improved=False,
         deg_inv_sqrt.masked_fill_(deg_inv_sqrt == float('inf'), 0)
         value = deg_inv_sqrt[row] * value * deg_inv_sqrt[col]
 
-        return set_sparse_value(adj_t, value), None
+        return set_sparse_value(adj_t.coalesce(), value), None
 
     num_nodes = maybe_num_nodes(edge_index, num_nodes)
 

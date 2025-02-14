@@ -1034,9 +1034,9 @@ class DirGCNConv_2(torch.nn.Module):
 
         if self.conv_type == 'dir-gcn':
             if self.adj_norm is None:
-                values = torch.ones(edge_index.shape[1]).to(device)
-                adj = torch.sparse_coo_tensor(edge_index, values, (num_nodes, num_nodes))
-                # adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
+                # values = torch.ones(edge_index.shape[1]).to(device)
+                # adj = torch.sparse_coo_tensor(edge_index, values, (num_nodes, num_nodes))
+                adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
                 self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
 
                 adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
