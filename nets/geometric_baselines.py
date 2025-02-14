@@ -16,7 +16,9 @@ from torch_sparse import mul
 
 
 # from dgl.python.dgl import add_self_loop
-from nets.gcn import gcn_norm
+# from nets.gcn import gcn_norm
+from torch_geometric.nn.conv.gcn_conv import gcn_norm
+
 from torch_geometric.utils import add_self_loops
 
 from nets.jumping_weight import JumpingKnowledge
