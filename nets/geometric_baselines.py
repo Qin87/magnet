@@ -2667,8 +2667,42 @@ def add_self_loop_qin(adj):
     return adj
 
 
-def directed_norm(adj, rm_gen_sLoop=False):
+def directed_norm(adj, rm_gen_sLoop=True):
+    device = adj.device()
+
+    # Convert to COO and work with that
+    edge_index = adj.coo()[:2]  # This seems to work based on your error logs
+    N = adj.sparse_sizes()[0]
+
+    # Calculate degrees using edge_index directly
+    in_deg = torch.zeros(N, device=device)
+    out_deg = torch.zeros(N, device=device)
+
+    # Count degrees using index_add
+    in_deg.index_add_(0, edge_index[1], torch.ones_like(edge_index[1], dtype=torch.float))
+    out_deg.index_add_(0, edge_index[0], torch.ones_like(edge_index[0], dtype=torch.float))
+
+    # Compute normalizations
+    in_deg_inv_sqrt = in_deg.pow(-0.5)
+    out_deg_inv_sqrt = out_deg.pow(-0.5)
+    in_deg_inv_sqrt[in_deg_inv_sqrt.isinf()] = 0
+    out_deg_inv_sqrt[out_deg_inv_sqrt.isinf()] = 0
+
+    # Create normalized edge weights
+    edge_weight = out_deg_inv_sqrt[edge_index[0]] * in_deg_inv_sqrt[edge_index[1]]
+
+    # Create new normalized sparse tensor
+    return SparseTensor(
+        row=edge_index[0],
+        col=edge_index[1],
+        value=edge_weight,
+        sparse_sizes=(N, N)
+    ).to(device)
+
+
+def directed_norm0(adj, rm_gen_sLoop=False):
     """
+    this will go wrong in GPU1
     Applies the normalization for directed graphs:
         \mathbf{D}_{out}^{-1/2} \mathbf{A} \mathbf{D}_{in}^{-1/2}.
     """
