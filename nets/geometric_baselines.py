@@ -915,7 +915,7 @@ class DirGCNConv(torch.nn.Module):
             row, col = edge_index
             num_nodes = x.shape[0]
 
-            adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+            adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
             self.adj_norm = get_norm_adj(adj, norm="dir")     # this is key: improve from 57 to 72
 
             adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
@@ -1032,7 +1032,7 @@ class DirGCNConv_2(torch.nn.Module):
 
         if self.conv_type == 'dir-gcn':
             if self.adj_norm is None:
-                adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                 self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
 
                 adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
@@ -1065,13 +1065,13 @@ class DirGCNConv_2(torch.nn.Module):
                     indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
                     row = indices[0]
                     col = indices[1]
-                    sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    sparse_tensor1 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
 
                     indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
                     row = indices[0]
                     col = indices[1]
-                    sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    sparse_tensor2 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
                 if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
                     self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
@@ -1269,7 +1269,7 @@ class HighFreConv(torch.nn.Module):
 
         if self.conv_type == 'dir-gcn':
             if self.adj_norm is None:
-                adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                 self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
 
                 adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
@@ -1296,13 +1296,13 @@ class HighFreConv(torch.nn.Module):
             #         indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
             #         row = indices[0]
             #         col = indices[1]
-            #         sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+            #         sparse_tensor1 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
             #         self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
             #
             #         indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
             #         row = indices[0]
             #         col = indices[1]
-            #         sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+            #         sparse_tensor2 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
             #         self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
             #     if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
             #         self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
@@ -1454,7 +1454,7 @@ class RanConv(torch.nn.Module):
 
         if self.conv_type == 'dir-gcn':
             if self.adj_norm is None:
-                adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                 edge_weight = torch.rand(len(row)) * (10000 - 0.0001) + 0.0001
                 edge_weight = edge_weight.to(device)
                 self.adj_norm = directed_norm_weight(adj, edge_weight)     # this is key: improve from 57 to 72
@@ -1482,13 +1482,13 @@ class RanConv(torch.nn.Module):
                     indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
                     row = indices[0]
                     col = indices[1]
-                    sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    sparse_tensor1 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
 
                     indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
                     row = indices[0]
                     col = indices[1]
-                    sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    sparse_tensor2 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
                 if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
                     self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
@@ -1640,7 +1640,7 @@ class DirConv_tSNE(torch.nn.Module):
 
         if self.conv_type == 'dir-gcn':
             if self.adj_norm is None:
-                adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                 self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
 
                 adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
@@ -1670,13 +1670,13 @@ class DirConv_tSNE(torch.nn.Module):
                     indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
                     row = indices[0]
                     col = indices[1]
-                    sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    sparse_tensor1 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
 
                     indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
                     row = indices[0]
                     col = indices[1]
-                    sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    sparse_tensor2 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
                 if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
                     self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
@@ -2218,7 +2218,7 @@ class DirGCNConv_sloop(torch.nn.Module):
             if self.conv_type == 'dir-gcn':
                 if self.adj_norm is None or flag:
 
-                    adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                    adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                     self.adj_norm = get_norm_adj(adj, norm=self.inci_norm)     # this is key: improve from 57 to 72
 
                     adj_t = SparseTensor(row=col, col=row, sparse_sizes=(num_nodes, num_nodes))
@@ -2250,13 +2250,13 @@ class DirGCNConv_sloop(torch.nn.Module):
                         indices = torch.stack([torch.tensor(pair) for pair in diff_0], dim=0).t()
                         row = indices[0]
                         col = indices[1]
-                        sparse_tensor1 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                        sparse_tensor1 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                         self.adj_norm = get_norm_adj(sparse_tensor1, norm=self.inci_norm).to(self.adj_t_norm.device())
 
                         indices = torch.stack([torch.tensor(pair) for pair in diff_t], dim=0).t()
                         row = indices[0]
                         col = indices[1]
-                        sparse_tensor2 = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+                        sparse_tensor2 = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
                         self.adj_t_norm = get_norm_adj(sparse_tensor2, norm=self.inci_norm).to(self.adj_t_norm.device())
                     if 3 in (self.alpha, self.beta, self.gama) and self.adj_intersection is None:
                         self.adj_intersection = intersection_adj_norm(self.adj_norm, self.adj_t_norm, self.inci_norm, device)
@@ -2384,7 +2384,7 @@ def edge_index_to_adj(edge_index, num_nodes):
     # Create the adjacency matrix from edge_index
     row = edge_index[0]
     col = edge_index[1]
-    adj = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+    adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
     return adj
 
 def get_index(adj_aat):
@@ -2453,7 +2453,7 @@ def union_adj_norm(adj0, adj1, inci_norm, device):
     row = unique_edges[:, 0].to(device)
     col = unique_edges[:, 1].to(device)
     num_nodes = adj0.size(0)
-    unique_edges = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+    unique_edges = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
     new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
 
     return new_adj_norm
@@ -2494,7 +2494,7 @@ def intersection_adj_norm(adj0, adj1, inci_norm, device):
     row = intersection[:, 0].to(device)
     col = intersection[:, 1].to(device)
     num_nodes = adj0.size(0)
-    unique_edges = SparseTensor(row=row, col=col, sparse_sizes=(num_nodes, num_nodes))
+    unique_edges = SparseTensor(row=row.contiguous(), col=col.contiguous(), sparse_sizes=(num_nodes, num_nodes))
     new_adj_norm = get_norm_adj(unique_edges, norm=inci_norm).to(device)
 
     return new_adj_norm
@@ -2636,7 +2636,7 @@ def remove_self_loop_qin(adj):
     row = row[mask]
     col = col[mask]
     value = value[mask] if value is not None else None
-    adj = SparseTensor(row=row, col=col, value=value, sparse_sizes=adj.sparse_sizes())
+    adj = SparseTensor(row=row.contiguous(), col=col.contiguous(), value=value, sparse_sizes=adj.sparse_sizes())
     return adj
 
 
@@ -2702,7 +2702,7 @@ def directed_norm_weight(adj, edge_weight=None, rm_gen_sLoop=False):
     if edge_weight is not None:
         row, col, _ = adj.coo()
         new_values = edge_weight
-        adj = torch_sparse.SparseTensor(row=row, col=col, value=new_values, sparse_sizes=adj.sparse_sizes())
+        adj = torch_sparse.SparseTensor(row=row.contiguous(), col=col.contiguous(), value=new_values, sparse_sizes=adj.sparse_sizes())
         return adj        # this to test without inci-norm
 
     device = adj.device()
